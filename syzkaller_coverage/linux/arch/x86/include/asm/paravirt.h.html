@@ -1,0 +1,836 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br>152<br>153<br>154<br>155<br>156<br>157<br>158<br>159<br>160<br>161<br>162<br>163<br>164<br>165<br>166<br>167<br>168<br>169<br>170<br>171<br>172<br>173<br>174<br>175<br>176<br>177<br>178<br>179<br>180<br>181<br>182<br>183<br>184<br>185<br>186<br>187<br>188<br>189<br>190<br>191<br>192<br>193<br>194<br>195<br>196<br>197<br>198<br>199<br>200<br>201<br>202<br>203<br>204<br>205<br>206<br>207<br>208<br>209<br>210<br>211<br>212<br>213<br>214<br>215<br>216<br>217<br>218<br>219<br>220<br>221<br>222<br>223<br>224<br>225<br>226<br>227<br>228<br>229<br>230<br>231<br>232<br>233<br>234<br>235<br>236<br>237<br>238<br>239<br>240<br>241<br>242<br>243<br>244<br>245<br>246<br>247<br>248<br>249<br>250<br>251<br>252<br>253<br>254<br>255<br>256<br>257<br>258<br>259<br>260<br>261<br>262<br>263<br>264<br>265<br>266<br>267<br>268<br>269<br>270<br>271<br>272<br>273<br>274<br>275<br>276<br>277<br>278<br>279<br>280<br>281<br>282<br>283<br>284<br>285<br>286<br>287<br>288<br>289<br>290<br>291<br>292<br>293<br>294<br>295<br>296<br>297<br>298<br>299<br>300<br>301<br>302<br>303<br>304<br>305<br>306<br>307<br>308<br>309<br>310<br>311<br>312<br>313<br>314<br>315<br>316<br>317<br>318<br>319<br>320<br>321<br>322<br>323<br>324<br>325<br>326<br>327<br>328<br>329<br>330<br>331<br>332<br>333<br>334<br>335<br>336<br>337<br>338<br>339<br>340<br>341<br>342<br>343<br>344<br>345<br>346<br>347<br>348<br>349<br>350<br>351<br>352<br>353<br>354<br>355<br>356<br>357<br>358<br>359<br>360<br>361<br>362<br>363<br>364<br>365<br>366<br>367<br>368<br>369<br>370<br>371<br>372<br>373<br>374<br>375<br>376<br>377<br>378<br>379<br>380<br>381<br>382<br>383<br>384<br>385<br>386<br>387<br>388<br>389<br>390<br>391<br>392<br>393<br>394<br>395<br>396<br>397<br>398<br>399<br>400<br>401<br>402<br>403<br>404<br>405<br>406<br>407<br>408<br>409<br>410<br>411<br>412<br>413<br>414<br>415<br>416<br>417<br>418<br>419<br>420<br>421<br>422<br>423<br>424<br>425<br>426<br>427<br>428<br>429<br>430<br>431<br>432<br>433<br>434<br>435<br>436<br>437<br>438<br>439<br>440<br>441<br>442<br>443<br>444<br>445<br>446<br>447<br>448<br>449<br>450<br>451<br>452<br>453<br>454<br>455<br>456<br>457<br>458<br>459<br>460<br>461<br>462<br>463<br>464<br>465<br>466<br>467<br>468<br>469<br>470<br>471<br>472<br>473<br>474<br>475<br>476<br>477<br>478<br>479<br>480<br>481<br>482<br>483<br>484<br>485<br>486<br>487<br>488<br>489<br>490<br>491<br>492<br>493<br>494<br>495<br>496<br>497<br>498<br>499<br>500<br>501<br>502<br>503<br>504<br>505<br>506<br>507<br>508<br>509<br>510<br>511<br>512<br>513<br>514<br>515<br>516<br>517<br>518<br>519<br>520<br>521<br>522<br>523<br>524<br>525<br>526<br>527<br>528<br>529<br>530<br>531<br>532<br>533<br>534<br>535<br>536<br>537<br>538<br>539<br>540<br>541<br>542<br>543<br>544<br>545<br>546<br>547<br>548<br>549<br>550<br>551<br>552<br>553<br>554<br>555<br>556<br>557<br>558<br>559<br>560<br>561<br>562<br>563<br>564<br>565<br>566<br>567<br>568<br>569<br>570<br>571<br>572<br>573<br>574<br>575<br>576<br>577<br>578<br>579<br>580<br>581<br>582<br>583<br>584<br>585<br>586<br>587<br>588<br>589<br>590<br>591<br>592<br>593<br>594<br>595<br>596<br>597<br>598<br>599<br>600<br>601<br>602<br>603<br>604<br>605<br>606<br>607<br>608<br>609<br>610<br>611<br>612<br>613<br>614<br>615<br>616<br>617<br>618<br>619<br>620<br>621<br>622<br>623<br>624<br>625<br>626<br>627<br>628<br>629<br>630<br>631<br>632<br>633<br>634<br>635<br>636<br>637<br>638<br>639<br>640<br>641<br>642<br>643<br>644<br>645<br>646<br>647<br>648<br>649<br>650<br>651<br>652<br>653<br>654<br>655<br>656<br>657<br>658<br>659<br>660<br>661<br>662<br>663<br>664<br>665<br>666<br>667<br>668<br>669<br>670<br>671<br>672<br>673<br>674<br>675<br>676<br>677<br>678<br>679<br>680<br>681<br>682<br>683<br>684<br>685<br>686<br>687<br>688<br>689<br>690<br>691<br>692<br>693<br>694<br>695<br>696<br>697<br>698<br>699<br>700<br>701<br>702<br>703<br>704<br>705<br>706<br>707<br>708<br>709<br>710<br>711<br>712<br>713<br>714<br>715<br>716<br>717<br>718<br>719<br>720<br>721<br>722<br>723<br>724<br>725<br>726<br>727<br>728<br>729<br>730<br>731<br>732<br>733<br>734<br>735<br>736<br>737<br>738<br>739<br>740<br>741<br>742<br>743<br>744<br>745<br>746<br>747<br>748<br>749<br>750<br>751<br>752<br>753<br>754<br>755<br>756<br>757<br>758<br>759<br>760<br>761<br>762<br>763<br>764<br>765<br>766<br>767<br>768<br>769<br>770<br>771<br>772<br>773<br>774<br>775<br>776<br>777<br>778<br>779<br>780<br>781<br>782<br>783<br>784<br>785<br>786<br>787<br>788<br>789<br>790<br>791<br>792<br>793<br>794<br>795<br>796<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_PARAVIRT_H
+#define _ASM_X86_PARAVIRT_H
+/* Various instructions on x86 need to be replaced for
+ * para-virtualization: those hooks are defined here. */
+
+#ifdef CONFIG_PARAVIRT
+#include &lt;asm/pgtable_types.h&gt;
+#include &lt;asm/asm.h&gt;
+#include &lt;asm/nospec-branch.h&gt;
+
+#include &lt;asm/paravirt_types.h&gt;
+
+#ifndef __ASSEMBLY__
+#include &lt;linux/bug.h&gt;
+#include &lt;linux/types.h&gt;
+#include &lt;linux/cpumask.h&gt;
+#include &lt;linux/static_call_types.h&gt;
+#include &lt;asm/frame.h&gt;
+
+u64 dummy_steal_clock(int cpu);
+u64 dummy_sched_clock(void);
+
+DECLARE_STATIC_CALL(pv_steal_clock, dummy_steal_clock);
+DECLARE_STATIC_CALL(pv_sched_clock, dummy_sched_clock);
+
+void paravirt_set_sched_clock(u64 (*func)(void));
+
+static inline u64 paravirt_sched_clock(void)
+{
+	return static_call(pv_sched_clock)();
+}
+
+struct static_key;
+extern struct static_key paravirt_steal_enabled;
+extern struct static_key paravirt_steal_rq_enabled;
+
+__visible void __native_queued_spin_unlock(struct qspinlock *lock);
+bool pv_is_native_spin_unlock(void);
+__visible bool __native_vcpu_is_preempted(long cpu);
+bool pv_is_native_vcpu_is_preempted(void);
+
+static inline u64 paravirt_steal_clock(int cpu)
+{
+	return static_call(pv_steal_clock)(cpu);
+}
+
+#ifdef CONFIG_PARAVIRT_SPINLOCKS
+void __init paravirt_set_cap(void);
+#endif
+
+/* The paravirtualized I/O functions */
+static inline void slow_down_io(void)
+{
+<yellow>	PVOP_VCALL0(cpu.io_delay);</yellow>
+#ifdef REALLY_SLOW_IO
+	PVOP_VCALL0(cpu.io_delay);
+	PVOP_VCALL0(cpu.io_delay);
+	PVOP_VCALL0(cpu.io_delay);
+#endif
+<yellow>}</yellow>
+
+void native_flush_tlb_local(void);
+void native_flush_tlb_global(void);
+void native_flush_tlb_one_user(unsigned long addr);
+void native_flush_tlb_multi(const struct cpumask *cpumask,
+			     const struct flush_tlb_info *info);
+
+static inline void __flush_tlb_local(void)
+{
+	PVOP_VCALL0(mmu.flush_tlb_user);
+}
+
+static inline void __flush_tlb_global(void)
+{
+	PVOP_VCALL0(mmu.flush_tlb_kernel);
+}
+
+static inline void __flush_tlb_one_user(unsigned long addr)
+{
+	PVOP_VCALL1(mmu.flush_tlb_one_user, addr);
+}
+
+static inline void __flush_tlb_multi(const struct cpumask *cpumask,
+				      const struct flush_tlb_info *info)
+{
+	PVOP_VCALL2(mmu.flush_tlb_multi, cpumask, info);
+}
+
+static inline void paravirt_tlb_remove_table(struct mmu_gather *tlb, void *table)
+{
+	PVOP_VCALL2(mmu.tlb_remove_table, tlb, table);
+}
+
+static inline void paravirt_arch_exit_mmap(struct mm_struct *mm)
+{
+<yellow>	PVOP_VCALL1(mmu.exit_mmap, mm);</yellow>
+}
+
+static inline void notify_page_enc_status_changed(unsigned long pfn,
+						  int npages, bool enc)
+{
+	PVOP_VCALL3(mmu.notify_page_enc_status_changed, pfn, npages, enc);
+}
+
+#ifdef CONFIG_PARAVIRT_XXL
+static inline void load_sp0(unsigned long sp0)
+{
+	PVOP_VCALL1(cpu.load_sp0, sp0);
+}
+
+/* The paravirtualized CPUID instruction. */
+static inline void __cpuid(unsigned int *eax, unsigned int *ebx,
+			   unsigned int *ecx, unsigned int *edx)
+{
+<yellow>	PVOP_VCALL4(cpu.cpuid, eax, ebx, ecx, edx);</yellow>
+}
+
+/*
+ * These special macros can be used to get or set a debugging register
+ */
+static __always_inline unsigned long paravirt_get_debugreg(int reg)
+{
+<blue>	return PVOP_CALL1(unsigned long, cpu.get_debugreg, reg);</blue>
+}
+#define get_debugreg(var, reg) var = paravirt_get_debugreg(reg)
+static __always_inline void set_debugreg(unsigned long val, int reg)
+{
+<blue>	PVOP_VCALL2(cpu.set_debugreg, reg, val);</blue>
+}
+
+static inline unsigned long read_cr0(void)
+{
+<blue>	return PVOP_CALL0(unsigned long, cpu.read_cr0);</blue>
+}
+
+static inline void write_cr0(unsigned long x)
+{
+	PVOP_VCALL1(cpu.write_cr0, x);
+}
+
+static __always_inline unsigned long read_cr2(void)
+{
+<yellow>	return PVOP_ALT_CALLEE0(unsigned long, mmu.read_cr2,</yellow>
+				&quot;mov %%cr2, %%rax;&quot;,
+				ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static __always_inline void write_cr2(unsigned long x)
+{
+	PVOP_VCALL1(mmu.write_cr2, x);
+}
+
+static inline unsigned long __read_cr3(void)
+{
+<blue>	return PVOP_ALT_CALL0(unsigned long, mmu.read_cr3,</blue>
+			      &quot;mov %%cr3, %%rax;&quot;, ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static inline void write_cr3(unsigned long x)
+{
+<yellow>	PVOP_ALT_VCALL1(mmu.write_cr3, x,</yellow>
+			&quot;mov %%rdi, %%cr3&quot;, ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static inline void __write_cr4(unsigned long x)
+{
+<yellow>	PVOP_VCALL1(cpu.write_cr4, x);</yellow>
+}
+
+static inline void arch_safe_halt(void)
+{
+<yellow>	PVOP_VCALL0(irq.safe_halt);</yellow>
+}
+
+static inline void halt(void)
+{
+<yellow>	PVOP_VCALL0(irq.halt);</yellow>
+}
+
+static inline void wbinvd(void)
+{
+<yellow>	PVOP_ALT_VCALL0(cpu.wbinvd, "wbinvd", ALT_NOT(X86_FEATURE_XENPV));</yellow>
+}
+
+static inline u64 paravirt_read_msr(unsigned msr)
+{
+<blue>	return PVOP_CALL1(u64, cpu.read_msr, msr);</blue>
+}
+
+static inline void paravirt_write_msr(unsigned msr,
+				      unsigned low, unsigned high)
+{
+<blue>	PVOP_VCALL3(cpu.write_msr, msr, low, high);</blue>
+}
+
+static inline u64 paravirt_read_msr_safe(unsigned msr, int *err)
+{
+<blue>	return PVOP_CALL2(u64, cpu.read_msr_safe, msr, err);</blue>
+}
+
+static inline int paravirt_write_msr_safe(unsigned msr,
+					  unsigned low, unsigned high)
+{
+<yellow>	return PVOP_CALL3(int, cpu.write_msr_safe, msr, low, high);</yellow>
+}
+
+#define rdmsr(msr, val1, val2)			\
+do {						\
+	u64 _l = paravirt_read_msr(msr);	\
+	val1 = (u32)_l;				\
+	val2 = _l &gt;&gt; 32;			\
+} while (0)
+
+#define wrmsr(msr, val1, val2)			\
+do {						\
+	paravirt_write_msr(msr, val1, val2);	\
+} while (0)
+
+#define rdmsrl(msr, val)			\
+do {						\
+	val = paravirt_read_msr(msr);		\
+} while (0)
+
+static inline void wrmsrl(unsigned msr, u64 val)
+{
+<blue>	wrmsr(msr, (u32)val, (u32)(val>>32));</blue>
+}
+
+#define wrmsr_safe(msr, a, b)	paravirt_write_msr_safe(msr, a, b)
+
+/* rdmsr with exception handling */
+#define rdmsr_safe(msr, a, b)				\
+({							\
+	int _err;					\
+	u64 _l = paravirt_read_msr_safe(msr, &amp;_err);	\
+	(*a) = (u32)_l;					\
+	(*b) = _l &gt;&gt; 32;				\
+	_err;						\
+})
+
+static inline int rdmsrl_safe(unsigned msr, unsigned long long *p)
+{
+	int err;
+
+<blue>	*p = paravirt_read_msr_safe(msr, &err);</blue>
+	return err;
+}
+
+static inline unsigned long long paravirt_read_pmc(int counter)
+{
+	return PVOP_CALL1(u64, cpu.read_pmc, counter);
+}
+
+#define rdpmc(counter, low, high)		\
+do {						\
+	u64 _l = paravirt_read_pmc(counter);	\
+	low = (u32)_l;				\
+	high = _l &gt;&gt; 32;			\
+} while (0)
+
+#define rdpmcl(counter, val) ((val) = paravirt_read_pmc(counter))
+
+static inline void paravirt_alloc_ldt(struct desc_struct *ldt, unsigned entries)
+{
+	PVOP_VCALL2(cpu.alloc_ldt, ldt, entries);
+}
+
+static inline void paravirt_free_ldt(struct desc_struct *ldt, unsigned entries)
+{
+	PVOP_VCALL2(cpu.free_ldt, ldt, entries);
+}
+
+static inline void load_TR_desc(void)
+{
+	PVOP_VCALL0(cpu.load_tr_desc);
+}
+static inline void load_gdt(const struct desc_ptr *dtr)
+{
+	PVOP_VCALL1(cpu.load_gdt, dtr);
+}
+static inline void load_idt(const struct desc_ptr *dtr)
+{
+	PVOP_VCALL1(cpu.load_idt, dtr);
+}
+static inline void set_ldt(const void *addr, unsigned entries)
+{
+	PVOP_VCALL2(cpu.set_ldt, addr, entries);
+}
+static inline unsigned long paravirt_store_tr(void)
+{
+	return PVOP_CALL0(unsigned long, cpu.store_tr);
+}
+
+#define store_tr(tr)	((tr) = paravirt_store_tr())
+static inline void load_TLS(struct thread_struct *t, unsigned cpu)
+{
+	PVOP_VCALL2(cpu.load_tls, t, cpu);
+}
+
+static inline void load_gs_index(unsigned int gs)
+{
+<yellow>	PVOP_VCALL1(cpu.load_gs_index, gs);</yellow>
+}
+
+static inline void write_ldt_entry(struct desc_struct *dt, int entry,
+				   const void *desc)
+{
+	PVOP_VCALL3(cpu.write_ldt_entry, dt, entry, desc);
+}
+
+static inline void write_gdt_entry(struct desc_struct *dt, int entry,
+				   void *desc, int type)
+{
+	PVOP_VCALL4(cpu.write_gdt_entry, dt, entry, desc, type);
+}
+
+static inline void write_idt_entry(gate_desc *dt, int entry, const gate_desc *g)
+{
+	PVOP_VCALL3(cpu.write_idt_entry, dt, entry, g);
+}
+
+#ifdef CONFIG_X86_IOPL_IOPERM
+static inline void tss_invalidate_io_bitmap(void)
+{
+	PVOP_VCALL0(cpu.invalidate_io_bitmap);
+}
+
+static inline void tss_update_io_bitmap(void)
+{
+	PVOP_VCALL0(cpu.update_io_bitmap);
+}
+#endif
+
+static inline void paravirt_activate_mm(struct mm_struct *prev,
+					struct mm_struct *next)
+{
+	PVOP_VCALL2(mmu.activate_mm, prev, next);
+}
+
+static inline void paravirt_arch_dup_mmap(struct mm_struct *oldmm,
+					  struct mm_struct *mm)
+{
+<yellow>	PVOP_VCALL2(mmu.dup_mmap, oldmm, mm);</yellow>
+}
+
+static inline int paravirt_pgd_alloc(struct mm_struct *mm)
+{
+<yellow>	return PVOP_CALL1(int, mmu.pgd_alloc, mm);</yellow>
+}
+
+static inline void paravirt_pgd_free(struct mm_struct *mm, pgd_t *pgd)
+{
+	PVOP_VCALL2(mmu.pgd_free, mm, pgd);
+}
+
+static inline void paravirt_alloc_pte(struct mm_struct *mm, unsigned long pfn)
+{
+<yellow>	PVOP_VCALL2(mmu.alloc_pte, mm, pfn);</yellow>
+}
+static inline void paravirt_release_pte(unsigned long pfn)
+{
+	PVOP_VCALL1(mmu.release_pte, pfn);
+}
+
+static inline void paravirt_alloc_pmd(struct mm_struct *mm, unsigned long pfn)
+{
+	PVOP_VCALL2(mmu.alloc_pmd, mm, pfn);
+}
+
+static inline void paravirt_release_pmd(unsigned long pfn)
+{
+	PVOP_VCALL1(mmu.release_pmd, pfn);
+}
+
+static inline void paravirt_alloc_pud(struct mm_struct *mm, unsigned long pfn)
+{
+	PVOP_VCALL2(mmu.alloc_pud, mm, pfn);
+}
+static inline void paravirt_release_pud(unsigned long pfn)
+{
+	PVOP_VCALL1(mmu.release_pud, pfn);
+}
+
+static inline void paravirt_alloc_p4d(struct mm_struct *mm, unsigned long pfn)
+{
+<yellow>	PVOP_VCALL2(mmu.alloc_p4d, mm, pfn);</yellow>
+}
+
+static inline void paravirt_release_p4d(unsigned long pfn)
+{
+	PVOP_VCALL1(mmu.release_p4d, pfn);
+}
+
+static inline pte_t __pte(pteval_t val)
+{
+<yellow>	return (pte_t) { PVOP_ALT_CALLEE1(pteval_t, mmu.make_pte, val,</yellow>
+					  &quot;mov %%rdi, %%rax&quot;,
+					  ALT_NOT(X86_FEATURE_XENPV)) };
+}
+
+static inline pteval_t pte_val(pte_t pte)
+{
+<blue>	return PVOP_ALT_CALLEE1(pteval_t, mmu.pte_val, pte.pte,</blue>
+				&quot;mov %%rdi, %%rax&quot;, ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static inline pgd_t __pgd(pgdval_t val)
+{
+<yellow>	return (pgd_t) { PVOP_ALT_CALLEE1(pgdval_t, mmu.make_pgd, val,</yellow>
+					  &quot;mov %%rdi, %%rax&quot;,
+					  ALT_NOT(X86_FEATURE_XENPV)) };
+}
+
+static inline pgdval_t pgd_val(pgd_t pgd)
+{
+<yellow>	return PVOP_ALT_CALLEE1(pgdval_t, mmu.pgd_val, pgd.pgd,</yellow>
+				&quot;mov %%rdi, %%rax&quot;, ALT_NOT(X86_FEATURE_XENPV));
+}
+
+#define  __HAVE_ARCH_PTEP_MODIFY_PROT_TRANSACTION
+static inline pte_t ptep_modify_prot_start(struct vm_area_struct *vma, unsigned long addr,
+					   pte_t *ptep)
+{
+	pteval_t ret;
+
+<yellow>	ret = PVOP_CALL3(pteval_t, mmu.ptep_modify_prot_start, vma, addr, ptep);</yellow>
+
+	return (pte_t) { .pte = ret };
+}
+
+static inline void ptep_modify_prot_commit(struct vm_area_struct *vma, unsigned long addr,
+					   pte_t *ptep, pte_t old_pte, pte_t pte)
+{
+
+<yellow>	PVOP_VCALL4(mmu.ptep_modify_prot_commit, vma, addr, ptep, pte.pte);</yellow>
+}
+
+static inline void set_pte(pte_t *ptep, pte_t pte)
+{
+<blue>	PVOP_VCALL2(mmu.set_pte, ptep, pte.pte);</blue>
+}
+
+static inline void set_pmd(pmd_t *pmdp, pmd_t pmd)
+{
+<yellow>	PVOP_VCALL2(mmu.set_pmd, pmdp, native_pmd_val(pmd));</yellow>
+}
+
+static inline pmd_t __pmd(pmdval_t val)
+{
+<yellow>	return (pmd_t) { PVOP_ALT_CALLEE1(pmdval_t, mmu.make_pmd, val,</yellow>
+					  &quot;mov %%rdi, %%rax&quot;,
+					  ALT_NOT(X86_FEATURE_XENPV)) };
+}
+
+static inline pmdval_t pmd_val(pmd_t pmd)
+{
+<blue>	return PVOP_ALT_CALLEE1(pmdval_t, mmu.pmd_val, pmd.pmd,</blue>
+				&quot;mov %%rdi, %%rax&quot;, ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static inline void set_pud(pud_t *pudp, pud_t pud)
+{
+<yellow>	PVOP_VCALL2(mmu.set_pud, pudp, native_pud_val(pud));</yellow>
+}
+
+static inline pud_t __pud(pudval_t val)
+{
+	pudval_t ret;
+
+<yellow>	ret = PVOP_ALT_CALLEE1(pudval_t, mmu.make_pud, val,</yellow>
+			       &quot;mov %%rdi, %%rax&quot;, ALT_NOT(X86_FEATURE_XENPV));
+
+	return (pud_t) { ret };
+}
+
+static inline pudval_t pud_val(pud_t pud)
+{
+<blue>	return PVOP_ALT_CALLEE1(pudval_t, mmu.pud_val, pud.pud,</blue>
+				&quot;mov %%rdi, %%rax&quot;, ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static inline void pud_clear(pud_t *pudp)
+{
+<yellow>	set_pud(pudp, native_make_pud(0));</yellow>
+}
+
+static inline void set_p4d(p4d_t *p4dp, p4d_t p4d)
+{
+<yellow>	p4dval_t val = native_p4d_val(p4d);</yellow>
+
+<yellow>	PVOP_VCALL2(mmu.set_p4d, p4dp, val);</yellow>
+}
+
+#if CONFIG_PGTABLE_LEVELS &gt;= 5
+
+static inline p4d_t __p4d(p4dval_t val)
+{
+<yellow>	p4dval_t ret = PVOP_ALT_CALLEE1(p4dval_t, mmu.make_p4d, val,</yellow>
+					&quot;mov %%rdi, %%rax&quot;,
+					ALT_NOT(X86_FEATURE_XENPV));
+
+	return (p4d_t) { ret };
+}
+
+static inline p4dval_t p4d_val(p4d_t p4d)
+{
+<blue>	return PVOP_ALT_CALLEE1(p4dval_t, mmu.p4d_val, p4d.p4d,</blue>
+				&quot;mov %%rdi, %%rax&quot;, ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static inline void __set_pgd(pgd_t *pgdp, pgd_t pgd)
+{
+<yellow>	PVOP_VCALL2(mmu.set_pgd, pgdp, native_pgd_val(pgd));</yellow>
+}
+
+#define set_pgd(pgdp, pgdval) do {					\
+	if (pgtable_l5_enabled())						\
+		__set_pgd(pgdp, pgdval);				\
+	else								\
+		set_p4d((p4d_t *)(pgdp), (p4d_t) { (pgdval).pgd });	\
+} while (0)
+
+#define pgd_clear(pgdp) do {						\
+	if (pgtable_l5_enabled())					\
+		set_pgd(pgdp, native_make_pgd(0));			\
+} while (0)
+
+#endif  /* CONFIG_PGTABLE_LEVELS == 5 */
+
+static inline void p4d_clear(p4d_t *p4dp)
+{
+<yellow>	set_p4d(p4dp, native_make_p4d(0));</yellow>
+}
+
+static inline void set_pte_atomic(pte_t *ptep, pte_t pte)
+{
+<yellow>	set_pte(ptep, pte);</yellow>
+}
+
+static inline void pte_clear(struct mm_struct *mm, unsigned long addr,
+			     pte_t *ptep)
+{
+<yellow>	set_pte(ptep, native_make_pte(0));</yellow>
+}
+
+static inline void pmd_clear(pmd_t *pmdp)
+{
+<yellow>	set_pmd(pmdp, native_make_pmd(0));</yellow>
+}
+
+#define  __HAVE_ARCH_START_CONTEXT_SWITCH
+static inline void arch_start_context_switch(struct task_struct *prev)
+{
+	PVOP_VCALL1(cpu.start_context_switch, prev);
+}
+
+static inline void arch_end_context_switch(struct task_struct *next)
+{
+	PVOP_VCALL1(cpu.end_context_switch, next);
+}
+
+#define  __HAVE_ARCH_ENTER_LAZY_MMU_MODE
+static inline void arch_enter_lazy_mmu_mode(void)
+{
+<yellow>	PVOP_VCALL0(mmu.lazy_mode.enter);</yellow>
+}
+
+static inline void arch_leave_lazy_mmu_mode(void)
+{
+<yellow>	PVOP_VCALL0(mmu.lazy_mode.leave);</yellow>
+}
+
+static inline void arch_flush_lazy_mmu_mode(void)
+{
+	PVOP_VCALL0(mmu.lazy_mode.flush);
+}
+
+static inline void __set_fixmap(unsigned /* enum fixed_addresses */ idx,
+				phys_addr_t phys, pgprot_t flags)
+{
+<yellow>	pv_ops.mmu.set_fixmap(idx, phys, flags);</yellow>
+}
+#endif
+
+#if defined(CONFIG_SMP) &amp;&amp; defined(CONFIG_PARAVIRT_SPINLOCKS)
+
+static __always_inline void pv_queued_spin_lock_slowpath(struct qspinlock *lock,
+							u32 val)
+{
+	PVOP_VCALL2(lock.queued_spin_lock_slowpath, lock, val);
+}
+
+static __always_inline void pv_queued_spin_unlock(struct qspinlock *lock)
+{
+<yellow>	PVOP_ALT_VCALLEE1(lock.queued_spin_unlock, lock,</yellow>
+			  &quot;movb $0, (%%&quot; _ASM_ARG1 &quot;);&quot;,
+			  ALT_NOT(X86_FEATURE_PVUNLOCK));
+}
+
+static __always_inline void pv_wait(u8 *ptr, u8 val)
+{
+	PVOP_VCALL2(lock.wait, ptr, val);
+}
+
+static __always_inline void pv_kick(int cpu)
+{
+	PVOP_VCALL1(lock.kick, cpu);
+}
+
+static __always_inline bool pv_vcpu_is_preempted(long cpu)
+{
+	return PVOP_ALT_CALLEE1(bool, lock.vcpu_is_preempted, cpu,
+				&quot;xor %%&quot; _ASM_AX &quot;, %%&quot; _ASM_AX &quot;;&quot;,
+				ALT_NOT(X86_FEATURE_VCPUPREEMPT));
+}
+
+void __raw_callee_save___native_queued_spin_unlock(struct qspinlock *lock);
+bool __raw_callee_save___native_vcpu_is_preempted(long cpu);
+
+#endif /* SMP &amp;&amp; PARAVIRT_SPINLOCKS */
+
+#ifdef CONFIG_X86_32
+/* save and restore all caller-save registers, except return value */
+#define PV_SAVE_ALL_CALLER_REGS		&quot;pushl %ecx;&quot;
+#define PV_RESTORE_ALL_CALLER_REGS	&quot;popl  %ecx;&quot;
+#else
+/* save and restore all caller-save registers, except return value */
+#define PV_SAVE_ALL_CALLER_REGS						\
+	&quot;push %rcx;&quot;							\
+	&quot;push %rdx;&quot;							\
+	&quot;push %rsi;&quot;							\
+	&quot;push %rdi;&quot;							\
+	&quot;push %r8;&quot;							\
+	&quot;push %r9;&quot;							\
+	&quot;push %r10;&quot;							\
+	&quot;push %r11;&quot;
+#define PV_RESTORE_ALL_CALLER_REGS					\
+	&quot;pop %r11;&quot;							\
+	&quot;pop %r10;&quot;							\
+	&quot;pop %r9;&quot;							\
+	&quot;pop %r8;&quot;							\
+	&quot;pop %rdi;&quot;							\
+	&quot;pop %rsi;&quot;							\
+	&quot;pop %rdx;&quot;							\
+	&quot;pop %rcx;&quot;
+#endif
+
+/*
+ * Generate a thunk around a function which saves all caller-save
+ * registers except for the return value.  This allows C functions to
+ * be called from assembler code where fewer than normal registers are
+ * available.  It may also help code generation around calls from C
+ * code if the common case doesn&#x27;t use many registers.
+ *
+ * When a callee is wrapped in a thunk, the caller can assume that all
+ * arg regs and all scratch registers are preserved across the
+ * call. The return value in rax/eax will not be saved, even for void
+ * functions.
+ */
+#define PV_THUNK_NAME(func) &quot;__raw_callee_save_&quot; #func
+#define __PV_CALLEE_SAVE_REGS_THUNK(func, section)			\
+	extern typeof(func) __raw_callee_save_##func;			\
+									\
+	asm(&quot;.pushsection &quot; section &quot;, \&quot;ax\&quot;;&quot;				\
+	    &quot;.globl &quot; PV_THUNK_NAME(func) &quot;;&quot;				\
+	    &quot;.type &quot; PV_THUNK_NAME(func) &quot;, @function;&quot;			\
+	    PV_THUNK_NAME(func) &quot;:&quot;					\
+	    ASM_ENDBR							\
+	    FRAME_BEGIN							\
+	    PV_SAVE_ALL_CALLER_REGS					\
+	    &quot;call &quot; #func &quot;;&quot;						\
+	    PV_RESTORE_ALL_CALLER_REGS					\
+	    FRAME_END							\
+	    ASM_RET							\
+	    &quot;.size &quot; PV_THUNK_NAME(func) &quot;, .-&quot; PV_THUNK_NAME(func) &quot;;&quot;	\
+	    &quot;.popsection&quot;)
+
+#define PV_CALLEE_SAVE_REGS_THUNK(func)			\
+	__PV_CALLEE_SAVE_REGS_THUNK(func, &quot;.text&quot;)
+
+/* Get a reference to a callee-save function */
+#define PV_CALLEE_SAVE(func)						\
+	((struct paravirt_callee_save) { __raw_callee_save_##func })
+
+/* Promise that &quot;func&quot; already uses the right calling convention */
+#define __PV_IS_CALLEE_SAVE(func)			\
+	((struct paravirt_callee_save) { func })
+
+#ifdef CONFIG_PARAVIRT_XXL
+static __always_inline unsigned long arch_local_save_flags(void)
+{
+<blue>	return PVOP_ALT_CALLEE0(unsigned long, irq.save_fl, "pushf; pop %%rax;",</blue>
+				ALT_NOT(X86_FEATURE_XENPV));
+}
+
+static __always_inline void arch_local_irq_disable(void)
+{
+<blue>	PVOP_ALT_VCALLEE0(irq.irq_disable, "cli;", ALT_NOT(X86_FEATURE_XENPV));</blue>
+}
+
+static __always_inline void arch_local_irq_enable(void)
+{
+<blue>	PVOP_ALT_VCALLEE0(irq.irq_enable, "sti;", ALT_NOT(X86_FEATURE_XENPV));</blue>
+}
+
+static __always_inline unsigned long arch_local_irq_save(void)
+{
+	unsigned long f;
+
+<blue>	f = arch_local_save_flags();</blue>
+	arch_local_irq_disable();
+	return f;
+}
+#endif
+
+
+/* Make sure as little as possible of this mess escapes. */
+#undef PARAVIRT_CALL
+#undef __PVOP_CALL
+#undef __PVOP_VCALL
+#undef PVOP_VCALL0
+#undef PVOP_CALL0
+#undef PVOP_VCALL1
+#undef PVOP_CALL1
+#undef PVOP_VCALL2
+#undef PVOP_CALL2
+#undef PVOP_VCALL3
+#undef PVOP_CALL3
+#undef PVOP_VCALL4
+#undef PVOP_CALL4
+
+extern void default_banner(void);
+
+#else  /* __ASSEMBLY__ */
+
+#define _PVSITE(ptype, ops, word, algn)		\
+771:;						\
+	ops;					\
+772:;						\
+	.pushsection .parainstructions,&quot;a&quot;;	\
+	 .align	algn;				\
+	 word 771b;				\
+	 .byte ptype;				\
+	 .byte 772b-771b;			\
+	 _ASM_ALIGN;				\
+	.popsection
+
+
+#ifdef CONFIG_X86_64
+#ifdef CONFIG_PARAVIRT_XXL
+
+#define PARA_PATCH(off)		((off) / 8)
+#define PARA_SITE(ptype, ops)	_PVSITE(ptype, ops, .quad, 8)
+#define PARA_INDIRECT(addr)	*addr(%rip)
+
+#ifdef CONFIG_DEBUG_ENTRY
+.macro PARA_IRQ_save_fl
+	PARA_SITE(PARA_PATCH(PV_IRQ_save_fl),
+		  ANNOTATE_RETPOLINE_SAFE;
+		  call PARA_INDIRECT(pv_ops+PV_IRQ_save_fl);)
+.endm
+
+#define SAVE_FLAGS	ALTERNATIVE &quot;PARA_IRQ_save_fl;&quot;, &quot;pushf; pop %rax;&quot;, \
+				    ALT_NOT(X86_FEATURE_XENPV)
+#endif
+#endif /* CONFIG_PARAVIRT_XXL */
+#endif	/* CONFIG_X86_64 */
+
+#endif /* __ASSEMBLY__ */
+#else  /* CONFIG_PARAVIRT */
+# define default_banner x86_init_noop
+#endif /* !CONFIG_PARAVIRT */
+
+#ifndef __ASSEMBLY__
+#ifndef CONFIG_PARAVIRT_XXL
+static inline void paravirt_arch_dup_mmap(struct mm_struct *oldmm,
+					  struct mm_struct *mm)
+{
+}
+#endif
+
+#ifndef CONFIG_PARAVIRT
+static inline void paravirt_arch_exit_mmap(struct mm_struct *mm)
+{
+}
+#endif
+
+#ifndef CONFIG_PARAVIRT_SPINLOCKS
+static inline void paravirt_set_cap(void)
+{
+}
+#endif
+#endif /* __ASSEMBLY__ */
+#endif /* _ASM_X86_PARAVIRT_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

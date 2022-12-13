@@ -1,0 +1,1948 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br>152<br>153<br>154<br>155<br>156<br>157<br>158<br>159<br>160<br>161<br>162<br>163<br>164<br>165<br>166<br>167<br>168<br>169<br>170<br>171<br>172<br>173<br>174<br>175<br>176<br>177<br>178<br>179<br>180<br>181<br>182<br>183<br>184<br>185<br>186<br>187<br>188<br>189<br>190<br>191<br>192<br>193<br>194<br>195<br>196<br>197<br>198<br>199<br>200<br>201<br>202<br>203<br>204<br>205<br>206<br>207<br>208<br>209<br>210<br>211<br>212<br>213<br>214<br>215<br>216<br>217<br>218<br>219<br>220<br>221<br>222<br>223<br>224<br>225<br>226<br>227<br>228<br>229<br>230<br>231<br>232<br>233<br>234<br>235<br>236<br>237<br>238<br>239<br>240<br>241<br>242<br>243<br>244<br>245<br>246<br>247<br>248<br>249<br>250<br>251<br>252<br>253<br>254<br>255<br>256<br>257<br>258<br>259<br>260<br>261<br>262<br>263<br>264<br>265<br>266<br>267<br>268<br>269<br>270<br>271<br>272<br>273<br>274<br>275<br>276<br>277<br>278<br>279<br>280<br>281<br>282<br>283<br>284<br>285<br>286<br>287<br>288<br>289<br>290<br>291<br>292<br>293<br>294<br>295<br>296<br>297<br>298<br>299<br>300<br>301<br>302<br>303<br>304<br>305<br>306<br>307<br>308<br>309<br>310<br>311<br>312<br>313<br>314<br>315<br>316<br>317<br>318<br>319<br>320<br>321<br>322<br>323<br>324<br>325<br>326<br>327<br>328<br>329<br>330<br>331<br>332<br>333<br>334<br>335<br>336<br>337<br>338<br>339<br>340<br>341<br>342<br>343<br>344<br>345<br>346<br>347<br>348<br>349<br>350<br>351<br>352<br>353<br>354<br>355<br>356<br>357<br>358<br>359<br>360<br>361<br>362<br>363<br>364<br>365<br>366<br>367<br>368<br>369<br>370<br>371<br>372<br>373<br>374<br>375<br>376<br>377<br>378<br>379<br>380<br>381<br>382<br>383<br>384<br>385<br>386<br>387<br>388<br>389<br>390<br>391<br>392<br>393<br>394<br>395<br>396<br>397<br>398<br>399<br>400<br>401<br>402<br>403<br>404<br>405<br>406<br>407<br>408<br>409<br>410<br>411<br>412<br>413<br>414<br>415<br>416<br>417<br>418<br>419<br>420<br>421<br>422<br>423<br>424<br>425<br>426<br>427<br>428<br>429<br>430<br>431<br>432<br>433<br>434<br>435<br>436<br>437<br>438<br>439<br>440<br>441<br>442<br>443<br>444<br>445<br>446<br>447<br>448<br>449<br>450<br>451<br>452<br>453<br>454<br>455<br>456<br>457<br>458<br>459<br>460<br>461<br>462<br>463<br>464<br>465<br>466<br>467<br>468<br>469<br>470<br>471<br>472<br>473<br>474<br>475<br>476<br>477<br>478<br>479<br>480<br>481<br>482<br>483<br>484<br>485<br>486<br>487<br>488<br>489<br>490<br>491<br>492<br>493<br>494<br>495<br>496<br>497<br>498<br>499<br>500<br>501<br>502<br>503<br>504<br>505<br>506<br>507<br>508<br>509<br>510<br>511<br>512<br>513<br>514<br>515<br>516<br>517<br>518<br>519<br>520<br>521<br>522<br>523<br>524<br>525<br>526<br>527<br>528<br>529<br>530<br>531<br>532<br>533<br>534<br>535<br>536<br>537<br>538<br>539<br>540<br>541<br>542<br>543<br>544<br>545<br>546<br>547<br>548<br>549<br>550<br>551<br>552<br>553<br>554<br>555<br>556<br>557<br>558<br>559<br>560<br>561<br>562<br>563<br>564<br>565<br>566<br>567<br>568<br>569<br>570<br>571<br>572<br>573<br>574<br>575<br>576<br>577<br>578<br>579<br>580<br>581<br>582<br>583<br>584<br>585<br>586<br>587<br>588<br>589<br>590<br>591<br>592<br>593<br>594<br>595<br>596<br>597<br>598<br>599<br>600<br>601<br>602<br>603<br>604<br>605<br>606<br>607<br>608<br>609<br>610<br>611<br>612<br>613<br>614<br>615<br>616<br>617<br>618<br>619<br>620<br>621<br>622<br>623<br>624<br>625<br>626<br>627<br>628<br>629<br>630<br>631<br>632<br>633<br>634<br>635<br>636<br>637<br>638<br>639<br>640<br>641<br>642<br>643<br>644<br>645<br>646<br>647<br>648<br>649<br>650<br>651<br>652<br>653<br>654<br>655<br>656<br>657<br>658<br>659<br>660<br>661<br>662<br>663<br>664<br>665<br>666<br>667<br>668<br>669<br>670<br>671<br>672<br>673<br>674<br>675<br>676<br>677<br>678<br>679<br>680<br>681<br>682<br>683<br>684<br>685<br>686<br>687<br>688<br>689<br>690<br>691<br>692<br>693<br>694<br>695<br>696<br>697<br>698<br>699<br>700<br>701<br>702<br>703<br>704<br>705<br>706<br>707<br>708<br>709<br>710<br>711<br>712<br>713<br>714<br>715<br>716<br>717<br>718<br>719<br>720<br>721<br>722<br>723<br>724<br>725<br>726<br>727<br>728<br>729<br>730<br>731<br>732<br>733<br>734<br>735<br>736<br>737<br>738<br>739<br>740<br>741<br>742<br>743<br>744<br>745<br>746<br>747<br>748<br>749<br>750<br>751<br>752<br>753<br>754<br>755<br>756<br>757<br>758<br>759<br>760<br>761<br>762<br>763<br>764<br>765<br>766<br>767<br>768<br>769<br>770<br>771<br>772<br>773<br>774<br>775<br>776<br>777<br>778<br>779<br>780<br>781<br>782<br>783<br>784<br>785<br>786<br>787<br>788<br>789<br>790<br>791<br>792<br>793<br>794<br>795<br>796<br>797<br>798<br>799<br>800<br>801<br>802<br>803<br>804<br>805<br>806<br>807<br>808<br>809<br>810<br>811<br>812<br>813<br>814<br>815<br>816<br>817<br>818<br>819<br>820<br>821<br>822<br>823<br>824<br>825<br>826<br>827<br>828<br>829<br>830<br>831<br>832<br>833<br>834<br>835<br>836<br>837<br>838<br>839<br>840<br>841<br>842<br>843<br>844<br>845<br>846<br>847<br>848<br>849<br>850<br>851<br>852<br>853<br>854<br>855<br>856<br>857<br>858<br>859<br>860<br>861<br>862<br>863<br>864<br>865<br>866<br>867<br>868<br>869<br>870<br>871<br>872<br>873<br>874<br>875<br>876<br>877<br>878<br>879<br>880<br>881<br>882<br>883<br>884<br>885<br>886<br>887<br>888<br>889<br>890<br>891<br>892<br>893<br>894<br>895<br>896<br>897<br>898<br>899<br>900<br>901<br>902<br>903<br>904<br>905<br>906<br>907<br>908<br>909<br>910<br>911<br>912<br>913<br>914<br>915<br>916<br>917<br>918<br>919<br>920<br>921<br>922<br>923<br>924<br>925<br>926<br>927<br>928<br>929<br>930<br>931<br>932<br>933<br>934<br>935<br>936<br>937<br>938<br>939<br>940<br>941<br>942<br>943<br>944<br>945<br>946<br>947<br>948<br>949<br>950<br>951<br>952<br>953<br>954<br>955<br>956<br>957<br>958<br>959<br>960<br>961<br>962<br>963<br>964<br>965<br>966<br>967<br>968<br>969<br>970<br>971<br>972<br>973<br>974<br>975<br>976<br>977<br>978<br>979<br>980<br>981<br>982<br>983<br>984<br>985<br>986<br>987<br>988<br>989<br>990<br>991<br>992<br>993<br>994<br>995<br>996<br>997<br>998<br>999<br>1000<br>1001<br>1002<br>1003<br>1004<br>1005<br>1006<br>1007<br>1008<br>1009<br>1010<br>1011<br>1012<br>1013<br>1014<br>1015<br>1016<br>1017<br>1018<br>1019<br>1020<br>1021<br>1022<br>1023<br>1024<br>1025<br>1026<br>1027<br>1028<br>1029<br>1030<br>1031<br>1032<br>1033<br>1034<br>1035<br>1036<br>1037<br>1038<br>1039<br>1040<br>1041<br>1042<br>1043<br>1044<br>1045<br>1046<br>1047<br>1048<br>1049<br>1050<br>1051<br>1052<br>1053<br>1054<br>1055<br>1056<br>1057<br>1058<br>1059<br>1060<br>1061<br>1062<br>1063<br>1064<br>1065<br>1066<br>1067<br>1068<br>1069<br>1070<br>1071<br>1072<br>1073<br>1074<br>1075<br>1076<br>1077<br>1078<br>1079<br>1080<br>1081<br>1082<br>1083<br>1084<br>1085<br>1086<br>1087<br>1088<br>1089<br>1090<br>1091<br>1092<br>1093<br>1094<br>1095<br>1096<br>1097<br>1098<br>1099<br>1100<br>1101<br>1102<br>1103<br>1104<br>1105<br>1106<br>1107<br>1108<br>1109<br>1110<br>1111<br>1112<br>1113<br>1114<br>1115<br>1116<br>1117<br>1118<br>1119<br>1120<br>1121<br>1122<br>1123<br>1124<br>1125<br>1126<br>1127<br>1128<br>1129<br>1130<br>1131<br>1132<br>1133<br>1134<br>1135<br>1136<br>1137<br>1138<br>1139<br>1140<br>1141<br>1142<br>1143<br>1144<br>1145<br>1146<br>1147<br>1148<br>1149<br>1150<br>1151<br>1152<br>1153<br>1154<br>1155<br>1156<br>1157<br>1158<br>1159<br>1160<br>1161<br>1162<br>1163<br>1164<br>1165<br>1166<br>1167<br>1168<br>1169<br>1170<br>1171<br>1172<br>1173<br>1174<br>1175<br>1176<br>1177<br>1178<br>1179<br>1180<br>1181<br>1182<br>1183<br>1184<br>1185<br>1186<br>1187<br>1188<br>1189<br>1190<br>1191<br>1192<br>1193<br>1194<br>1195<br>1196<br>1197<br>1198<br>1199<br>1200<br>1201<br>1202<br>1203<br>1204<br>1205<br>1206<br>1207<br>1208<br>1209<br>1210<br>1211<br>1212<br>1213<br>1214<br>1215<br>1216<br>1217<br>1218<br>1219<br>1220<br>1221<br>1222<br>1223<br>1224<br>1225<br>1226<br>1227<br>1228<br>1229<br>1230<br>1231<br>1232<br>1233<br>1234<br>1235<br>1236<br>1237<br>1238<br>1239<br>1240<br>1241<br>1242<br>1243<br>1244<br>1245<br>1246<br>1247<br>1248<br>1249<br>1250<br>1251<br>1252<br>1253<br>1254<br>1255<br>1256<br>1257<br>1258<br>1259<br>1260<br>1261<br>1262<br>1263<br>1264<br>1265<br>1266<br>1267<br>1268<br>1269<br>1270<br>1271<br>1272<br>1273<br>1274<br>1275<br>1276<br>1277<br>1278<br>1279<br>1280<br>1281<br>1282<br>1283<br>1284<br>1285<br>1286<br>1287<br>1288<br>1289<br>1290<br>1291<br>1292<br>1293<br>1294<br>1295<br>1296<br>1297<br>1298<br>1299<br>1300<br>1301<br>1302<br>1303<br>1304<br>1305<br>1306<br>1307<br>1308<br>1309<br>1310<br>1311<br>1312<br>1313<br>1314<br>1315<br>1316<br>1317<br>1318<br>1319<br>1320<br>1321<br>1322<br>1323<br>1324<br>1325<br>1326<br>1327<br>1328<br>1329<br>1330<br>1331<br>1332<br>1333<br>1334<br>1335<br>1336<br>1337<br>1338<br>1339<br>1340<br>1341<br>1342<br>1343<br>1344<br>1345<br>1346<br>1347<br>1348<br>1349<br>1350<br>1351<br>1352<br>1353<br>1354<br>1355<br>1356<br>1357<br>1358<br>1359<br>1360<br>1361<br>1362<br>1363<br>1364<br>1365<br>1366<br>1367<br>1368<br>1369<br>1370<br>1371<br>1372<br>1373<br>1374<br>1375<br>1376<br>1377<br>1378<br>1379<br>1380<br>1381<br>1382<br>1383<br>1384<br>1385<br>1386<br>1387<br>1388<br>1389<br>1390<br>1391<br>1392<br>1393<br>1394<br>1395<br>1396<br>1397<br>1398<br>1399<br>1400<br>1401<br>1402<br>1403<br>1404<br>1405<br>1406<br>1407<br>1408<br>1409<br>1410<br>1411<br>1412<br>1413<br>1414<br>1415<br>1416<br>1417<br>1418<br>1419<br>1420<br>1421<br>1422<br>1423<br>1424<br>1425<br>1426<br>1427<br>1428<br>1429<br>1430<br>1431<br>1432<br>1433<br>1434<br>1435<br>1436<br>1437<br>1438<br>1439<br>1440<br>1441<br>1442<br>1443<br>1444<br>1445<br>1446<br>1447<br>1448<br>1449<br>1450<br>1451<br>1452<br>1453<br>1454<br>1455<br>1456<br>1457<br>1458<br>1459<br>1460<br>1461<br>1462<br>1463<br>1464<br>1465<br>1466<br>1467<br>1468<br>1469<br>1470<br>1471<br>1472<br>1473<br>1474<br>1475<br>1476<br>1477<br>1478<br>1479<br>1480<br>1481<br>1482<br>1483<br>1484<br>1485<br>1486<br>1487<br>1488<br>1489<br>1490<br>1491<br>1492<br>1493<br>1494<br>1495<br>1496<br>1497<br>1498<br>1499<br>1500<br>1501<br>1502<br>1503<br>1504<br>1505<br>1506<br>1507<br>1508<br>1509<br>1510<br>1511<br>1512<br>1513<br>1514<br>1515<br>1516<br>1517<br>1518<br>1519<br>1520<br>1521<br>1522<br>1523<br>1524<br>1525<br>1526<br>1527<br>1528<br>1529<br>1530<br>1531<br>1532<br>1533<br>1534<br>1535<br>1536<br>1537<br>1538<br>1539<br>1540<br>1541<br>1542<br>1543<br>1544<br>1545<br>1546<br>1547<br>1548<br>1549<br>1550<br>1551<br>1552<br>1553<br>1554<br>1555<br>1556<br>1557<br>1558<br>1559<br>1560<br>1561<br>1562<br>1563<br>1564<br>1565<br>1566<br>1567<br>1568<br>1569<br>1570<br>1571<br>1572<br>1573<br>1574<br>1575<br>1576<br>1577<br>1578<br>1579<br>1580<br>1581<br>1582<br>1583<br>1584<br>1585<br>1586<br>1587<br>1588<br>1589<br>1590<br>1591<br>1592<br>1593<br>1594<br>1595<br>1596<br>1597<br>1598<br>1599<br>1600<br>1601<br>1602<br>1603<br>1604<br>1605<br>1606<br>1607<br>1608<br>1609<br>1610<br>1611<br>1612<br>1613<br>1614<br>1615<br>1616<br>1617<br>1618<br>1619<br>1620<br>1621<br>1622<br>1623<br>1624<br>1625<br>1626<br>1627<br>1628<br>1629<br>1630<br>1631<br>1632<br>1633<br>1634<br>1635<br>1636<br>1637<br>1638<br>1639<br>1640<br>1641<br>1642<br>1643<br>1644<br>1645<br>1646<br>1647<br>1648<br>1649<br>1650<br>1651<br>1652<br>1653<br>1654<br>1655<br>1656<br>1657<br>1658<br>1659<br>1660<br>1661<br>1662<br>1663<br>1664<br>1665<br>1666<br>1667<br>1668<br>1669<br>1670<br>1671<br>1672<br>1673<br>1674<br>1675<br>1676<br>1677<br>1678<br>1679<br>1680<br>1681<br>1682<br>1683<br>1684<br>1685<br>1686<br>1687<br>1688<br>1689<br>1690<br>1691<br>1692<br>1693<br>1694<br>1695<br>1696<br>1697<br>1698<br>1699<br>1700<br>1701<br>1702<br>1703<br>1704<br>1705<br>1706<br>1707<br>1708<br>1709<br>1710<br>1711<br>1712<br>1713<br>1714<br>1715<br>1716<br>1717<br>1718<br>1719<br>1720<br>1721<br>1722<br>1723<br>1724<br>1725<br>1726<br>1727<br>1728<br>1729<br>1730<br>1731<br>1732<br>1733<br>1734<br>1735<br>1736<br>1737<br>1738<br>1739<br>1740<br>1741<br>1742<br>1743<br>1744<br>1745<br>1746<br>1747<br>1748<br>1749<br>1750<br>1751<br>1752<br>1753<br>1754<br>1755<br>1756<br>1757<br>1758<br>1759<br>1760<br>1761<br>1762<br>1763<br>1764<br>1765<br>1766<br>1767<br>1768<br>1769<br>1770<br>1771<br>1772<br>1773<br>1774<br>1775<br>1776<br>1777<br>1778<br>1779<br>1780<br>1781<br>1782<br>1783<br>1784<br>1785<br>1786<br>1787<br>1788<br>1789<br>1790<br>1791<br>1792<br>1793<br>1794<br>1795<br>1796<br>1797<br>1798<br>1799<br>1800<br>1801<br>1802<br>1803<br>1804<br>1805<br>1806<br>1807<br>1808<br>1809<br>1810<br>1811<br>1812<br>1813<br>1814<br>1815<br>1816<br>1817<br>1818<br>1819<br>1820<br>1821<br>1822<br>1823<br>1824<br>1825<br>1826<br>1827<br>1828<br>1829<br>1830<br>1831<br>1832<br>1833<br>1834<br>1835<br>1836<br>1837<br>1838<br>1839<br>1840<br>1841<br>1842<br>1843<br>1844<br>1845<br>1846<br>1847<br>1848<br>1849<br>1850<br>1851<br>1852<br>1853<br>1854<br>1855<br>1856<br>1857<br>1858<br>1859<br>1860<br>1861<br>1862<br>1863<br>1864<br>1865<br>1866<br>1867<br>1868<br>1869<br>1870<br>1871<br>1872<br>1873<br>1874<br>1875<br>1876<br>1877<br>1878<br>1879<br>1880<br>1881<br>1882<br>1883<br>1884<br>1885<br>1886<br>1887<br>1888<br>1889<br>1890<br>1891<br>1892<br>1893<br>1894<br>1895<br>1896<br>1897<br>1898<br>1899<br>1900<br>1901<br>1902<br>1903<br>1904<br>1905<br>1906<br>1907<br>1908<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_MMZONE_H
+#define _LINUX_MMZONE_H
+
+#ifndef __ASSEMBLY__
+#ifndef __GENERATING_BOUNDS_H
+
+#include &lt;linux/spinlock.h&gt;
+#include &lt;linux/list.h&gt;
+#include &lt;linux/wait.h&gt;
+#include &lt;linux/bitops.h&gt;
+#include &lt;linux/cache.h&gt;
+#include &lt;linux/threads.h&gt;
+#include &lt;linux/numa.h&gt;
+#include &lt;linux/init.h&gt;
+#include &lt;linux/seqlock.h&gt;
+#include &lt;linux/nodemask.h&gt;
+#include &lt;linux/pageblock-flags.h&gt;
+#include &lt;linux/page-flags-layout.h&gt;
+#include &lt;linux/atomic.h&gt;
+#include &lt;linux/mm_types.h&gt;
+#include &lt;linux/page-flags.h&gt;
+#include &lt;linux/local_lock.h&gt;
+#include &lt;asm/page.h&gt;
+
+/* Free memory management - zoned buddy allocator.  */
+#ifndef CONFIG_ARCH_FORCE_MAX_ORDER
+#define MAX_ORDER 11
+#else
+#define MAX_ORDER CONFIG_ARCH_FORCE_MAX_ORDER
+#endif
+#define MAX_ORDER_NR_PAGES (1 &lt;&lt; (MAX_ORDER - 1))
+
+/*
+ * PAGE_ALLOC_COSTLY_ORDER is the order at which allocations are deemed
+ * costly to service.  That is between allocation orders which should
+ * coalesce naturally under reasonable reclaim pressure and those which
+ * will not.
+ */
+#define PAGE_ALLOC_COSTLY_ORDER 3
+
+enum migratetype {
+	MIGRATE_UNMOVABLE,
+	MIGRATE_MOVABLE,
+	MIGRATE_RECLAIMABLE,
+	MIGRATE_PCPTYPES,	/* the number of types on the pcp lists */
+	MIGRATE_HIGHATOMIC = MIGRATE_PCPTYPES,
+#ifdef CONFIG_CMA
+	/*
+	 * MIGRATE_CMA migration type is designed to mimic the way
+	 * ZONE_MOVABLE works.  Only movable pages can be allocated
+	 * from MIGRATE_CMA pageblocks and page allocator never
+	 * implicitly change migration type of MIGRATE_CMA pageblock.
+	 *
+	 * The way to use it is to change migratetype of a range of
+	 * pageblocks to MIGRATE_CMA which can be done by
+	 * __free_pageblock_cma() function.
+	 */
+	MIGRATE_CMA,
+#endif
+#ifdef CONFIG_MEMORY_ISOLATION
+	MIGRATE_ISOLATE,	/* can&#x27;t allocate from here */
+#endif
+	MIGRATE_TYPES
+};
+
+/* In mm/page_alloc.c; keep in sync also with show_migration_types() there */
+extern const char * const migratetype_names[MIGRATE_TYPES];
+
+#ifdef CONFIG_CMA
+#  define is_migrate_cma(migratetype) unlikely((migratetype) == MIGRATE_CMA)
+#  define is_migrate_cma_page(_page) (get_pageblock_migratetype(_page) == MIGRATE_CMA)
+#else
+#  define is_migrate_cma(migratetype) false
+#  define is_migrate_cma_page(_page) false
+#endif
+
+static inline bool is_migrate_movable(int mt)
+{
+<yellow>	return is_migrate_cma(mt) || mt == MIGRATE_MOVABLE;</yellow>
+}
+
+/*
+ * Check whether a migratetype can be merged with another migratetype.
+ *
+ * It is only mergeable when it can fall back to other migratetypes for
+ * allocation. See fallbacks[MIGRATE_TYPES][3] in page_alloc.c.
+ */
+static inline bool migratetype_is_mergeable(int mt)
+{
+	return mt &lt; MIGRATE_PCPTYPES;
+}
+
+#define for_each_migratetype_order(order, type) \
+	for (order = 0; order &lt; MAX_ORDER; order++) \
+		for (type = 0; type &lt; MIGRATE_TYPES; type++)
+
+extern int page_group_by_mobility_disabled;
+
+#define MIGRATETYPE_MASK ((1UL &lt;&lt; PB_migratetype_bits) - 1)
+
+#define get_pageblock_migratetype(page)					\
+	get_pfnblock_flags_mask(page, page_to_pfn(page), MIGRATETYPE_MASK)
+
+struct free_area {
+	struct list_head	free_list[MIGRATE_TYPES];
+	unsigned long		nr_free;
+};
+
+static inline struct page *get_page_from_free_area(struct free_area *area,
+					    int migratetype)
+{
+	return list_first_entry_or_null(&amp;area-&gt;free_list[migratetype],
+					struct page, lru);
+}
+
+static inline bool free_area_empty(struct free_area *area, int migratetype)
+{
+	return list_empty(&amp;area-&gt;free_list[migratetype]);
+}
+
+struct pglist_data;
+
+#ifdef CONFIG_NUMA
+enum numa_stat_item {
+	NUMA_HIT,		/* allocated in intended node */
+	NUMA_MISS,		/* allocated in non intended node */
+	NUMA_FOREIGN,		/* was intended here, hit elsewhere */
+	NUMA_INTERLEAVE_HIT,	/* interleaver preferred this zone */
+	NUMA_LOCAL,		/* allocation from local node */
+	NUMA_OTHER,		/* allocation from other node */
+	NR_VM_NUMA_EVENT_ITEMS
+};
+#else
+#define NR_VM_NUMA_EVENT_ITEMS 0
+#endif
+
+enum zone_stat_item {
+	/* First 128 byte cacheline (assuming 64 bit words) */
+	NR_FREE_PAGES,
+	NR_ZONE_LRU_BASE, /* Used only for compaction and reclaim retry */
+	NR_ZONE_INACTIVE_ANON = NR_ZONE_LRU_BASE,
+	NR_ZONE_ACTIVE_ANON,
+	NR_ZONE_INACTIVE_FILE,
+	NR_ZONE_ACTIVE_FILE,
+	NR_ZONE_UNEVICTABLE,
+	NR_ZONE_WRITE_PENDING,	/* Count of dirty, writeback and unstable pages */
+	NR_MLOCK,		/* mlock()ed pages found and moved off LRU */
+	/* Second 128 byte cacheline */
+	NR_BOUNCE,
+#if IS_ENABLED(CONFIG_ZSMALLOC)
+	NR_ZSPAGES,		/* allocated in zsmalloc */
+#endif
+	NR_FREE_CMA_PAGES,
+	NR_VM_ZONE_STAT_ITEMS };
+
+enum node_stat_item {
+	NR_LRU_BASE,
+	NR_INACTIVE_ANON = NR_LRU_BASE, /* must match order of LRU_[IN]ACTIVE */
+	NR_ACTIVE_ANON,		/*  &quot;     &quot;     &quot;   &quot;       &quot;         */
+	NR_INACTIVE_FILE,	/*  &quot;     &quot;     &quot;   &quot;       &quot;         */
+	NR_ACTIVE_FILE,		/*  &quot;     &quot;     &quot;   &quot;       &quot;         */
+	NR_UNEVICTABLE,		/*  &quot;     &quot;     &quot;   &quot;       &quot;         */
+	NR_SLAB_RECLAIMABLE_B,
+	NR_SLAB_UNRECLAIMABLE_B,
+	NR_ISOLATED_ANON,	/* Temporary isolated pages from anon lru */
+	NR_ISOLATED_FILE,	/* Temporary isolated pages from file lru */
+	WORKINGSET_NODES,
+	WORKINGSET_REFAULT_BASE,
+	WORKINGSET_REFAULT_ANON = WORKINGSET_REFAULT_BASE,
+	WORKINGSET_REFAULT_FILE,
+	WORKINGSET_ACTIVATE_BASE,
+	WORKINGSET_ACTIVATE_ANON = WORKINGSET_ACTIVATE_BASE,
+	WORKINGSET_ACTIVATE_FILE,
+	WORKINGSET_RESTORE_BASE,
+	WORKINGSET_RESTORE_ANON = WORKINGSET_RESTORE_BASE,
+	WORKINGSET_RESTORE_FILE,
+	WORKINGSET_NODERECLAIM,
+	NR_ANON_MAPPED,	/* Mapped anonymous pages */
+	NR_FILE_MAPPED,	/* pagecache pages mapped into pagetables.
+			   only modified from process context */
+	NR_FILE_PAGES,
+	NR_FILE_DIRTY,
+	NR_WRITEBACK,
+	NR_WRITEBACK_TEMP,	/* Writeback using temporary buffers */
+	NR_SHMEM,		/* shmem pages (included tmpfs/GEM pages) */
+	NR_SHMEM_THPS,
+	NR_SHMEM_PMDMAPPED,
+	NR_FILE_THPS,
+	NR_FILE_PMDMAPPED,
+	NR_ANON_THPS,
+	NR_VMSCAN_WRITE,
+	NR_VMSCAN_IMMEDIATE,	/* Prioritise for reclaim when writeback ends */
+	NR_DIRTIED,		/* page dirtyings since bootup */
+	NR_WRITTEN,		/* page writings since bootup */
+	NR_THROTTLED_WRITTEN,	/* NR_WRITTEN while reclaim throttled */
+	NR_KERNEL_MISC_RECLAIMABLE,	/* reclaimable non-slab kernel pages */
+	NR_FOLL_PIN_ACQUIRED,	/* via: pin_user_page(), gup flag: FOLL_PIN */
+	NR_FOLL_PIN_RELEASED,	/* pages returned via unpin_user_page() */
+	NR_KERNEL_STACK_KB,	/* measured in KiB */
+#if IS_ENABLED(CONFIG_SHADOW_CALL_STACK)
+	NR_KERNEL_SCS_KB,	/* measured in KiB */
+#endif
+	NR_PAGETABLE,		/* used for pagetables */
+	NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. KVM pagetables */
+#ifdef CONFIG_SWAP
+	NR_SWAPCACHE,
+#endif
+#ifdef CONFIG_NUMA_BALANCING
+	PGPROMOTE_SUCCESS,	/* promote successfully */
+	PGPROMOTE_CANDIDATE,	/* candidate pages to promote */
+#endif
+	NR_VM_NODE_STAT_ITEMS
+};
+
+/*
+ * Returns true if the item should be printed in THPs (/proc/vmstat
+ * currently prints number of anon, file and shmem THPs. But the item
+ * is charged in pages).
+ */
+static __always_inline bool vmstat_item_print_in_thp(enum node_stat_item item)
+{
+	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
+		return false;
+
+	return item == NR_ANON_THPS ||
+	       item == NR_FILE_THPS ||
+	       item == NR_SHMEM_THPS ||
+	       item == NR_SHMEM_PMDMAPPED ||
+	       item == NR_FILE_PMDMAPPED;
+}
+
+/*
+ * Returns true if the value is measured in bytes (most vmstat values are
+ * measured in pages). This defines the API part, the internal representation
+ * might be different.
+ */
+static __always_inline bool vmstat_item_in_bytes(int idx)
+{
+	/*
+	 * Global and per-node slab counters track slab pages.
+	 * It&#x27;s expected that changes are multiples of PAGE_SIZE.
+	 * Internally values are stored in pages.
+	 *
+	 * Per-memcg and per-lruvec counters track memory, consumed
+	 * by individual slab objects. These counters are actually
+	 * byte-precise.
+	 */
+	return (idx == NR_SLAB_RECLAIMABLE_B ||
+		idx == NR_SLAB_UNRECLAIMABLE_B);
+}
+
+/*
+ * We do arithmetic on the LRU lists in various places in the code,
+ * so it is important to keep the active lists LRU_ACTIVE higher in
+ * the array than the corresponding inactive lists, and to keep
+ * the *_FILE lists LRU_FILE higher than the corresponding _ANON lists.
+ *
+ * This has to be kept in sync with the statistics in zone_stat_item
+ * above and the descriptions in vmstat_text in mm/vmstat.c
+ */
+#define LRU_BASE 0
+#define LRU_ACTIVE 1
+#define LRU_FILE 2
+
+enum lru_list {
+	LRU_INACTIVE_ANON = LRU_BASE,
+	LRU_ACTIVE_ANON = LRU_BASE + LRU_ACTIVE,
+	LRU_INACTIVE_FILE = LRU_BASE + LRU_FILE,
+	LRU_ACTIVE_FILE = LRU_BASE + LRU_FILE + LRU_ACTIVE,
+	LRU_UNEVICTABLE,
+	NR_LRU_LISTS
+};
+
+enum vmscan_throttle_state {
+	VMSCAN_THROTTLE_WRITEBACK,
+	VMSCAN_THROTTLE_ISOLATED,
+	VMSCAN_THROTTLE_NOPROGRESS,
+	VMSCAN_THROTTLE_CONGESTED,
+	NR_VMSCAN_THROTTLE,
+};
+
+#define for_each_lru(lru) for (lru = 0; lru &lt; NR_LRU_LISTS; lru++)
+
+#define for_each_evictable_lru(lru) for (lru = 0; lru &lt;= LRU_ACTIVE_FILE; lru++)
+
+static inline bool is_file_lru(enum lru_list lru)
+{
+<yellow>	return (lru == LRU_INACTIVE_FILE || lru == LRU_ACTIVE_FILE);</yellow>
+}
+
+static inline bool is_active_lru(enum lru_list lru)
+{
+	return (lru == LRU_ACTIVE_ANON || lru == LRU_ACTIVE_FILE);
+}
+
+#define WORKINGSET_ANON 0
+#define WORKINGSET_FILE 1
+#define ANON_AND_FILE 2
+
+enum lruvec_flags {
+	LRUVEC_CONGESTED,		/* lruvec has many dirty pages
+					 * backed by a congested BDI
+					 */
+};
+
+#endif /* !__GENERATING_BOUNDS_H */
+
+/*
+ * Evictable pages are divided into multiple generations. The youngest and the
+ * oldest generation numbers, max_seq and min_seq, are monotonically increasing.
+ * They form a sliding window of a variable size [MIN_NR_GENS, MAX_NR_GENS]. An
+ * offset within MAX_NR_GENS, i.e., gen, indexes the LRU list of the
+ * corresponding generation. The gen counter in folio-&gt;flags stores gen+1 while
+ * a page is on one of lrugen-&gt;lists[]. Otherwise it stores 0.
+ *
+ * A page is added to the youngest generation on faulting. The aging needs to
+ * check the accessed bit at least twice before handing this page over to the
+ * eviction. The first check takes care of the accessed bit set on the initial
+ * fault; the second check makes sure this page hasn&#x27;t been used since then.
+ * This process, AKA second chance, requires a minimum of two generations,
+ * hence MIN_NR_GENS. And to maintain ABI compatibility with the active/inactive
+ * LRU, e.g., /proc/vmstat, these two generations are considered active; the
+ * rest of generations, if they exist, are considered inactive. See
+ * lru_gen_is_active().
+ *
+ * PG_active is always cleared while a page is on one of lrugen-&gt;lists[] so that
+ * the aging needs not to worry about it. And it&#x27;s set again when a page
+ * considered active is isolated for non-reclaiming purposes, e.g., migration.
+ * See lru_gen_add_folio() and lru_gen_del_folio().
+ *
+ * MAX_NR_GENS is set to 4 so that the multi-gen LRU can support twice the
+ * number of categories of the active/inactive LRU when keeping track of
+ * accesses through page tables. This requires order_base_2(MAX_NR_GENS+1) bits
+ * in folio-&gt;flags.
+ */
+#define MIN_NR_GENS		2U
+#define MAX_NR_GENS		4U
+
+/*
+ * Each generation is divided into multiple tiers. A page accessed N times
+ * through file descriptors is in tier order_base_2(N). A page in the first tier
+ * (N=0,1) is marked by PG_referenced unless it was faulted in through page
+ * tables or read ahead. A page in any other tier (N&gt;1) is marked by
+ * PG_referenced and PG_workingset. This implies a minimum of two tiers is
+ * supported without using additional bits in folio-&gt;flags.
+ *
+ * In contrast to moving across generations which requires the LRU lock, moving
+ * across tiers only involves atomic operations on folio-&gt;flags and therefore
+ * has a negligible cost in the buffered access path. In the eviction path,
+ * comparisons of refaulted/(evicted+protected) from the first tier and the
+ * rest infer whether pages accessed multiple times through file descriptors
+ * are statistically hot and thus worth protecting.
+ *
+ * MAX_NR_TIERS is set to 4 so that the multi-gen LRU can support twice the
+ * number of categories of the active/inactive LRU when keeping track of
+ * accesses through file descriptors. This uses MAX_NR_TIERS-2 spare bits in
+ * folio-&gt;flags.
+ */
+#define MAX_NR_TIERS		4U
+
+#ifndef __GENERATING_BOUNDS_H
+
+struct lruvec;
+struct page_vma_mapped_walk;
+
+#define LRU_GEN_MASK		((BIT(LRU_GEN_WIDTH) - 1) &lt;&lt; LRU_GEN_PGOFF)
+#define LRU_REFS_MASK		((BIT(LRU_REFS_WIDTH) - 1) &lt;&lt; LRU_REFS_PGOFF)
+
+#ifdef CONFIG_LRU_GEN
+
+enum {
+	LRU_GEN_ANON,
+	LRU_GEN_FILE,
+};
+
+enum {
+	LRU_GEN_CORE,
+	LRU_GEN_MM_WALK,
+	LRU_GEN_NONLEAF_YOUNG,
+	NR_LRU_GEN_CAPS
+};
+
+#define MIN_LRU_BATCH		BITS_PER_LONG
+#define MAX_LRU_BATCH		(MIN_LRU_BATCH * 64)
+
+/* whether to keep historical stats from evicted generations */
+#ifdef CONFIG_LRU_GEN_STATS
+#define NR_HIST_GENS		MAX_NR_GENS
+#else
+#define NR_HIST_GENS		1U
+#endif
+
+/*
+ * The youngest generation number is stored in max_seq for both anon and file
+ * types as they are aged on an equal footing. The oldest generation numbers are
+ * stored in min_seq[] separately for anon and file types as clean file pages
+ * can be evicted regardless of swap constraints.
+ *
+ * Normally anon and file min_seq are in sync. But if swapping is constrained,
+ * e.g., out of swap space, file min_seq is allowed to advance and leave anon
+ * min_seq behind.
+ *
+ * The number of pages in each generation is eventually consistent and therefore
+ * can be transiently negative when reset_batch_size() is pending.
+ */
+struct lru_gen_struct {
+	/* the aging increments the youngest generation number */
+	unsigned long max_seq;
+	/* the eviction increments the oldest generation numbers */
+	unsigned long min_seq[ANON_AND_FILE];
+	/* the birth time of each generation in jiffies */
+	unsigned long timestamps[MAX_NR_GENS];
+	/* the multi-gen LRU lists, lazily sorted on eviction */
+	struct list_head lists[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+	/* the multi-gen LRU sizes, eventually consistent */
+	long nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+	/* the exponential moving average of refaulted */
+	unsigned long avg_refaulted[ANON_AND_FILE][MAX_NR_TIERS];
+	/* the exponential moving average of evicted+protected */
+	unsigned long avg_total[ANON_AND_FILE][MAX_NR_TIERS];
+	/* the first tier doesn&#x27;t need protection, hence the minus one */
+	unsigned long protected[NR_HIST_GENS][ANON_AND_FILE][MAX_NR_TIERS - 1];
+	/* can be modified without holding the LRU lock */
+	atomic_long_t evicted[NR_HIST_GENS][ANON_AND_FILE][MAX_NR_TIERS];
+	atomic_long_t refaulted[NR_HIST_GENS][ANON_AND_FILE][MAX_NR_TIERS];
+	/* whether the multi-gen LRU is enabled */
+	bool enabled;
+};
+
+enum {
+	MM_LEAF_TOTAL,		/* total leaf entries */
+	MM_LEAF_OLD,		/* old leaf entries */
+	MM_LEAF_YOUNG,		/* young leaf entries */
+	MM_NONLEAF_TOTAL,	/* total non-leaf entries */
+	MM_NONLEAF_FOUND,	/* non-leaf entries found in Bloom filters */
+	MM_NONLEAF_ADDED,	/* non-leaf entries added to Bloom filters */
+	NR_MM_STATS
+};
+
+/* double-buffering Bloom filters */
+#define NR_BLOOM_FILTERS	2
+
+struct lru_gen_mm_state {
+	/* set to max_seq after each iteration */
+	unsigned long seq;
+	/* where the current iteration continues (inclusive) */
+	struct list_head *head;
+	/* where the last iteration ended (exclusive) */
+	struct list_head *tail;
+	/* to wait for the last page table walker to finish */
+	struct wait_queue_head wait;
+	/* Bloom filters flip after each iteration */
+	unsigned long *filters[NR_BLOOM_FILTERS];
+	/* the mm stats for debugging */
+	unsigned long stats[NR_HIST_GENS][NR_MM_STATS];
+	/* the number of concurrent page table walkers */
+	int nr_walkers;
+};
+
+struct lru_gen_mm_walk {
+	/* the lruvec under reclaim */
+	struct lruvec *lruvec;
+	/* unstable max_seq from lru_gen_struct */
+	unsigned long max_seq;
+	/* the next address within an mm to scan */
+	unsigned long next_addr;
+	/* to batch promoted pages */
+	int nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+	/* to batch the mm stats */
+	int mm_stats[NR_MM_STATS];
+	/* total batched items */
+	int batched;
+	bool can_swap;
+	bool force_scan;
+};
+
+void lru_gen_init_lruvec(struct lruvec *lruvec);
+void lru_gen_look_around(struct page_vma_mapped_walk *pvmw);
+
+#ifdef CONFIG_MEMCG
+void lru_gen_init_memcg(struct mem_cgroup *memcg);
+void lru_gen_exit_memcg(struct mem_cgroup *memcg);
+#endif
+
+#else /* !CONFIG_LRU_GEN */
+
+static inline void lru_gen_init_lruvec(struct lruvec *lruvec)
+{
+}
+
+static inline void lru_gen_look_around(struct page_vma_mapped_walk *pvmw)
+{
+}
+
+#ifdef CONFIG_MEMCG
+static inline void lru_gen_init_memcg(struct mem_cgroup *memcg)
+{
+}
+
+static inline void lru_gen_exit_memcg(struct mem_cgroup *memcg)
+{
+}
+#endif
+
+#endif /* CONFIG_LRU_GEN */
+
+struct lruvec {
+	struct list_head		lists[NR_LRU_LISTS];
+	/* per lruvec lru_lock for memcg */
+	spinlock_t			lru_lock;
+	/*
+	 * These track the cost of reclaiming one LRU - file or anon -
+	 * over the other. As the observed cost of reclaiming one LRU
+	 * increases, the reclaim scan balance tips toward the other.
+	 */
+	unsigned long			anon_cost;
+	unsigned long			file_cost;
+	/* Non-resident age, driven by LRU movement */
+	atomic_long_t			nonresident_age;
+	/* Refaults at the time of last reclaim cycle */
+	unsigned long			refaults[ANON_AND_FILE];
+	/* Various lruvec state flags (enum lruvec_flags) */
+	unsigned long			flags;
+#ifdef CONFIG_LRU_GEN
+	/* evictable pages divided into generations */
+	struct lru_gen_struct		lrugen;
+	/* to concurrently iterate lru_gen_mm_list */
+	struct lru_gen_mm_state		mm_state;
+#endif
+#ifdef CONFIG_MEMCG
+	struct pglist_data *pgdat;
+#endif
+};
+
+/* Isolate unmapped pages */
+#define ISOLATE_UNMAPPED	((__force isolate_mode_t)0x2)
+/* Isolate for asynchronous migration */
+#define ISOLATE_ASYNC_MIGRATE	((__force isolate_mode_t)0x4)
+/* Isolate unevictable pages */
+#define ISOLATE_UNEVICTABLE	((__force isolate_mode_t)0x8)
+
+/* LRU Isolation modes. */
+typedef unsigned __bitwise isolate_mode_t;
+
+enum zone_watermarks {
+	WMARK_MIN,
+	WMARK_LOW,
+	WMARK_HIGH,
+	WMARK_PROMO,
+	NR_WMARK
+};
+
+/*
+ * One per migratetype for each PAGE_ALLOC_COSTLY_ORDER. One additional list
+ * for THP which will usually be GFP_MOVABLE. Even if it is another type,
+ * it should not contribute to serious fragmentation causing THP allocation
+ * failures.
+ */
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+#define NR_PCP_THP 1
+#else
+#define NR_PCP_THP 0
+#endif
+#define NR_LOWORDER_PCP_LISTS (MIGRATE_PCPTYPES * (PAGE_ALLOC_COSTLY_ORDER + 1))
+#define NR_PCP_LISTS (NR_LOWORDER_PCP_LISTS + NR_PCP_THP)
+
+#define min_wmark_pages(z) (z-&gt;_watermark[WMARK_MIN] + z-&gt;watermark_boost)
+#define low_wmark_pages(z) (z-&gt;_watermark[WMARK_LOW] + z-&gt;watermark_boost)
+#define high_wmark_pages(z) (z-&gt;_watermark[WMARK_HIGH] + z-&gt;watermark_boost)
+#define wmark_pages(z, i) (z-&gt;_watermark[i] + z-&gt;watermark_boost)
+
+/* Fields and list protected by pagesets local_lock in page_alloc.c */
+struct per_cpu_pages {
+	spinlock_t lock;	/* Protects lists field */
+	int count;		/* number of pages in the list */
+	int high;		/* high watermark, emptying needed */
+	int batch;		/* chunk size for buddy add/remove */
+	short free_factor;	/* batch scaling factor during free */
+#ifdef CONFIG_NUMA
+	short expire;		/* When 0, remote pagesets are drained */
+#endif
+
+	/* Lists of pages, one per migrate type stored on the pcp-lists */
+	struct list_head lists[NR_PCP_LISTS];
+} ____cacheline_aligned_in_smp;
+
+struct per_cpu_zonestat {
+#ifdef CONFIG_SMP
+	s8 vm_stat_diff[NR_VM_ZONE_STAT_ITEMS];
+	s8 stat_threshold;
+#endif
+#ifdef CONFIG_NUMA
+	/*
+	 * Low priority inaccurate counters that are only folded
+	 * on demand. Use a large type to avoid the overhead of
+	 * folding during refresh_cpu_vm_stats.
+	 */
+	unsigned long vm_numa_event[NR_VM_NUMA_EVENT_ITEMS];
+#endif
+};
+
+struct per_cpu_nodestat {
+	s8 stat_threshold;
+	s8 vm_node_stat_diff[NR_VM_NODE_STAT_ITEMS];
+};
+
+#endif /* !__GENERATING_BOUNDS.H */
+
+enum zone_type {
+	/*
+	 * ZONE_DMA and ZONE_DMA32 are used when there are peripherals not able
+	 * to DMA to all of the addressable memory (ZONE_NORMAL).
+	 * On architectures where this area covers the whole 32 bit address
+	 * space ZONE_DMA32 is used. ZONE_DMA is left for the ones with smaller
+	 * DMA addressing constraints. This distinction is important as a 32bit
+	 * DMA mask is assumed when ZONE_DMA32 is defined. Some 64-bit
+	 * platforms may need both zones as they support peripherals with
+	 * different DMA addressing limitations.
+	 */
+#ifdef CONFIG_ZONE_DMA
+	ZONE_DMA,
+#endif
+#ifdef CONFIG_ZONE_DMA32
+	ZONE_DMA32,
+#endif
+	/*
+	 * Normal addressable memory is in ZONE_NORMAL. DMA operations can be
+	 * performed on pages in ZONE_NORMAL if the DMA devices support
+	 * transfers to all addressable memory.
+	 */
+	ZONE_NORMAL,
+#ifdef CONFIG_HIGHMEM
+	/*
+	 * A memory area that is only addressable by the kernel through
+	 * mapping portions into its own address space. This is for example
+	 * used by i386 to allow the kernel to address the memory beyond
+	 * 900MB. The kernel will set up special mappings (page
+	 * table entries on i386) for each page that the kernel needs to
+	 * access.
+	 */
+	ZONE_HIGHMEM,
+#endif
+	/*
+	 * ZONE_MOVABLE is similar to ZONE_NORMAL, except that it contains
+	 * movable pages with few exceptional cases described below. Main use
+	 * cases for ZONE_MOVABLE are to make memory offlining/unplug more
+	 * likely to succeed, and to locally limit unmovable allocations - e.g.,
+	 * to increase the number of THP/huge pages. Notable special cases are:
+	 *
+	 * 1. Pinned pages: (long-term) pinning of movable pages might
+	 *    essentially turn such pages unmovable. Therefore, we do not allow
+	 *    pinning long-term pages in ZONE_MOVABLE. When pages are pinned and
+	 *    faulted, they come from the right zone right away. However, it is
+	 *    still possible that address space already has pages in
+	 *    ZONE_MOVABLE at the time when pages are pinned (i.e. user has
+	 *    touches that memory before pinning). In such case we migrate them
+	 *    to a different zone. When migration fails - pinning fails.
+	 * 2. memblock allocations: kernelcore/movablecore setups might create
+	 *    situations where ZONE_MOVABLE contains unmovable allocations
+	 *    after boot. Memory offlining and allocations fail early.
+	 * 3. Memory holes: kernelcore/movablecore setups might create very rare
+	 *    situations where ZONE_MOVABLE contains memory holes after boot,
+	 *    for example, if we have sections that are only partially
+	 *    populated. Memory offlining and allocations fail early.
+	 * 4. PG_hwpoison pages: while poisoned pages can be skipped during
+	 *    memory offlining, such pages cannot be allocated.
+	 * 5. Unmovable PG_offline pages: in paravirtualized environments,
+	 *    hotplugged memory blocks might only partially be managed by the
+	 *    buddy (e.g., via XEN-balloon, Hyper-V balloon, virtio-mem). The
+	 *    parts not manged by the buddy are unmovable PG_offline pages. In
+	 *    some cases (virtio-mem), such pages can be skipped during
+	 *    memory offlining, however, cannot be moved/allocated. These
+	 *    techniques might use alloc_contig_range() to hide previously
+	 *    exposed pages from the buddy again (e.g., to implement some sort
+	 *    of memory unplug in virtio-mem).
+	 * 6. ZERO_PAGE(0), kernelcore/movablecore setups might create
+	 *    situations where ZERO_PAGE(0) which is allocated differently
+	 *    on different platforms may end up in a movable zone. ZERO_PAGE(0)
+	 *    cannot be migrated.
+	 * 7. Memory-hotplug: when using memmap_on_memory and onlining the
+	 *    memory to the MOVABLE zone, the vmemmap pages are also placed in
+	 *    such zone. Such pages cannot be really moved around as they are
+	 *    self-stored in the range, but they are treated as movable when
+	 *    the range they describe is about to be offlined.
+	 *
+	 * In general, no unmovable allocations that degrade memory offlining
+	 * should end up in ZONE_MOVABLE. Allocators (like alloc_contig_range())
+	 * have to expect that migrating pages in ZONE_MOVABLE can fail (even
+	 * if has_unmovable_pages() states that there are no unmovable pages,
+	 * there can be false negatives).
+	 */
+	ZONE_MOVABLE,
+#ifdef CONFIG_ZONE_DEVICE
+	ZONE_DEVICE,
+#endif
+	__MAX_NR_ZONES
+
+};
+
+#ifndef __GENERATING_BOUNDS_H
+
+#define ASYNC_AND_SYNC 2
+
+struct zone {
+	/* Read-mostly fields */
+
+	/* zone watermarks, access with *_wmark_pages(zone) macros */
+	unsigned long _watermark[NR_WMARK];
+	unsigned long watermark_boost;
+
+	unsigned long nr_reserved_highatomic;
+
+	/*
+	 * We don&#x27;t know if the memory that we&#x27;re going to allocate will be
+	 * freeable or/and it will be released eventually, so to avoid totally
+	 * wasting several GB of ram we must reserve some of the lower zone
+	 * memory (otherwise we risk to run OOM on the lower zones despite
+	 * there being tons of freeable ram on the higher zones).  This array is
+	 * recalculated at runtime if the sysctl_lowmem_reserve_ratio sysctl
+	 * changes.
+	 */
+	long lowmem_reserve[MAX_NR_ZONES];
+
+#ifdef CONFIG_NUMA
+	int node;
+#endif
+	struct pglist_data	*zone_pgdat;
+	struct per_cpu_pages	__percpu *per_cpu_pageset;
+	struct per_cpu_zonestat	__percpu *per_cpu_zonestats;
+	/*
+	 * the high and batch values are copied to individual pagesets for
+	 * faster access
+	 */
+	int pageset_high;
+	int pageset_batch;
+
+#ifndef CONFIG_SPARSEMEM
+	/*
+	 * Flags for a pageblock_nr_pages block. See pageblock-flags.h.
+	 * In SPARSEMEM, this map is stored in struct mem_section
+	 */
+	unsigned long		*pageblock_flags;
+#endif /* CONFIG_SPARSEMEM */
+
+	/* zone_start_pfn == zone_start_paddr &gt;&gt; PAGE_SHIFT */
+	unsigned long		zone_start_pfn;
+
+	/*
+	 * spanned_pages is the total pages spanned by the zone, including
+	 * holes, which is calculated as:
+	 * 	spanned_pages = zone_end_pfn - zone_start_pfn;
+	 *
+	 * present_pages is physical pages existing within the zone, which
+	 * is calculated as:
+	 *	present_pages = spanned_pages - absent_pages(pages in holes);
+	 *
+	 * present_early_pages is present pages existing within the zone
+	 * located on memory available since early boot, excluding hotplugged
+	 * memory.
+	 *
+	 * managed_pages is present pages managed by the buddy system, which
+	 * is calculated as (reserved_pages includes pages allocated by the
+	 * bootmem allocator):
+	 *	managed_pages = present_pages - reserved_pages;
+	 *
+	 * cma pages is present pages that are assigned for CMA use
+	 * (MIGRATE_CMA).
+	 *
+	 * So present_pages may be used by memory hotplug or memory power
+	 * management logic to figure out unmanaged pages by checking
+	 * (present_pages - managed_pages). And managed_pages should be used
+	 * by page allocator and vm scanner to calculate all kinds of watermarks
+	 * and thresholds.
+	 *
+	 * Locking rules:
+	 *
+	 * zone_start_pfn and spanned_pages are protected by span_seqlock.
+	 * It is a seqlock because it has to be read outside of zone-&gt;lock,
+	 * and it is done in the main allocator path.  But, it is written
+	 * quite infrequently.
+	 *
+	 * The span_seq lock is declared along with zone-&gt;lock because it is
+	 * frequently read in proximity to zone-&gt;lock.  It&#x27;s good to
+	 * give them a chance of being in the same cacheline.
+	 *
+	 * Write access to present_pages at runtime should be protected by
+	 * mem_hotplug_begin/done(). Any reader who can&#x27;t tolerant drift of
+	 * present_pages should use get_online_mems() to get a stable value.
+	 */
+	atomic_long_t		managed_pages;
+	unsigned long		spanned_pages;
+	unsigned long		present_pages;
+#if defined(CONFIG_MEMORY_HOTPLUG)
+	unsigned long		present_early_pages;
+#endif
+#ifdef CONFIG_CMA
+	unsigned long		cma_pages;
+#endif
+
+	const char		*name;
+
+#ifdef CONFIG_MEMORY_ISOLATION
+	/*
+	 * Number of isolated pageblock. It is used to solve incorrect
+	 * freepage counting problem due to racy retrieving migratetype
+	 * of pageblock. Protected by zone-&gt;lock.
+	 */
+	unsigned long		nr_isolate_pageblock;
+#endif
+
+#ifdef CONFIG_MEMORY_HOTPLUG
+	/* see spanned/present_pages for more description */
+	seqlock_t		span_seqlock;
+#endif
+
+	int initialized;
+
+	/* Write-intensive fields used from the page allocator */
+	CACHELINE_PADDING(_pad1_);
+
+	/* free areas of different sizes */
+	struct free_area	free_area[MAX_ORDER];
+
+	/* zone flags, see below */
+	unsigned long		flags;
+
+	/* Primarily protects free_area */
+	spinlock_t		lock;
+
+	/* Write-intensive fields used by compaction and vmstats. */
+	CACHELINE_PADDING(_pad2_);
+
+	/*
+	 * When free pages are below this point, additional steps are taken
+	 * when reading the number of free pages to avoid per-cpu counter
+	 * drift allowing watermarks to be breached
+	 */
+	unsigned long percpu_drift_mark;
+
+#if defined CONFIG_COMPACTION || defined CONFIG_CMA
+	/* pfn where compaction free scanner should start */
+	unsigned long		compact_cached_free_pfn;
+	/* pfn where compaction migration scanner should start */
+	unsigned long		compact_cached_migrate_pfn[ASYNC_AND_SYNC];
+	unsigned long		compact_init_migrate_pfn;
+	unsigned long		compact_init_free_pfn;
+#endif
+
+#ifdef CONFIG_COMPACTION
+	/*
+	 * On compaction failure, 1&lt;&lt;compact_defer_shift compactions
+	 * are skipped before trying again. The number attempted since
+	 * last failure is tracked with compact_considered.
+	 * compact_order_failed is the minimum compaction failed order.
+	 */
+	unsigned int		compact_considered;
+	unsigned int		compact_defer_shift;
+	int			compact_order_failed;
+#endif
+
+#if defined CONFIG_COMPACTION || defined CONFIG_CMA
+	/* Set to true when the PG_migrate_skip bits should be cleared */
+	bool			compact_blockskip_flush;
+#endif
+
+	bool			contiguous;
+
+	CACHELINE_PADDING(_pad3_);
+	/* Zone statistics */
+	atomic_long_t		vm_stat[NR_VM_ZONE_STAT_ITEMS];
+	atomic_long_t		vm_numa_event[NR_VM_NUMA_EVENT_ITEMS];
+} ____cacheline_internodealigned_in_smp;
+
+enum pgdat_flags {
+	PGDAT_DIRTY,			/* reclaim scanning has recently found
+					 * many dirty file pages at the tail
+					 * of the LRU.
+					 */
+	PGDAT_WRITEBACK,		/* reclaim scanning has recently found
+					 * many pages under writeback
+					 */
+	PGDAT_RECLAIM_LOCKED,		/* prevents concurrent reclaim */
+};
+
+enum zone_flags {
+	ZONE_BOOSTED_WATERMARK,		/* zone recently boosted watermarks.
+					 * Cleared when kswapd is woken.
+					 */
+	ZONE_RECLAIM_ACTIVE,		/* kswapd may be scanning the zone. */
+};
+
+static inline unsigned long zone_managed_pages(struct zone *zone)
+{
+<yellow>	return (unsigned long)atomic_long_read(&zone->managed_pages);</yellow>
+}
+
+static inline unsigned long zone_cma_pages(struct zone *zone)
+{
+#ifdef CONFIG_CMA
+	return zone-&gt;cma_pages;
+#else
+	return 0;
+#endif
+}
+
+static inline unsigned long zone_end_pfn(const struct zone *zone)
+{
+<yellow>	return zone->zone_start_pfn + zone->spanned_pages;</yellow>
+}
+
+static inline bool zone_spans_pfn(const struct zone *zone, unsigned long pfn)
+{
+	return zone-&gt;zone_start_pfn &lt;= pfn &amp;&amp; pfn &lt; zone_end_pfn(zone);
+}
+
+static inline bool zone_is_initialized(struct zone *zone)
+{
+	return zone-&gt;initialized;
+}
+
+static inline bool zone_is_empty(struct zone *zone)
+{
+<yellow>	return zone->spanned_pages == 0;</yellow>
+}
+
+#ifndef BUILD_VDSO32_64
+/*
+ * The zone field is never updated after free_area_init_core()
+ * sets it, so none of the operations on it need to be atomic.
+ */
+
+/* Page flags: | [SECTION] | [NODE] | ZONE | [LAST_CPUPID] | ... | FLAGS | */
+#define SECTIONS_PGOFF		((sizeof(unsigned long)*8) - SECTIONS_WIDTH)
+#define NODES_PGOFF		(SECTIONS_PGOFF - NODES_WIDTH)
+#define ZONES_PGOFF		(NODES_PGOFF - ZONES_WIDTH)
+#define LAST_CPUPID_PGOFF	(ZONES_PGOFF - LAST_CPUPID_WIDTH)
+#define KASAN_TAG_PGOFF		(LAST_CPUPID_PGOFF - KASAN_TAG_WIDTH)
+#define LRU_GEN_PGOFF		(KASAN_TAG_PGOFF - LRU_GEN_WIDTH)
+#define LRU_REFS_PGOFF		(LRU_GEN_PGOFF - LRU_REFS_WIDTH)
+
+/*
+ * Define the bit shifts to access each section.  For non-existent
+ * sections we define the shift as 0; that plus a 0 mask ensures
+ * the compiler will optimise away reference to them.
+ */
+#define SECTIONS_PGSHIFT	(SECTIONS_PGOFF * (SECTIONS_WIDTH != 0))
+#define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
+#define ZONES_PGSHIFT		(ZONES_PGOFF * (ZONES_WIDTH != 0))
+#define LAST_CPUPID_PGSHIFT	(LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
+#define KASAN_TAG_PGSHIFT	(KASAN_TAG_PGOFF * (KASAN_TAG_WIDTH != 0))
+
+/* NODE:ZONE or SECTION:ZONE is used to ID a zone for the buddy allocator */
+#ifdef NODE_NOT_IN_PAGE_FLAGS
+#define ZONEID_SHIFT		(SECTIONS_SHIFT + ZONES_SHIFT)
+#define ZONEID_PGOFF		((SECTIONS_PGOFF &lt; ZONES_PGOFF) ? \
+						SECTIONS_PGOFF : ZONES_PGOFF)
+#else
+#define ZONEID_SHIFT		(NODES_SHIFT + ZONES_SHIFT)
+#define ZONEID_PGOFF		((NODES_PGOFF &lt; ZONES_PGOFF) ? \
+						NODES_PGOFF : ZONES_PGOFF)
+#endif
+
+#define ZONEID_PGSHIFT		(ZONEID_PGOFF * (ZONEID_SHIFT != 0))
+
+#define ZONES_MASK		((1UL &lt;&lt; ZONES_WIDTH) - 1)
+#define NODES_MASK		((1UL &lt;&lt; NODES_WIDTH) - 1)
+#define SECTIONS_MASK		((1UL &lt;&lt; SECTIONS_WIDTH) - 1)
+#define LAST_CPUPID_MASK	((1UL &lt;&lt; LAST_CPUPID_SHIFT) - 1)
+#define KASAN_TAG_MASK		((1UL &lt;&lt; KASAN_TAG_WIDTH) - 1)
+#define ZONEID_MASK		((1UL &lt;&lt; ZONEID_SHIFT) - 1)
+
+static inline enum zone_type page_zonenum(const struct page *page)
+{
+	ASSERT_EXCLUSIVE_BITS(page-&gt;flags, ZONES_MASK &lt;&lt; ZONES_PGSHIFT);
+<blue>	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;</blue>
+}
+
+static inline enum zone_type folio_zonenum(const struct folio *folio)
+{
+<blue>	return page_zonenum(&folio->page);</blue>
+}
+
+#ifdef CONFIG_ZONE_DEVICE
+static inline bool is_zone_device_page(const struct page *page)
+{
+<blue>	return page_zonenum(page) == ZONE_DEVICE;</blue>
+}
+extern void memmap_init_zone_device(struct zone *, unsigned long,
+				    unsigned long, struct dev_pagemap *);
+#else
+static inline bool is_zone_device_page(const struct page *page)
+{
+	return false;
+}
+#endif
+
+static inline bool folio_is_zone_device(const struct folio *folio)
+{
+<blue>	return is_zone_device_page(&folio->page);</blue>
+}
+
+static inline bool is_zone_movable_page(const struct page *page)
+{
+<yellow>	return page_zonenum(page) == ZONE_MOVABLE;</yellow>
+}
+#endif
+
+/*
+ * Return true if [start_pfn, start_pfn + nr_pages) range has a non-empty
+ * intersection with the given zone
+ */
+static inline bool zone_intersects(struct zone *zone,
+		unsigned long start_pfn, unsigned long nr_pages)
+{
+<yellow>	if (zone_is_empty(zone))</yellow>
+		return false;
+<yellow>	if (start_pfn >= zone_end_pfn(zone) ||</yellow>
+<yellow>	    start_pfn + nr_pages <= zone->zone_start_pfn)</yellow>
+		return false;
+
+	return true;
+}
+
+/*
+ * The &quot;priority&quot; of VM scanning is how much of the queues we will scan in one
+ * go. A value of 12 for DEF_PRIORITY implies that we will scan 1/4096th of the
+ * queues (&quot;queue_length &gt;&gt; 12&quot;) during an aging round.
+ */
+#define DEF_PRIORITY 12
+
+/* Maximum number of zones on a zonelist */
+#define MAX_ZONES_PER_ZONELIST (MAX_NUMNODES * MAX_NR_ZONES)
+
+enum {
+	ZONELIST_FALLBACK,	/* zonelist with fallback */
+#ifdef CONFIG_NUMA
+	/*
+	 * The NUMA zonelists are doubled because we need zonelists that
+	 * restrict the allocations to a single node for __GFP_THISNODE.
+	 */
+	ZONELIST_NOFALLBACK,	/* zonelist without fallback (__GFP_THISNODE) */
+#endif
+	MAX_ZONELISTS
+};
+
+/*
+ * This struct contains information about a zone in a zonelist. It is stored
+ * here to avoid dereferences into large structures and lookups of tables
+ */
+struct zoneref {
+	struct zone *zone;	/* Pointer to actual zone */
+	int zone_idx;		/* zone_idx(zoneref-&gt;zone) */
+};
+
+/*
+ * One allocation request operates on a zonelist. A zonelist
+ * is a list of zones, the first one is the &#x27;goal&#x27; of the
+ * allocation, the other zones are fallback zones, in decreasing
+ * priority.
+ *
+ * To speed the reading of the zonelist, the zonerefs contain the zone index
+ * of the entry being read. Helper functions to access information given
+ * a struct zoneref are
+ *
+ * zonelist_zone()	- Return the struct zone * for an entry in _zonerefs
+ * zonelist_zone_idx()	- Return the index of the zone for an entry
+ * zonelist_node_idx()	- Return the index of the node for an entry
+ */
+struct zonelist {
+	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];
+};
+
+/*
+ * The array of struct pages for flatmem.
+ * It must be declared for SPARSEMEM as well because there are configurations
+ * that rely on that.
+ */
+extern struct page *mem_map;
+
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+struct deferred_split {
+	spinlock_t split_queue_lock;
+	struct list_head split_queue;
+	unsigned long split_queue_len;
+};
+#endif
+
+/*
+ * On NUMA machines, each NUMA node would have a pg_data_t to describe
+ * it&#x27;s memory layout. On UMA machines there is a single pglist_data which
+ * describes the whole memory.
+ *
+ * Memory statistics and page replacement data structures are maintained on a
+ * per-zone basis.
+ */
+typedef struct pglist_data {
+	/*
+	 * node_zones contains just the zones for THIS node. Not all of the
+	 * zones may be populated, but it is the full list. It is referenced by
+	 * this node&#x27;s node_zonelists as well as other node&#x27;s node_zonelists.
+	 */
+	struct zone node_zones[MAX_NR_ZONES];
+
+	/*
+	 * node_zonelists contains references to all zones in all nodes.
+	 * Generally the first zones will be references to this node&#x27;s
+	 * node_zones.
+	 */
+	struct zonelist node_zonelists[MAX_ZONELISTS];
+
+	int nr_zones; /* number of populated zones in this node */
+#ifdef CONFIG_FLATMEM	/* means !SPARSEMEM */
+	struct page *node_mem_map;
+#ifdef CONFIG_PAGE_EXTENSION
+	struct page_ext *node_page_ext;
+#endif
+#endif
+#if defined(CONFIG_MEMORY_HOTPLUG) || defined(CONFIG_DEFERRED_STRUCT_PAGE_INIT)
+	/*
+	 * Must be held any time you expect node_start_pfn,
+	 * node_present_pages, node_spanned_pages or nr_zones to stay constant.
+	 * Also synchronizes pgdat-&gt;first_deferred_pfn during deferred page
+	 * init.
+	 *
+	 * pgdat_resize_lock() and pgdat_resize_unlock() are provided to
+	 * manipulate node_size_lock without checking for CONFIG_MEMORY_HOTPLUG
+	 * or CONFIG_DEFERRED_STRUCT_PAGE_INIT.
+	 *
+	 * Nests above zone-&gt;lock and zone-&gt;span_seqlock
+	 */
+	spinlock_t node_size_lock;
+#endif
+	unsigned long node_start_pfn;
+	unsigned long node_present_pages; /* total number of physical pages */
+	unsigned long node_spanned_pages; /* total size of physical page
+					     range, including holes */
+	int node_id;
+	wait_queue_head_t kswapd_wait;
+	wait_queue_head_t pfmemalloc_wait;
+
+	/* workqueues for throttling reclaim for different reasons. */
+	wait_queue_head_t reclaim_wait[NR_VMSCAN_THROTTLE];
+
+	atomic_t nr_writeback_throttled;/* nr of writeback-throttled tasks */
+	unsigned long nr_reclaim_start;	/* nr pages written while throttled
+					 * when throttling started. */
+#ifdef CONFIG_MEMORY_HOTPLUG
+	struct mutex kswapd_lock;
+#endif
+	struct task_struct *kswapd;	/* Protected by kswapd_lock */
+	int kswapd_order;
+	enum zone_type kswapd_highest_zoneidx;
+
+	int kswapd_failures;		/* Number of &#x27;reclaimed == 0&#x27; runs */
+
+#ifdef CONFIG_COMPACTION
+	int kcompactd_max_order;
+	enum zone_type kcompactd_highest_zoneidx;
+	wait_queue_head_t kcompactd_wait;
+	struct task_struct *kcompactd;
+	bool proactive_compact_trigger;
+#endif
+	/*
+	 * This is a per-node reserve of pages that are not available
+	 * to userspace allocations.
+	 */
+	unsigned long		totalreserve_pages;
+
+#ifdef CONFIG_NUMA
+	/*
+	 * node reclaim becomes active if more unmapped pages exist.
+	 */
+	unsigned long		min_unmapped_pages;
+	unsigned long		min_slab_pages;
+#endif /* CONFIG_NUMA */
+
+	/* Write-intensive fields used by page reclaim */
+	CACHELINE_PADDING(_pad1_);
+
+#ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
+	/*
+	 * If memory initialisation on large machines is deferred then this
+	 * is the first PFN that needs to be initialised.
+	 */
+	unsigned long first_deferred_pfn;
+#endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
+
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	struct deferred_split deferred_split_queue;
+#endif
+
+#ifdef CONFIG_NUMA_BALANCING
+	/* start time in ms of current promote rate limit period */
+	unsigned int nbp_rl_start;
+	/* number of promote candidate pages at start time of current rate limit period */
+	unsigned long nbp_rl_nr_cand;
+	/* promote threshold in ms */
+	unsigned int nbp_threshold;
+	/* start time in ms of current promote threshold adjustment period */
+	unsigned int nbp_th_start;
+	/*
+	 * number of promote candidate pages at stat time of current promote
+	 * threshold adjustment period
+	 */
+	unsigned long nbp_th_nr_cand;
+#endif
+	/* Fields commonly accessed by the page reclaim scanner */
+
+	/*
+	 * NOTE: THIS IS UNUSED IF MEMCG IS ENABLED.
+	 *
+	 * Use mem_cgroup_lruvec() to look up lruvecs.
+	 */
+	struct lruvec		__lruvec;
+
+	unsigned long		flags;
+
+#ifdef CONFIG_LRU_GEN
+	/* kswap mm walk data */
+	struct lru_gen_mm_walk	mm_walk;
+#endif
+
+	CACHELINE_PADDING(_pad2_);
+
+	/* Per-node vmstats */
+	struct per_cpu_nodestat __percpu *per_cpu_nodestats;
+	atomic_long_t		vm_stat[NR_VM_NODE_STAT_ITEMS];
+#ifdef CONFIG_NUMA
+	struct memory_tier __rcu *memtier;
+#endif
+} pg_data_t;
+
+#define node_present_pages(nid)	(NODE_DATA(nid)-&gt;node_present_pages)
+#define node_spanned_pages(nid)	(NODE_DATA(nid)-&gt;node_spanned_pages)
+
+#define node_start_pfn(nid)	(NODE_DATA(nid)-&gt;node_start_pfn)
+#define node_end_pfn(nid) pgdat_end_pfn(NODE_DATA(nid))
+
+static inline unsigned long pgdat_end_pfn(pg_data_t *pgdat)
+{
+	return pgdat-&gt;node_start_pfn + pgdat-&gt;node_spanned_pages;
+}
+
+#include &lt;linux/memory_hotplug.h&gt;
+
+void build_all_zonelists(pg_data_t *pgdat);
+void wakeup_kswapd(struct zone *zone, gfp_t gfp_mask, int order,
+		   enum zone_type highest_zoneidx);
+bool __zone_watermark_ok(struct zone *z, unsigned int order, unsigned long mark,
+			 int highest_zoneidx, unsigned int alloc_flags,
+			 long free_pages);
+bool zone_watermark_ok(struct zone *z, unsigned int order,
+		unsigned long mark, int highest_zoneidx,
+		unsigned int alloc_flags);
+bool zone_watermark_ok_safe(struct zone *z, unsigned int order,
+		unsigned long mark, int highest_zoneidx);
+/*
+ * Memory initialization context, use to differentiate memory added by
+ * the platform statically or via memory hotplug interface.
+ */
+enum meminit_context {
+	MEMINIT_EARLY,
+	MEMINIT_HOTPLUG,
+};
+
+extern void init_currently_empty_zone(struct zone *zone, unsigned long start_pfn,
+				     unsigned long size);
+
+extern void lruvec_init(struct lruvec *lruvec);
+
+static inline struct pglist_data *lruvec_pgdat(struct lruvec *lruvec)
+{
+#ifdef CONFIG_MEMCG
+<blue>	return lruvec->pgdat;</blue>
+#else
+	return container_of(lruvec, struct pglist_data, __lruvec);
+#endif
+}
+
+#ifdef CONFIG_HAVE_MEMORYLESS_NODES
+int local_memory_node(int node_id);
+#else
+static inline int local_memory_node(int node_id) { return node_id; };
+#endif
+
+/*
+ * zone_idx() returns 0 for the ZONE_DMA zone, 1 for the ZONE_NORMAL zone, etc.
+ */
+#define zone_idx(zone)		((zone) - (zone)-&gt;zone_pgdat-&gt;node_zones)
+
+#ifdef CONFIG_ZONE_DEVICE
+static inline bool zone_is_zone_device(struct zone *zone)
+{
+<yellow>	return zone_idx(zone) == ZONE_DEVICE;</yellow>
+}
+#else
+static inline bool zone_is_zone_device(struct zone *zone)
+{
+	return false;
+}
+#endif
+
+/*
+ * Returns true if a zone has pages managed by the buddy allocator.
+ * All the reclaim decisions have to use this function rather than
+ * populated_zone(). If the whole zone is reserved then we can easily
+ * end up with populated_zone() &amp;&amp; !managed_zone().
+ */
+static inline bool managed_zone(struct zone *zone)
+{
+<yellow>	return zone_managed_pages(zone);</yellow>
+}
+
+/* Returns true if a zone has memory */
+static inline bool populated_zone(struct zone *zone)
+{
+<yellow>	return zone->present_pages;</yellow>
+}
+
+#ifdef CONFIG_NUMA
+static inline int zone_to_nid(struct zone *zone)
+{
+<yellow>	return zone->node;</yellow>
+}
+
+static inline void zone_set_nid(struct zone *zone, int nid)
+{
+	zone-&gt;node = nid;
+}
+#else
+static inline int zone_to_nid(struct zone *zone)
+{
+	return 0;
+}
+
+static inline void zone_set_nid(struct zone *zone, int nid) {}
+#endif
+
+extern int movable_zone;
+
+static inline int is_highmem_idx(enum zone_type idx)
+{
+#ifdef CONFIG_HIGHMEM
+	return (idx == ZONE_HIGHMEM ||
+		(idx == ZONE_MOVABLE &amp;&amp; movable_zone == ZONE_HIGHMEM));
+#else
+	return 0;
+#endif
+}
+
+/**
+ * is_highmem - helper function to quickly check if a struct zone is a
+ *              highmem zone or not.  This is an attempt to keep references
+ *              to ZONE_{DMA/NORMAL/HIGHMEM/etc} in general code to a minimum.
+ * @zone: pointer to struct zone variable
+ * Return: 1 for a highmem zone, 0 otherwise
+ */
+static inline int is_highmem(struct zone *zone)
+{
+	return is_highmem_idx(zone_idx(zone));
+}
+
+#ifdef CONFIG_ZONE_DMA
+bool has_managed_dma(void);
+#else
+static inline bool has_managed_dma(void)
+{
+	return false;
+}
+#endif
+
+/* These two functions are used to setup the per zone pages min values */
+struct ctl_table;
+
+int min_free_kbytes_sysctl_handler(struct ctl_table *, int, void *, size_t *,
+		loff_t *);
+int watermark_scale_factor_sysctl_handler(struct ctl_table *, int, void *,
+		size_t *, loff_t *);
+extern int sysctl_lowmem_reserve_ratio[MAX_NR_ZONES];
+int lowmem_reserve_ratio_sysctl_handler(struct ctl_table *, int, void *,
+		size_t *, loff_t *);
+int percpu_pagelist_high_fraction_sysctl_handler(struct ctl_table *, int,
+		void *, size_t *, loff_t *);
+int sysctl_min_unmapped_ratio_sysctl_handler(struct ctl_table *, int,
+		void *, size_t *, loff_t *);
+int sysctl_min_slab_ratio_sysctl_handler(struct ctl_table *, int,
+		void *, size_t *, loff_t *);
+int numa_zonelist_order_handler(struct ctl_table *, int,
+		void *, size_t *, loff_t *);
+extern int percpu_pagelist_high_fraction;
+extern char numa_zonelist_order[];
+#define NUMA_ZONELIST_ORDER_LEN	16
+
+#ifndef CONFIG_NUMA
+
+extern struct pglist_data contig_page_data;
+static inline struct pglist_data *NODE_DATA(int nid)
+{
+	return &amp;contig_page_data;
+}
+
+#else /* CONFIG_NUMA */
+
+#include &lt;asm/mmzone.h&gt;
+
+#endif /* !CONFIG_NUMA */
+
+extern struct pglist_data *first_online_pgdat(void);
+extern struct pglist_data *next_online_pgdat(struct pglist_data *pgdat);
+extern struct zone *next_zone(struct zone *zone);
+
+/**
+ * for_each_online_pgdat - helper macro to iterate over all online nodes
+ * @pgdat: pointer to a pg_data_t variable
+ */
+#define for_each_online_pgdat(pgdat)			\
+	for (pgdat = first_online_pgdat();		\
+	     pgdat;					\
+	     pgdat = next_online_pgdat(pgdat))
+/**
+ * for_each_zone - helper macro to iterate over all memory zones
+ * @zone: pointer to struct zone variable
+ *
+ * The user only needs to declare the zone variable, for_each_zone
+ * fills it in.
+ */
+#define for_each_zone(zone)			        \
+	for (zone = (first_online_pgdat())-&gt;node_zones; \
+	     zone;					\
+	     zone = next_zone(zone))
+
+#define for_each_populated_zone(zone)		        \
+	for (zone = (first_online_pgdat())-&gt;node_zones; \
+	     zone;					\
+	     zone = next_zone(zone))			\
+		if (!populated_zone(zone))		\
+			; /* do nothing */		\
+		else
+
+static inline struct zone *zonelist_zone(struct zoneref *zoneref)
+{
+<yellow>	return zoneref->zone;</yellow>
+}
+
+static inline int zonelist_zone_idx(struct zoneref *zoneref)
+{
+<yellow>	return zoneref->zone_idx;</yellow>
+}
+
+static inline int zonelist_node_idx(struct zoneref *zoneref)
+{
+	return zone_to_nid(zoneref-&gt;zone);
+}
+
+struct zoneref *__next_zones_zonelist(struct zoneref *z,
+					enum zone_type highest_zoneidx,
+					nodemask_t *nodes);
+
+/**
+ * next_zones_zonelist - Returns the next zone at or below highest_zoneidx within the allowed nodemask using a cursor within a zonelist as a starting point
+ * @z: The cursor used as a starting point for the search
+ * @highest_zoneidx: The zone index of the highest zone to return
+ * @nodes: An optional nodemask to filter the zonelist with
+ *
+ * This function returns the next zone at or below a given zone index that is
+ * within the allowed nodemask using a cursor as the starting point for the
+ * search. The zoneref returned is a cursor that represents the current zone
+ * being examined. It should be advanced by one before calling
+ * next_zones_zonelist again.
+ *
+ * Return: the next zone at or below highest_zoneidx within the allowed
+ * nodemask using a cursor within a zonelist as a starting point
+ */
+static __always_inline struct zoneref *next_zones_zonelist(struct zoneref *z,
+					enum zone_type highest_zoneidx,
+					nodemask_t *nodes)
+{
+<yellow>	if (likely(!nodes && zonelist_zone_idx(z) <= highest_zoneidx))</yellow>
+		return z;
+<yellow>	return __next_zones_zonelist(z, highest_zoneidx, nodes);</yellow>
+}
+
+/**
+ * first_zones_zonelist - Returns the first zone at or below highest_zoneidx within the allowed nodemask in a zonelist
+ * @zonelist: The zonelist to search for a suitable zone
+ * @highest_zoneidx: The zone index of the highest zone to return
+ * @nodes: An optional nodemask to filter the zonelist with
+ *
+ * This function returns the first zone at or below a given zone index that is
+ * within the allowed nodemask. The zoneref returned is a cursor that can be
+ * used to iterate the zonelist with next_zones_zonelist by advancing it by
+ * one before calling.
+ *
+ * When no eligible zone is found, zoneref-&gt;zone is NULL (zoneref itself is
+ * never NULL). This may happen either genuinely, or due to concurrent nodemask
+ * update due to cpuset modification.
+ *
+ * Return: Zoneref pointer for the first suitable zone found
+ */
+static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
+					enum zone_type highest_zoneidx,
+					nodemask_t *nodes)
+{
+<yellow>	return next_zones_zonelist(zonelist->_zonerefs,</yellow>
+							highest_zoneidx, nodes);
+}
+
+/**
+ * for_each_zone_zonelist_nodemask - helper macro to iterate over valid zones in a zonelist at or below a given zone index and within a nodemask
+ * @zone: The current zone in the iterator
+ * @z: The current pointer within zonelist-&gt;_zonerefs being iterated
+ * @zlist: The zonelist being iterated
+ * @highidx: The zone index of the highest zone to return
+ * @nodemask: Nodemask allowed by the allocator
+ *
+ * This iterator iterates though all zones at or below a given zone index and
+ * within a given nodemask
+ */
+#define for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, nodemask) \
+	for (z = first_zones_zonelist(zlist, highidx, nodemask), zone = zonelist_zone(z);	\
+		zone;							\
+		z = next_zones_zonelist(++z, highidx, nodemask),	\
+			zone = zonelist_zone(z))
+
+#define for_next_zone_zonelist_nodemask(zone, z, highidx, nodemask) \
+	for (zone = z-&gt;zone;	\
+		zone;							\
+		z = next_zones_zonelist(++z, highidx, nodemask),	\
+			zone = zonelist_zone(z))
+
+
+/**
+ * for_each_zone_zonelist - helper macro to iterate over valid zones in a zonelist at or below a given zone index
+ * @zone: The current zone in the iterator
+ * @z: The current pointer within zonelist-&gt;zones being iterated
+ * @zlist: The zonelist being iterated
+ * @highidx: The zone index of the highest zone to return
+ *
+ * This iterator iterates though all zones at or below a given zone index.
+ */
+#define for_each_zone_zonelist(zone, z, zlist, highidx) \
+	for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, NULL)
+
+/* Whether the &#x27;nodes&#x27; are all movable nodes */
+static inline bool movable_only_nodes(nodemask_t *nodes)
+{
+	struct zonelist *zonelist;
+	struct zoneref *z;
+	int nid;
+
+<yellow>	if (nodes_empty(*nodes))</yellow>
+		return false;
+
+	/*
+	 * We can chose arbitrary node from the nodemask to get a
+	 * zonelist as they are interlinked. We just need to find
+	 * at least one zone that can satisfy kernel allocations.
+	 */
+<yellow>	nid = first_node(*nodes);</yellow>
+	zonelist = &amp;NODE_DATA(nid)-&gt;node_zonelists[ZONELIST_FALLBACK];
+<yellow>	z = first_zones_zonelist(zonelist, ZONE_NORMAL,	nodes);</yellow>
+<yellow>	return (!z->zone) ? true : false;</yellow>
+}
+
+
+#ifdef CONFIG_SPARSEMEM
+#include &lt;asm/sparsemem.h&gt;
+#endif
+
+#ifdef CONFIG_FLATMEM
+#define pfn_to_nid(pfn)		(0)
+#endif
+
+#ifdef CONFIG_SPARSEMEM
+
+/*
+ * PA_SECTION_SHIFT		physical address to/from section number
+ * PFN_SECTION_SHIFT		pfn to/from section number
+ */
+#define PA_SECTION_SHIFT	(SECTION_SIZE_BITS)
+#define PFN_SECTION_SHIFT	(SECTION_SIZE_BITS - PAGE_SHIFT)
+
+#define NR_MEM_SECTIONS		(1UL &lt;&lt; SECTIONS_SHIFT)
+
+#define PAGES_PER_SECTION       (1UL &lt;&lt; PFN_SECTION_SHIFT)
+#define PAGE_SECTION_MASK	(~(PAGES_PER_SECTION-1))
+
+#define SECTION_BLOCKFLAGS_BITS \
+	((1UL &lt;&lt; (PFN_SECTION_SHIFT - pageblock_order)) * NR_PAGEBLOCK_BITS)
+
+#if (MAX_ORDER - 1 + PAGE_SHIFT) &gt; SECTION_SIZE_BITS
+#error Allocator MAX_ORDER exceeds SECTION_SIZE
+#endif
+
+static inline unsigned long pfn_to_section_nr(unsigned long pfn)
+{
+<blue>	return pfn >> PFN_SECTION_SHIFT;</blue>
+}
+static inline unsigned long section_nr_to_pfn(unsigned long sec)
+{
+<yellow>	return sec << PFN_SECTION_SHIFT;</yellow>
+}
+
+#define SECTION_ALIGN_UP(pfn)	(((pfn) + PAGES_PER_SECTION - 1) &amp; PAGE_SECTION_MASK)
+#define SECTION_ALIGN_DOWN(pfn)	((pfn) &amp; PAGE_SECTION_MASK)
+
+#define SUBSECTION_SHIFT 21
+#define SUBSECTION_SIZE (1UL &lt;&lt; SUBSECTION_SHIFT)
+
+#define PFN_SUBSECTION_SHIFT (SUBSECTION_SHIFT - PAGE_SHIFT)
+#define PAGES_PER_SUBSECTION (1UL &lt;&lt; PFN_SUBSECTION_SHIFT)
+#define PAGE_SUBSECTION_MASK (~(PAGES_PER_SUBSECTION-1))
+
+#if SUBSECTION_SHIFT &gt; SECTION_SIZE_BITS
+#error Subsection size exceeds section size
+#else
+#define SUBSECTIONS_PER_SECTION (1UL &lt;&lt; (SECTION_SIZE_BITS - SUBSECTION_SHIFT))
+#endif
+
+#define SUBSECTION_ALIGN_UP(pfn) ALIGN((pfn), PAGES_PER_SUBSECTION)
+#define SUBSECTION_ALIGN_DOWN(pfn) ((pfn) &amp; PAGE_SUBSECTION_MASK)
+
+struct mem_section_usage {
+#ifdef CONFIG_SPARSEMEM_VMEMMAP
+	DECLARE_BITMAP(subsection_map, SUBSECTIONS_PER_SECTION);
+#endif
+	/* See declaration of similar field in struct zone */
+	unsigned long pageblock_flags[0];
+};
+
+void subsection_map_init(unsigned long pfn, unsigned long nr_pages);
+
+struct page;
+struct page_ext;
+struct mem_section {
+	/*
+	 * This is, logically, a pointer to an array of struct
+	 * pages.  However, it is stored with some other magic.
+	 * (see sparse.c::sparse_init_one_section())
+	 *
+	 * Additionally during early boot we encode node id of
+	 * the location of the section here to guide allocation.
+	 * (see sparse.c::memory_present())
+	 *
+	 * Making it a UL at least makes someone do a cast
+	 * before using it wrong.
+	 */
+	unsigned long section_mem_map;
+
+	struct mem_section_usage *usage;
+#ifdef CONFIG_PAGE_EXTENSION
+	/*
+	 * If SPARSEMEM, pgdat doesn&#x27;t have page_ext pointer. We use
+	 * section. (see page_ext.h about this.)
+	 */
+	struct page_ext *page_ext;
+	unsigned long pad;
+#endif
+	/*
+	 * WARNING: mem_section must be a power-of-2 in size for the
+	 * calculation and use of SECTION_ROOT_MASK to make sense.
+	 */
+};
+
+#ifdef CONFIG_SPARSEMEM_EXTREME
+#define SECTIONS_PER_ROOT       (PAGE_SIZE / sizeof (struct mem_section))
+#else
+#define SECTIONS_PER_ROOT	1
+#endif
+
+#define SECTION_NR_TO_ROOT(sec)	((sec) / SECTIONS_PER_ROOT)
+#define NR_SECTION_ROOTS	DIV_ROUND_UP(NR_MEM_SECTIONS, SECTIONS_PER_ROOT)
+#define SECTION_ROOT_MASK	(SECTIONS_PER_ROOT - 1)
+
+#ifdef CONFIG_SPARSEMEM_EXTREME
+extern struct mem_section **mem_section;
+#else
+extern struct mem_section mem_section[NR_SECTION_ROOTS][SECTIONS_PER_ROOT];
+#endif
+
+static inline unsigned long *section_to_usemap(struct mem_section *ms)
+{
+	return ms-&gt;usage-&gt;pageblock_flags;
+}
+
+static inline struct mem_section *__nr_to_section(unsigned long nr)
+{
+<blue>	unsigned long root = SECTION_NR_TO_ROOT(nr);</blue>
+
+<blue>	if (unlikely(root >= NR_SECTION_ROOTS))</blue>
+<yellow>		return NULL;</yellow>
+
+#ifdef CONFIG_SPARSEMEM_EXTREME
+<blue>	if (!mem_section || !mem_section[root])</blue>
+		return NULL;
+#endif
+<blue>	return &mem_section[root][nr & SECTION_ROOT_MASK];</blue>
+<yellow>}</yellow>
+extern size_t mem_section_usage_size(void);
+
+/*
+ * We use the lower bits of the mem_map pointer to store
+ * a little bit of information.  The pointer is calculated
+ * as mem_map - section_nr_to_pfn(pnum).  The result is
+ * aligned to the minimum alignment of the two values:
+ *   1. All mem_map arrays are page-aligned.
+ *   2. section_nr_to_pfn() always clears PFN_SECTION_SHIFT
+ *      lowest bits.  PFN_SECTION_SHIFT is arch-specific
+ *      (equal SECTION_SIZE_BITS - PAGE_SHIFT), and the
+ *      worst combination is powerpc with 256k pages,
+ *      which results in PFN_SECTION_SHIFT equal 6.
+ * To sum it up, at least 6 bits are available on all architectures.
+ * However, we can exceed 6 bits on some other architectures except
+ * powerpc (e.g. 15 bits are available on x86_64, 13 bits are available
+ * with the worst case of 64K pages on arm64) if we make sure the
+ * exceeded bit is not applicable to powerpc.
+ */
+enum {
+	SECTION_MARKED_PRESENT_BIT,
+	SECTION_HAS_MEM_MAP_BIT,
+	SECTION_IS_ONLINE_BIT,
+	SECTION_IS_EARLY_BIT,
+#ifdef CONFIG_ZONE_DEVICE
+	SECTION_TAINT_ZONE_DEVICE_BIT,
+#endif
+	SECTION_MAP_LAST_BIT,
+};
+
+#define SECTION_MARKED_PRESENT		BIT(SECTION_MARKED_PRESENT_BIT)
+#define SECTION_HAS_MEM_MAP		BIT(SECTION_HAS_MEM_MAP_BIT)
+#define SECTION_IS_ONLINE		BIT(SECTION_IS_ONLINE_BIT)
+#define SECTION_IS_EARLY		BIT(SECTION_IS_EARLY_BIT)
+#ifdef CONFIG_ZONE_DEVICE
+#define SECTION_TAINT_ZONE_DEVICE	BIT(SECTION_TAINT_ZONE_DEVICE_BIT)
+#endif
+#define SECTION_MAP_MASK		(~(BIT(SECTION_MAP_LAST_BIT) - 1))
+#define SECTION_NID_SHIFT		SECTION_MAP_LAST_BIT
+
+static inline struct page *__section_mem_map_addr(struct mem_section *section)
+{
+	unsigned long map = section-&gt;section_mem_map;
+	map &amp;= SECTION_MAP_MASK;
+	return (struct page *)map;
+}
+
+static inline int present_section(struct mem_section *section)
+{
+<yellow>	return (section && (section->section_mem_map & SECTION_MARKED_PRESENT));</yellow>
+}
+
+static inline int present_section_nr(unsigned long nr)
+{
+<yellow>	return present_section(__nr_to_section(nr));</yellow>
+}
+
+static inline int valid_section(struct mem_section *section)
+{
+<blue>	return (section && (section->section_mem_map & SECTION_HAS_MEM_MAP));</blue>
+}
+
+static inline int early_section(struct mem_section *section)
+{
+<blue>	return (section && (section->section_mem_map & SECTION_IS_EARLY));</blue>
+}
+
+static inline int valid_section_nr(unsigned long nr)
+{
+<yellow>	return valid_section(__nr_to_section(nr));</yellow>
+}
+
+static inline int online_section(struct mem_section *section)
+{
+<yellow>	return (section && (section->section_mem_map & SECTION_IS_ONLINE));</yellow>
+}
+
+#ifdef CONFIG_ZONE_DEVICE
+static inline int online_device_section(struct mem_section *section)
+{
+	unsigned long flags = SECTION_IS_ONLINE | SECTION_TAINT_ZONE_DEVICE;
+
+<yellow>	return section && ((section->section_mem_map & flags) == flags);</yellow>
+}
+#else
+static inline int online_device_section(struct mem_section *section)
+{
+	return 0;
+}
+#endif
+
+static inline int online_section_nr(unsigned long nr)
+{
+	return online_section(__nr_to_section(nr));
+}
+
+#ifdef CONFIG_MEMORY_HOTPLUG
+void online_mem_sections(unsigned long start_pfn, unsigned long end_pfn);
+void offline_mem_sections(unsigned long start_pfn, unsigned long end_pfn);
+#endif
+
+static inline struct mem_section *__pfn_to_section(unsigned long pfn)
+{
+<blue>	return __nr_to_section(pfn_to_section_nr(pfn));</blue>
+}
+
+extern unsigned long __highest_present_section_nr;
+
+static inline int subsection_map_index(unsigned long pfn)
+{
+<yellow>	return (pfn & ~(PAGE_SECTION_MASK)) / PAGES_PER_SUBSECTION;</yellow>
+}
+
+#ifdef CONFIG_SPARSEMEM_VMEMMAP
+static inline int pfn_section_valid(struct mem_section *ms, unsigned long pfn)
+{
+<yellow>	int idx = subsection_map_index(pfn);</yellow>
+
+<yellow>	return test_bit(idx, ms->usage->subsection_map);</yellow>
+}
+#else
+static inline int pfn_section_valid(struct mem_section *ms, unsigned long pfn)
+{
+	return 1;
+}
+#endif
+
+#ifndef CONFIG_HAVE_ARCH_PFN_VALID
+/**
+ * pfn_valid - check if there is a valid memory map entry for a PFN
+ * @pfn: the page frame number to check
+ *
+ * Check if there is a valid memory map entry aka struct page for the @pfn.
+ * Note, that availability of the memory map entry does not imply that
+ * there is actual usable memory at that @pfn. The struct page may
+ * represent a hole or an unusable page frame.
+ *
+ * Return: 1 for PFNs that have memory map entries and 0 otherwise
+ */
+<blue>static inline int pfn_valid(unsigned long pfn)</blue>
+{
+	struct mem_section *ms;
+
+	/*
+	 * Ensure the upper PAGE_SHIFT bits are clear in the
+	 * pfn. Else it might lead to false positives when
+	 * some of the upper bits are set, but the lower bits
+	 * match a valid pfn.
+	 */
+<blue>	if (PHYS_PFN(PFN_PHYS(pfn)) != pfn)</blue>
+		return 0;
+
+<blue>	if (pfn_to_section_nr(pfn) >= NR_MEM_SECTIONS)</blue>
+		return 0;
+<blue>	ms = __pfn_to_section(pfn);</blue>
+<blue>	if (!valid_section(ms))</blue>
+		return 0;
+	/*
+	 * Traditionally early sections always returned pfn_valid() for
+	 * the entire section-sized span.
+	 */
+<blue>	return early_section(ms) || pfn_section_valid(ms, pfn);</blue>
+}
+#endif
+
+static inline int pfn_in_present_section(unsigned long pfn)
+{
+<yellow>	if (pfn_to_section_nr(pfn) >= NR_MEM_SECTIONS)</yellow>
+		return 0;
+<yellow>	return present_section(__pfn_to_section(pfn));</yellow>
+}
+
+static inline unsigned long next_present_section_nr(unsigned long section_nr)
+{
+<yellow>	while (++section_nr <= __highest_present_section_nr) {</yellow>
+<yellow>		if (present_section_nr(section_nr))</yellow>
+			return section_nr;
+	}
+
+	return -1;
+<yellow>}</yellow>
+
+/*
+ * These are _only_ used during initialisation, therefore they
+ * can use __initdata ...  They could have names to indicate
+ * this restriction.
+ */
+#ifdef CONFIG_NUMA
+#define pfn_to_nid(pfn)							\
+({									\
+	unsigned long __pfn_to_nid_pfn = (pfn);				\
+	page_to_nid(pfn_to_page(__pfn_to_nid_pfn));			\
+})
+#else
+#define pfn_to_nid(pfn)		(0)
+#endif
+
+void sparse_init(void);
+#else
+#define sparse_init()	do {} while (0)
+#define sparse_index_init(_sec, _nid)  do {} while (0)
+#define pfn_in_present_section pfn_valid
+#define subsection_map_init(_pfn, _nr_pages) do {} while (0)
+#endif /* CONFIG_SPARSEMEM */
+
+#endif /* !__GENERATING_BOUNDS.H */
+#endif /* !__ASSEMBLY__ */
+#endif /* _LINUX_MMZONE_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

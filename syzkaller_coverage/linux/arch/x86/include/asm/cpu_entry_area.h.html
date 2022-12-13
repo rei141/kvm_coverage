@@ -1,0 +1,198 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br>152<br>153<br>154<br>155<br>156<br>157<br>158<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+
+#ifndef _ASM_X86_CPU_ENTRY_AREA_H
+#define _ASM_X86_CPU_ENTRY_AREA_H
+
+#include &lt;linux/percpu-defs.h&gt;
+#include &lt;asm/processor.h&gt;
+#include &lt;asm/intel_ds.h&gt;
+#include &lt;asm/pgtable_areas.h&gt;
+
+#ifdef CONFIG_X86_64
+
+#ifdef CONFIG_AMD_MEM_ENCRYPT
+#define VC_EXCEPTION_STKSZ	EXCEPTION_STKSZ
+#else
+#define VC_EXCEPTION_STKSZ	0
+#endif
+
+/* Macro to enforce the same ordering and stack sizes */
+#define ESTACKS_MEMBERS(guardsize, optional_stack_size)		\
+	char	DF_stack_guard[guardsize];			\
+	char	DF_stack[EXCEPTION_STKSZ];			\
+	char	NMI_stack_guard[guardsize];			\
+	char	NMI_stack[EXCEPTION_STKSZ];			\
+	char	DB_stack_guard[guardsize];			\
+	char	DB_stack[EXCEPTION_STKSZ];			\
+	char	MCE_stack_guard[guardsize];			\
+	char	MCE_stack[EXCEPTION_STKSZ];			\
+	char	VC_stack_guard[guardsize];			\
+	char	VC_stack[optional_stack_size];			\
+	char	VC2_stack_guard[guardsize];			\
+	char	VC2_stack[optional_stack_size];			\
+	char	IST_top_guard[guardsize];			\
+
+/* The exception stacks&#x27; physical storage. No guard pages required */
+struct exception_stacks {
+	ESTACKS_MEMBERS(0, VC_EXCEPTION_STKSZ)
+};
+
+/* The effective cpu entry area mapping with guard pages. */
+struct cea_exception_stacks {
+	ESTACKS_MEMBERS(PAGE_SIZE, EXCEPTION_STKSZ)
+};
+
+/*
+ * The exception stack ordering in [cea_]exception_stacks
+ */
+enum exception_stack_ordering {
+	ESTACK_DF,
+	ESTACK_NMI,
+	ESTACK_DB,
+	ESTACK_MCE,
+	ESTACK_VC,
+	ESTACK_VC2,
+	N_EXCEPTION_STACKS
+};
+
+#define CEA_ESTACK_SIZE(st)					\
+	sizeof(((struct cea_exception_stacks *)0)-&gt;st## _stack)
+
+#define CEA_ESTACK_BOT(ceastp, st)				\
+	((unsigned long)&amp;(ceastp)-&gt;st## _stack)
+
+#define CEA_ESTACK_TOP(ceastp, st)				\
+	(CEA_ESTACK_BOT(ceastp, st) + CEA_ESTACK_SIZE(st))
+
+#define CEA_ESTACK_OFFS(st)					\
+	offsetof(struct cea_exception_stacks, st## _stack)
+
+#define CEA_ESTACK_PAGES					\
+	(sizeof(struct cea_exception_stacks) / PAGE_SIZE)
+
+#endif
+
+#ifdef CONFIG_X86_32
+struct doublefault_stack {
+	unsigned long stack[(PAGE_SIZE - sizeof(struct x86_hw_tss)) / sizeof(unsigned long)];
+	struct x86_hw_tss tss;
+} __aligned(PAGE_SIZE);
+#endif
+
+/*
+ * cpu_entry_area is a percpu region that contains things needed by the CPU
+ * and early entry/exit code.  Real types aren&#x27;t used for all fields here
+ * to avoid circular header dependencies.
+ *
+ * Every field is a virtual alias of some other allocated backing store.
+ * There is no direct allocation of a struct cpu_entry_area.
+ */
+struct cpu_entry_area {
+	char gdt[PAGE_SIZE];
+
+	/*
+	 * The GDT is just below entry_stack and thus serves (on x86_64) as
+	 * a read-only guard page. On 32-bit the GDT must be writeable, so
+	 * it needs an extra guard page.
+	 */
+#ifdef CONFIG_X86_32
+	char guard_entry_stack[PAGE_SIZE];
+#endif
+	struct entry_stack_page entry_stack_page;
+
+#ifdef CONFIG_X86_32
+	char guard_doublefault_stack[PAGE_SIZE];
+	struct doublefault_stack doublefault_stack;
+#endif
+
+	/*
+	 * On x86_64, the TSS is mapped RO.  On x86_32, it&#x27;s mapped RW because
+	 * we need task switches to work, and task switches write to the TSS.
+	 */
+	struct tss_struct tss;
+
+#ifdef CONFIG_X86_64
+	/*
+	 * Exception stacks used for IST entries with guard pages.
+	 */
+	struct cea_exception_stacks estacks;
+#endif
+	/*
+	 * Per CPU debug store for Intel performance monitoring. Wastes a
+	 * full page at the moment.
+	 */
+	struct debug_store cpu_debug_store;
+	/*
+	 * The actual PEBS/BTS buffers must be mapped to user space
+	 * Reserve enough fixmap PTEs.
+	 */
+	struct debug_store_buffers cpu_debug_buffers;
+};
+
+#define CPU_ENTRY_AREA_SIZE		(sizeof(struct cpu_entry_area))
+#define CPU_ENTRY_AREA_ARRAY_SIZE	(CPU_ENTRY_AREA_SIZE * NR_CPUS)
+
+/* Total size includes the readonly IDT mapping page as well: */
+#define CPU_ENTRY_AREA_TOTAL_SIZE	(CPU_ENTRY_AREA_ARRAY_SIZE + PAGE_SIZE)
+
+DECLARE_PER_CPU(struct cpu_entry_area *, cpu_entry_area);
+DECLARE_PER_CPU(struct cea_exception_stacks *, cea_exception_stacks);
+
+extern void setup_cpu_entry_areas(void);
+extern void cea_set_pte(void *cea_vaddr, phys_addr_t pa, pgprot_t flags);
+
+extern struct cpu_entry_area *get_cpu_entry_area(int cpu);
+
+static __always_inline struct entry_stack *cpu_entry_stack(int cpu)
+{
+<blue>	return &get_cpu_entry_area(cpu)->entry_stack_page.stack;</blue>
+}
+
+#define __this_cpu_ist_top_va(name)					\
+	CEA_ESTACK_TOP(__this_cpu_read(cea_exception_stacks), name)
+
+#define __this_cpu_ist_bottom_va(name)					\
+	CEA_ESTACK_BOT(__this_cpu_read(cea_exception_stacks), name)
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

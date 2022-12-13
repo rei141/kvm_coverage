@@ -1,0 +1,82 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_PGTABLE_INVERT_H
+#define _ASM_PGTABLE_INVERT_H 1
+
+#ifndef __ASSEMBLY__
+
+/*
+ * A clear pte value is special, and doesn&#x27;t get inverted.
+ *
+ * Note that even users that only pass a pgprot_t (rather
+ * than a full pte) won&#x27;t trigger the special zero case,
+ * because even PAGE_NONE has _PAGE_PROTNONE | _PAGE_ACCESSED
+ * set. So the all zero case really is limited to just the
+ * cleared page table entry case.
+ */
+static inline bool __pte_needs_invert(u64 val)
+{
+<blue>	return val && !(val & _PAGE_PRESENT);</blue>
+}
+
+/* Get a mask to xor with the page table entry to get the correct pfn. */
+static inline u64 protnone_mask(u64 val)
+{
+<blue>	return __pte_needs_invert(val) ?  ~0ull : 0;</blue>
+}
+
+static inline u64 flip_protnone_guard(u64 oldval, u64 val, u64 mask)
+{
+	/*
+	 * When a PTE transitions from NONE to !NONE or vice-versa
+	 * invert the PFN part to stop speculation.
+	 * pte_pfn undoes this when needed.
+	 */
+<yellow>	if (__pte_needs_invert(oldval) != __pte_needs_invert(val))</yellow>
+		val = (val &amp; ~mask) | (~val &amp; mask);
+	return val;
+}
+
+#endif /* __ASSEMBLY__ */
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

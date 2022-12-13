@@ -1,0 +1,191 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __ASM_PREEMPT_H
+#define __ASM_PREEMPT_H
+
+#include &lt;asm/rmwcc.h&gt;
+#include &lt;asm/percpu.h&gt;
+#include &lt;linux/thread_info.h&gt;
+#include &lt;linux/static_call_types.h&gt;
+
+DECLARE_PER_CPU(int, __preempt_count);
+
+/* We use the MSB mostly because its available */
+#define PREEMPT_NEED_RESCHED	0x80000000
+
+/*
+ * We use the PREEMPT_NEED_RESCHED bit as an inverted NEED_RESCHED such
+ * that a decrement hitting 0 means we can and should reschedule.
+ */
+#define PREEMPT_ENABLED	(0 + PREEMPT_NEED_RESCHED)
+
+/*
+ * We mask the PREEMPT_NEED_RESCHED bit so as not to confuse all current users
+ * that think a non-zero value indicates we cannot preempt.
+ */
+static __always_inline int preempt_count(void)
+{
+<yellow>	return raw_cpu_read_4(__preempt_count) & ~PREEMPT_NEED_RESCHED;</yellow>
+}
+
+static __always_inline void preempt_count_set(int pc)
+{
+	int old, new;
+
+	do {
+<yellow>		old = raw_cpu_read_4(__preempt_count);</yellow>
+		new = (old &amp; PREEMPT_NEED_RESCHED) |
+			(pc &amp; ~PREEMPT_NEED_RESCHED);
+	} while (raw_cpu_cmpxchg_4(__preempt_count, old, new) != old);
+}
+
+/*
+ * must be macros to avoid header recursion hell
+ */
+#define init_task_preempt_count(p) do { } while (0)
+
+#define init_idle_preempt_count(p, cpu) do { \
+	per_cpu(__preempt_count, (cpu)) = PREEMPT_DISABLED; \
+} while (0)
+
+/*
+ * We fold the NEED_RESCHED bit into the preempt count such that
+ * preempt_enable() can decrement and test for needing to reschedule with a
+ * single instruction.
+ *
+ * We invert the actual bit, so that when the decrement hits 0 we know we both
+ * need to resched (the bit is cleared) and can resched (no preempt count).
+ */
+
+static __always_inline void set_preempt_need_resched(void)
+{
+<yellow>	raw_cpu_and_4(__preempt_count, ~PREEMPT_NEED_RESCHED);</yellow>
+}
+
+static __always_inline void clear_preempt_need_resched(void)
+{
+	raw_cpu_or_4(__preempt_count, PREEMPT_NEED_RESCHED);
+}
+
+static __always_inline bool test_preempt_need_resched(void)
+{
+	return !(raw_cpu_read_4(__preempt_count) &amp; PREEMPT_NEED_RESCHED);
+}
+
+/*
+ * The various preempt_count add/sub methods
+ */
+
+static __always_inline void __preempt_count_add(int val)
+{
+<blue>	raw_cpu_add_4(__preempt_count, val);</blue>
+}
+
+static __always_inline void __preempt_count_sub(int val)
+{
+	raw_cpu_add_4(__preempt_count, -val);
+}
+
+/*
+ * Because we keep PREEMPT_NEED_RESCHED set when we do _not_ need to reschedule
+ * a decrement which hits zero means we have no preempt_count and should
+ * reschedule.
+ */
+static __always_inline bool __preempt_count_dec_and_test(void)
+{
+<blue>	return GEN_UNARY_RMWcc("decl", __preempt_count, e, __percpu_arg([var]));</blue>
+}
+
+/*
+ * Returns true when we need to resched and can (barring IRQ state).
+ */
+static __always_inline bool should_resched(int preempt_offset)
+{
+	return unlikely(raw_cpu_read_4(__preempt_count) == preempt_offset);
+}
+
+#ifdef CONFIG_PREEMPTION
+
+extern asmlinkage void preempt_schedule(void);
+extern asmlinkage void preempt_schedule_thunk(void);
+
+#define preempt_schedule_dynamic_enabled	preempt_schedule_thunk
+#define preempt_schedule_dynamic_disabled	NULL
+
+extern asmlinkage void preempt_schedule_notrace(void);
+extern asmlinkage void preempt_schedule_notrace_thunk(void);
+
+#define preempt_schedule_notrace_dynamic_enabled	preempt_schedule_notrace_thunk
+#define preempt_schedule_notrace_dynamic_disabled	NULL
+
+#ifdef CONFIG_PREEMPT_DYNAMIC
+
+DECLARE_STATIC_CALL(preempt_schedule, preempt_schedule_dynamic_enabled);
+
+#define __preempt_schedule() \
+do { \
+	__STATIC_CALL_MOD_ADDRESSABLE(preempt_schedule); \
+	asm volatile (&quot;call &quot; STATIC_CALL_TRAMP_STR(preempt_schedule) : ASM_CALL_CONSTRAINT); \
+} while (0)
+
+DECLARE_STATIC_CALL(preempt_schedule_notrace, preempt_schedule_notrace_dynamic_enabled);
+
+#define __preempt_schedule_notrace() \
+do { \
+	__STATIC_CALL_MOD_ADDRESSABLE(preempt_schedule_notrace); \
+	asm volatile (&quot;call &quot; STATIC_CALL_TRAMP_STR(preempt_schedule_notrace) : ASM_CALL_CONSTRAINT); \
+} while (0)
+
+#else /* PREEMPT_DYNAMIC */
+
+#define __preempt_schedule() \
+	asm volatile (&quot;call preempt_schedule_thunk&quot; : ASM_CALL_CONSTRAINT);
+
+#define __preempt_schedule_notrace() \
+	asm volatile (&quot;call preempt_schedule_notrace_thunk&quot; : ASM_CALL_CONSTRAINT);
+
+#endif /* PREEMPT_DYNAMIC */
+
+#endif /* PREEMPTION */
+
+#endif /* __ASM_PREEMPT_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

@@ -1,0 +1,1916 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br>152<br>153<br>154<br>155<br>156<br>157<br>158<br>159<br>160<br>161<br>162<br>163<br>164<br>165<br>166<br>167<br>168<br>169<br>170<br>171<br>172<br>173<br>174<br>175<br>176<br>177<br>178<br>179<br>180<br>181<br>182<br>183<br>184<br>185<br>186<br>187<br>188<br>189<br>190<br>191<br>192<br>193<br>194<br>195<br>196<br>197<br>198<br>199<br>200<br>201<br>202<br>203<br>204<br>205<br>206<br>207<br>208<br>209<br>210<br>211<br>212<br>213<br>214<br>215<br>216<br>217<br>218<br>219<br>220<br>221<br>222<br>223<br>224<br>225<br>226<br>227<br>228<br>229<br>230<br>231<br>232<br>233<br>234<br>235<br>236<br>237<br>238<br>239<br>240<br>241<br>242<br>243<br>244<br>245<br>246<br>247<br>248<br>249<br>250<br>251<br>252<br>253<br>254<br>255<br>256<br>257<br>258<br>259<br>260<br>261<br>262<br>263<br>264<br>265<br>266<br>267<br>268<br>269<br>270<br>271<br>272<br>273<br>274<br>275<br>276<br>277<br>278<br>279<br>280<br>281<br>282<br>283<br>284<br>285<br>286<br>287<br>288<br>289<br>290<br>291<br>292<br>293<br>294<br>295<br>296<br>297<br>298<br>299<br>300<br>301<br>302<br>303<br>304<br>305<br>306<br>307<br>308<br>309<br>310<br>311<br>312<br>313<br>314<br>315<br>316<br>317<br>318<br>319<br>320<br>321<br>322<br>323<br>324<br>325<br>326<br>327<br>328<br>329<br>330<br>331<br>332<br>333<br>334<br>335<br>336<br>337<br>338<br>339<br>340<br>341<br>342<br>343<br>344<br>345<br>346<br>347<br>348<br>349<br>350<br>351<br>352<br>353<br>354<br>355<br>356<br>357<br>358<br>359<br>360<br>361<br>362<br>363<br>364<br>365<br>366<br>367<br>368<br>369<br>370<br>371<br>372<br>373<br>374<br>375<br>376<br>377<br>378<br>379<br>380<br>381<br>382<br>383<br>384<br>385<br>386<br>387<br>388<br>389<br>390<br>391<br>392<br>393<br>394<br>395<br>396<br>397<br>398<br>399<br>400<br>401<br>402<br>403<br>404<br>405<br>406<br>407<br>408<br>409<br>410<br>411<br>412<br>413<br>414<br>415<br>416<br>417<br>418<br>419<br>420<br>421<br>422<br>423<br>424<br>425<br>426<br>427<br>428<br>429<br>430<br>431<br>432<br>433<br>434<br>435<br>436<br>437<br>438<br>439<br>440<br>441<br>442<br>443<br>444<br>445<br>446<br>447<br>448<br>449<br>450<br>451<br>452<br>453<br>454<br>455<br>456<br>457<br>458<br>459<br>460<br>461<br>462<br>463<br>464<br>465<br>466<br>467<br>468<br>469<br>470<br>471<br>472<br>473<br>474<br>475<br>476<br>477<br>478<br>479<br>480<br>481<br>482<br>483<br>484<br>485<br>486<br>487<br>488<br>489<br>490<br>491<br>492<br>493<br>494<br>495<br>496<br>497<br>498<br>499<br>500<br>501<br>502<br>503<br>504<br>505<br>506<br>507<br>508<br>509<br>510<br>511<br>512<br>513<br>514<br>515<br>516<br>517<br>518<br>519<br>520<br>521<br>522<br>523<br>524<br>525<br>526<br>527<br>528<br>529<br>530<br>531<br>532<br>533<br>534<br>535<br>536<br>537<br>538<br>539<br>540<br>541<br>542<br>543<br>544<br>545<br>546<br>547<br>548<br>549<br>550<br>551<br>552<br>553<br>554<br>555<br>556<br>557<br>558<br>559<br>560<br>561<br>562<br>563<br>564<br>565<br>566<br>567<br>568<br>569<br>570<br>571<br>572<br>573<br>574<br>575<br>576<br>577<br>578<br>579<br>580<br>581<br>582<br>583<br>584<br>585<br>586<br>587<br>588<br>589<br>590<br>591<br>592<br>593<br>594<br>595<br>596<br>597<br>598<br>599<br>600<br>601<br>602<br>603<br>604<br>605<br>606<br>607<br>608<br>609<br>610<br>611<br>612<br>613<br>614<br>615<br>616<br>617<br>618<br>619<br>620<br>621<br>622<br>623<br>624<br>625<br>626<br>627<br>628<br>629<br>630<br>631<br>632<br>633<br>634<br>635<br>636<br>637<br>638<br>639<br>640<br>641<br>642<br>643<br>644<br>645<br>646<br>647<br>648<br>649<br>650<br>651<br>652<br>653<br>654<br>655<br>656<br>657<br>658<br>659<br>660<br>661<br>662<br>663<br>664<br>665<br>666<br>667<br>668<br>669<br>670<br>671<br>672<br>673<br>674<br>675<br>676<br>677<br>678<br>679<br>680<br>681<br>682<br>683<br>684<br>685<br>686<br>687<br>688<br>689<br>690<br>691<br>692<br>693<br>694<br>695<br>696<br>697<br>698<br>699<br>700<br>701<br>702<br>703<br>704<br>705<br>706<br>707<br>708<br>709<br>710<br>711<br>712<br>713<br>714<br>715<br>716<br>717<br>718<br>719<br>720<br>721<br>722<br>723<br>724<br>725<br>726<br>727<br>728<br>729<br>730<br>731<br>732<br>733<br>734<br>735<br>736<br>737<br>738<br>739<br>740<br>741<br>742<br>743<br>744<br>745<br>746<br>747<br>748<br>749<br>750<br>751<br>752<br>753<br>754<br>755<br>756<br>757<br>758<br>759<br>760<br>761<br>762<br>763<br>764<br>765<br>766<br>767<br>768<br>769<br>770<br>771<br>772<br>773<br>774<br>775<br>776<br>777<br>778<br>779<br>780<br>781<br>782<br>783<br>784<br>785<br>786<br>787<br>788<br>789<br>790<br>791<br>792<br>793<br>794<br>795<br>796<br>797<br>798<br>799<br>800<br>801<br>802<br>803<br>804<br>805<br>806<br>807<br>808<br>809<br>810<br>811<br>812<br>813<br>814<br>815<br>816<br>817<br>818<br>819<br>820<br>821<br>822<br>823<br>824<br>825<br>826<br>827<br>828<br>829<br>830<br>831<br>832<br>833<br>834<br>835<br>836<br>837<br>838<br>839<br>840<br>841<br>842<br>843<br>844<br>845<br>846<br>847<br>848<br>849<br>850<br>851<br>852<br>853<br>854<br>855<br>856<br>857<br>858<br>859<br>860<br>861<br>862<br>863<br>864<br>865<br>866<br>867<br>868<br>869<br>870<br>871<br>872<br>873<br>874<br>875<br>876<br>877<br>878<br>879<br>880<br>881<br>882<br>883<br>884<br>885<br>886<br>887<br>888<br>889<br>890<br>891<br>892<br>893<br>894<br>895<br>896<br>897<br>898<br>899<br>900<br>901<br>902<br>903<br>904<br>905<br>906<br>907<br>908<br>909<br>910<br>911<br>912<br>913<br>914<br>915<br>916<br>917<br>918<br>919<br>920<br>921<br>922<br>923<br>924<br>925<br>926<br>927<br>928<br>929<br>930<br>931<br>932<br>933<br>934<br>935<br>936<br>937<br>938<br>939<br>940<br>941<br>942<br>943<br>944<br>945<br>946<br>947<br>948<br>949<br>950<br>951<br>952<br>953<br>954<br>955<br>956<br>957<br>958<br>959<br>960<br>961<br>962<br>963<br>964<br>965<br>966<br>967<br>968<br>969<br>970<br>971<br>972<br>973<br>974<br>975<br>976<br>977<br>978<br>979<br>980<br>981<br>982<br>983<br>984<br>985<br>986<br>987<br>988<br>989<br>990<br>991<br>992<br>993<br>994<br>995<br>996<br>997<br>998<br>999<br>1000<br>1001<br>1002<br>1003<br>1004<br>1005<br>1006<br>1007<br>1008<br>1009<br>1010<br>1011<br>1012<br>1013<br>1014<br>1015<br>1016<br>1017<br>1018<br>1019<br>1020<br>1021<br>1022<br>1023<br>1024<br>1025<br>1026<br>1027<br>1028<br>1029<br>1030<br>1031<br>1032<br>1033<br>1034<br>1035<br>1036<br>1037<br>1038<br>1039<br>1040<br>1041<br>1042<br>1043<br>1044<br>1045<br>1046<br>1047<br>1048<br>1049<br>1050<br>1051<br>1052<br>1053<br>1054<br>1055<br>1056<br>1057<br>1058<br>1059<br>1060<br>1061<br>1062<br>1063<br>1064<br>1065<br>1066<br>1067<br>1068<br>1069<br>1070<br>1071<br>1072<br>1073<br>1074<br>1075<br>1076<br>1077<br>1078<br>1079<br>1080<br>1081<br>1082<br>1083<br>1084<br>1085<br>1086<br>1087<br>1088<br>1089<br>1090<br>1091<br>1092<br>1093<br>1094<br>1095<br>1096<br>1097<br>1098<br>1099<br>1100<br>1101<br>1102<br>1103<br>1104<br>1105<br>1106<br>1107<br>1108<br>1109<br>1110<br>1111<br>1112<br>1113<br>1114<br>1115<br>1116<br>1117<br>1118<br>1119<br>1120<br>1121<br>1122<br>1123<br>1124<br>1125<br>1126<br>1127<br>1128<br>1129<br>1130<br>1131<br>1132<br>1133<br>1134<br>1135<br>1136<br>1137<br>1138<br>1139<br>1140<br>1141<br>1142<br>1143<br>1144<br>1145<br>1146<br>1147<br>1148<br>1149<br>1150<br>1151<br>1152<br>1153<br>1154<br>1155<br>1156<br>1157<br>1158<br>1159<br>1160<br>1161<br>1162<br>1163<br>1164<br>1165<br>1166<br>1167<br>1168<br>1169<br>1170<br>1171<br>1172<br>1173<br>1174<br>1175<br>1176<br>1177<br>1178<br>1179<br>1180<br>1181<br>1182<br>1183<br>1184<br>1185<br>1186<br>1187<br>1188<br>1189<br>1190<br>1191<br>1192<br>1193<br>1194<br>1195<br>1196<br>1197<br>1198<br>1199<br>1200<br>1201<br>1202<br>1203<br>1204<br>1205<br>1206<br>1207<br>1208<br>1209<br>1210<br>1211<br>1212<br>1213<br>1214<br>1215<br>1216<br>1217<br>1218<br>1219<br>1220<br>1221<br>1222<br>1223<br>1224<br>1225<br>1226<br>1227<br>1228<br>1229<br>1230<br>1231<br>1232<br>1233<br>1234<br>1235<br>1236<br>1237<br>1238<br>1239<br>1240<br>1241<br>1242<br>1243<br>1244<br>1245<br>1246<br>1247<br>1248<br>1249<br>1250<br>1251<br>1252<br>1253<br>1254<br>1255<br>1256<br>1257<br>1258<br>1259<br>1260<br>1261<br>1262<br>1263<br>1264<br>1265<br>1266<br>1267<br>1268<br>1269<br>1270<br>1271<br>1272<br>1273<br>1274<br>1275<br>1276<br>1277<br>1278<br>1279<br>1280<br>1281<br>1282<br>1283<br>1284<br>1285<br>1286<br>1287<br>1288<br>1289<br>1290<br>1291<br>1292<br>1293<br>1294<br>1295<br>1296<br>1297<br>1298<br>1299<br>1300<br>1301<br>1302<br>1303<br>1304<br>1305<br>1306<br>1307<br>1308<br>1309<br>1310<br>1311<br>1312<br>1313<br>1314<br>1315<br>1316<br>1317<br>1318<br>1319<br>1320<br>1321<br>1322<br>1323<br>1324<br>1325<br>1326<br>1327<br>1328<br>1329<br>1330<br>1331<br>1332<br>1333<br>1334<br>1335<br>1336<br>1337<br>1338<br>1339<br>1340<br>1341<br>1342<br>1343<br>1344<br>1345<br>1346<br>1347<br>1348<br>1349<br>1350<br>1351<br>1352<br>1353<br>1354<br>1355<br>1356<br>1357<br>1358<br>1359<br>1360<br>1361<br>1362<br>1363<br>1364<br>1365<br>1366<br>1367<br>1368<br>1369<br>1370<br>1371<br>1372<br>1373<br>1374<br>1375<br>1376<br>1377<br>1378<br>1379<br>1380<br>1381<br>1382<br>1383<br>1384<br>1385<br>1386<br>1387<br>1388<br>1389<br>1390<br>1391<br>1392<br>1393<br>1394<br>1395<br>1396<br>1397<br>1398<br>1399<br>1400<br>1401<br>1402<br>1403<br>1404<br>1405<br>1406<br>1407<br>1408<br>1409<br>1410<br>1411<br>1412<br>1413<br>1414<br>1415<br>1416<br>1417<br>1418<br>1419<br>1420<br>1421<br>1422<br>1423<br>1424<br>1425<br>1426<br>1427<br>1428<br>1429<br>1430<br>1431<br>1432<br>1433<br>1434<br>1435<br>1436<br>1437<br>1438<br>1439<br>1440<br>1441<br>1442<br>1443<br>1444<br>1445<br>1446<br>1447<br>1448<br>1449<br>1450<br>1451<br>1452<br>1453<br>1454<br>1455<br>1456<br>1457<br>1458<br>1459<br>1460<br>1461<br>1462<br>1463<br>1464<br>1465<br>1466<br>1467<br>1468<br>1469<br>1470<br>1471<br>1472<br>1473<br>1474<br>1475<br>1476<br>1477<br>1478<br>1479<br>1480<br>1481<br>1482<br>1483<br>1484<br>1485<br>1486<br>1487<br>1488<br>1489<br>1490<br>1491<br>1492<br>1493<br>1494<br>1495<br>1496<br>1497<br>1498<br>1499<br>1500<br>1501<br>1502<br>1503<br>1504<br>1505<br>1506<br>1507<br>1508<br>1509<br>1510<br>1511<br>1512<br>1513<br>1514<br>1515<br>1516<br>1517<br>1518<br>1519<br>1520<br>1521<br>1522<br>1523<br>1524<br>1525<br>1526<br>1527<br>1528<br>1529<br>1530<br>1531<br>1532<br>1533<br>1534<br>1535<br>1536<br>1537<br>1538<br>1539<br>1540<br>1541<br>1542<br>1543<br>1544<br>1545<br>1546<br>1547<br>1548<br>1549<br>1550<br>1551<br>1552<br>1553<br>1554<br>1555<br>1556<br>1557<br>1558<br>1559<br>1560<br>1561<br>1562<br>1563<br>1564<br>1565<br>1566<br>1567<br>1568<br>1569<br>1570<br>1571<br>1572<br>1573<br>1574<br>1575<br>1576<br>1577<br>1578<br>1579<br>1580<br>1581<br>1582<br>1583<br>1584<br>1585<br>1586<br>1587<br>1588<br>1589<br>1590<br>1591<br>1592<br>1593<br>1594<br>1595<br>1596<br>1597<br>1598<br>1599<br>1600<br>1601<br>1602<br>1603<br>1604<br>1605<br>1606<br>1607<br>1608<br>1609<br>1610<br>1611<br>1612<br>1613<br>1614<br>1615<br>1616<br>1617<br>1618<br>1619<br>1620<br>1621<br>1622<br>1623<br>1624<br>1625<br>1626<br>1627<br>1628<br>1629<br>1630<br>1631<br>1632<br>1633<br>1634<br>1635<br>1636<br>1637<br>1638<br>1639<br>1640<br>1641<br>1642<br>1643<br>1644<br>1645<br>1646<br>1647<br>1648<br>1649<br>1650<br>1651<br>1652<br>1653<br>1654<br>1655<br>1656<br>1657<br>1658<br>1659<br>1660<br>1661<br>1662<br>1663<br>1664<br>1665<br>1666<br>1667<br>1668<br>1669<br>1670<br>1671<br>1672<br>1673<br>1674<br>1675<br>1676<br>1677<br>1678<br>1679<br>1680<br>1681<br>1682<br>1683<br>1684<br>1685<br>1686<br>1687<br>1688<br>1689<br>1690<br>1691<br>1692<br>1693<br>1694<br>1695<br>1696<br>1697<br>1698<br>1699<br>1700<br>1701<br>1702<br>1703<br>1704<br>1705<br>1706<br>1707<br>1708<br>1709<br>1710<br>1711<br>1712<br>1713<br>1714<br>1715<br>1716<br>1717<br>1718<br>1719<br>1720<br>1721<br>1722<br>1723<br>1724<br>1725<br>1726<br>1727<br>1728<br>1729<br>1730<br>1731<br>1732<br>1733<br>1734<br>1735<br>1736<br>1737<br>1738<br>1739<br>1740<br>1741<br>1742<br>1743<br>1744<br>1745<br>1746<br>1747<br>1748<br>1749<br>1750<br>1751<br>1752<br>1753<br>1754<br>1755<br>1756<br>1757<br>1758<br>1759<br>1760<br>1761<br>1762<br>1763<br>1764<br>1765<br>1766<br>1767<br>1768<br>1769<br>1770<br>1771<br>1772<br>1773<br>1774<br>1775<br>1776<br>1777<br>1778<br>1779<br>1780<br>1781<br>1782<br>1783<br>1784<br>1785<br>1786<br>1787<br>1788<br>1789<br>1790<br>1791<br>1792<br>1793<br>1794<br>1795<br>1796<br>1797<br>1798<br>1799<br>1800<br>1801<br>1802<br>1803<br>1804<br>1805<br>1806<br>1807<br>1808<br>1809<br>1810<br>1811<br>1812<br>1813<br>1814<br>1815<br>1816<br>1817<br>1818<br>1819<br>1820<br>1821<br>1822<br>1823<br>1824<br>1825<br>1826<br>1827<br>1828<br>1829<br>1830<br>1831<br>1832<br>1833<br>1834<br>1835<br>1836<br>1837<br>1838<br>1839<br>1840<br>1841<br>1842<br>1843<br>1844<br>1845<br>1846<br>1847<br>1848<br>1849<br>1850<br>1851<br>1852<br>1853<br>1854<br>1855<br>1856<br>1857<br>1858<br>1859<br>1860<br>1861<br>1862<br>1863<br>1864<br>1865<br>1866<br>1867<br>1868<br>1869<br>1870<br>1871<br>1872<br>1873<br>1874<br>1875<br>1876<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright © 2019 Oracle and/or its affiliates. All rights reserved.
+ * Copyright © 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * KVM Xen emulation
+ */
+
+#include &quot;x86.h&quot;
+#include &quot;xen.h&quot;
+#include &quot;hyperv.h&quot;
+#include &quot;lapic.h&quot;
+
+#include &lt;linux/eventfd.h&gt;
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/sched/stat.h&gt;
+
+#include &lt;trace/events/kvm.h&gt;
+#include &lt;xen/interface/xen.h&gt;
+#include &lt;xen/interface/vcpu.h&gt;
+#include &lt;xen/interface/version.h&gt;
+#include &lt;xen/interface/event_channel.h&gt;
+#include &lt;xen/interface/sched.h&gt;
+
+#include &quot;trace.h&quot;
+
+static int kvm_xen_set_evtchn(struct kvm_xen_evtchn *xe, struct kvm *kvm);
+static int kvm_xen_setattr_evtchn(struct kvm *kvm, struct kvm_xen_hvm_attr *data);
+static bool kvm_xen_hcall_evtchn_send(struct kvm_vcpu *vcpu, u64 param, u64 *r);
+
+DEFINE_STATIC_KEY_DEFERRED_FALSE(kvm_xen_enabled, HZ);
+
+static int kvm_xen_shared_info_init(struct kvm *kvm, gfn_t gfn)
+{
+	struct gfn_to_pfn_cache *gpc = &amp;kvm-&gt;arch.xen.shinfo_cache;
+	struct pvclock_wall_clock *wc;
+	gpa_t gpa = gfn_to_gpa(gfn);
+	u32 *wc_sec_hi;
+	u32 wc_version;
+	u64 wall_nsec;
+	int ret = 0;
+	int idx = srcu_read_lock(&amp;kvm-&gt;srcu);
+
+	if (gfn == GPA_INVALID) {
+<yellow>		kvm_gpc_deactivate(kvm, gpc);</yellow>
+		goto out;
+	}
+
+	do {
+<blue>		ret = kvm_gpc_activate(kvm, gpc, NULL, KVM_HOST_USES_PFN, gpa,</blue>
+				       PAGE_SIZE);
+		if (ret)
+			goto out;
+
+		/*
+		 * This code mirrors kvm_write_wall_clock() except that it writes
+		 * directly through the pfn cache and doesn&#x27;t mark the page dirty.
+		 */
+<blue>		wall_nsec = ktime_get_real_ns() - get_kvmclock_ns(kvm);</blue>
+
+		/* It could be invalid again already, so we need to check */
+		read_lock_irq(&amp;gpc-&gt;lock);
+
+<blue>		if (gpc->valid)</blue>
+			break;
+
+<yellow>		read_unlock_irq(&gpc->lock);</yellow>
+	} while (1);
+
+	/* Paranoia checks on the 32-bit struct layout */
+	BUILD_BUG_ON(offsetof(struct compat_shared_info, wc) != 0x900);
+	BUILD_BUG_ON(offsetof(struct compat_shared_info, arch.wc_sec_hi) != 0x924);
+	BUILD_BUG_ON(offsetof(struct pvclock_vcpu_time_info, version) != 0);
+
+#ifdef CONFIG_X86_64
+	/* Paranoia checks on the 64-bit struct layout */
+	BUILD_BUG_ON(offsetof(struct shared_info, wc) != 0xc00);
+	BUILD_BUG_ON(offsetof(struct shared_info, wc_sec_hi) != 0xc0c);
+
+<blue>	if (IS_ENABLED(CONFIG_64BIT) && kvm->arch.xen.long_mode) {</blue>
+<blue>		struct shared_info *shinfo = gpc->khva;</blue>
+
+<yellow>		wc_sec_hi = &shinfo->wc_sec_hi;</yellow>
+		wc = &amp;shinfo-&gt;wc;
+	} else
+#endif
+	{
+		struct compat_shared_info *shinfo = gpc-&gt;khva;
+
+<blue>		wc_sec_hi = &shinfo->arch.wc_sec_hi;</blue>
+		wc = &amp;shinfo-&gt;wc;
+	}
+
+	/* Increment and ensure an odd value */
+<blue>	wc_version = wc->version = (wc->version + 1) | 1;</blue>
+	smp_wmb();
+
+	wc-&gt;nsec = do_div(wall_nsec,  1000000000);
+	wc-&gt;sec = (u32)wall_nsec;
+	*wc_sec_hi = wall_nsec &gt;&gt; 32;
+	smp_wmb();
+
+	wc-&gt;version = wc_version + 1;
+	read_unlock_irq(&amp;gpc-&gt;lock);
+
+	kvm_make_all_cpus_request(kvm, KVM_REQ_MASTERCLOCK_UPDATE);
+
+out:
+<blue>	srcu_read_unlock(&kvm->srcu, idx);</blue>
+	return ret;
+}
+
+void kvm_xen_inject_timer_irqs(struct kvm_vcpu *vcpu)
+<yellow>{</yellow>
+<yellow>	if (atomic_read(&vcpu->arch.xen.timer_pending) > 0) {</yellow>
+		struct kvm_xen_evtchn e;
+
+<yellow>		e.vcpu_id = vcpu->vcpu_id;</yellow>
+		e.vcpu_idx = vcpu-&gt;vcpu_idx;
+		e.port = vcpu-&gt;arch.xen.timer_virq;
+		e.priority = KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL;
+
+<yellow>		kvm_xen_set_evtchn(&e, vcpu->kvm);</yellow>
+
+<yellow>		vcpu->arch.xen.timer_expires = 0;</yellow>
+		atomic_set(&amp;vcpu-&gt;arch.xen.timer_pending, 0);
+	}
+}
+
+static enum hrtimer_restart xen_timer_callback(struct hrtimer *timer)
+{
+	struct kvm_vcpu *vcpu = container_of(timer, struct kvm_vcpu,
+					     arch.xen.timer);
+<yellow>	if (atomic_read(&vcpu->arch.xen.timer_pending))</yellow>
+		return HRTIMER_NORESTART;
+
+<yellow>	atomic_inc(&vcpu->arch.xen.timer_pending);</yellow>
+	kvm_make_request(KVM_REQ_UNBLOCK, vcpu);
+	kvm_vcpu_kick(vcpu);
+
+	return HRTIMER_NORESTART;
+<yellow>}</yellow>
+
+static void kvm_xen_start_timer(struct kvm_vcpu *vcpu, u64 guest_abs, s64 delta_ns)
+{
+<yellow>	atomic_set(&vcpu->arch.xen.timer_pending, 0);</yellow>
+<yellow>	vcpu->arch.xen.timer_expires = guest_abs;</yellow>
+
+	if (delta_ns &lt;= 0) {
+<yellow>		xen_timer_callback(&vcpu->arch.xen.timer);</yellow>
+	} else {
+		ktime_t ktime_now = ktime_get();
+		hrtimer_start(&amp;vcpu-&gt;arch.xen.timer,
+			      ktime_add_ns(ktime_now, delta_ns),
+			      HRTIMER_MODE_ABS_HARD);
+	}
+}
+
+static void kvm_xen_stop_timer(struct kvm_vcpu *vcpu)
+{
+<blue>	hrtimer_cancel(&vcpu->arch.xen.timer);</blue>
+	vcpu-&gt;arch.xen.timer_expires = 0;
+	atomic_set(&amp;vcpu-&gt;arch.xen.timer_pending, 0);
+}
+
+static void kvm_xen_init_timer(struct kvm_vcpu *vcpu)
+{
+<blue>	hrtimer_init(&vcpu->arch.xen.timer, CLOCK_MONOTONIC,</blue>
+		     HRTIMER_MODE_ABS_HARD);
+	vcpu-&gt;arch.xen.timer.function = xen_timer_callback;
+}
+
+static void kvm_xen_update_runstate(struct kvm_vcpu *v, int state)
+{
+	struct kvm_vcpu_xen *vx = &amp;v-&gt;arch.xen;
+<blue>	u64 now = get_kvmclock_ns(v->kvm);</blue>
+	u64 delta_ns = now - vx-&gt;runstate_entry_time;
+	u64 run_delay = current-&gt;sched_info.run_delay;
+
+	if (unlikely(!vx-&gt;runstate_entry_time))
+<blue>		vx->current_runstate = RUNSTATE_offline;</blue>
+
+	/*
+	 * Time waiting for the scheduler isn&#x27;t &quot;stolen&quot; if the
+	 * vCPU wasn&#x27;t running anyway.
+	 */
+<blue>	if (vx->current_runstate == RUNSTATE_running) {</blue>
+<blue>		u64 steal_ns = run_delay - vx->last_steal;</blue>
+
+		delta_ns -= steal_ns;
+
+		vx-&gt;runstate_times[RUNSTATE_runnable] += steal_ns;
+	}
+<blue>	vx->last_steal = run_delay;</blue>
+
+	vx-&gt;runstate_times[vx-&gt;current_runstate] += delta_ns;
+	vx-&gt;current_runstate = state;
+	vx-&gt;runstate_entry_time = now;
+}
+
+void kvm_xen_update_runstate_guest(struct kvm_vcpu *v, int state)
+{
+	struct kvm_vcpu_xen *vx = &amp;v-&gt;arch.xen;
+	struct gfn_to_pfn_cache *gpc = &amp;vx-&gt;runstate_cache;
+	uint64_t *user_times;
+	unsigned long flags;
+	size_t user_len;
+	int *user_state;
+
+<blue>	kvm_xen_update_runstate(v, state);</blue>
+
+<blue>	if (!vx->runstate_cache.active)</blue>
+		return;
+
+<yellow>	if (IS_ENABLED(CONFIG_64BIT) && v->kvm->arch.xen.long_mode)</yellow>
+		user_len = sizeof(struct vcpu_runstate_info);
+	else
+		user_len = sizeof(struct compat_vcpu_runstate_info);
+
+<yellow>	read_lock_irqsave(&gpc->lock, flags);</yellow>
+<yellow>	while (!kvm_gfn_to_pfn_cache_check(v->kvm, gpc, gpc->gpa,</yellow>
+					   user_len)) {
+<yellow>		read_unlock_irqrestore(&gpc->lock, flags);</yellow>
+
+		/* When invoked from kvm_sched_out() we cannot sleep */
+		if (state == RUNSTATE_runnable)
+			return;
+
+<yellow>		if (kvm_gfn_to_pfn_cache_refresh(v->kvm, gpc, gpc->gpa, user_len))</yellow>
+			return;
+
+<yellow>		read_lock_irqsave(&gpc->lock, flags);</yellow>
+	}
+
+	/*
+	 * The only difference between 32-bit and 64-bit versions of the
+	 * runstate struct us the alignment of uint64_t in 32-bit, which
+	 * means that the 64-bit version has an additional 4 bytes of
+	 * padding after the first field &#x27;state&#x27;.
+	 *
+	 * So we use &#x27;int __user *user_state&#x27; to point to the state field,
+	 * and &#x27;uint64_t __user *user_times&#x27; for runstate_entry_time. So
+	 * the actual array of time[] in each state starts at user_times[1].
+	 */
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state) != 0);
+	BUILD_BUG_ON(offsetof(struct compat_vcpu_runstate_info, state) != 0);
+	BUILD_BUG_ON(sizeof(struct compat_vcpu_runstate_info) != 0x2c);
+#ifdef CONFIG_X86_64
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state_entry_time) !=
+		     offsetof(struct compat_vcpu_runstate_info, state_entry_time) + 4);
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, time) !=
+		     offsetof(struct compat_vcpu_runstate_info, time) + 4);
+#endif
+
+<yellow>	user_state = gpc->khva;</yellow>
+
+<yellow>	if (IS_ENABLED(CONFIG_64BIT) && v->kvm->arch.xen.long_mode)</yellow>
+<yellow>		user_times = gpc->khva + offsetof(struct vcpu_runstate_info,</yellow>
+						  state_entry_time);
+	else
+<yellow>		user_times = gpc->khva + offsetof(struct compat_vcpu_runstate_info,</yellow>
+						  state_entry_time);
+
+	/*
+	 * First write the updated state_entry_time at the appropriate
+	 * location determined by &#x27;offset&#x27;.
+	 */
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, state_entry_time) !=
+		     sizeof(user_times[0]));
+	BUILD_BUG_ON(sizeof_field(struct compat_vcpu_runstate_info, state_entry_time) !=
+		     sizeof(user_times[0]));
+
+<yellow>	user_times[0] = vx->runstate_entry_time | XEN_RUNSTATE_UPDATE;</yellow>
+	smp_wmb();
+
+	/*
+	 * Next, write the new runstate. This is in the *same* place
+	 * for 32-bit and 64-bit guests, asserted here for paranoia.
+	 */
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state) !=
+		     offsetof(struct compat_vcpu_runstate_info, state));
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, state) !=
+		     sizeof(vx-&gt;current_runstate));
+	BUILD_BUG_ON(sizeof_field(struct compat_vcpu_runstate_info, state) !=
+		     sizeof(vx-&gt;current_runstate));
+
+	*user_state = vx-&gt;current_runstate;
+
+	/*
+	 * Write the actual runstate times immediately after the
+	 * runstate_entry_time.
+	 */
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state_entry_time) !=
+		     offsetof(struct vcpu_runstate_info, time) - sizeof(u64));
+	BUILD_BUG_ON(offsetof(struct compat_vcpu_runstate_info, state_entry_time) !=
+		     offsetof(struct compat_vcpu_runstate_info, time) - sizeof(u64));
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, time) !=
+		     sizeof_field(struct compat_vcpu_runstate_info, time));
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, time) !=
+		     sizeof(vx-&gt;runstate_times));
+
+	memcpy(user_times + 1, vx-&gt;runstate_times, sizeof(vx-&gt;runstate_times));
+	smp_wmb();
+
+	/*
+	 * Finally, clear the XEN_RUNSTATE_UPDATE bit in the guest&#x27;s
+	 * runstate_entry_time field.
+	 */
+	user_times[0] &amp;= ~XEN_RUNSTATE_UPDATE;
+	smp_wmb();
+
+	read_unlock_irqrestore(&amp;gpc-&gt;lock, flags);
+
+	mark_page_dirty_in_slot(v-&gt;kvm, gpc-&gt;memslot, gpc-&gt;gpa &gt;&gt; PAGE_SHIFT);
+<blue>}</blue>
+
+<yellow>static void kvm_xen_inject_vcpu_vector(struct kvm_vcpu *v)</yellow>
+{
+	struct kvm_lapic_irq irq = { };
+	int r;
+
+	irq.dest_id = v-&gt;vcpu_id;
+	irq.vector = v-&gt;arch.xen.upcall_vector;
+	irq.dest_mode = APIC_DEST_PHYSICAL;
+	irq.shorthand = APIC_DEST_NOSHORT;
+	irq.delivery_mode = APIC_DM_FIXED;
+	irq.level = 1;
+
+	/* The fast version will always work for physical unicast */
+<yellow>	WARN_ON_ONCE(!kvm_irq_delivery_to_apic_fast(v->kvm, NULL, &irq, &r, NULL));</yellow>
+}
+
+/*
+ * On event channel delivery, the vcpu_info may not have been accessible.
+ * In that case, there are bits in vcpu-&gt;arch.xen.evtchn_pending_sel which
+ * need to be marked into the vcpu_info (and evtchn_upcall_pending set).
+ * Do so now that we can sleep in the context of the vCPU to bring the
+ * page in, and refresh the pfn cache for it.
+ */
+void kvm_xen_inject_pending_events(struct kvm_vcpu *v)
+{
+<yellow>	unsigned long evtchn_pending_sel = READ_ONCE(v->arch.xen.evtchn_pending_sel);</yellow>
+	struct gfn_to_pfn_cache *gpc = &amp;v-&gt;arch.xen.vcpu_info_cache;
+	unsigned long flags;
+
+	if (!evtchn_pending_sel)
+		return;
+
+	/*
+	 * Yes, this is an open-coded loop. But that&#x27;s just what put_user()
+	 * does anyway. Page it in and retry the instruction. We&#x27;re just a
+	 * little more honest about it.
+	 */
+<yellow>	read_lock_irqsave(&gpc->lock, flags);</yellow>
+<yellow>	while (!kvm_gfn_to_pfn_cache_check(v->kvm, gpc, gpc->gpa,</yellow>
+					   sizeof(struct vcpu_info))) {
+<yellow>		read_unlock_irqrestore(&gpc->lock, flags);</yellow>
+
+		if (kvm_gfn_to_pfn_cache_refresh(v-&gt;kvm, gpc, gpc-&gt;gpa,
+						 sizeof(struct vcpu_info)))
+			return;
+
+<yellow>		read_lock_irqsave(&gpc->lock, flags);</yellow>
+	}
+
+	/* Now gpc-&gt;khva is a valid kernel address for the vcpu_info */
+<yellow>	if (IS_ENABLED(CONFIG_64BIT) && v->kvm->arch.xen.long_mode) {</yellow>
+<yellow>		struct vcpu_info *vi = gpc->khva;</yellow>
+
+<yellow>		asm volatile(LOCK_PREFIX "orq %0, %1\n"</yellow>
+			     &quot;notq %0\n&quot;
+			     LOCK_PREFIX &quot;andq %0, %2\n&quot;
+			     : &quot;=r&quot; (evtchn_pending_sel),
+			       &quot;+m&quot; (vi-&gt;evtchn_pending_sel),
+			       &quot;+m&quot; (v-&gt;arch.xen.evtchn_pending_sel)
+			     : &quot;0&quot; (evtchn_pending_sel));
+		WRITE_ONCE(vi-&gt;evtchn_upcall_pending, 1);
+	} else {
+		u32 evtchn_pending_sel32 = evtchn_pending_sel;
+		struct compat_vcpu_info *vi = gpc-&gt;khva;
+
+<yellow>		asm volatile(LOCK_PREFIX "orl %0, %1\n"</yellow>
+			     &quot;notl %0\n&quot;
+			     LOCK_PREFIX &quot;andl %0, %2\n&quot;
+			     : &quot;=r&quot; (evtchn_pending_sel32),
+			       &quot;+m&quot; (vi-&gt;evtchn_pending_sel),
+			       &quot;+m&quot; (v-&gt;arch.xen.evtchn_pending_sel)
+			     : &quot;0&quot; (evtchn_pending_sel32));
+		WRITE_ONCE(vi-&gt;evtchn_upcall_pending, 1);
+	}
+<yellow>	read_unlock_irqrestore(&gpc->lock, flags);</yellow>
+
+	/* For the per-vCPU lapic vector, deliver it as MSI. */
+	if (v-&gt;arch.xen.upcall_vector)
+<yellow>		kvm_xen_inject_vcpu_vector(v);</yellow>
+
+<yellow>	mark_page_dirty_in_slot(v->kvm, gpc->memslot, gpc->gpa >> PAGE_SHIFT);</yellow>
+<yellow>}</yellow>
+
+int __kvm_xen_has_interrupt(struct kvm_vcpu *v)
+{
+	struct gfn_to_pfn_cache *gpc = &amp;v-&gt;arch.xen.vcpu_info_cache;
+	unsigned long flags;
+	u8 rc = 0;
+
+	/*
+	 * If the global upcall vector (HVMIRQ_callback_vector) is set and
+	 * the vCPU&#x27;s evtchn_upcall_pending flag is set, the IRQ is pending.
+	 */
+
+	/* No need for compat handling here */
+	BUILD_BUG_ON(offsetof(struct vcpu_info, evtchn_upcall_pending) !=
+		     offsetof(struct compat_vcpu_info, evtchn_upcall_pending));
+	BUILD_BUG_ON(sizeof(rc) !=
+		     sizeof_field(struct vcpu_info, evtchn_upcall_pending));
+	BUILD_BUG_ON(sizeof(rc) !=
+		     sizeof_field(struct compat_vcpu_info, evtchn_upcall_pending));
+
+<yellow>	read_lock_irqsave(&gpc->lock, flags);</yellow>
+<yellow>	while (!kvm_gfn_to_pfn_cache_check(v->kvm, gpc, gpc->gpa,</yellow>
+					   sizeof(struct vcpu_info))) {
+<yellow>		read_unlock_irqrestore(&gpc->lock, flags);</yellow>
+
+		/*
+		 * This function gets called from kvm_vcpu_block() after setting the
+		 * task to TASK_INTERRUPTIBLE, to see if it needs to wake immediately
+		 * from a HLT. So we really mustn&#x27;t sleep. If the page ended up absent
+		 * at that point, just return 1 in order to trigger an immediate wake,
+		 * and we&#x27;ll end up getting called again from a context where we *can*
+		 * fault in the page and wait for it.
+		 */
+<yellow>		if (in_atomic() || !task_is_running(current))</yellow>
+			return 1;
+
+<yellow>		if (kvm_gfn_to_pfn_cache_refresh(v->kvm, gpc, gpc->gpa,</yellow>
+						 sizeof(struct vcpu_info))) {
+			/*
+			 * If this failed, userspace has screwed up the
+			 * vcpu_info mapping. No interrupts for you.
+			 */
+			return 0;
+		}
+<yellow>		read_lock_irqsave(&gpc->lock, flags);</yellow>
+	}
+
+<yellow>	rc = ((struct vcpu_info *)gpc->khva)->evtchn_upcall_pending;</yellow>
+	read_unlock_irqrestore(&amp;gpc-&gt;lock, flags);
+	return rc;
+<yellow>}</yellow>
+
+int kvm_xen_hvm_set_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
+<blue>{</blue>
+	int r = -ENOENT;
+
+
+<blue>	switch (data->type) {</blue>
+	case KVM_XEN_ATTR_TYPE_LONG_MODE:
+		if (!IS_ENABLED(CONFIG_64BIT) &amp;&amp; data-&gt;u.long_mode) {
+			r = -EINVAL;
+		} else {
+<blue>			mutex_lock(&kvm->lock);</blue>
+			kvm-&gt;arch.xen.long_mode = !!data-&gt;u.long_mode;
+			mutex_unlock(&amp;kvm-&gt;lock);
+			r = 0;
+		}
+		break;
+
+	case KVM_XEN_ATTR_TYPE_SHARED_INFO:
+<blue>		mutex_lock(&kvm->lock);</blue>
+<blue>		r = kvm_xen_shared_info_init(kvm, data->u.shared_info.gfn);</blue>
+		mutex_unlock(&amp;kvm-&gt;lock);
+		break;
+
+	case KVM_XEN_ATTR_TYPE_UPCALL_VECTOR:
+<blue>		if (data->u.vector && data->u.vector < 0x10)</blue>
+			r = -EINVAL;
+		else {
+<blue>			mutex_lock(&kvm->lock);</blue>
+			kvm-&gt;arch.xen.upcall_vector = data-&gt;u.vector;
+			mutex_unlock(&amp;kvm-&gt;lock);
+			r = 0;
+		}
+		break;
+
+	case KVM_XEN_ATTR_TYPE_EVTCHN:
+<blue>		r = kvm_xen_setattr_evtchn(kvm, data);</blue>
+		break;
+
+	case KVM_XEN_ATTR_TYPE_XEN_VERSION:
+<blue>		mutex_lock(&kvm->lock);</blue>
+		kvm-&gt;arch.xen.xen_version = data-&gt;u.xen_version;
+		mutex_unlock(&amp;kvm-&gt;lock);
+		r = 0;
+		break;
+
+	default:
+		break;
+	}
+
+	return r;
+}
+
+int kvm_xen_hvm_get_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
+{
+	int r = -ENOENT;
+
+<blue>	mutex_lock(&kvm->lock);</blue>
+
+	switch (data-&gt;type) {
+	case KVM_XEN_ATTR_TYPE_LONG_MODE:
+<blue>		data->u.long_mode = kvm->arch.xen.long_mode;</blue>
+		r = 0;
+		break;
+
+	case KVM_XEN_ATTR_TYPE_SHARED_INFO:
+<blue>		if (kvm->arch.xen.shinfo_cache.active)</blue>
+<yellow>			data->u.shared_info.gfn = gpa_to_gfn(kvm->arch.xen.shinfo_cache.gpa);</yellow>
+		else
+<blue>			data->u.shared_info.gfn = GPA_INVALID;</blue>
+		r = 0;
+		break;
+
+	case KVM_XEN_ATTR_TYPE_UPCALL_VECTOR:
+<blue>		data->u.vector = kvm->arch.xen.upcall_vector;</blue>
+		r = 0;
+		break;
+
+	case KVM_XEN_ATTR_TYPE_XEN_VERSION:
+<blue>		data->u.xen_version = kvm->arch.xen.xen_version;</blue>
+		r = 0;
+		break;
+
+	default:
+		break;
+	}
+
+<blue>	mutex_unlock(&kvm->lock);</blue>
+	return r;
+}
+
+int kvm_xen_vcpu_set_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
+{
+	int idx, r = -ENOENT;
+
+<blue>	mutex_lock(&vcpu->kvm->lock);</blue>
+	idx = srcu_read_lock(&amp;vcpu-&gt;kvm-&gt;srcu);
+
+	switch (data-&gt;type) {
+	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_INFO:
+		/* No compat necessary here. */
+		BUILD_BUG_ON(sizeof(struct vcpu_info) !=
+			     sizeof(struct compat_vcpu_info));
+		BUILD_BUG_ON(offsetof(struct vcpu_info, time) !=
+			     offsetof(struct compat_vcpu_info, time));
+
+<blue>		if (data->u.gpa == GPA_INVALID) {</blue>
+			kvm_gpc_deactivate(vcpu-&gt;kvm, &amp;vcpu-&gt;arch.xen.vcpu_info_cache);
+			r = 0;
+			break;
+		}
+
+<blue>		r = kvm_gpc_activate(vcpu->kvm,</blue>
+				     &amp;vcpu-&gt;arch.xen.vcpu_info_cache, NULL,
+				     KVM_HOST_USES_PFN, data-&gt;u.gpa,
+				     sizeof(struct vcpu_info));
+		if (!r)
+			kvm_make_request(KVM_REQ_CLOCK_UPDATE, vcpu);
+
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_TIME_INFO:
+<blue>		if (data->u.gpa == GPA_INVALID) {</blue>
+			kvm_gpc_deactivate(vcpu-&gt;kvm,
+					   &amp;vcpu-&gt;arch.xen.vcpu_time_info_cache);
+			r = 0;
+			break;
+		}
+
+<blue>		r = kvm_gpc_activate(vcpu->kvm,</blue>
+				     &amp;vcpu-&gt;arch.xen.vcpu_time_info_cache,
+				     NULL, KVM_HOST_USES_PFN, data-&gt;u.gpa,
+				     sizeof(struct pvclock_vcpu_time_info));
+		if (!r)
+<blue>			kvm_make_request(KVM_REQ_CLOCK_UPDATE, vcpu);</blue>
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_ADDR:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<blue>		if (data->u.gpa == GPA_INVALID) {</blue>
+<yellow>			kvm_gpc_deactivate(vcpu->kvm,</yellow>
+					   &amp;vcpu-&gt;arch.xen.runstate_cache);
+			r = 0;
+			break;
+		}
+
+<blue>		r = kvm_gpc_activate(vcpu->kvm, &vcpu->arch.xen.runstate_cache,</blue>
+				     NULL, KVM_HOST_USES_PFN, data-&gt;u.gpa,
+				     sizeof(struct vcpu_runstate_info));
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_CURRENT:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<blue>		if (data->u.runstate.state > RUNSTATE_offline) {</blue>
+			r = -EINVAL;
+			break;
+		}
+
+		kvm_xen_update_runstate(vcpu, data-&gt;u.runstate.state);
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_DATA:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<blue>		if (data->u.runstate.state > RUNSTATE_offline) {</blue>
+			r = -EINVAL;
+			break;
+		}
+<blue>		if (data->u.runstate.state_entry_time !=</blue>
+		    (data-&gt;u.runstate.time_running +
+		     data-&gt;u.runstate.time_runnable +
+		     data-&gt;u.runstate.time_blocked +
+		     data-&gt;u.runstate.time_offline)) {
+			r = -EINVAL;
+			break;
+		}
+<blue>		if (get_kvmclock_ns(vcpu->kvm) <</blue>
+		    data-&gt;u.runstate.state_entry_time) {
+			r = -EINVAL;
+			break;
+		}
+
+<blue>		vcpu->arch.xen.current_runstate = data->u.runstate.state;</blue>
+		vcpu-&gt;arch.xen.runstate_entry_time =
+			data-&gt;u.runstate.state_entry_time;
+		vcpu-&gt;arch.xen.runstate_times[RUNSTATE_running] =
+			data-&gt;u.runstate.time_running;
+		vcpu-&gt;arch.xen.runstate_times[RUNSTATE_runnable] =
+			data-&gt;u.runstate.time_runnable;
+		vcpu-&gt;arch.xen.runstate_times[RUNSTATE_blocked] =
+			data-&gt;u.runstate.time_blocked;
+		vcpu-&gt;arch.xen.runstate_times[RUNSTATE_offline] =
+			data-&gt;u.runstate.time_offline;
+		vcpu-&gt;arch.xen.last_steal = current-&gt;sched_info.run_delay;
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_ADJUST:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<blue>		if (data->u.runstate.state > RUNSTATE_offline &&</blue>
+		    data-&gt;u.runstate.state != (u64)-1) {
+			r = -EINVAL;
+			break;
+		}
+		/* The adjustment must add up */
+<blue>		if (data->u.runstate.state_entry_time !=</blue>
+		    (data-&gt;u.runstate.time_running +
+		     data-&gt;u.runstate.time_runnable +
+		     data-&gt;u.runstate.time_blocked +
+		     data-&gt;u.runstate.time_offline)) {
+			r = -EINVAL;
+			break;
+		}
+
+<blue>		if (get_kvmclock_ns(vcpu->kvm) <</blue>
+		    (vcpu-&gt;arch.xen.runstate_entry_time +
+		     data-&gt;u.runstate.state_entry_time)) {
+			r = -EINVAL;
+			break;
+		}
+
+		vcpu-&gt;arch.xen.runstate_entry_time +=
+			data-&gt;u.runstate.state_entry_time;
+<blue>		vcpu->arch.xen.runstate_times[RUNSTATE_running] +=</blue>
+			data-&gt;u.runstate.time_running;
+		vcpu-&gt;arch.xen.runstate_times[RUNSTATE_runnable] +=
+			data-&gt;u.runstate.time_runnable;
+		vcpu-&gt;arch.xen.runstate_times[RUNSTATE_blocked] +=
+			data-&gt;u.runstate.time_blocked;
+		vcpu-&gt;arch.xen.runstate_times[RUNSTATE_offline] +=
+			data-&gt;u.runstate.time_offline;
+
+		if (data-&gt;u.runstate.state &lt;= RUNSTATE_offline)
+<blue>			kvm_xen_update_runstate(vcpu, data->u.runstate.state);</blue>
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_ID:
+<blue>		if (data->u.vcpu_id >= KVM_MAX_VCPUS)</blue>
+			r = -EINVAL;
+		else {
+<blue>			vcpu->arch.xen.vcpu_id = data->u.vcpu_id;</blue>
+			r = 0;
+		}
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_TIMER:
+<blue>		if (data->u.timer.port &&</blue>
+<blue>		    data->u.timer.priority != KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL) {</blue>
+			r = -EINVAL;
+			break;
+		}
+
+<blue>		if (!vcpu->arch.xen.timer.function)</blue>
+<blue>			kvm_xen_init_timer(vcpu);</blue>
+
+		/* Stop the timer (if it&#x27;s running) before changing the vector */
+<blue>		kvm_xen_stop_timer(vcpu);</blue>
+		vcpu-&gt;arch.xen.timer_virq = data-&gt;u.timer.port;
+
+		/* Start the timer if the new value has a valid vector+expiry. */
+<yellow>		if (data->u.timer.port && data->u.timer.expires_ns)</yellow>
+<yellow>			kvm_xen_start_timer(vcpu, data->u.timer.expires_ns,</yellow>
+					    data-&gt;u.timer.expires_ns -
+<yellow>					    get_kvmclock_ns(vcpu->kvm));</yellow>
+
+<yellow>		r = 0;</yellow>
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_UPCALL_VECTOR:
+<blue>		if (data->u.vector && data->u.vector < 0x10)</blue>
+			r = -EINVAL;
+		else {
+<blue>			vcpu->arch.xen.upcall_vector = data->u.vector;</blue>
+			r = 0;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+<blue>	srcu_read_unlock(&vcpu->kvm->srcu, idx);</blue>
+	mutex_unlock(&amp;vcpu-&gt;kvm-&gt;lock);
+	return r;
+}
+
+int kvm_xen_vcpu_get_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
+{
+	int r = -ENOENT;
+
+<blue>	mutex_lock(&vcpu->kvm->lock);</blue>
+
+	switch (data-&gt;type) {
+	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_INFO:
+<blue>		if (vcpu->arch.xen.vcpu_info_cache.active)</blue>
+<blue>			data->u.gpa = vcpu->arch.xen.vcpu_info_cache.gpa;</blue>
+		else
+<blue>			data->u.gpa = GPA_INVALID;</blue>
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_TIME_INFO:
+<blue>		if (vcpu->arch.xen.vcpu_time_info_cache.active)</blue>
+<yellow>			data->u.gpa = vcpu->arch.xen.vcpu_time_info_cache.gpa;</yellow>
+		else
+			data-&gt;u.gpa = GPA_INVALID;
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_ADDR:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<blue>		if (vcpu->arch.xen.runstate_cache.active) {</blue>
+<yellow>			data->u.gpa = vcpu->arch.xen.runstate_cache.gpa;</yellow>
+			r = 0;
+		}
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_CURRENT:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<blue>		data->u.runstate.state = vcpu->arch.xen.current_runstate;</blue>
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_DATA:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<blue>		data->u.runstate.state = vcpu->arch.xen.current_runstate;</blue>
+		data-&gt;u.runstate.state_entry_time =
+			vcpu-&gt;arch.xen.runstate_entry_time;
+		data-&gt;u.runstate.time_running =
+			vcpu-&gt;arch.xen.runstate_times[RUNSTATE_running];
+		data-&gt;u.runstate.time_runnable =
+			vcpu-&gt;arch.xen.runstate_times[RUNSTATE_runnable];
+		data-&gt;u.runstate.time_blocked =
+			vcpu-&gt;arch.xen.runstate_times[RUNSTATE_blocked];
+		data-&gt;u.runstate.time_offline =
+			vcpu-&gt;arch.xen.runstate_times[RUNSTATE_offline];
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_ADJUST:
+		r = -EINVAL;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_ID:
+<blue>		data->u.vcpu_id = vcpu->arch.xen.vcpu_id;</blue>
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_TIMER:
+<blue>		data->u.timer.port = vcpu->arch.xen.timer_virq;</blue>
+		data-&gt;u.timer.priority = KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL;
+		data-&gt;u.timer.expires_ns = vcpu-&gt;arch.xen.timer_expires;
+		r = 0;
+		break;
+
+	case KVM_XEN_VCPU_ATTR_TYPE_UPCALL_VECTOR:
+<blue>		data->u.vector = vcpu->arch.xen.upcall_vector;</blue>
+		r = 0;
+		break;
+
+	default:
+		break;
+	}
+
+<blue>	mutex_unlock(&vcpu->kvm->lock);</blue>
+	return r;
+}
+
+int kvm_xen_write_hypercall_page(struct kvm_vcpu *vcpu, u64 data)
+<yellow>{</yellow>
+<yellow>	struct kvm *kvm = vcpu->kvm;</yellow>
+	u32 page_num = data &amp; ~PAGE_MASK;
+	u64 page_addr = data &amp; PAGE_MASK;
+	bool lm = is_long_mode(vcpu);
+
+	/* Latch long_mode for shared_info pages etc. */
+	vcpu-&gt;kvm-&gt;arch.xen.long_mode = lm;
+
+	/*
+	 * If Xen hypercall intercept is enabled, fill the hypercall
+	 * page with VMCALL/VMMCALL instructions since that&#x27;s what
+	 * we catch. Else the VMM has provided the hypercall pages
+	 * with instructions of its own choosing, so use those.
+	 */
+<yellow>	if (kvm_xen_hypercall_enabled(kvm)) {</yellow>
+		u8 instructions[32];
+		int i;
+
+<yellow>		if (page_num)</yellow>
+<yellow>			return 1;</yellow>
+
+		/* mov imm32, %eax */
+		instructions[0] = 0xb8;
+
+		/* vmcall / vmmcall */
+<yellow>		static_call(kvm_x86_patch_hypercall)(vcpu, instructions + 5);</yellow>
+
+		/* ret */
+		instructions[8] = 0xc3;
+
+		/* int3 to pad */
+		memset(instructions + 9, 0xcc, sizeof(instructions) - 9);
+
+<yellow>		for (i = 0; i < PAGE_SIZE / sizeof(instructions); i++) {</yellow>
+			*(u32 *)&amp;instructions[1] = i;
+<yellow>			if (kvm_vcpu_write_guest(vcpu,</yellow>
+						 page_addr + (i * sizeof(instructions)),
+						 instructions, sizeof(instructions)))
+				return 1;
+		}
+	} else {
+		/*
+		 * Note, truncation is a non-issue as &#x27;lm&#x27; is guaranteed to be
+		 * false for a 32-bit kernel, i.e. when hva_t is only 4 bytes.
+		 */
+		hva_t blob_addr = lm ? kvm-&gt;arch.xen_hvm_config.blob_addr_64
+				     : kvm-&gt;arch.xen_hvm_config.blob_addr_32;
+<yellow>		u8 blob_size = lm ? kvm->arch.xen_hvm_config.blob_size_64</yellow>
+				  : kvm-&gt;arch.xen_hvm_config.blob_size_32;
+		u8 *page;
+
+<yellow>		if (page_num >= blob_size)</yellow>
+			return 1;
+
+<yellow>		blob_addr += page_num * PAGE_SIZE;</yellow>
+
+		page = memdup_user((u8 __user *)blob_addr, PAGE_SIZE);
+		if (IS_ERR(page))
+<yellow>			return PTR_ERR(page);</yellow>
+
+<yellow>		if (kvm_vcpu_write_guest(vcpu, page_addr, page, PAGE_SIZE)) {</yellow>
+<yellow>			kfree(page);</yellow>
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int kvm_xen_hvm_config(struct kvm *kvm, struct kvm_xen_hvm_config *xhc)
+{
+	/* Only some feature flags need to be *enabled* by userspace */
+	u32 permitted_flags = KVM_XEN_HVM_CONFIG_INTERCEPT_HCALL |
+		KVM_XEN_HVM_CONFIG_EVTCHN_SEND;
+
+<blue>	if (xhc->flags & ~permitted_flags)</blue>
+		return -EINVAL;
+
+	/*
+	 * With hypercall interception the kernel generates its own
+	 * hypercall page so it must not be provided.
+	 */
+<blue>	if ((xhc->flags & KVM_XEN_HVM_CONFIG_INTERCEPT_HCALL) &&</blue>
+<blue>	    (xhc->blob_addr_32 || xhc->blob_addr_64 ||</blue>
+<blue>	     xhc->blob_size_32 || xhc->blob_size_64))</blue>
+		return -EINVAL;
+
+<blue>	mutex_lock(&kvm->lock);</blue>
+
+<blue>	if (xhc->msr && !kvm->arch.xen_hvm_config.msr)</blue>
+<blue>		static_branch_inc(&kvm_xen_enabled.key);</blue>
+<blue>	else if (!xhc->msr && kvm->arch.xen_hvm_config.msr)</blue>
+<yellow>		static_branch_slow_dec_deferred(&kvm_xen_enabled);</yellow>
+
+<blue>	memcpy(&kvm->arch.xen_hvm_config, xhc, sizeof(*xhc));</blue>
+
+	mutex_unlock(&amp;kvm-&gt;lock);
+	return 0;
+<blue>}</blue>
+
+static int kvm_xen_hypercall_set_result(struct kvm_vcpu *vcpu, u64 result)
+{
+<yellow>	kvm_rax_write(vcpu, result);</yellow>
+	return kvm_skip_emulated_instruction(vcpu);
+}
+
+static int kvm_xen_hypercall_complete_userspace(struct kvm_vcpu *vcpu)
+{
+<yellow>	struct kvm_run *run = vcpu->run;</yellow>
+
+	if (unlikely(!kvm_is_linear_rip(vcpu, vcpu-&gt;arch.xen.hypercall_rip)))
+<yellow>		return 1;</yellow>
+
+<yellow>	return kvm_xen_hypercall_set_result(vcpu, run->xen.u.hcall.result);</yellow>
+<yellow>}</yellow>
+
+static inline int max_evtchn_port(struct kvm *kvm)
+{
+<blue>	if (IS_ENABLED(CONFIG_64BIT) && kvm->arch.xen.long_mode)</blue>
+		return EVTCHN_2L_NR_CHANNELS;
+	else
+		return COMPAT_EVTCHN_2L_NR_CHANNELS;
+}
+
+static bool wait_pending_event(struct kvm_vcpu *vcpu, int nr_ports,
+			       evtchn_port_t *ports)
+{
+	struct kvm *kvm = vcpu-&gt;kvm;
+	struct gfn_to_pfn_cache *gpc = &amp;kvm-&gt;arch.xen.shinfo_cache;
+	unsigned long *pending_bits;
+	unsigned long flags;
+	bool ret = true;
+	int idx, i;
+
+	read_lock_irqsave(&amp;gpc-&gt;lock, flags);
+	idx = srcu_read_lock(&amp;kvm-&gt;srcu);
+	if (!kvm_gfn_to_pfn_cache_check(kvm, gpc, gpc-&gt;gpa, PAGE_SIZE))
+		goto out_rcu;
+
+	ret = false;
+<yellow>	if (IS_ENABLED(CONFIG_64BIT) && kvm->arch.xen.long_mode) {</yellow>
+<yellow>		struct shared_info *shinfo = gpc->khva;</yellow>
+		pending_bits = (unsigned long *)&amp;shinfo-&gt;evtchn_pending;
+	} else {
+		struct compat_shared_info *shinfo = gpc-&gt;khva;
+		pending_bits = (unsigned long *)&amp;shinfo-&gt;evtchn_pending;
+	}
+
+<yellow>	for (i = 0; i < nr_ports; i++) {</yellow>
+<yellow>		if (test_bit(ports[i], pending_bits)) {</yellow>
+			ret = true;
+			break;
+		}
+	}
+
+ out_rcu:
+<yellow>	srcu_read_unlock(&kvm->srcu, idx);</yellow>
+	read_unlock_irqrestore(&amp;gpc-&gt;lock, flags);
+
+	return ret;
+}
+
+static bool kvm_xen_schedop_poll(struct kvm_vcpu *vcpu, bool longmode,
+				 u64 param, u64 *r)
+{
+	int idx, i;
+	struct sched_poll sched_poll;
+	evtchn_port_t port, *ports;
+	gpa_t gpa;
+
+<yellow>	if (!longmode || !lapic_in_kernel(vcpu) ||</yellow>
+<yellow>	    !(vcpu->kvm->arch.xen_hvm_config.flags & KVM_XEN_HVM_CONFIG_EVTCHN_SEND))</yellow>
+		return false;
+
+<yellow>	idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
+	gpa = kvm_mmu_gva_to_gpa_system(vcpu, param, NULL);
+<yellow>	srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
+
+<yellow>	if (!gpa || kvm_vcpu_read_guest(vcpu, gpa, &sched_poll,</yellow>
+					sizeof(sched_poll))) {
+		*r = -EFAULT;
+		return true;
+	}
+
+<yellow>	if (unlikely(sched_poll.nr_ports > 1)) {</yellow>
+		/* Xen (unofficially) limits number of pollers to 128 */
+<yellow>		if (sched_poll.nr_ports > 128) {</yellow>
+			*r = -EINVAL;
+			return true;
+		}
+
+<yellow>		ports = kmalloc_array(sched_poll.nr_ports,</yellow>
+				      sizeof(*ports), GFP_KERNEL);
+		if (!ports) {
+			*r = -ENOMEM;
+			return true;
+		}
+	} else
+		ports = &amp;port;
+
+<yellow>	for (i = 0; i < sched_poll.nr_ports; i++) {</yellow>
+<yellow>		idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
+		gpa = kvm_mmu_gva_to_gpa_system(vcpu,
+						(gva_t)(sched_poll.ports + i),
+						NULL);
+<yellow>		srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
+
+<yellow>		if (!gpa || kvm_vcpu_read_guest(vcpu, gpa,</yellow>
+						&amp;ports[i], sizeof(port))) {
+			*r = -EFAULT;
+			goto out;
+		}
+<yellow>		if (ports[i] >= max_evtchn_port(vcpu->kvm)) {</yellow>
+			*r = -EINVAL;
+			goto out;
+		}
+	}
+
+<yellow>	if (sched_poll.nr_ports == 1)</yellow>
+<yellow>		vcpu->arch.xen.poll_evtchn = port;</yellow>
+	else
+		vcpu-&gt;arch.xen.poll_evtchn = -1;
+
+<yellow>	set_bit(vcpu->vcpu_idx, vcpu->kvm->arch.xen.poll_mask);</yellow>
+
+<yellow>	if (!wait_pending_event(vcpu, sched_poll.nr_ports, ports)) {</yellow>
+<yellow>		vcpu->arch.mp_state = KVM_MP_STATE_HALTED;</yellow>
+
+		if (sched_poll.timeout)
+			mod_timer(&amp;vcpu-&gt;arch.xen.poll_timer,
+<yellow>				  jiffies + nsecs_to_jiffies(sched_poll.timeout));</yellow>
+
+<yellow>		kvm_vcpu_halt(vcpu);</yellow>
+
+		if (sched_poll.timeout)
+<yellow>			del_timer(&vcpu->arch.xen.poll_timer);</yellow>
+
+<yellow>		vcpu->arch.mp_state = KVM_MP_STATE_RUNNABLE;</yellow>
+	}
+
+<yellow>	vcpu->arch.xen.poll_evtchn = 0;</yellow>
+	*r = 0;
+out:
+	/* Really, this is only needed in case of timeout */
+<yellow>	clear_bit(vcpu->vcpu_idx, vcpu->kvm->arch.xen.poll_mask);</yellow>
+
+	if (unlikely(sched_poll.nr_ports &gt; 1))
+<yellow>		kfree(ports);</yellow>
+	return true;
+}
+
+static void cancel_evtchn_poll(struct timer_list *t)
+{
+	struct kvm_vcpu *vcpu = from_timer(vcpu, t, arch.xen.poll_timer);
+
+<yellow>	kvm_make_request(KVM_REQ_UNBLOCK, vcpu);</yellow>
+	kvm_vcpu_kick(vcpu);
+}
+
+static bool kvm_xen_hcall_sched_op(struct kvm_vcpu *vcpu, bool longmode,
+				   int cmd, u64 param, u64 *r)
+{
+<yellow>	switch (cmd) {</yellow>
+	case SCHEDOP_poll:
+<yellow>		if (kvm_xen_schedop_poll(vcpu, longmode, param, r))</yellow>
+			return true;
+		fallthrough;
+	case SCHEDOP_yield:
+<yellow>		kvm_vcpu_on_spin(vcpu, true);</yellow>
+		*r = 0;
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+struct compat_vcpu_set_singleshot_timer {
+    uint64_t timeout_abs_ns;
+    uint32_t flags;
+} __attribute__((packed));
+
+static bool kvm_xen_hcall_vcpu_op(struct kvm_vcpu *vcpu, bool longmode, int cmd,
+				  int vcpu_id, u64 param, u64 *r)
+{
+	struct vcpu_set_singleshot_timer oneshot;
+	s64 delta;
+	gpa_t gpa;
+	int idx;
+
+<yellow>	if (!kvm_xen_timer_enabled(vcpu))</yellow>
+		return false;
+
+<yellow>	switch (cmd) {</yellow>
+	case VCPUOP_set_singleshot_timer:
+<yellow>		if (vcpu->arch.xen.vcpu_id != vcpu_id) {</yellow>
+			*r = -EINVAL;
+			return true;
+		}
+<yellow>		idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
+		gpa = kvm_mmu_gva_to_gpa_system(vcpu, param, NULL);
+<yellow>		srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
+
+		/*
+		 * The only difference for 32-bit compat is the 4 bytes of
+		 * padding after the interesting part of the structure. So
+		 * for a faithful emulation of Xen we have to *try* to copy
+		 * the padding and return -EFAULT if we can&#x27;t. Otherwise we
+		 * might as well just have copied the 12-byte 32-bit struct.
+		 */
+		BUILD_BUG_ON(offsetof(struct compat_vcpu_set_singleshot_timer, timeout_abs_ns) !=
+			     offsetof(struct vcpu_set_singleshot_timer, timeout_abs_ns));
+		BUILD_BUG_ON(sizeof_field(struct compat_vcpu_set_singleshot_timer, timeout_abs_ns) !=
+			     sizeof_field(struct vcpu_set_singleshot_timer, timeout_abs_ns));
+		BUILD_BUG_ON(offsetof(struct compat_vcpu_set_singleshot_timer, flags) !=
+			     offsetof(struct vcpu_set_singleshot_timer, flags));
+		BUILD_BUG_ON(sizeof_field(struct compat_vcpu_set_singleshot_timer, flags) !=
+			     sizeof_field(struct vcpu_set_singleshot_timer, flags));
+
+		if (!gpa ||
+<yellow>		    kvm_vcpu_read_guest(vcpu, gpa, &oneshot, longmode ? sizeof(oneshot) :</yellow>
+					sizeof(struct compat_vcpu_set_singleshot_timer))) {
+<yellow>			*r = -EFAULT;</yellow>
+			return true;
+		}
+
+<yellow>		delta = oneshot.timeout_abs_ns - get_kvmclock_ns(vcpu->kvm);</yellow>
+<yellow>		if ((oneshot.flags & VCPU_SSHOTTMR_future) && delta < 0) {</yellow>
+<yellow>			*r = -ETIME;</yellow>
+			return true;
+		}
+
+<yellow>		kvm_xen_start_timer(vcpu, oneshot.timeout_abs_ns, delta);</yellow>
+<yellow>		*r = 0;</yellow>
+		return true;
+
+	case VCPUOP_stop_singleshot_timer:
+<yellow>		if (vcpu->arch.xen.vcpu_id != vcpu_id) {</yellow>
+<yellow>			*r = -EINVAL;</yellow>
+			return true;
+		}
+<yellow>		kvm_xen_stop_timer(vcpu);</yellow>
+		*r = 0;
+		return true;
+	}
+
+	return false;
+}
+
+static bool kvm_xen_hcall_set_timer_op(struct kvm_vcpu *vcpu, uint64_t timeout,
+				       u64 *r)
+{
+<yellow>	if (!kvm_xen_timer_enabled(vcpu))</yellow>
+		return false;
+
+<yellow>	if (timeout) {</yellow>
+<yellow>		uint64_t guest_now = get_kvmclock_ns(vcpu->kvm);</yellow>
+		int64_t delta = timeout - guest_now;
+
+		/* Xen has a &#x27;Linux workaround&#x27; in do_set_timer_op() which
+		 * checks for negative absolute timeout values (caused by
+		 * integer overflow), and for values about 13 days in the
+		 * future (2^50ns) which would be caused by jiffies
+		 * overflow. For those cases, it sets the timeout 100ms in
+		 * the future (not *too* soon, since if a guest really did
+		 * set a long timeout on purpose we don&#x27;t want to keep
+		 * churning CPU time by waking it up).
+		 */
+<yellow>		if (unlikely((int64_t)timeout < 0 ||</yellow>
+			     (delta &gt; 0 &amp;&amp; (uint32_t) (delta &gt;&gt; 50) != 0))) {
+			delta = 100 * NSEC_PER_MSEC;
+			timeout = guest_now + delta;
+		}
+
+<yellow>		kvm_xen_start_timer(vcpu, timeout, delta);</yellow>
+	} else {
+<yellow>		kvm_xen_stop_timer(vcpu);</yellow>
+	}
+
+	*r = 0;
+	return true;
+}
+
+int kvm_xen_hypercall(struct kvm_vcpu *vcpu)
+<yellow>{</yellow>
+	bool longmode;
+	u64 input, params[6], r = -ENOSYS;
+	bool handled = false;
+	u8 cpl;
+
+<yellow>	input = (u64)kvm_register_read(vcpu, VCPU_REGS_RAX);</yellow>
+
+	/* Hyper-V hypercalls get bit 31 set in EAX */
+<yellow>	if ((input & 0x80000000) &&</yellow>
+<yellow>	    kvm_hv_hypercall_enabled(vcpu))</yellow>
+<yellow>		return kvm_hv_hypercall(vcpu);</yellow>
+
+<yellow>	longmode = is_64_bit_hypercall(vcpu);</yellow>
+	if (!longmode) {
+<yellow>		params[0] = (u32)kvm_rbx_read(vcpu);</yellow>
+		params[1] = (u32)kvm_rcx_read(vcpu);
+		params[2] = (u32)kvm_rdx_read(vcpu);
+		params[3] = (u32)kvm_rsi_read(vcpu);
+		params[4] = (u32)kvm_rdi_read(vcpu);
+		params[5] = (u32)kvm_rbp_read(vcpu);
+	}
+#ifdef CONFIG_X86_64
+	else {
+<yellow>		params[0] = (u64)kvm_rdi_read(vcpu);</yellow>
+		params[1] = (u64)kvm_rsi_read(vcpu);
+		params[2] = (u64)kvm_rdx_read(vcpu);
+		params[3] = (u64)kvm_r10_read(vcpu);
+		params[4] = (u64)kvm_r8_read(vcpu);
+		params[5] = (u64)kvm_r9_read(vcpu);
+	}
+#endif
+<yellow>	cpl = static_call(kvm_x86_get_cpl)(vcpu);</yellow>
+<yellow>	trace_kvm_xen_hypercall(input, params[0], params[1], params[2],</yellow>
+				params[3], params[4], params[5]);
+
+	/*
+	 * Only allow hypercall acceleration for CPL0. The rare hypercalls that
+	 * are permitted in guest userspace can be handled by the VMM.
+	 */
+<yellow>	if (unlikely(cpl > 0))</yellow>
+		goto handle_in_userspace;
+
+<yellow>	switch (input) {</yellow>
+	case __HYPERVISOR_xen_version:
+<yellow>		if (params[0] == XENVER_version && vcpu->kvm->arch.xen.xen_version) {</yellow>
+			r = vcpu-&gt;kvm-&gt;arch.xen.xen_version;
+			handled = true;
+		}
+		break;
+	case __HYPERVISOR_event_channel_op:
+<yellow>		if (params[0] == EVTCHNOP_send)</yellow>
+<yellow>			handled = kvm_xen_hcall_evtchn_send(vcpu, params[1], &r);</yellow>
+		break;
+	case __HYPERVISOR_sched_op:
+<yellow>		handled = kvm_xen_hcall_sched_op(vcpu, longmode, params[0],</yellow>
+						 params[1], &amp;r);
+		break;
+	case __HYPERVISOR_vcpu_op:
+<yellow>		handled = kvm_xen_hcall_vcpu_op(vcpu, longmode, params[0], params[1],</yellow>
+						params[2], &amp;r);
+		break;
+	case __HYPERVISOR_set_timer_op: {
+		u64 timeout = params[0];
+		/* In 32-bit mode, the 64-bit timeout is in two 32-bit params. */
+<yellow>		if (!longmode)</yellow>
+<yellow>			timeout |= params[1] << 32;</yellow>
+<yellow>		handled = kvm_xen_hcall_set_timer_op(vcpu, timeout, &r);</yellow>
+		break;
+	}
+	default:
+		break;
+	}
+
+<yellow>	if (handled)</yellow>
+<yellow>		return kvm_xen_hypercall_set_result(vcpu, r);</yellow>
+
+handle_in_userspace:
+<yellow>	vcpu->run->exit_reason = KVM_EXIT_XEN;</yellow>
+	vcpu-&gt;run-&gt;xen.type = KVM_EXIT_XEN_HCALL;
+	vcpu-&gt;run-&gt;xen.u.hcall.longmode = longmode;
+	vcpu-&gt;run-&gt;xen.u.hcall.cpl = cpl;
+	vcpu-&gt;run-&gt;xen.u.hcall.input = input;
+	vcpu-&gt;run-&gt;xen.u.hcall.params[0] = params[0];
+	vcpu-&gt;run-&gt;xen.u.hcall.params[1] = params[1];
+	vcpu-&gt;run-&gt;xen.u.hcall.params[2] = params[2];
+	vcpu-&gt;run-&gt;xen.u.hcall.params[3] = params[3];
+	vcpu-&gt;run-&gt;xen.u.hcall.params[4] = params[4];
+	vcpu-&gt;run-&gt;xen.u.hcall.params[5] = params[5];
+	vcpu-&gt;arch.xen.hypercall_rip = kvm_get_linear_rip(vcpu);
+	vcpu-&gt;arch.complete_userspace_io =
+		kvm_xen_hypercall_complete_userspace;
+
+	return 0;
+}
+
+static void kvm_xen_check_poller(struct kvm_vcpu *vcpu, int port)
+{
+	int poll_evtchn = vcpu-&gt;arch.xen.poll_evtchn;
+
+<yellow>	if ((poll_evtchn == port || poll_evtchn == -1) &&</yellow>
+<yellow>	    test_and_clear_bit(vcpu->vcpu_idx, vcpu->kvm->arch.xen.poll_mask)) {</yellow>
+<yellow>		kvm_make_request(KVM_REQ_UNBLOCK, vcpu);</yellow>
+		kvm_vcpu_kick(vcpu);
+	}
+}
+
+/*
+ * The return value from this function is propagated to kvm_set_irq() API,
+ * so it returns:
+ *  &lt; 0   Interrupt was ignored (masked or not delivered for other reasons)
+ *  = 0   Interrupt was coalesced (previous irq is still pending)
+ *  &gt; 0   Number of CPUs interrupt was delivered to
+ *
+ * It is also called directly from kvm_arch_set_irq_inatomic(), where the
+ * only check on its return value is a comparison with -EWOULDBLOCK&#x27;.
+ */
+int kvm_xen_set_evtchn_fast(struct kvm_xen_evtchn *xe, struct kvm *kvm)
+<yellow>{</yellow>
+<yellow>	struct gfn_to_pfn_cache *gpc = &kvm->arch.xen.shinfo_cache;</yellow>
+	struct kvm_vcpu *vcpu;
+	unsigned long *pending_bits, *mask_bits;
+	unsigned long flags;
+	int port_word_bit;
+	bool kick_vcpu = false;
+	int vcpu_idx, idx, rc;
+
+	vcpu_idx = READ_ONCE(xe-&gt;vcpu_idx);
+	if (vcpu_idx &gt;= 0)
+<yellow>		vcpu = kvm_get_vcpu(kvm, vcpu_idx);</yellow>
+	else {
+<yellow>		vcpu = kvm_get_vcpu_by_id(kvm, xe->vcpu_id);</yellow>
+		if (!vcpu)
+<yellow>			return -EINVAL;</yellow>
+<yellow>		WRITE_ONCE(xe->vcpu_idx, vcpu->vcpu_idx);</yellow>
+	}
+
+<yellow>	if (!vcpu->arch.xen.vcpu_info_cache.active)</yellow>
+		return -EINVAL;
+
+<yellow>	if (xe->port >= max_evtchn_port(kvm))</yellow>
+		return -EINVAL;
+
+	rc = -EWOULDBLOCK;
+
+<yellow>	idx = srcu_read_lock(&kvm->srcu);</yellow>
+
+	read_lock_irqsave(&amp;gpc-&gt;lock, flags);
+	if (!kvm_gfn_to_pfn_cache_check(kvm, gpc, gpc-&gt;gpa, PAGE_SIZE))
+		goto out_rcu;
+
+<yellow>	if (IS_ENABLED(CONFIG_64BIT) && kvm->arch.xen.long_mode) {</yellow>
+<yellow>		struct shared_info *shinfo = gpc->khva;</yellow>
+		pending_bits = (unsigned long *)&amp;shinfo-&gt;evtchn_pending;
+<yellow>		mask_bits = (unsigned long *)&shinfo->evtchn_mask;</yellow>
+		port_word_bit = xe-&gt;port / 64;
+	} else {
+		struct compat_shared_info *shinfo = gpc-&gt;khva;
+		pending_bits = (unsigned long *)&amp;shinfo-&gt;evtchn_pending;
+<yellow>		mask_bits = (unsigned long *)&shinfo->evtchn_mask;</yellow>
+		port_word_bit = xe-&gt;port / 32;
+	}
+
+	/*
+	 * If this port wasn&#x27;t already set, and if it isn&#x27;t masked, then
+	 * we try to set the corresponding bit in the in-kernel shadow of
+	 * evtchn_pending_sel for the target vCPU. And if *that* wasn&#x27;t
+	 * already set, then we kick the vCPU in question to write to the
+	 * *real* evtchn_pending_sel in its own guest vcpu_info struct.
+	 */
+<yellow>	if (test_and_set_bit(xe->port, pending_bits)) {</yellow>
+		rc = 0; /* It was already raised */
+<yellow>	} else if (test_bit(xe->port, mask_bits)) {</yellow>
+		rc = -ENOTCONN; /* Masked */
+<yellow>		kvm_xen_check_poller(vcpu, xe->port);</yellow>
+	} else {
+		rc = 1; /* Delivered to the bitmap in shared_info. */
+		/* Now switch to the vCPU&#x27;s vcpu_info to set the index and pending_sel */
+		read_unlock_irqrestore(&amp;gpc-&gt;lock, flags);
+		gpc = &amp;vcpu-&gt;arch.xen.vcpu_info_cache;
+
+		read_lock_irqsave(&amp;gpc-&gt;lock, flags);
+		if (!kvm_gfn_to_pfn_cache_check(kvm, gpc, gpc-&gt;gpa, sizeof(struct vcpu_info))) {
+			/*
+			 * Could not access the vcpu_info. Set the bit in-kernel
+			 * and prod the vCPU to deliver it for itself.
+			 */
+<yellow>			if (!test_and_set_bit(port_word_bit, &vcpu->arch.xen.evtchn_pending_sel))</yellow>
+				kick_vcpu = true;
+			goto out_rcu;
+		}
+
+<yellow>		if (IS_ENABLED(CONFIG_64BIT) && kvm->arch.xen.long_mode) {</yellow>
+<yellow>			struct vcpu_info *vcpu_info = gpc->khva;</yellow>
+<yellow>			if (!test_and_set_bit(port_word_bit, &vcpu_info->evtchn_pending_sel)) {</yellow>
+<yellow>				WRITE_ONCE(vcpu_info->evtchn_upcall_pending, 1);</yellow>
+				kick_vcpu = true;
+			}
+		} else {
+			struct compat_vcpu_info *vcpu_info = gpc-&gt;khva;
+<yellow>			if (!test_and_set_bit(port_word_bit,</yellow>
+					      (unsigned long *)&amp;vcpu_info-&gt;evtchn_pending_sel)) {
+<yellow>				WRITE_ONCE(vcpu_info->evtchn_upcall_pending, 1);</yellow>
+				kick_vcpu = true;
+			}
+		}
+
+		/* For the per-vCPU lapic vector, deliver it as MSI. */
+<yellow>		if (kick_vcpu && vcpu->arch.xen.upcall_vector) {</yellow>
+<yellow>			kvm_xen_inject_vcpu_vector(vcpu);</yellow>
+			kick_vcpu = false;
+		}
+	}
+
+ out_rcu:
+<yellow>	read_unlock_irqrestore(&gpc->lock, flags);</yellow>
+<yellow>	srcu_read_unlock(&kvm->srcu, idx);</yellow>
+
+	if (kick_vcpu) {
+<yellow>		kvm_make_request(KVM_REQ_UNBLOCK, vcpu);</yellow>
+		kvm_vcpu_kick(vcpu);
+	}
+
+	return rc;
+}
+
+static int kvm_xen_set_evtchn(struct kvm_xen_evtchn *xe, struct kvm *kvm)
+{
+	bool mm_borrowed = false;
+	int rc;
+
+	rc = kvm_xen_set_evtchn_fast(xe, kvm);
+<yellow>	if (rc != -EWOULDBLOCK)</yellow>
+		return rc;
+
+<yellow>	if (current->mm != kvm->mm) {</yellow>
+		/*
+		 * If not on a thread which already belongs to this KVM,
+		 * we&#x27;d better be in the irqfd workqueue.
+		 */
+<yellow>		if (WARN_ON_ONCE(current->mm))</yellow>
+			return -EINVAL;
+
+<yellow>		kthread_use_mm(kvm->mm);</yellow>
+		mm_borrowed = true;
+	}
+
+	/*
+	 * For the irqfd workqueue, using the main kvm-&gt;lock mutex is
+	 * fine since this function is invoked from kvm_set_irq() with
+	 * no other lock held, no srcu. In future if it will be called
+	 * directly from a vCPU thread (e.g. on hypercall for an IPI)
+	 * then it may need to switch to using a leaf-node mutex for
+	 * serializing the shared_info mapping.
+	 */
+<yellow>	mutex_lock(&kvm->lock);</yellow>
+
+	/*
+	 * It is theoretically possible for the page to be unmapped
+	 * and the MMU notifier to invalidate the shared_info before
+	 * we even get to use it. In that case, this looks like an
+	 * infinite loop. It was tempting to do it via the userspace
+	 * HVA instead... but that just *hides* the fact that it&#x27;s
+	 * an infinite loop, because if a fault occurs and it waits
+	 * for the page to come back, it can *still* immediately
+	 * fault and have to wait again, repeatedly.
+	 *
+	 * Conversely, the page could also have been reinstated by
+	 * another thread before we even obtain the mutex above, so
+	 * check again *first* before remapping it.
+	 */
+	do {
+		struct gfn_to_pfn_cache *gpc = &amp;kvm-&gt;arch.xen.shinfo_cache;
+		int idx;
+
+<yellow>		rc = kvm_xen_set_evtchn_fast(xe, kvm);</yellow>
+		if (rc != -EWOULDBLOCK)
+			break;
+
+<yellow>		idx = srcu_read_lock(&kvm->srcu);</yellow>
+		rc = kvm_gfn_to_pfn_cache_refresh(kvm, gpc, gpc-&gt;gpa, PAGE_SIZE);
+<yellow>		srcu_read_unlock(&kvm->srcu, idx);</yellow>
+	} while(!rc);
+
+<yellow>	mutex_unlock(&kvm->lock);</yellow>
+
+	if (mm_borrowed)
+<yellow>		kthread_unuse_mm(kvm->mm);</yellow>
+
+	return rc;
+<yellow>}</yellow>
+
+/* This is the version called from kvm_set_irq() as the .set function */
+static int evtchn_set_fn(struct kvm_kernel_irq_routing_entry *e, struct kvm *kvm,
+			 int irq_source_id, int level, bool line_status)
+{
+<yellow>	if (!level)</yellow>
+		return -EINVAL;
+
+<yellow>	return kvm_xen_set_evtchn(&e->xen_evtchn, kvm);</yellow>
+<yellow>}</yellow>
+
+/*
+ * Set up an event channel interrupt from the KVM IRQ routing table.
+ * Used for e.g. PIRQ from passed through physical devices.
+ */
+int kvm_xen_setup_evtchn(struct kvm *kvm,
+			 struct kvm_kernel_irq_routing_entry *e,
+			 const struct kvm_irq_routing_entry *ue)
+
+<blue>{</blue>
+	struct kvm_vcpu *vcpu;
+
+<blue>	if (ue->u.xen_evtchn.port >= max_evtchn_port(kvm))</blue>
+		return -EINVAL;
+
+	/* We only support 2 level event channels for now */
+<blue>	if (ue->u.xen_evtchn.priority != KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL)</blue>
+		return -EINVAL;
+
+	/*
+	 * Xen gives us interesting mappings from vCPU index to APIC ID,
+	 * which means kvm_get_vcpu_by_id() has to iterate over all vCPUs
+	 * to find it. Do that once at setup time, instead of every time.
+	 * But beware that on live update / live migration, the routing
+	 * table might be reinstated before the vCPU threads have finished
+	 * recreating their vCPUs.
+	 */
+<blue>	vcpu = kvm_get_vcpu_by_id(kvm, ue->u.xen_evtchn.vcpu);</blue>
+	if (vcpu)
+<blue>		e->xen_evtchn.vcpu_idx = vcpu->vcpu_idx;</blue>
+	else
+<blue>		e->xen_evtchn.vcpu_idx = -1;</blue>
+
+	e-&gt;xen_evtchn.port = ue-&gt;u.xen_evtchn.port;
+	e-&gt;xen_evtchn.vcpu_id = ue-&gt;u.xen_evtchn.vcpu;
+	e-&gt;xen_evtchn.priority = ue-&gt;u.xen_evtchn.priority;
+	e-&gt;set = evtchn_set_fn;
+
+	return 0;
+}
+
+/*
+ * Explicit event sending from userspace with KVM_XEN_HVM_EVTCHN_SEND ioctl.
+ */
+int kvm_xen_hvm_evtchn_send(struct kvm *kvm, struct kvm_irq_routing_xen_evtchn *uxe)
+<blue>{</blue>
+	struct kvm_xen_evtchn e;
+	int ret;
+
+<blue>	if (!uxe->port || uxe->port >= max_evtchn_port(kvm))</blue>
+		return -EINVAL;
+
+	/* We only support 2 level event channels for now */
+<blue>	if (uxe->priority != KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL)</blue>
+		return -EINVAL;
+
+<yellow>	e.port = uxe->port;</yellow>
+	e.vcpu_id = uxe-&gt;vcpu;
+	e.vcpu_idx = -1;
+	e.priority = uxe-&gt;priority;
+
+<yellow>	ret = kvm_xen_set_evtchn(&e, kvm);</yellow>
+
+	/*
+	 * None of that &#x27;return 1 if it actually got delivered&#x27; nonsense.
+	 * We don&#x27;t care if it was masked (-ENOTCONN) either.
+	 */
+<yellow>	if (ret > 0 || ret == -ENOTCONN)</yellow>
+		ret = 0;
+
+	return ret;
+<yellow>}</yellow>
+
+/*
+ * Support for *outbound* event channel events via the EVTCHNOP_send hypercall.
+ */
+struct evtchnfd {
+	u32 send_port;
+	u32 type;
+	union {
+		struct kvm_xen_evtchn port;
+		struct {
+			u32 port; /* zero */
+			struct eventfd_ctx *ctx;
+		} eventfd;
+	} deliver;
+};
+
+/*
+ * Update target vCPU or priority for a registered sending channel.
+ */
+static int kvm_xen_eventfd_update(struct kvm *kvm,
+				  struct kvm_xen_hvm_attr *data)
+{
+<blue>	u32 port = data->u.evtchn.send_port;</blue>
+	struct evtchnfd *evtchnfd;
+
+<blue>	if (!port || port >= max_evtchn_port(kvm))</blue>
+		return -EINVAL;
+
+<blue>	mutex_lock(&kvm->lock);</blue>
+	evtchnfd = idr_find(&amp;kvm-&gt;arch.xen.evtchn_ports, port);
+	mutex_unlock(&amp;kvm-&gt;lock);
+
+	if (!evtchnfd)
+		return -ENOENT;
+
+	/* For an UPDATE, nothing may change except the priority/vcpu */
+<yellow>	if (evtchnfd->type != data->u.evtchn.type)</yellow>
+		return -EINVAL;
+
+	/*
+	 * Port cannot change, and if it&#x27;s zero that was an eventfd
+	 * which can&#x27;t be changed either.
+	 */
+<yellow>	if (!evtchnfd->deliver.port.port ||</yellow>
+<yellow>	    evtchnfd->deliver.port.port != data->u.evtchn.deliver.port.port)</yellow>
+		return -EINVAL;
+
+	/* We only support 2 level event channels for now */
+<yellow>	if (data->u.evtchn.deliver.port.priority != KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL)</yellow>
+		return -EINVAL;
+
+<yellow>	mutex_lock(&kvm->lock);</yellow>
+	evtchnfd-&gt;deliver.port.priority = data-&gt;u.evtchn.deliver.port.priority;
+	if (evtchnfd-&gt;deliver.port.vcpu_id != data-&gt;u.evtchn.deliver.port.vcpu) {
+		evtchnfd-&gt;deliver.port.vcpu_id = data-&gt;u.evtchn.deliver.port.vcpu;
+<yellow>		evtchnfd->deliver.port.vcpu_idx = -1;</yellow>
+	}
+<yellow>	mutex_unlock(&kvm->lock);</yellow>
+	return 0;
+}
+
+/*
+ * Configure the target (eventfd or local port delivery) for sending on
+ * a given event channel.
+ */
+static int kvm_xen_eventfd_assign(struct kvm *kvm,
+				  struct kvm_xen_hvm_attr *data)
+{
+<blue>	u32 port = data->u.evtchn.send_port;</blue>
+	struct eventfd_ctx *eventfd = NULL;
+	struct evtchnfd *evtchnfd = NULL;
+	int ret = -EINVAL;
+
+<blue>	if (!port || port >= max_evtchn_port(kvm))</blue>
+		return -EINVAL;
+
+<blue>	evtchnfd = kzalloc(sizeof(struct evtchnfd), GFP_KERNEL);</blue>
+	if (!evtchnfd)
+		return -ENOMEM;
+
+<blue>	switch(data->u.evtchn.type) {</blue>
+	case EVTCHNSTAT_ipi:
+		/* IPI  must map back to the same port# */
+<blue>		if (data->u.evtchn.deliver.port.port != data->u.evtchn.send_port)</blue>
+			goto out_noeventfd; /* -EINVAL */
+		break;
+
+	case EVTCHNSTAT_interdomain:
+<blue>		if (data->u.evtchn.deliver.port.port) {</blue>
+<blue>			if (data->u.evtchn.deliver.port.port >= max_evtchn_port(kvm))</blue>
+				goto out_noeventfd; /* -EINVAL */
+		} else {
+<blue>			eventfd = eventfd_ctx_fdget(data->u.evtchn.deliver.eventfd.fd);</blue>
+			if (IS_ERR(eventfd)) {
+<blue>				ret = PTR_ERR(eventfd);</blue>
+				goto out_noeventfd;
+			}
+		}
+		break;
+
+	case EVTCHNSTAT_virq:
+	case EVTCHNSTAT_closed:
+	case EVTCHNSTAT_unbound:
+	case EVTCHNSTAT_pirq:
+	default: /* Unknown event channel type */
+		goto out; /* -EINVAL */
+	}
+
+<yellow>	evtchnfd->send_port = data->u.evtchn.send_port;</yellow>
+	evtchnfd-&gt;type = data-&gt;u.evtchn.type;
+	if (eventfd) {
+<yellow>		evtchnfd->deliver.eventfd.ctx = eventfd;</yellow>
+	} else {
+		/* We only support 2 level event channels for now */
+<yellow>		if (data->u.evtchn.deliver.port.priority != KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL)</yellow>
+			goto out; /* -EINVAL; */
+
+<yellow>		evtchnfd->deliver.port.port = data->u.evtchn.deliver.port.port;</yellow>
+		evtchnfd-&gt;deliver.port.vcpu_id = data-&gt;u.evtchn.deliver.port.vcpu;
+		evtchnfd-&gt;deliver.port.vcpu_idx = -1;
+		evtchnfd-&gt;deliver.port.priority = data-&gt;u.evtchn.deliver.port.priority;
+	}
+
+<yellow>	mutex_lock(&kvm->lock);</yellow>
+	ret = idr_alloc(&amp;kvm-&gt;arch.xen.evtchn_ports, evtchnfd, port, port + 1,
+			GFP_KERNEL);
+	mutex_unlock(&amp;kvm-&gt;lock);
+	if (ret &gt;= 0)
+		return 0;
+
+<yellow>	if (ret == -ENOSPC)</yellow>
+		ret = -EEXIST;
+out:
+<yellow>	if (eventfd)</yellow>
+<yellow>		eventfd_ctx_put(eventfd);</yellow>
+out_noeventfd:
+<blue>	kfree(evtchnfd);</blue>
+	return ret;
+}
+
+static int kvm_xen_eventfd_deassign(struct kvm *kvm, u32 port)
+{
+	struct evtchnfd *evtchnfd;
+
+<blue>	mutex_lock(&kvm->lock);</blue>
+	evtchnfd = idr_remove(&amp;kvm-&gt;arch.xen.evtchn_ports, port);
+	mutex_unlock(&amp;kvm-&gt;lock);
+
+	if (!evtchnfd)
+		return -ENOENT;
+
+<yellow>	if (kvm)</yellow>
+<yellow>		synchronize_srcu(&kvm->srcu);</yellow>
+<yellow>	if (!evtchnfd->deliver.port.port)</yellow>
+<yellow>		eventfd_ctx_put(evtchnfd->deliver.eventfd.ctx);</yellow>
+<yellow>	kfree(evtchnfd);</yellow>
+	return 0;
+}
+
+static int kvm_xen_eventfd_reset(struct kvm *kvm)
+{
+	struct evtchnfd *evtchnfd;
+	int i;
+
+	mutex_lock(&amp;kvm-&gt;lock);
+<blue>	idr_for_each_entry(&kvm->arch.xen.evtchn_ports, evtchnfd, i) {</blue>
+<yellow>		idr_remove(&kvm->arch.xen.evtchn_ports, evtchnfd->send_port);</yellow>
+		synchronize_srcu(&amp;kvm-&gt;srcu);
+		if (!evtchnfd-&gt;deliver.port.port)
+<yellow>			eventfd_ctx_put(evtchnfd->deliver.eventfd.ctx);</yellow>
+<yellow>		kfree(evtchnfd);</yellow>
+	}
+<blue>	mutex_unlock(&kvm->lock);</blue>
+
+	return 0;
+}
+
+static int kvm_xen_setattr_evtchn(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
+{
+<blue>	u32 port = data->u.evtchn.send_port;</blue>
+
+	if (data-&gt;u.evtchn.flags == KVM_XEN_EVTCHN_RESET)
+<blue>		return kvm_xen_eventfd_reset(kvm);</blue>
+
+<blue>	if (!port || port >= max_evtchn_port(kvm))</blue>
+		return -EINVAL;
+
+<blue>	if (data->u.evtchn.flags == KVM_XEN_EVTCHN_DEASSIGN)</blue>
+<blue>		return kvm_xen_eventfd_deassign(kvm, port);</blue>
+<blue>	if (data->u.evtchn.flags == KVM_XEN_EVTCHN_UPDATE)</blue>
+<blue>		return kvm_xen_eventfd_update(kvm, data);</blue>
+<blue>	if (data->u.evtchn.flags)</blue>
+		return -EINVAL;
+
+<blue>	return kvm_xen_eventfd_assign(kvm, data);</blue>
+}
+
+static bool kvm_xen_hcall_evtchn_send(struct kvm_vcpu *vcpu, u64 param, u64 *r)
+{
+	struct evtchnfd *evtchnfd;
+	struct evtchn_send send;
+	gpa_t gpa;
+	int idx;
+
+<yellow>	idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
+	gpa = kvm_mmu_gva_to_gpa_system(vcpu, param, NULL);
+<yellow>	srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
+
+<yellow>	if (!gpa || kvm_vcpu_read_guest(vcpu, gpa, &send, sizeof(send))) {</yellow>
+		*r = -EFAULT;
+		return true;
+	}
+
+	/* The evtchn_ports idr is protected by vcpu-&gt;kvm-&gt;srcu */
+<yellow>	evtchnfd = idr_find(&vcpu->kvm->arch.xen.evtchn_ports, send.port);</yellow>
+	if (!evtchnfd)
+		return false;
+
+<yellow>	if (evtchnfd->deliver.port.port) {</yellow>
+<yellow>		int ret = kvm_xen_set_evtchn(&evtchnfd->deliver.port, vcpu->kvm);</yellow>
+<yellow>		if (ret < 0 && ret != -ENOTCONN)</yellow>
+			return false;
+	} else {
+<yellow>		eventfd_signal(evtchnfd->deliver.eventfd.ctx, 1);</yellow>
+	}
+
+<yellow>	*r = 0;</yellow>
+	return true;
+}
+
+void kvm_xen_init_vcpu(struct kvm_vcpu *vcpu)
+{
+<blue>	vcpu->arch.xen.vcpu_id = vcpu->vcpu_idx;</blue>
+	vcpu-&gt;arch.xen.poll_evtchn = 0;
+
+	timer_setup(&amp;vcpu-&gt;arch.xen.poll_timer, cancel_evtchn_poll, 0);
+
+	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.runstate_cache);
+	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.vcpu_info_cache);
+	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.vcpu_time_info_cache);
+}
+
+void kvm_xen_destroy_vcpu(struct kvm_vcpu *vcpu)
+{
+<blue>	if (kvm_xen_timer_enabled(vcpu))</blue>
+<yellow>		kvm_xen_stop_timer(vcpu);</yellow>
+
+<blue>	kvm_gpc_deactivate(vcpu->kvm, &vcpu->arch.xen.runstate_cache);</blue>
+	kvm_gpc_deactivate(vcpu-&gt;kvm, &amp;vcpu-&gt;arch.xen.vcpu_info_cache);
+	kvm_gpc_deactivate(vcpu-&gt;kvm, &amp;vcpu-&gt;arch.xen.vcpu_time_info_cache);
+
+	del_timer_sync(&amp;vcpu-&gt;arch.xen.poll_timer);
+}
+
+void kvm_xen_init_vm(struct kvm *kvm)
+{
+<blue>	idr_init(&kvm->arch.xen.evtchn_ports);</blue>
+	kvm_gpc_init(&amp;kvm-&gt;arch.xen.shinfo_cache);
+}
+
+void kvm_xen_destroy_vm(struct kvm *kvm)
+<yellow>{</yellow>
+	struct evtchnfd *evtchnfd;
+	int i;
+
+<yellow>	kvm_gpc_deactivate(kvm, &kvm->arch.xen.shinfo_cache);</yellow>
+
+<yellow>	idr_for_each_entry(&kvm->arch.xen.evtchn_ports, evtchnfd, i) {</yellow>
+<yellow>		if (!evtchnfd->deliver.port.port)</yellow>
+<yellow>			eventfd_ctx_put(evtchnfd->deliver.eventfd.ctx);</yellow>
+<yellow>		kfree(evtchnfd);</yellow>
+	}
+<yellow>	idr_destroy(&kvm->arch.xen.evtchn_ports);</yellow>
+
+	if (kvm-&gt;arch.xen_hvm_config.msr)
+<yellow>		static_branch_slow_dec_deferred(&kvm_xen_enabled);</yellow>
+}
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

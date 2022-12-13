@@ -1,0 +1,275 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br>152<br>153<br>154<br>155<br>156<br>157<br>158<br>159<br>160<br>161<br>162<br>163<br>164<br>165<br>166<br>167<br>168<br>169<br>170<br>171<br>172<br>173<br>174<br>175<br>176<br>177<br>178<br>179<br>180<br>181<br>182<br>183<br>184<br>185<br>186<br>187<br>188<br>189<br>190<br>191<br>192<br>193<br>194<br>195<br>196<br>197<br>198<br>199<br>200<br>201<br>202<br>203<br>204<br>205<br>206<br>207<br>208<br>209<br>210<br>211<br>212<br>213<br>214<br>215<br>216<br>217<br>218<br>219<br>220<br>221<br>222<br>223<br>224<br>225<br>226<br>227<br>228<br>229<br>230<br>231<br>232<br>233<br>234<br>235<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/*
+ *  include/linux/ktime.h
+ *
+ *  ktime_t - nanosecond-resolution time format.
+ *
+ *   Copyright(C) 2005, Thomas Gleixner &lt;tglx@linutronix.de&gt;
+ *   Copyright(C) 2005, Red Hat, Inc., Ingo Molnar
+ *
+ *  data type definitions, declarations, prototypes and macros.
+ *
+ *  Started by: Thomas Gleixner and Ingo Molnar
+ *
+ *  Credits:
+ *
+ *  	Roman Zippel provided the ideas and primary code snippets of
+ *  	the ktime_t union and further simplifications of the original
+ *  	code.
+ *
+ *  For licencing details see kernel-base/COPYING
+ */
+#ifndef _LINUX_KTIME_H
+#define _LINUX_KTIME_H
+
+#include &lt;linux/time.h&gt;
+#include &lt;linux/jiffies.h&gt;
+#include &lt;asm/bug.h&gt;
+
+/* Nanosecond scalar representation for kernel time values */
+typedef s64	ktime_t;
+
+/**
+ * ktime_set - Set a ktime_t variable from a seconds/nanoseconds value
+ * @secs:	seconds to set
+ * @nsecs:	nanoseconds to set
+ *
+ * Return: The ktime_t representation of the value.
+ */
+static inline ktime_t ktime_set(const s64 secs, const unsigned long nsecs)
+{
+<yellow>	if (unlikely(secs >= KTIME_SEC_MAX))</yellow>
+		return KTIME_MAX;
+
+<yellow>	return secs * NSEC_PER_SEC + (s64)nsecs;</yellow>
+}
+
+/* Subtract two ktime_t variables. rem = lhs -rhs: */
+#define ktime_sub(lhs, rhs)	((lhs) - (rhs))
+
+/* Add two ktime_t variables. res = lhs + rhs: */
+#define ktime_add(lhs, rhs)	((lhs) + (rhs))
+
+/*
+ * Same as ktime_add(), but avoids undefined behaviour on overflow; however,
+ * this means that you must check the result for overflow yourself.
+ */
+#define ktime_add_unsafe(lhs, rhs)	((u64) (lhs) + (rhs))
+
+/*
+ * Add a ktime_t variable and a scalar nanosecond value.
+ * res = kt + nsval:
+ */
+#define ktime_add_ns(kt, nsval)		((kt) + (nsval))
+
+/*
+ * Subtract a scalar nanosecod from a ktime_t variable
+ * res = kt - nsval:
+ */
+#define ktime_sub_ns(kt, nsval)		((kt) - (nsval))
+
+/* convert a timespec64 to ktime_t format: */
+static inline ktime_t timespec64_to_ktime(struct timespec64 ts)
+{
+<yellow>	return ktime_set(ts.tv_sec, ts.tv_nsec);</yellow>
+}
+
+/* Map the ktime_t to timespec conversion to ns_to_timespec function */
+#define ktime_to_timespec64(kt)		ns_to_timespec64((kt))
+
+/* Convert ktime_t to nanoseconds */
+static inline s64 ktime_to_ns(const ktime_t kt)
+{
+	return kt;
+}
+
+/**
+ * ktime_compare - Compares two ktime_t variables for less, greater or equal
+ * @cmp1:	comparable1
+ * @cmp2:	comparable2
+ *
+ * Return: ...
+ *   cmp1  &lt; cmp2: return &lt;0
+ *   cmp1 == cmp2: return 0
+ *   cmp1  &gt; cmp2: return &gt;0
+ */
+static inline int ktime_compare(const ktime_t cmp1, const ktime_t cmp2)
+{
+<yellow>	if (cmp1 < cmp2)</yellow>
+<yellow>		return -1;</yellow>
+<yellow>	if (cmp1 > cmp2)</yellow>
+		return 1;
+	return 0;
+}
+
+/**
+ * ktime_after - Compare if a ktime_t value is bigger than another one.
+ * @cmp1:	comparable1
+ * @cmp2:	comparable2
+ *
+ * Return: true if cmp1 happened after cmp2.
+ */
+static inline bool ktime_after(const ktime_t cmp1, const ktime_t cmp2)
+{
+<yellow>	return ktime_compare(cmp1, cmp2) > 0;</yellow>
+}
+
+/**
+ * ktime_before - Compare if a ktime_t value is smaller than another one.
+ * @cmp1:	comparable1
+ * @cmp2:	comparable2
+ *
+ * Return: true if cmp1 happened before cmp2.
+ */
+static inline bool ktime_before(const ktime_t cmp1, const ktime_t cmp2)
+{
+<yellow>	return ktime_compare(cmp1, cmp2) < 0;</yellow>
+}
+
+#if BITS_PER_LONG &lt; 64
+extern s64 __ktime_divns(const ktime_t kt, s64 div);
+static inline s64 ktime_divns(const ktime_t kt, s64 div)
+{
+	/*
+	 * Negative divisors could cause an inf loop,
+	 * so bug out here.
+	 */
+	BUG_ON(div &lt; 0);
+	if (__builtin_constant_p(div) &amp;&amp; !(div &gt;&gt; 32)) {
+		s64 ns = kt;
+		u64 tmp = ns &lt; 0 ? -ns : ns;
+
+		do_div(tmp, div);
+		return ns &lt; 0 ? -tmp : tmp;
+	} else {
+		return __ktime_divns(kt, div);
+	}
+}
+#else /* BITS_PER_LONG &lt; 64 */
+static inline s64 ktime_divns(const ktime_t kt, s64 div)
+{
+	/*
+	 * 32-bit implementation cannot handle negative divisors,
+	 * so catch them on 64bit as well.
+	 */
+<yellow>	WARN_ON(div < 0);</yellow>
+<yellow>	return kt / div;</yellow>
+}
+#endif
+
+static inline s64 ktime_to_us(const ktime_t kt)
+{
+<yellow>	return ktime_divns(kt, NSEC_PER_USEC);</yellow>
+}
+
+static inline s64 ktime_to_ms(const ktime_t kt)
+{
+<yellow>	return ktime_divns(kt, NSEC_PER_MSEC);</yellow>
+}
+
+static inline s64 ktime_us_delta(const ktime_t later, const ktime_t earlier)
+{
+<yellow>       return ktime_to_us(ktime_sub(later, earlier));</yellow>
+}
+
+static inline s64 ktime_ms_delta(const ktime_t later, const ktime_t earlier)
+{
+<yellow>	return ktime_to_ms(ktime_sub(later, earlier));</yellow>
+}
+
+static inline ktime_t ktime_add_us(const ktime_t kt, const u64 usec)
+{
+<yellow>	return ktime_add_ns(kt, usec * NSEC_PER_USEC);</yellow>
+}
+
+static inline ktime_t ktime_add_ms(const ktime_t kt, const u64 msec)
+{
+	return ktime_add_ns(kt, msec * NSEC_PER_MSEC);
+}
+
+static inline ktime_t ktime_sub_us(const ktime_t kt, const u64 usec)
+{
+	return ktime_sub_ns(kt, usec * NSEC_PER_USEC);
+}
+
+static inline ktime_t ktime_sub_ms(const ktime_t kt, const u64 msec)
+{
+	return ktime_sub_ns(kt, msec * NSEC_PER_MSEC);
+}
+
+extern ktime_t ktime_add_safe(const ktime_t lhs, const ktime_t rhs);
+
+/**
+ * ktime_to_timespec64_cond - convert a ktime_t variable to timespec64
+ *			    format only if the variable contains data
+ * @kt:		the ktime_t variable to convert
+ * @ts:		the timespec variable to store the result in
+ *
+ * Return: %true if there was a successful conversion, %false if kt was 0.
+ */
+static inline __must_check bool ktime_to_timespec64_cond(const ktime_t kt,
+						       struct timespec64 *ts)
+{
+<yellow>	if (kt) {</yellow>
+<yellow>		*ts = ktime_to_timespec64(kt);</yellow>
+		return true;
+	} else {
+		return false;
+	}
+}
+
+#include &lt;vdso/ktime.h&gt;
+
+static inline ktime_t ns_to_ktime(u64 ns)
+{
+<yellow>	return ns;</yellow>
+}
+
+static inline ktime_t ms_to_ktime(u64 ms)
+{
+	return ms * NSEC_PER_MSEC;
+}
+
+# include &lt;linux/timekeeping.h&gt;
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

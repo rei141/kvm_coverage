@@ -1,0 +1,376 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br>152<br>153<br>154<br>155<br>156<br>157<br>158<br>159<br>160<br>161<br>162<br>163<br>164<br>165<br>166<br>167<br>168<br>169<br>170<br>171<br>172<br>173<br>174<br>175<br>176<br>177<br>178<br>179<br>180<br>181<br>182<br>183<br>184<br>185<br>186<br>187<br>188<br>189<br>190<br>191<br>192<br>193<br>194<br>195<br>196<br>197<br>198<br>199<br>200<br>201<br>202<br>203<br>204<br>205<br>206<br>207<br>208<br>209<br>210<br>211<br>212<br>213<br>214<br>215<br>216<br>217<br>218<br>219<br>220<br>221<br>222<br>223<br>224<br>225<br>226<br>227<br>228<br>229<br>230<br>231<br>232<br>233<br>234<br>235<br>236<br>237<br>238<br>239<br>240<br>241<br>242<br>243<br>244<br>245<br>246<br>247<br>248<br>249<br>250<br>251<br>252<br>253<br>254<br>255<br>256<br>257<br>258<br>259<br>260<br>261<br>262<br>263<br>264<br>265<br>266<br>267<br>268<br>269<br>270<br>271<br>272<br>273<br>274<br>275<br>276<br>277<br>278<br>279<br>280<br>281<br>282<br>283<br>284<br>285<br>286<br>287<br>288<br>289<br>290<br>291<br>292<br>293<br>294<br>295<br>296<br>297<br>298<br>299<br>300<br>301<br>302<br>303<br>304<br>305<br>306<br>307<br>308<br>309<br>310<br>311<br>312<br>313<br>314<br>315<br>316<br>317<br>318<br>319<br>320<br>321<br>322<br>323<br>324<br>325<br>326<br>327<br>328<br>329<br>330<br>331<br>332<br>333<br>334<br>335<br>336<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_MATH64_H
+#define _LINUX_MATH64_H
+
+#include &lt;linux/types.h&gt;
+#include &lt;linux/math.h&gt;
+#include &lt;vdso/math64.h&gt;
+#include &lt;asm/div64.h&gt;
+
+#if BITS_PER_LONG == 64
+
+#define div64_long(x, y) div64_s64((x), (y))
+#define div64_ul(x, y)   div64_u64((x), (y))
+
+/**
+ * div_u64_rem - unsigned 64bit divide with 32bit divisor with remainder
+ * @dividend: unsigned 64bit dividend
+ * @divisor: unsigned 32bit divisor
+ * @remainder: pointer to unsigned 32bit remainder
+ *
+ * Return: sets ``*remainder``, then returns dividend / divisor
+ *
+ * This is commonly provided by 32bit archs to provide an optimized 64bit
+ * divide.
+ */
+static inline u64 div_u64_rem(u64 dividend, u32 divisor, u32 *remainder)
+{
+<yellow>	*remainder = dividend % divisor;</yellow>
+<yellow>	return dividend / divisor;</yellow>
+}
+
+/*
+ * div_s64_rem - signed 64bit divide with 32bit divisor with remainder
+ * @dividend: signed 64bit dividend
+ * @divisor: signed 32bit divisor
+ * @remainder: pointer to signed 32bit remainder
+ *
+ * Return: sets ``*remainder``, then returns dividend / divisor
+ */
+static inline s64 div_s64_rem(s64 dividend, s32 divisor, s32 *remainder)
+{
+<yellow>	*remainder = dividend % divisor;</yellow>
+<yellow>	return dividend / divisor;</yellow>
+}
+
+/*
+ * div64_u64_rem - unsigned 64bit divide with 64bit divisor and remainder
+ * @dividend: unsigned 64bit dividend
+ * @divisor: unsigned 64bit divisor
+ * @remainder: pointer to unsigned 64bit remainder
+ *
+ * Return: sets ``*remainder``, then returns dividend / divisor
+ */
+static inline u64 div64_u64_rem(u64 dividend, u64 divisor, u64 *remainder)
+{
+<yellow>	*remainder = dividend % divisor;</yellow>
+<yellow>	return dividend / divisor;</yellow>
+}
+
+/*
+ * div64_u64 - unsigned 64bit divide with 64bit divisor
+ * @dividend: unsigned 64bit dividend
+ * @divisor: unsigned 64bit divisor
+ *
+ * Return: dividend / divisor
+ */
+static inline u64 div64_u64(u64 dividend, u64 divisor)
+{
+<yellow>	return dividend / divisor;</yellow>
+}
+
+/*
+ * div64_s64 - signed 64bit divide with 64bit divisor
+ * @dividend: signed 64bit dividend
+ * @divisor: signed 64bit divisor
+ *
+ * Return: dividend / divisor
+ */
+static inline s64 div64_s64(s64 dividend, s64 divisor)
+{
+<yellow>	return dividend / divisor;</yellow>
+}
+
+#elif BITS_PER_LONG == 32
+
+#define div64_long(x, y) div_s64((x), (y))
+#define div64_ul(x, y)   div_u64((x), (y))
+
+#ifndef div_u64_rem
+static inline u64 div_u64_rem(u64 dividend, u32 divisor, u32 *remainder)
+{
+	*remainder = do_div(dividend, divisor);
+	return dividend;
+}
+#endif
+
+#ifndef div_s64_rem
+extern s64 div_s64_rem(s64 dividend, s32 divisor, s32 *remainder);
+#endif
+
+#ifndef div64_u64_rem
+extern u64 div64_u64_rem(u64 dividend, u64 divisor, u64 *remainder);
+#endif
+
+#ifndef div64_u64
+extern u64 div64_u64(u64 dividend, u64 divisor);
+#endif
+
+#ifndef div64_s64
+extern s64 div64_s64(s64 dividend, s64 divisor);
+#endif
+
+#endif /* BITS_PER_LONG */
+
+/**
+ * div_u64 - unsigned 64bit divide with 32bit divisor
+ * @dividend: unsigned 64bit dividend
+ * @divisor: unsigned 32bit divisor
+ *
+ * This is the most common 64bit divide and should be used if possible,
+ * as many 32bit archs can optimize this variant better than a full 64bit
+ * divide.
+ */
+#ifndef div_u64
+static inline u64 div_u64(u64 dividend, u32 divisor)
+{
+	u32 remainder;
+<yellow>	return div_u64_rem(dividend, divisor, &remainder);</yellow>
+}
+#endif
+
+/**
+ * div_s64 - signed 64bit divide with 32bit divisor
+ * @dividend: signed 64bit dividend
+ * @divisor: signed 32bit divisor
+ */
+#ifndef div_s64
+static inline s64 div_s64(s64 dividend, s32 divisor)
+{
+	s32 remainder;
+	return div_s64_rem(dividend, divisor, &amp;remainder);
+}
+#endif
+
+u32 iter_div_u64_rem(u64 dividend, u32 divisor, u64 *remainder);
+
+#ifndef mul_u32_u32
+/*
+ * Many a GCC version messes this up and generates a 64x64 mult :-(
+ */
+static inline u64 mul_u32_u32(u32 a, u32 b)
+{
+<yellow>	return (u64)a * b;</yellow>
+}
+#endif
+
+#if defined(CONFIG_ARCH_SUPPORTS_INT128) &amp;&amp; defined(__SIZEOF_INT128__)
+
+#ifndef mul_u64_u32_shr
+static inline u64 mul_u64_u32_shr(u64 a, u32 mul, unsigned int shift)
+{
+<yellow>	return (u64)(((unsigned __int128)a * mul) >> shift);</yellow>
+}
+#endif /* mul_u64_u32_shr */
+
+#ifndef mul_u64_u64_shr
+static inline u64 mul_u64_u64_shr(u64 a, u64 mul, unsigned int shift)
+{
+<blue>	return (u64)(((unsigned __int128)a * mul) >> shift);</blue>
+}
+#endif /* mul_u64_u64_shr */
+
+#else
+
+#ifndef mul_u64_u32_shr
+static inline u64 mul_u64_u32_shr(u64 a, u32 mul, unsigned int shift)
+{
+	u32 ah, al;
+	u64 ret;
+
+	al = a;
+	ah = a &gt;&gt; 32;
+
+	ret = mul_u32_u32(al, mul) &gt;&gt; shift;
+	if (ah)
+		ret += mul_u32_u32(ah, mul) &lt;&lt; (32 - shift);
+
+	return ret;
+}
+#endif /* mul_u64_u32_shr */
+
+#ifndef mul_u64_u64_shr
+static inline u64 mul_u64_u64_shr(u64 a, u64 b, unsigned int shift)
+{
+	union {
+		u64 ll;
+		struct {
+#ifdef __BIG_ENDIAN
+			u32 high, low;
+#else
+			u32 low, high;
+#endif
+		} l;
+	} rl, rm, rn, rh, a0, b0;
+	u64 c;
+
+	a0.ll = a;
+	b0.ll = b;
+
+	rl.ll = mul_u32_u32(a0.l.low, b0.l.low);
+	rm.ll = mul_u32_u32(a0.l.low, b0.l.high);
+	rn.ll = mul_u32_u32(a0.l.high, b0.l.low);
+	rh.ll = mul_u32_u32(a0.l.high, b0.l.high);
+
+	/*
+	 * Each of these lines computes a 64-bit intermediate result into &quot;c&quot;,
+	 * starting at bits 32-95.  The low 32-bits go into the result of the
+	 * multiplication, the high 32-bits are carried into the next step.
+	 */
+	rl.l.high = c = (u64)rl.l.high + rm.l.low + rn.l.low;
+	rh.l.low = c = (c &gt;&gt; 32) + rm.l.high + rn.l.high + rh.l.low;
+	rh.l.high = (c &gt;&gt; 32) + rh.l.high;
+
+	/*
+	 * The 128-bit result of the multiplication is in rl.ll and rh.ll,
+	 * shift it right and throw away the high part of the result.
+	 */
+	if (shift == 0)
+		return rl.ll;
+	if (shift &lt; 64)
+		return (rl.ll &gt;&gt; shift) | (rh.ll &lt;&lt; (64 - shift));
+	return rh.ll &gt;&gt; (shift &amp; 63);
+}
+#endif /* mul_u64_u64_shr */
+
+#endif
+
+#ifndef mul_s64_u64_shr
+static inline u64 mul_s64_u64_shr(s64 a, u64 b, unsigned int shift)
+{
+	u64 ret;
+
+	/*
+	 * Extract the sign before the multiplication and put it back
+	 * afterwards if needed.
+	 */
+<yellow>	ret = mul_u64_u64_shr(abs(a), b, shift);</yellow>
+
+	if (a &lt; 0)
+<yellow>		ret = -((s64) ret);</yellow>
+
+	return ret;
+}
+#endif /* mul_s64_u64_shr */
+
+#ifndef mul_u64_u32_div
+static inline u64 mul_u64_u32_div(u64 a, u32 mul, u32 divisor)
+{
+	union {
+		u64 ll;
+		struct {
+#ifdef __BIG_ENDIAN
+			u32 high, low;
+#else
+			u32 low, high;
+#endif
+		} l;
+	} u, rl, rh;
+
+	u.ll = a;
+	rl.ll = mul_u32_u32(u.l.low, mul);
+	rh.ll = mul_u32_u32(u.l.high, mul) + rl.l.high;
+
+	/* Bits 32-63 of the result will be in rh.l.low. */
+	rl.l.high = do_div(rh.ll, divisor);
+
+	/* Bits 0-31 of the result will be in rl.l.low.	*/
+	do_div(rl.ll, divisor);
+
+	rl.l.high = rh.l.low;
+	return rl.ll;
+}
+#endif /* mul_u64_u32_div */
+
+u64 mul_u64_u64_div_u64(u64 a, u64 mul, u64 div);
+
+#define DIV64_U64_ROUND_UP(ll, d)	\
+	({ u64 _tmp = (d); div64_u64((ll) + _tmp - 1, _tmp); })
+
+/**
+ * DIV64_U64_ROUND_CLOSEST - unsigned 64bit divide with 64bit divisor rounded to nearest integer
+ * @dividend: unsigned 64bit dividend
+ * @divisor: unsigned 64bit divisor
+ *
+ * Divide unsigned 64bit dividend by unsigned 64bit divisor
+ * and round to closest integer.
+ *
+ * Return: dividend / divisor rounded to nearest integer
+ */
+#define DIV64_U64_ROUND_CLOSEST(dividend, divisor)	\
+	({ u64 _tmp = (divisor); div64_u64((dividend) + _tmp / 2, _tmp); })
+
+/*
+ * DIV_U64_ROUND_CLOSEST - unsigned 64bit divide with 32bit divisor rounded to nearest integer
+ * @dividend: unsigned 64bit dividend
+ * @divisor: unsigned 32bit divisor
+ *
+ * Divide unsigned 64bit dividend by unsigned 32bit divisor
+ * and round to closest integer.
+ *
+ * Return: dividend / divisor rounded to nearest integer
+ */
+#define DIV_U64_ROUND_CLOSEST(dividend, divisor)	\
+	({ u32 _tmp = (divisor); div_u64((u64)(dividend) + _tmp / 2, _tmp); })
+
+/*
+ * DIV_S64_ROUND_CLOSEST - signed 64bit divide with 32bit divisor rounded to nearest integer
+ * @dividend: signed 64bit dividend
+ * @divisor: signed 32bit divisor
+ *
+ * Divide signed 64bit dividend by signed 32bit divisor
+ * and round to closest integer.
+ *
+ * Return: dividend / divisor rounded to nearest integer
+ */
+#define DIV_S64_ROUND_CLOSEST(dividend, divisor)(	\
+{							\
+	s64 __x = (dividend);				\
+	s32 __d = (divisor);				\
+	((__x &gt; 0) == (__d &gt; 0)) ?			\
+		div_s64((__x + (__d / 2)), __d) :	\
+		div_s64((__x - (__d / 2)), __d);	\
+}							\
+)
+#endif /* _LINUX_MATH64_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

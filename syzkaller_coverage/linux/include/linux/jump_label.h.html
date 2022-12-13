@@ -1,0 +1,565 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, 'Courier New';
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20<br>21<br>22<br>23<br>24<br>25<br>26<br>27<br>28<br>29<br>30<br>31<br>32<br>33<br>34<br>35<br>36<br>37<br>38<br>39<br>40<br>41<br>42<br>43<br>44<br>45<br>46<br>47<br>48<br>49<br>50<br>51<br>52<br>53<br>54<br>55<br>56<br>57<br>58<br>59<br>60<br>61<br>62<br>63<br>64<br>65<br>66<br>67<br>68<br>69<br>70<br>71<br>72<br>73<br>74<br>75<br>76<br>77<br>78<br>79<br>80<br>81<br>82<br>83<br>84<br>85<br>86<br>87<br>88<br>89<br>90<br>91<br>92<br>93<br>94<br>95<br>96<br>97<br>98<br>99<br>100<br>101<br>102<br>103<br>104<br>105<br>106<br>107<br>108<br>109<br>110<br>111<br>112<br>113<br>114<br>115<br>116<br>117<br>118<br>119<br>120<br>121<br>122<br>123<br>124<br>125<br>126<br>127<br>128<br>129<br>130<br>131<br>132<br>133<br>134<br>135<br>136<br>137<br>138<br>139<br>140<br>141<br>142<br>143<br>144<br>145<br>146<br>147<br>148<br>149<br>150<br>151<br>152<br>153<br>154<br>155<br>156<br>157<br>158<br>159<br>160<br>161<br>162<br>163<br>164<br>165<br>166<br>167<br>168<br>169<br>170<br>171<br>172<br>173<br>174<br>175<br>176<br>177<br>178<br>179<br>180<br>181<br>182<br>183<br>184<br>185<br>186<br>187<br>188<br>189<br>190<br>191<br>192<br>193<br>194<br>195<br>196<br>197<br>198<br>199<br>200<br>201<br>202<br>203<br>204<br>205<br>206<br>207<br>208<br>209<br>210<br>211<br>212<br>213<br>214<br>215<br>216<br>217<br>218<br>219<br>220<br>221<br>222<br>223<br>224<br>225<br>226<br>227<br>228<br>229<br>230<br>231<br>232<br>233<br>234<br>235<br>236<br>237<br>238<br>239<br>240<br>241<br>242<br>243<br>244<br>245<br>246<br>247<br>248<br>249<br>250<br>251<br>252<br>253<br>254<br>255<br>256<br>257<br>258<br>259<br>260<br>261<br>262<br>263<br>264<br>265<br>266<br>267<br>268<br>269<br>270<br>271<br>272<br>273<br>274<br>275<br>276<br>277<br>278<br>279<br>280<br>281<br>282<br>283<br>284<br>285<br>286<br>287<br>288<br>289<br>290<br>291<br>292<br>293<br>294<br>295<br>296<br>297<br>298<br>299<br>300<br>301<br>302<br>303<br>304<br>305<br>306<br>307<br>308<br>309<br>310<br>311<br>312<br>313<br>314<br>315<br>316<br>317<br>318<br>319<br>320<br>321<br>322<br>323<br>324<br>325<br>326<br>327<br>328<br>329<br>330<br>331<br>332<br>333<br>334<br>335<br>336<br>337<br>338<br>339<br>340<br>341<br>342<br>343<br>344<br>345<br>346<br>347<br>348<br>349<br>350<br>351<br>352<br>353<br>354<br>355<br>356<br>357<br>358<br>359<br>360<br>361<br>362<br>363<br>364<br>365<br>366<br>367<br>368<br>369<br>370<br>371<br>372<br>373<br>374<br>375<br>376<br>377<br>378<br>379<br>380<br>381<br>382<br>383<br>384<br>385<br>386<br>387<br>388<br>389<br>390<br>391<br>392<br>393<br>394<br>395<br>396<br>397<br>398<br>399<br>400<br>401<br>402<br>403<br>404<br>405<br>406<br>407<br>408<br>409<br>410<br>411<br>412<br>413<br>414<br>415<br>416<br>417<br>418<br>419<br>420<br>421<br>422<br>423<br>424<br>425<br>426<br>427<br>428<br>429<br>430<br>431<br>432<br>433<br>434<br>435<br>436<br>437<br>438<br>439<br>440<br>441<br>442<br>443<br>444<br>445<br>446<br>447<br>448<br>449<br>450<br>451<br>452<br>453<br>454<br>455<br>456<br>457<br>458<br>459<br>460<br>461<br>462<br>463<br>464<br>465<br>466<br>467<br>468<br>469<br>470<br>471<br>472<br>473<br>474<br>475<br>476<br>477<br>478<br>479<br>480<br>481<br>482<br>483<br>484<br>485<br>486<br>487<br>488<br>489<br>490<br>491<br>492<br>493<br>494<br>495<br>496<br>497<br>498<br>499<br>500<br>501<br>502<br>503<br>504<br>505<br>506<br>507<br>508<br>509<br>510<br>511<br>512<br>513<br>514<br>515<br>516<br>517<br>518<br>519<br>520<br>521<br>522<br>523<br>524<br>525<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_JUMP_LABEL_H
+#define _LINUX_JUMP_LABEL_H
+
+/*
+ * Jump label support
+ *
+ * Copyright (C) 2009-2012 Jason Baron &lt;jbaron@redhat.com&gt;
+ * Copyright (C) 2011-2012 Red Hat, Inc., Peter Zijlstra
+ *
+ * DEPRECATED API:
+ *
+ * The use of &#x27;struct static_key&#x27; directly, is now DEPRECATED. In addition
+ * static_key_{true,false}() is also DEPRECATED. IE DO NOT use the following:
+ *
+ * struct static_key false = STATIC_KEY_INIT_FALSE;
+ * struct static_key true = STATIC_KEY_INIT_TRUE;
+ * static_key_true()
+ * static_key_false()
+ *
+ * The updated API replacements are:
+ *
+ * DEFINE_STATIC_KEY_TRUE(key);
+ * DEFINE_STATIC_KEY_FALSE(key);
+ * DEFINE_STATIC_KEY_ARRAY_TRUE(keys, count);
+ * DEFINE_STATIC_KEY_ARRAY_FALSE(keys, count);
+ * static_branch_likely()
+ * static_branch_unlikely()
+ *
+ * Jump labels provide an interface to generate dynamic branches using
+ * self-modifying code. Assuming toolchain and architecture support, if we
+ * define a &quot;key&quot; that is initially false via &quot;DEFINE_STATIC_KEY_FALSE(key)&quot;,
+ * an &quot;if (static_branch_unlikely(&amp;key))&quot; statement is an unconditional branch
+ * (which defaults to false - and the true block is placed out of line).
+ * Similarly, we can define an initially true key via
+ * &quot;DEFINE_STATIC_KEY_TRUE(key)&quot;, and use it in the same
+ * &quot;if (static_branch_unlikely(&amp;key))&quot;, in which case we will generate an
+ * unconditional branch to the out-of-line true branch. Keys that are
+ * initially true or false can be using in both static_branch_unlikely()
+ * and static_branch_likely() statements.
+ *
+ * At runtime we can change the branch target by setting the key
+ * to true via a call to static_branch_enable(), or false using
+ * static_branch_disable(). If the direction of the branch is switched by
+ * these calls then we run-time modify the branch target via a
+ * no-op -&gt; jump or jump -&gt; no-op conversion. For example, for an
+ * initially false key that is used in an &quot;if (static_branch_unlikely(&amp;key))&quot;
+ * statement, setting the key to true requires us to patch in a jump
+ * to the out-of-line of true branch.
+ *
+ * In addition to static_branch_{enable,disable}, we can also reference count
+ * the key or branch direction via static_branch_{inc,dec}. Thus,
+ * static_branch_inc() can be thought of as a &#x27;make more true&#x27; and
+ * static_branch_dec() as a &#x27;make more false&#x27;.
+ *
+ * Since this relies on modifying code, the branch modifying functions
+ * must be considered absolute slow paths (machine wide synchronization etc.).
+ * OTOH, since the affected branches are unconditional, their runtime overhead
+ * will be absolutely minimal, esp. in the default (off) case where the total
+ * effect is a single NOP of appropriate size. The on case will patch in a jump
+ * to the out-of-line block.
+ *
+ * When the control is directly exposed to userspace, it is prudent to delay the
+ * decrement to avoid high frequency code modifications which can (and do)
+ * cause significant performance degradation. Struct static_key_deferred and
+ * static_key_slow_dec_deferred() provide for this.
+ *
+ * Lacking toolchain and or architecture support, static keys fall back to a
+ * simple conditional branch.
+ *
+ * Additional babbling in: Documentation/staging/static-keys.rst
+ */
+
+#ifndef __ASSEMBLY__
+
+#include &lt;linux/types.h&gt;
+#include &lt;linux/compiler.h&gt;
+
+extern bool static_key_initialized;
+
+#define STATIC_KEY_CHECK_USE(key) WARN(!static_key_initialized,		      \
+				    &quot;%s(): static key &#x27;%pS&#x27; used before call to jump_label_init()&quot;, \
+				    __func__, (key))
+
+struct static_key {
+	atomic_t enabled;
+#ifdef CONFIG_JUMP_LABEL
+/*
+ * Note:
+ *   To make anonymous unions work with old compilers, the static
+ *   initialization of them requires brackets. This creates a dependency
+ *   on the order of the struct with the initializers. If any fields
+ *   are added, STATIC_KEY_INIT_TRUE and STATIC_KEY_INIT_FALSE may need
+ *   to be modified.
+ *
+ * bit 0 =&gt; 1 if key is initially true
+ *	    0 if initially false
+ * bit 1 =&gt; 1 if points to struct static_key_mod
+ *	    0 if points to struct jump_entry
+ */
+	union {
+		unsigned long type;
+		struct jump_entry *entries;
+		struct static_key_mod *next;
+	};
+#endif	/* CONFIG_JUMP_LABEL */
+};
+
+#endif /* __ASSEMBLY__ */
+
+#ifdef CONFIG_JUMP_LABEL
+#include &lt;asm/jump_label.h&gt;
+
+#ifndef __ASSEMBLY__
+#ifdef CONFIG_HAVE_ARCH_JUMP_LABEL_RELATIVE
+
+struct jump_entry {
+	s32 code;
+	s32 target;
+	long key;	// key may be far away from the core kernel under KASLR
+};
+
+static inline unsigned long jump_entry_code(const struct jump_entry *entry)
+{
+<blue>	return (unsigned long)&entry->code + entry->code;</blue>
+}
+
+static inline unsigned long jump_entry_target(const struct jump_entry *entry)
+{
+	return (unsigned long)&amp;entry-&gt;target + entry-&gt;target;
+}
+
+static inline struct static_key *jump_entry_key(const struct jump_entry *entry)
+{
+<blue>	long offset = entry->key & ~3L;</blue>
+
+	return (struct static_key *)((unsigned long)&amp;entry-&gt;key + offset);
+}
+
+#else
+
+static inline unsigned long jump_entry_code(const struct jump_entry *entry)
+{
+	return entry-&gt;code;
+}
+
+static inline unsigned long jump_entry_target(const struct jump_entry *entry)
+{
+	return entry-&gt;target;
+}
+
+static inline struct static_key *jump_entry_key(const struct jump_entry *entry)
+{
+	return (struct static_key *)((unsigned long)entry-&gt;key &amp; ~3UL);
+}
+
+#endif
+
+static inline bool jump_entry_is_branch(const struct jump_entry *entry)
+{
+<blue>	return (unsigned long)entry->key & 1UL;</blue>
+}
+
+static inline bool jump_entry_is_init(const struct jump_entry *entry)
+{
+<blue>	return (unsigned long)entry->key & 2UL;</blue>
+}
+
+static inline void jump_entry_set_init(struct jump_entry *entry, bool set)
+{
+	if (set)
+<yellow>		entry->key |= 2;</yellow>
+	else
+<yellow>		entry->key &= ~2;</yellow>
+}
+
+static inline int jump_entry_size(struct jump_entry *entry)
+{
+#ifdef JUMP_LABEL_NOP_SIZE
+	return JUMP_LABEL_NOP_SIZE;
+#else
+<yellow>	return arch_jump_entry_size(entry);</yellow>
+#endif
+}
+
+#endif
+#endif
+
+#ifndef __ASSEMBLY__
+
+enum jump_label_type {
+	JUMP_LABEL_NOP = 0,
+	JUMP_LABEL_JMP,
+};
+
+struct module;
+
+#ifdef CONFIG_JUMP_LABEL
+
+#define JUMP_TYPE_FALSE		0UL
+#define JUMP_TYPE_TRUE		1UL
+#define JUMP_TYPE_LINKED	2UL
+#define JUMP_TYPE_MASK		3UL
+
+static __always_inline bool static_key_false(struct static_key *key)
+{
+<blue>	return arch_static_branch(key, false);</blue>
+}
+
+static __always_inline bool static_key_true(struct static_key *key)
+{
+	return !arch_static_branch(key, true);
+}
+
+extern struct jump_entry __start___jump_table[];
+extern struct jump_entry __stop___jump_table[];
+
+extern void jump_label_init(void);
+extern void jump_label_lock(void);
+extern void jump_label_unlock(void);
+extern void arch_jump_label_transform(struct jump_entry *entry,
+				      enum jump_label_type type);
+extern bool arch_jump_label_transform_queue(struct jump_entry *entry,
+					    enum jump_label_type type);
+extern void arch_jump_label_transform_apply(void);
+extern int jump_label_text_reserved(void *start, void *end);
+extern void static_key_slow_inc(struct static_key *key);
+extern void static_key_slow_dec(struct static_key *key);
+extern void static_key_slow_inc_cpuslocked(struct static_key *key);
+extern void static_key_slow_dec_cpuslocked(struct static_key *key);
+extern int static_key_count(struct static_key *key);
+extern void static_key_enable(struct static_key *key);
+extern void static_key_disable(struct static_key *key);
+extern void static_key_enable_cpuslocked(struct static_key *key);
+extern void static_key_disable_cpuslocked(struct static_key *key);
+extern enum jump_label_type jump_label_init_type(struct jump_entry *entry);
+
+/*
+ * We should be using ATOMIC_INIT() for initializing .enabled, but
+ * the inclusion of atomic.h is problematic for inclusion of jump_label.h
+ * in &#x27;low-level&#x27; headers. Thus, we are initializing .enabled with a
+ * raw value, but have added a BUILD_BUG_ON() to catch any issues in
+ * jump_label_init() see: kernel/jump_label.c.
+ */
+#define STATIC_KEY_INIT_TRUE					\
+	{ .enabled = { 1 },					\
+	  { .type = JUMP_TYPE_TRUE } }
+#define STATIC_KEY_INIT_FALSE					\
+	{ .enabled = { 0 },					\
+	  { .type = JUMP_TYPE_FALSE } }
+
+#else  /* !CONFIG_JUMP_LABEL */
+
+#include &lt;linux/atomic.h&gt;
+#include &lt;linux/bug.h&gt;
+
+static __always_inline int static_key_count(struct static_key *key)
+{
+	return arch_atomic_read(&amp;key-&gt;enabled);
+}
+
+static __always_inline void jump_label_init(void)
+{
+	static_key_initialized = true;
+}
+
+static __always_inline bool static_key_false(struct static_key *key)
+{
+	if (unlikely_notrace(static_key_count(key) &gt; 0))
+		return true;
+	return false;
+}
+
+static __always_inline bool static_key_true(struct static_key *key)
+{
+	if (likely_notrace(static_key_count(key) &gt; 0))
+		return true;
+	return false;
+}
+
+static inline void static_key_slow_inc(struct static_key *key)
+{
+	STATIC_KEY_CHECK_USE(key);
+	atomic_inc(&amp;key-&gt;enabled);
+}
+
+static inline void static_key_slow_dec(struct static_key *key)
+{
+	STATIC_KEY_CHECK_USE(key);
+	atomic_dec(&amp;key-&gt;enabled);
+}
+
+#define static_key_slow_inc_cpuslocked(key) static_key_slow_inc(key)
+#define static_key_slow_dec_cpuslocked(key) static_key_slow_dec(key)
+
+static inline int jump_label_text_reserved(void *start, void *end)
+{
+	return 0;
+}
+
+static inline void jump_label_lock(void) {}
+static inline void jump_label_unlock(void) {}
+
+static inline void static_key_enable(struct static_key *key)
+{
+	STATIC_KEY_CHECK_USE(key);
+
+	if (atomic_read(&amp;key-&gt;enabled) != 0) {
+		WARN_ON_ONCE(atomic_read(&amp;key-&gt;enabled) != 1);
+		return;
+	}
+	atomic_set(&amp;key-&gt;enabled, 1);
+}
+
+static inline void static_key_disable(struct static_key *key)
+{
+	STATIC_KEY_CHECK_USE(key);
+
+	if (atomic_read(&amp;key-&gt;enabled) != 1) {
+		WARN_ON_ONCE(atomic_read(&amp;key-&gt;enabled) != 0);
+		return;
+	}
+	atomic_set(&amp;key-&gt;enabled, 0);
+}
+
+#define static_key_enable_cpuslocked(k)		static_key_enable((k))
+#define static_key_disable_cpuslocked(k)	static_key_disable((k))
+
+#define STATIC_KEY_INIT_TRUE	{ .enabled = ATOMIC_INIT(1) }
+#define STATIC_KEY_INIT_FALSE	{ .enabled = ATOMIC_INIT(0) }
+
+#endif	/* CONFIG_JUMP_LABEL */
+
+#define STATIC_KEY_INIT STATIC_KEY_INIT_FALSE
+#define jump_label_enabled static_key_enabled
+
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Two type wrappers around static_key, such that we can use compile time
+ * type differentiation to emit the right code.
+ *
+ * All the below code is macros in order to play type games.
+ */
+
+struct static_key_true {
+	struct static_key key;
+};
+
+struct static_key_false {
+	struct static_key key;
+};
+
+#define STATIC_KEY_TRUE_INIT  (struct static_key_true) { .key = STATIC_KEY_INIT_TRUE,  }
+#define STATIC_KEY_FALSE_INIT (struct static_key_false){ .key = STATIC_KEY_INIT_FALSE, }
+
+#define DEFINE_STATIC_KEY_TRUE(name)	\
+	struct static_key_true name = STATIC_KEY_TRUE_INIT
+
+#define DEFINE_STATIC_KEY_TRUE_RO(name)	\
+	struct static_key_true name __ro_after_init = STATIC_KEY_TRUE_INIT
+
+#define DECLARE_STATIC_KEY_TRUE(name)	\
+	extern struct static_key_true name
+
+#define DEFINE_STATIC_KEY_FALSE(name)	\
+	struct static_key_false name = STATIC_KEY_FALSE_INIT
+
+#define DEFINE_STATIC_KEY_FALSE_RO(name)	\
+	struct static_key_false name __ro_after_init = STATIC_KEY_FALSE_INIT
+
+#define DECLARE_STATIC_KEY_FALSE(name)	\
+	extern struct static_key_false name
+
+#define DEFINE_STATIC_KEY_ARRAY_TRUE(name, count)		\
+	struct static_key_true name[count] = {			\
+		[0 ... (count) - 1] = STATIC_KEY_TRUE_INIT,	\
+	}
+
+#define DEFINE_STATIC_KEY_ARRAY_FALSE(name, count)		\
+	struct static_key_false name[count] = {			\
+		[0 ... (count) - 1] = STATIC_KEY_FALSE_INIT,	\
+	}
+
+#define _DEFINE_STATIC_KEY_1(name)	DEFINE_STATIC_KEY_TRUE(name)
+#define _DEFINE_STATIC_KEY_0(name)	DEFINE_STATIC_KEY_FALSE(name)
+#define DEFINE_STATIC_KEY_MAYBE(cfg, name)			\
+	__PASTE(_DEFINE_STATIC_KEY_, IS_ENABLED(cfg))(name)
+
+#define _DEFINE_STATIC_KEY_RO_1(name)	DEFINE_STATIC_KEY_TRUE_RO(name)
+#define _DEFINE_STATIC_KEY_RO_0(name)	DEFINE_STATIC_KEY_FALSE_RO(name)
+#define DEFINE_STATIC_KEY_MAYBE_RO(cfg, name)			\
+	__PASTE(_DEFINE_STATIC_KEY_RO_, IS_ENABLED(cfg))(name)
+
+#define _DECLARE_STATIC_KEY_1(name)	DECLARE_STATIC_KEY_TRUE(name)
+#define _DECLARE_STATIC_KEY_0(name)	DECLARE_STATIC_KEY_FALSE(name)
+#define DECLARE_STATIC_KEY_MAYBE(cfg, name)			\
+	__PASTE(_DECLARE_STATIC_KEY_, IS_ENABLED(cfg))(name)
+
+extern bool ____wrong_branch_error(void);
+
+#define static_key_enabled(x)							\
+({										\
+	if (!__builtin_types_compatible_p(typeof(*x), struct static_key) &amp;&amp;	\
+	    !__builtin_types_compatible_p(typeof(*x), struct static_key_true) &amp;&amp;\
+	    !__builtin_types_compatible_p(typeof(*x), struct static_key_false))	\
+		____wrong_branch_error();					\
+	static_key_count((struct static_key *)x) &gt; 0;				\
+})
+
+#ifdef CONFIG_JUMP_LABEL
+
+/*
+ * Combine the right initial value (type) with the right branch order
+ * to generate the desired result.
+ *
+ *
+ * type\branch|	likely (1)	      |	unlikely (0)
+ * -----------+-----------------------+------------------
+ *            |                       |
+ *  true (1)  |	   ...		      |	   ...
+ *            |    NOP		      |	   JMP L
+ *            |    &lt;br-stmts&gt;	      |	1: ...
+ *            |	L: ...		      |
+ *            |			      |
+ *            |			      |	L: &lt;br-stmts&gt;
+ *            |			      |	   jmp 1b
+ *            |                       |
+ * -----------+-----------------------+------------------
+ *            |                       |
+ *  false (0) |	   ...		      |	   ...
+ *            |    JMP L	      |	   NOP
+ *            |    &lt;br-stmts&gt;	      |	1: ...
+ *            |	L: ...		      |
+ *            |			      |
+ *            |			      |	L: &lt;br-stmts&gt;
+ *            |			      |	   jmp 1b
+ *            |                       |
+ * -----------+-----------------------+------------------
+ *
+ * The initial value is encoded in the LSB of static_key::entries,
+ * type: 0 = false, 1 = true.
+ *
+ * The branch type is encoded in the LSB of jump_entry::key,
+ * branch: 0 = unlikely, 1 = likely.
+ *
+ * This gives the following logic table:
+ *
+ *	enabled	type	branch	  instuction
+ * -----------------------------+-----------
+ *	0	0	0	| NOP
+ *	0	0	1	| JMP
+ *	0	1	0	| NOP
+ *	0	1	1	| JMP
+ *
+ *	1	0	0	| JMP
+ *	1	0	1	| NOP
+ *	1	1	0	| JMP
+ *	1	1	1	| NOP
+ *
+ * Which gives the following functions:
+ *
+ *   dynamic: instruction = enabled ^ branch
+ *   static:  instruction = type ^ branch
+ *
+ * See jump_label_type() / jump_label_init_type().
+ */
+
+#define static_branch_likely(x)							\
+({										\
+	bool branch;								\
+	if (__builtin_types_compatible_p(typeof(*x), struct static_key_true))	\
+		branch = !arch_static_branch(&amp;(x)-&gt;key, true);			\
+	else if (__builtin_types_compatible_p(typeof(*x), struct static_key_false)) \
+		branch = !arch_static_branch_jump(&amp;(x)-&gt;key, true);		\
+	else									\
+		branch = ____wrong_branch_error();				\
+	likely_notrace(branch);								\
+})
+
+#define static_branch_unlikely(x)						\
+({										\
+	bool branch;								\
+	if (__builtin_types_compatible_p(typeof(*x), struct static_key_true))	\
+		branch = arch_static_branch_jump(&amp;(x)-&gt;key, false);		\
+	else if (__builtin_types_compatible_p(typeof(*x), struct static_key_false)) \
+		branch = arch_static_branch(&amp;(x)-&gt;key, false);			\
+	else									\
+		branch = ____wrong_branch_error();				\
+	unlikely_notrace(branch);							\
+})
+
+#else /* !CONFIG_JUMP_LABEL */
+
+#define static_branch_likely(x)		likely_notrace(static_key_enabled(&amp;(x)-&gt;key))
+#define static_branch_unlikely(x)	unlikely_notrace(static_key_enabled(&amp;(x)-&gt;key))
+
+#endif /* CONFIG_JUMP_LABEL */
+
+#define static_branch_maybe(config, x)					\
+	(IS_ENABLED(config) ? static_branch_likely(x)			\
+			    : static_branch_unlikely(x))
+
+/*
+ * Advanced usage; refcount, branch is enabled when: count != 0
+ */
+
+#define static_branch_inc(x)		static_key_slow_inc(&amp;(x)-&gt;key)
+#define static_branch_dec(x)		static_key_slow_dec(&amp;(x)-&gt;key)
+#define static_branch_inc_cpuslocked(x)	static_key_slow_inc_cpuslocked(&amp;(x)-&gt;key)
+#define static_branch_dec_cpuslocked(x)	static_key_slow_dec_cpuslocked(&amp;(x)-&gt;key)
+
+/*
+ * Normal usage; boolean enable/disable.
+ */
+
+#define static_branch_enable(x)			static_key_enable(&amp;(x)-&gt;key)
+#define static_branch_disable(x)		static_key_disable(&amp;(x)-&gt;key)
+#define static_branch_enable_cpuslocked(x)	static_key_enable_cpuslocked(&amp;(x)-&gt;key)
+#define static_branch_disable_cpuslocked(x)	static_key_disable_cpuslocked(&amp;(x)-&gt;key)
+
+#endif /* __ASSEMBLY__ */
+
+#endif	/* _LINUX_JUMP_LABEL_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
