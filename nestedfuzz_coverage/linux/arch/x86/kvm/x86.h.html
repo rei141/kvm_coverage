@@ -1,0 +1,529 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br>230.<br>231.<br>232.<br>233.<br>234.<br>235.<br>236.<br>237.<br>238.<br>239.<br>240.<br>241.<br>242.<br>243.<br>244.<br>245.<br>246.<br>247.<br>248.<br>249.<br>250.<br>251.<br>252.<br>253.<br>254.<br>255.<br>256.<br>257.<br>258.<br>259.<br>260.<br>261.<br>262.<br>263.<br>264.<br>265.<br>266.<br>267.<br>268.<br>269.<br>270.<br>271.<br>272.<br>273.<br>274.<br>275.<br>276.<br>277.<br>278.<br>279.<br>280.<br>281.<br>282.<br>283.<br>284.<br>285.<br>286.<br>287.<br>288.<br>289.<br>290.<br>291.<br>292.<br>293.<br>294.<br>295.<br>296.<br>297.<br>298.<br>299.<br>300.<br>301.<br>302.<br>303.<br>304.<br>305.<br>306.<br>307.<br>308.<br>309.<br>310.<br>311.<br>312.<br>313.<br>314.<br>315.<br>316.<br>317.<br>318.<br>319.<br>320.<br>321.<br>322.<br>323.<br>324.<br>325.<br>326.<br>327.<br>328.<br>329.<br>330.<br>331.<br>332.<br>333.<br>334.<br>335.<br>336.<br>337.<br>338.<br>339.<br>340.<br>341.<br>342.<br>343.<br>344.<br>345.<br>346.<br>347.<br>348.<br>349.<br>350.<br>351.<br>352.<br>353.<br>354.<br>355.<br>356.<br>357.<br>358.<br>359.<br>360.<br>361.<br>362.<br>363.<br>364.<br>365.<br>366.<br>367.<br>368.<br>369.<br>370.<br>371.<br>372.<br>373.<br>374.<br>375.<br>376.<br>377.<br>378.<br>379.<br>380.<br>381.<br>382.<br>383.<br>384.<br>385.<br>386.<br>387.<br>388.<br>389.<br>390.<br>391.<br>392.<br>393.<br>394.<br>395.<br>396.<br>397.<br>398.<br>399.<br>400.<br>401.<br>402.<br>403.<br>404.<br>405.<br>406.<br>407.<br>408.<br>409.<br>410.<br>411.<br>412.<br>413.<br>414.<br>415.<br>416.<br>417.<br>418.<br>419.<br>420.<br>421.<br>422.<br>423.<br>424.<br>425.<br>426.<br>427.<br>428.<br>429.<br>430.<br>431.<br>432.<br>433.<br>434.<br>435.<br>436.<br>437.<br>438.<br>439.<br>440.<br>441.<br>442.<br>443.<br>444.<br>445.<br>446.<br>447.<br>448.<br>449.<br>450.<br>451.<br>452.<br>453.<br>454.<br>455.<br>456.<br>457.<br>458.<br>459.<br>460.<br>461.<br>462.<br>463.<br>464.<br>465.<br>466.<br>467.<br>468.<br>469.<br>470.<br>471.<br>472.<br>473.<br>474.<br>475.<br>476.<br>477.<br>478.<br>479.<br>480.<br>481.<br>482.<br>483.<br>484.<br>485.<br>486.<br>487.<br>488.<br>489.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef ARCH_X86_KVM_X86_H
+#define ARCH_X86_KVM_X86_H
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;asm/mce.h&gt;
+#include &lt;asm/pvclock.h&gt;
+#include &quot;kvm_cache_regs.h&quot;
+#include &quot;kvm_emulate.h&quot;
+
+struct kvm_caps {
+	/* control of guest tsc rate supported? */
+	bool has_tsc_control;
+	/* maximum supported tsc_khz for guests */
+	u32  max_guest_tsc_khz;
+	/* number of bits of the fractional part of the TSC scaling ratio */
+	u8   tsc_scaling_ratio_frac_bits;
+	/* maximum allowed value of TSC scaling ratio */
+	u64  max_tsc_scaling_ratio;
+	/* 1ull &lt;&lt; kvm_caps.tsc_scaling_ratio_frac_bits */
+	u64  default_tsc_scaling_ratio;
+	/* bus lock detection supported? */
+	bool has_bus_lock_exit;
+	/* notify VM exit supported? */
+	bool has_notify_vmexit;
+
+	u64 supported_mce_cap;
+	u64 supported_xcr0;
+	u64 supported_xss;
+};
+
+void kvm_spurious_fault(void);
+
+#define KVM_NESTED_VMENTER_CONSISTENCY_CHECK(consistency_check)		\
+({									\
+	bool failed = (consistency_check);				\
+	if (failed)							\
+		trace_kvm_nested_vmenter_failed(#consistency_check, 0);	\
+	failed;								\
+})
+
+#define KVM_DEFAULT_PLE_GAP		128
+#define KVM_VMX_DEFAULT_PLE_WINDOW	4096
+#define KVM_DEFAULT_PLE_WINDOW_GROW	2
+#define KVM_DEFAULT_PLE_WINDOW_SHRINK	0
+#define KVM_VMX_DEFAULT_PLE_WINDOW_MAX	UINT_MAX
+#define KVM_SVM_DEFAULT_PLE_WINDOW_MAX	USHRT_MAX
+#define KVM_SVM_DEFAULT_PLE_WINDOW	3000
+
+static inline unsigned int __grow_ple_window(unsigned int val,
+		unsigned int base, unsigned int modifier, unsigned int max)
+{
+<yellow>	u64 ret = val;</yellow>
+
+	if (modifier &lt; 1)
+		return base;
+
+	if (modifier &lt; base)
+<yellow>		ret *= modifier;</yellow>
+	else
+<yellow>		ret += modifier;</yellow>
+
+<yellow>	return min(ret, (u64)max);</yellow>
+}
+
+static inline unsigned int __shrink_ple_window(unsigned int val,
+		unsigned int base, unsigned int modifier, unsigned int min)
+{
+	if (modifier &lt; 1)
+		return base;
+
+<yellow>	if (modifier < base)</yellow>
+<yellow>		val /= modifier;</yellow>
+	else
+<yellow>		val -= modifier;</yellow>
+
+<yellow>	return max(val, min);</yellow>
+}
+
+#define MSR_IA32_CR_PAT_DEFAULT  0x0007040600070406ULL
+
+void kvm_service_local_tlb_flush_requests(struct kvm_vcpu *vcpu);
+int kvm_check_nested_events(struct kvm_vcpu *vcpu);
+
+static inline bool kvm_is_exception_pending(struct kvm_vcpu *vcpu)
+{
+<yellow>	return vcpu->arch.exception.pending ||</yellow>
+<yellow>	       vcpu->arch.exception_vmexit.pending ||</yellow>
+<yellow>	       kvm_test_request(KVM_REQ_TRIPLE_FAULT, vcpu);</yellow>
+}
+
+static inline void kvm_clear_exception_queue(struct kvm_vcpu *vcpu)
+{
+<yellow>	vcpu->arch.exception.pending = false;</yellow>
+	vcpu-&gt;arch.exception.injected = false;
+	vcpu-&gt;arch.exception_vmexit.pending = false;
+}
+
+static inline void kvm_queue_interrupt(struct kvm_vcpu *vcpu, u8 vector,
+	bool soft)
+{
+	vcpu-&gt;arch.interrupt.injected = true;
+	vcpu-&gt;arch.interrupt.soft = soft;
+	vcpu-&gt;arch.interrupt.nr = vector;
+}
+
+static inline void kvm_clear_interrupt_queue(struct kvm_vcpu *vcpu)
+{
+<yellow>	vcpu->arch.interrupt.injected = false;</yellow>
+}
+
+static inline bool kvm_event_needs_reinjection(struct kvm_vcpu *vcpu)
+{
+	return vcpu-&gt;arch.exception.injected || vcpu-&gt;arch.interrupt.injected ||
+		vcpu-&gt;arch.nmi_injected;
+}
+
+static inline bool kvm_exception_is_soft(unsigned int nr)
+{
+	return (nr == BP_VECTOR) || (nr == OF_VECTOR);
+}
+
+static inline bool is_protmode(struct kvm_vcpu *vcpu)
+{
+<blue>	return kvm_read_cr0_bits(vcpu, X86_CR0_PE);</blue>
+}
+
+static inline int is_long_mode(struct kvm_vcpu *vcpu)
+{
+#ifdef CONFIG_X86_64
+<blue>	return vcpu->arch.efer & EFER_LMA;</blue>
+#else
+	return 0;
+#endif
+}
+
+<blue>static inline bool is_64_bit_mode(struct kvm_vcpu *vcpu)</blue>
+{
+	int cs_db, cs_l;
+
+<blue>	WARN_ON_ONCE(vcpu->arch.guest_state_protected);</blue>
+
+<blue>	if (!is_long_mode(vcpu))</blue>
+		return false;
+<blue>	static_call(kvm_x86_get_cs_db_l_bits)(vcpu, &cs_db, &cs_l);</blue>
+<yellow>	return cs_l;</yellow>
+}
+
+static inline bool is_64_bit_hypercall(struct kvm_vcpu *vcpu)
+{
+	/*
+	 * If running with protected guest state, the CS register is not
+	 * accessible. The hypercall register values will have had to been
+	 * provided in 64-bit mode, so assume the guest is in 64-bit.
+	 */
+	return vcpu-&gt;arch.guest_state_protected || is_64_bit_mode(vcpu);
+}
+
+static inline bool x86_exception_has_error_code(unsigned int vector)
+{
+	static u32 exception_has_error_code = BIT(DF_VECTOR) | BIT(TS_VECTOR) |
+			BIT(NP_VECTOR) | BIT(SS_VECTOR) | BIT(GP_VECTOR) |
+			BIT(PF_VECTOR) | BIT(AC_VECTOR);
+
+	return (1U &lt;&lt; vector) &amp; exception_has_error_code;
+}
+
+static inline bool mmu_is_nested(struct kvm_vcpu *vcpu)
+{
+	return vcpu-&gt;arch.walk_mmu == &amp;vcpu-&gt;arch.nested_mmu;
+}
+
+static inline int is_pae(struct kvm_vcpu *vcpu)
+{
+<blue>	return kvm_read_cr4_bits(vcpu, X86_CR4_PAE);</blue>
+}
+
+static inline int is_pse(struct kvm_vcpu *vcpu)
+{
+	return kvm_read_cr4_bits(vcpu, X86_CR4_PSE);
+}
+
+static inline int is_paging(struct kvm_vcpu *vcpu)
+{
+<blue>	return likely(kvm_read_cr0_bits(vcpu, X86_CR0_PG));</blue>
+}
+
+static inline bool is_pae_paging(struct kvm_vcpu *vcpu)
+{
+<blue>	return !is_long_mode(vcpu) && is_pae(vcpu) && is_paging(vcpu);</blue>
+}
+
+static inline u8 vcpu_virt_addr_bits(struct kvm_vcpu *vcpu)
+{
+<yellow>	return kvm_read_cr4_bits(vcpu, X86_CR4_LA57) ? 57 : 48;</yellow>
+}
+
+static inline bool is_noncanonical_address(u64 la, struct kvm_vcpu *vcpu)
+{
+<yellow>	return !__is_canonical_address(la, vcpu_virt_addr_bits(vcpu));</yellow>
+}
+
+static inline void vcpu_cache_mmio_info(struct kvm_vcpu *vcpu,
+					gva_t gva, gfn_t gfn, unsigned access)
+{
+	u64 gen = kvm_memslots(vcpu-&gt;kvm)-&gt;generation;
+
+	if (unlikely(gen &amp; KVM_MEMSLOT_GEN_UPDATE_IN_PROGRESS))
+		return;
+
+	/*
+	 * If this is a shadow nested page table, the &quot;GVA&quot; is
+	 * actually a nGPA.
+	 */
+	vcpu-&gt;arch.mmio_gva = mmu_is_nested(vcpu) ? 0 : gva &amp; PAGE_MASK;
+	vcpu-&gt;arch.mmio_access = access;
+	vcpu-&gt;arch.mmio_gfn = gfn;
+	vcpu-&gt;arch.mmio_gen = gen;
+}
+
+static inline bool vcpu_match_mmio_gen(struct kvm_vcpu *vcpu)
+{
+	return vcpu-&gt;arch.mmio_gen == kvm_memslots(vcpu-&gt;kvm)-&gt;generation;
+}
+
+/*
+ * Clear the mmio cache info for the given gva. If gva is MMIO_GVA_ANY, we
+ * clear all mmio cache info.
+ */
+#define MMIO_GVA_ANY (~(gva_t)0)
+
+static inline void vcpu_clear_mmio_info(struct kvm_vcpu *vcpu, gva_t gva)
+{
+	if (gva != MMIO_GVA_ANY &amp;&amp; vcpu-&gt;arch.mmio_gva != (gva &amp; PAGE_MASK))
+		return;
+
+	vcpu-&gt;arch.mmio_gva = 0;
+}
+
+static inline bool vcpu_match_mmio_gva(struct kvm_vcpu *vcpu, unsigned long gva)
+{
+	if (vcpu_match_mmio_gen(vcpu) &amp;&amp; vcpu-&gt;arch.mmio_gva &amp;&amp;
+	      vcpu-&gt;arch.mmio_gva == (gva &amp; PAGE_MASK))
+		return true;
+
+	return false;
+}
+
+static inline bool vcpu_match_mmio_gpa(struct kvm_vcpu *vcpu, gpa_t gpa)
+{
+	if (vcpu_match_mmio_gen(vcpu) &amp;&amp; vcpu-&gt;arch.mmio_gfn &amp;&amp;
+	      vcpu-&gt;arch.mmio_gfn == gpa &gt;&gt; PAGE_SHIFT)
+		return true;
+
+	return false;
+}
+
+static inline unsigned long kvm_register_read(struct kvm_vcpu *vcpu, int reg)
+{
+<blue>	unsigned long val = kvm_register_read_raw(vcpu, reg);</blue>
+
+<blue>	return is_64_bit_mode(vcpu) ? val : (u32)val;</blue>
+}
+
+static inline void kvm_register_write(struct kvm_vcpu *vcpu,
+				       int reg, unsigned long val)
+<yellow>{</yellow>
+<blue>	if (!is_64_bit_mode(vcpu))</blue>
+<yellow>		val = (u32)val;</yellow>
+<blue>	return kvm_register_write_raw(vcpu, reg, val);</blue>
+<yellow>}</yellow>
+
+static inline bool kvm_check_has_quirk(struct kvm *kvm, u64 quirk)
+{
+<yellow>	return !(kvm->arch.disabled_quirks & quirk);</yellow>
+}
+
+void kvm_inject_realmode_interrupt(struct kvm_vcpu *vcpu, int irq, int inc_eip);
+
+u64 get_kvmclock_ns(struct kvm *kvm);
+
+int kvm_read_guest_virt(struct kvm_vcpu *vcpu,
+	gva_t addr, void *val, unsigned int bytes,
+	struct x86_exception *exception);
+
+int kvm_write_guest_virt_system(struct kvm_vcpu *vcpu,
+	gva_t addr, void *val, unsigned int bytes,
+	struct x86_exception *exception);
+
+int handle_ud(struct kvm_vcpu *vcpu);
+
+void kvm_deliver_exception_payload(struct kvm_vcpu *vcpu,
+				   struct kvm_queued_exception *ex);
+
+void kvm_vcpu_mtrr_init(struct kvm_vcpu *vcpu);
+u8 kvm_mtrr_get_guest_memory_type(struct kvm_vcpu *vcpu, gfn_t gfn);
+bool kvm_mtrr_valid(struct kvm_vcpu *vcpu, u32 msr, u64 data);
+int kvm_mtrr_set_msr(struct kvm_vcpu *vcpu, u32 msr, u64 data);
+int kvm_mtrr_get_msr(struct kvm_vcpu *vcpu, u32 msr, u64 *pdata);
+bool kvm_mtrr_check_gfn_range_consistency(struct kvm_vcpu *vcpu, gfn_t gfn,
+					  int page_num);
+bool kvm_vector_hashing_enabled(void);
+void kvm_fixup_and_inject_pf_error(struct kvm_vcpu *vcpu, gva_t gva, u16 error_code);
+int x86_decode_emulated_instruction(struct kvm_vcpu *vcpu, int emulation_type,
+				    void *insn, int insn_len);
+int x86_emulate_instruction(struct kvm_vcpu *vcpu, gpa_t cr2_or_gpa,
+			    int emulation_type, void *insn, int insn_len);
+fastpath_t handle_fastpath_set_msr_irqoff(struct kvm_vcpu *vcpu);
+
+extern u64 host_xcr0;
+extern u64 host_xss;
+
+extern struct kvm_caps kvm_caps;
+
+extern bool enable_pmu;
+
+static inline bool kvm_mpx_supported(void)
+{
+<blue>	return (kvm_caps.supported_xcr0 & (XFEATURE_MASK_BNDREGS | XFEATURE_MASK_BNDCSR))</blue>
+		== (XFEATURE_MASK_BNDREGS | XFEATURE_MASK_BNDCSR);
+}
+
+extern unsigned int min_timer_period_us;
+
+extern bool enable_vmware_backdoor;
+
+extern int pi_inject_timer;
+
+extern bool report_ignored_msrs;
+
+extern bool eager_page_split;
+
+static inline u64 nsec_to_cycles(struct kvm_vcpu *vcpu, u64 nsec)
+{
+<yellow>	return pvclock_scale_delta(nsec, vcpu->arch.virtual_tsc_mult,</yellow>
+<yellow>				   vcpu->arch.virtual_tsc_shift);</yellow>
+}
+
+/* Same &quot;calling convention&quot; as do_div:
+ * - divide (n &lt;&lt; 32) by base
+ * - put result in n
+ * - return remainder
+ */
+#define do_shl32_div32(n, base)					\
+	({							\
+	    u32 __quot, __rem;					\
+	    asm(&quot;divl %2&quot; : &quot;=a&quot; (__quot), &quot;=d&quot; (__rem)		\
+			: &quot;rm&quot; (base), &quot;0&quot; (0), &quot;1&quot; ((u32) n));	\
+	    n = __quot;						\
+	    __rem;						\
+	 })
+
+static inline bool kvm_mwait_in_guest(struct kvm *kvm)
+{
+	return kvm-&gt;arch.mwait_in_guest;
+}
+
+static inline bool kvm_hlt_in_guest(struct kvm *kvm)
+{
+<blue>	return kvm->arch.hlt_in_guest;</blue>
+}
+
+static inline bool kvm_pause_in_guest(struct kvm *kvm)
+{
+<blue>	return kvm->arch.pause_in_guest;</blue>
+}
+
+static inline bool kvm_cstate_in_guest(struct kvm *kvm)
+{
+	return kvm-&gt;arch.cstate_in_guest;
+}
+
+static inline bool kvm_notify_vmexit_enabled(struct kvm *kvm)
+{
+<blue>	return kvm->arch.notify_vmexit_flags & KVM_X86_NOTIFY_VMEXIT_ENABLED;</blue>
+}
+
+enum kvm_intr_type {
+	/* Values are arbitrary, but must be non-zero. */
+	KVM_HANDLING_IRQ = 1,
+	KVM_HANDLING_NMI,
+};
+
+static inline void kvm_before_interrupt(struct kvm_vcpu *vcpu,
+					enum kvm_intr_type intr)
+{
+<blue>	WRITE_ONCE(vcpu->arch.handling_intr_from_guest, (u8)intr);</blue>
+}
+
+static inline void kvm_after_interrupt(struct kvm_vcpu *vcpu)
+{
+<yellow>	WRITE_ONCE(vcpu->arch.handling_intr_from_guest, 0);</yellow>
+}
+
+static inline bool kvm_handling_nmi_from_guest(struct kvm_vcpu *vcpu)
+{
+<yellow>	return vcpu->arch.handling_intr_from_guest == KVM_HANDLING_NMI;</yellow>
+}
+
+static inline bool kvm_pat_valid(u64 data)
+{
+<yellow>	if (data & 0xF8F8F8F8F8F8F8F8ull)</yellow>
+		return false;
+	/* 0, 1, 4, 5, 6, 7 are valid values.  */
+<yellow>	return (data | ((data & 0x0202020202020202ull) << 1)) == data;</yellow>
+}
+
+static inline bool kvm_dr7_valid(u64 data)
+{
+	/* Bits [63:32] are reserved */
+	return !(data &gt;&gt; 32);
+}
+static inline bool kvm_dr6_valid(u64 data)
+{
+	/* Bits [63:32] are reserved */
+	return !(data &gt;&gt; 32);
+}
+
+/*
+ * Trigger machine check on the host. We assume all the MSRs are already set up
+ * by the CPU and that we still run on the same CPU as the MCE occurred on.
+ * We pass a fake environment to the machine check handler because we want
+ * the guest to be always treated like user space, no matter what context
+ * it used internally.
+ */
+static inline void kvm_machine_check(void)
+<yellow>{</yellow>
+#if defined(CONFIG_X86_MCE)
+<yellow>	struct pt_regs regs = {</yellow>
+		.cs = 3, /* Fake ring 3 no matter what the guest ran on */
+		.flags = X86_EFLAGS_IF,
+	};
+
+<yellow>	do_machine_check(&regs);</yellow>
+#endif
+<yellow>}</yellow>
+
+void kvm_load_guest_xsave_state(struct kvm_vcpu *vcpu);
+void kvm_load_host_xsave_state(struct kvm_vcpu *vcpu);
+int kvm_spec_ctrl_test_value(u64 value);
+bool __kvm_is_valid_cr4(struct kvm_vcpu *vcpu, unsigned long cr4);
+int kvm_handle_memory_failure(struct kvm_vcpu *vcpu, int r,
+			      struct x86_exception *e);
+int kvm_handle_invpcid(struct kvm_vcpu *vcpu, unsigned long type, gva_t gva);
+bool kvm_msr_allowed(struct kvm_vcpu *vcpu, u32 index, u32 type);
+
+/*
+ * Internal error codes that are used to indicate that MSR emulation encountered
+ * an error that should result in #GP in the guest, unless userspace
+ * handles it.
+ */
+#define  KVM_MSR_RET_INVALID	2	/* in-kernel MSR emulation #GP condition */
+#define  KVM_MSR_RET_FILTERED	3	/* #GP due to userspace MSR filter */
+
+#define __cr4_reserved_bits(__cpu_has, __c)             \
+({                                                      \
+	u64 __reserved_bits = CR4_RESERVED_BITS;        \
+                                                        \
+	if (!__cpu_has(__c, X86_FEATURE_XSAVE))         \
+		__reserved_bits |= X86_CR4_OSXSAVE;     \
+	if (!__cpu_has(__c, X86_FEATURE_SMEP))          \
+		__reserved_bits |= X86_CR4_SMEP;        \
+	if (!__cpu_has(__c, X86_FEATURE_SMAP))          \
+		__reserved_bits |= X86_CR4_SMAP;        \
+	if (!__cpu_has(__c, X86_FEATURE_FSGSBASE))      \
+		__reserved_bits |= X86_CR4_FSGSBASE;    \
+	if (!__cpu_has(__c, X86_FEATURE_PKU))           \
+		__reserved_bits |= X86_CR4_PKE;         \
+	if (!__cpu_has(__c, X86_FEATURE_LA57))          \
+		__reserved_bits |= X86_CR4_LA57;        \
+	if (!__cpu_has(__c, X86_FEATURE_UMIP))          \
+		__reserved_bits |= X86_CR4_UMIP;        \
+	if (!__cpu_has(__c, X86_FEATURE_VMX))           \
+		__reserved_bits |= X86_CR4_VMXE;        \
+	if (!__cpu_has(__c, X86_FEATURE_PCID))          \
+		__reserved_bits |= X86_CR4_PCIDE;       \
+	__reserved_bits;                                \
+})
+
+int kvm_sev_es_mmio_write(struct kvm_vcpu *vcpu, gpa_t src, unsigned int bytes,
+			  void *dst);
+int kvm_sev_es_mmio_read(struct kvm_vcpu *vcpu, gpa_t src, unsigned int bytes,
+			 void *dst);
+int kvm_sev_es_string_io(struct kvm_vcpu *vcpu, unsigned int size,
+			 unsigned int port, void *data,  unsigned int count,
+			 int in);
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

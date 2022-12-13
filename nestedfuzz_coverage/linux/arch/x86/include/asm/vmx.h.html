@@ -1,0 +1,671 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br>230.<br>231.<br>232.<br>233.<br>234.<br>235.<br>236.<br>237.<br>238.<br>239.<br>240.<br>241.<br>242.<br>243.<br>244.<br>245.<br>246.<br>247.<br>248.<br>249.<br>250.<br>251.<br>252.<br>253.<br>254.<br>255.<br>256.<br>257.<br>258.<br>259.<br>260.<br>261.<br>262.<br>263.<br>264.<br>265.<br>266.<br>267.<br>268.<br>269.<br>270.<br>271.<br>272.<br>273.<br>274.<br>275.<br>276.<br>277.<br>278.<br>279.<br>280.<br>281.<br>282.<br>283.<br>284.<br>285.<br>286.<br>287.<br>288.<br>289.<br>290.<br>291.<br>292.<br>293.<br>294.<br>295.<br>296.<br>297.<br>298.<br>299.<br>300.<br>301.<br>302.<br>303.<br>304.<br>305.<br>306.<br>307.<br>308.<br>309.<br>310.<br>311.<br>312.<br>313.<br>314.<br>315.<br>316.<br>317.<br>318.<br>319.<br>320.<br>321.<br>322.<br>323.<br>324.<br>325.<br>326.<br>327.<br>328.<br>329.<br>330.<br>331.<br>332.<br>333.<br>334.<br>335.<br>336.<br>337.<br>338.<br>339.<br>340.<br>341.<br>342.<br>343.<br>344.<br>345.<br>346.<br>347.<br>348.<br>349.<br>350.<br>351.<br>352.<br>353.<br>354.<br>355.<br>356.<br>357.<br>358.<br>359.<br>360.<br>361.<br>362.<br>363.<br>364.<br>365.<br>366.<br>367.<br>368.<br>369.<br>370.<br>371.<br>372.<br>373.<br>374.<br>375.<br>376.<br>377.<br>378.<br>379.<br>380.<br>381.<br>382.<br>383.<br>384.<br>385.<br>386.<br>387.<br>388.<br>389.<br>390.<br>391.<br>392.<br>393.<br>394.<br>395.<br>396.<br>397.<br>398.<br>399.<br>400.<br>401.<br>402.<br>403.<br>404.<br>405.<br>406.<br>407.<br>408.<br>409.<br>410.<br>411.<br>412.<br>413.<br>414.<br>415.<br>416.<br>417.<br>418.<br>419.<br>420.<br>421.<br>422.<br>423.<br>424.<br>425.<br>426.<br>427.<br>428.<br>429.<br>430.<br>431.<br>432.<br>433.<br>434.<br>435.<br>436.<br>437.<br>438.<br>439.<br>440.<br>441.<br>442.<br>443.<br>444.<br>445.<br>446.<br>447.<br>448.<br>449.<br>450.<br>451.<br>452.<br>453.<br>454.<br>455.<br>456.<br>457.<br>458.<br>459.<br>460.<br>461.<br>462.<br>463.<br>464.<br>465.<br>466.<br>467.<br>468.<br>469.<br>470.<br>471.<br>472.<br>473.<br>474.<br>475.<br>476.<br>477.<br>478.<br>479.<br>480.<br>481.<br>482.<br>483.<br>484.<br>485.<br>486.<br>487.<br>488.<br>489.<br>490.<br>491.<br>492.<br>493.<br>494.<br>495.<br>496.<br>497.<br>498.<br>499.<br>500.<br>501.<br>502.<br>503.<br>504.<br>505.<br>506.<br>507.<br>508.<br>509.<br>510.<br>511.<br>512.<br>513.<br>514.<br>515.<br>516.<br>517.<br>518.<br>519.<br>520.<br>521.<br>522.<br>523.<br>524.<br>525.<br>526.<br>527.<br>528.<br>529.<br>530.<br>531.<br>532.<br>533.<br>534.<br>535.<br>536.<br>537.<br>538.<br>539.<br>540.<br>541.<br>542.<br>543.<br>544.<br>545.<br>546.<br>547.<br>548.<br>549.<br>550.<br>551.<br>552.<br>553.<br>554.<br>555.<br>556.<br>557.<br>558.<br>559.<br>560.<br>561.<br>562.<br>563.<br>564.<br>565.<br>566.<br>567.<br>568.<br>569.<br>570.<br>571.<br>572.<br>573.<br>574.<br>575.<br>576.<br>577.<br>578.<br>579.<br>580.<br>581.<br>582.<br>583.<br>584.<br>585.<br>586.<br>587.<br>588.<br>589.<br>590.<br>591.<br>592.<br>593.<br>594.<br>595.<br>596.<br>597.<br>598.<br>599.<br>600.<br>601.<br>602.<br>603.<br>604.<br>605.<br>606.<br>607.<br>608.<br>609.<br>610.<br>611.<br>612.<br>613.<br>614.<br>615.<br>616.<br>617.<br>618.<br>619.<br>620.<br>621.<br>622.<br>623.<br>624.<br>625.<br>626.<br>627.<br>628.<br>629.<br>630.<br>631.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+/*
+ * vmx.h: VMX Architecture related definitions
+ * Copyright (c) 2004, Intel Corporation.
+ *
+ * A few random additions are:
+ * Copyright (C) 2006 Qumranet
+ *    Avi Kivity &lt;avi@qumranet.com&gt;
+ *    Yaniv Kamay &lt;yaniv@qumranet.com&gt;
+ */
+#ifndef VMX_H
+#define VMX_H
+
+
+#include &lt;linux/bitops.h&gt;
+#include &lt;linux/types.h&gt;
+#include &lt;uapi/asm/vmx.h&gt;
+#include &lt;asm/vmxfeatures.h&gt;
+
+#define VMCS_CONTROL_BIT(x)	BIT(VMX_FEATURE_##x &amp; 0x1f)
+
+/*
+ * Definitions of Primary Processor-Based VM-Execution Controls.
+ */
+#define CPU_BASED_INTR_WINDOW_EXITING           VMCS_CONTROL_BIT(INTR_WINDOW_EXITING)
+#define CPU_BASED_USE_TSC_OFFSETTING            VMCS_CONTROL_BIT(USE_TSC_OFFSETTING)
+#define CPU_BASED_HLT_EXITING                   VMCS_CONTROL_BIT(HLT_EXITING)
+#define CPU_BASED_INVLPG_EXITING                VMCS_CONTROL_BIT(INVLPG_EXITING)
+#define CPU_BASED_MWAIT_EXITING                 VMCS_CONTROL_BIT(MWAIT_EXITING)
+#define CPU_BASED_RDPMC_EXITING                 VMCS_CONTROL_BIT(RDPMC_EXITING)
+#define CPU_BASED_RDTSC_EXITING                 VMCS_CONTROL_BIT(RDTSC_EXITING)
+#define CPU_BASED_CR3_LOAD_EXITING		VMCS_CONTROL_BIT(CR3_LOAD_EXITING)
+#define CPU_BASED_CR3_STORE_EXITING		VMCS_CONTROL_BIT(CR3_STORE_EXITING)
+#define CPU_BASED_ACTIVATE_TERTIARY_CONTROLS	VMCS_CONTROL_BIT(TERTIARY_CONTROLS)
+#define CPU_BASED_CR8_LOAD_EXITING              VMCS_CONTROL_BIT(CR8_LOAD_EXITING)
+#define CPU_BASED_CR8_STORE_EXITING             VMCS_CONTROL_BIT(CR8_STORE_EXITING)
+#define CPU_BASED_TPR_SHADOW                    VMCS_CONTROL_BIT(VIRTUAL_TPR)
+#define CPU_BASED_NMI_WINDOW_EXITING		VMCS_CONTROL_BIT(NMI_WINDOW_EXITING)
+#define CPU_BASED_MOV_DR_EXITING                VMCS_CONTROL_BIT(MOV_DR_EXITING)
+#define CPU_BASED_UNCOND_IO_EXITING             VMCS_CONTROL_BIT(UNCOND_IO_EXITING)
+#define CPU_BASED_USE_IO_BITMAPS                VMCS_CONTROL_BIT(USE_IO_BITMAPS)
+#define CPU_BASED_MONITOR_TRAP_FLAG             VMCS_CONTROL_BIT(MONITOR_TRAP_FLAG)
+#define CPU_BASED_USE_MSR_BITMAPS               VMCS_CONTROL_BIT(USE_MSR_BITMAPS)
+#define CPU_BASED_MONITOR_EXITING               VMCS_CONTROL_BIT(MONITOR_EXITING)
+#define CPU_BASED_PAUSE_EXITING                 VMCS_CONTROL_BIT(PAUSE_EXITING)
+#define CPU_BASED_ACTIVATE_SECONDARY_CONTROLS   VMCS_CONTROL_BIT(SEC_CONTROLS)
+
+#define CPU_BASED_ALWAYSON_WITHOUT_TRUE_MSR	0x0401e172
+
+/*
+ * Definitions of Secondary Processor-Based VM-Execution Controls.
+ */
+#define SECONDARY_EXEC_VIRTUALIZE_APIC_ACCESSES VMCS_CONTROL_BIT(VIRT_APIC_ACCESSES)
+#define SECONDARY_EXEC_ENABLE_EPT               VMCS_CONTROL_BIT(EPT)
+#define SECONDARY_EXEC_DESC			VMCS_CONTROL_BIT(DESC_EXITING)
+#define SECONDARY_EXEC_ENABLE_RDTSCP		VMCS_CONTROL_BIT(RDTSCP)
+#define SECONDARY_EXEC_VIRTUALIZE_X2APIC_MODE   VMCS_CONTROL_BIT(VIRTUAL_X2APIC)
+#define SECONDARY_EXEC_ENABLE_VPID              VMCS_CONTROL_BIT(VPID)
+#define SECONDARY_EXEC_WBINVD_EXITING		VMCS_CONTROL_BIT(WBINVD_EXITING)
+#define SECONDARY_EXEC_UNRESTRICTED_GUEST	VMCS_CONTROL_BIT(UNRESTRICTED_GUEST)
+#define SECONDARY_EXEC_APIC_REGISTER_VIRT       VMCS_CONTROL_BIT(APIC_REGISTER_VIRT)
+#define SECONDARY_EXEC_VIRTUAL_INTR_DELIVERY    VMCS_CONTROL_BIT(VIRT_INTR_DELIVERY)
+#define SECONDARY_EXEC_PAUSE_LOOP_EXITING	VMCS_CONTROL_BIT(PAUSE_LOOP_EXITING)
+#define SECONDARY_EXEC_RDRAND_EXITING		VMCS_CONTROL_BIT(RDRAND_EXITING)
+#define SECONDARY_EXEC_ENABLE_INVPCID		VMCS_CONTROL_BIT(INVPCID)
+#define SECONDARY_EXEC_ENABLE_VMFUNC            VMCS_CONTROL_BIT(VMFUNC)
+#define SECONDARY_EXEC_SHADOW_VMCS              VMCS_CONTROL_BIT(SHADOW_VMCS)
+#define SECONDARY_EXEC_ENCLS_EXITING		VMCS_CONTROL_BIT(ENCLS_EXITING)
+#define SECONDARY_EXEC_RDSEED_EXITING		VMCS_CONTROL_BIT(RDSEED_EXITING)
+#define SECONDARY_EXEC_ENABLE_PML               VMCS_CONTROL_BIT(PAGE_MOD_LOGGING)
+#define SECONDARY_EXEC_PT_CONCEAL_VMX		VMCS_CONTROL_BIT(PT_CONCEAL_VMX)
+#define SECONDARY_EXEC_XSAVES			VMCS_CONTROL_BIT(XSAVES)
+#define SECONDARY_EXEC_MODE_BASED_EPT_EXEC	VMCS_CONTROL_BIT(MODE_BASED_EPT_EXEC)
+#define SECONDARY_EXEC_PT_USE_GPA		VMCS_CONTROL_BIT(PT_USE_GPA)
+#define SECONDARY_EXEC_TSC_SCALING              VMCS_CONTROL_BIT(TSC_SCALING)
+#define SECONDARY_EXEC_ENABLE_USR_WAIT_PAUSE	VMCS_CONTROL_BIT(USR_WAIT_PAUSE)
+#define SECONDARY_EXEC_BUS_LOCK_DETECTION	VMCS_CONTROL_BIT(BUS_LOCK_DETECTION)
+#define SECONDARY_EXEC_NOTIFY_VM_EXITING	VMCS_CONTROL_BIT(NOTIFY_VM_EXITING)
+
+/*
+ * Definitions of Tertiary Processor-Based VM-Execution Controls.
+ */
+#define TERTIARY_EXEC_IPI_VIRT			VMCS_CONTROL_BIT(IPI_VIRT)
+
+#define PIN_BASED_EXT_INTR_MASK                 VMCS_CONTROL_BIT(INTR_EXITING)
+#define PIN_BASED_NMI_EXITING                   VMCS_CONTROL_BIT(NMI_EXITING)
+#define PIN_BASED_VIRTUAL_NMIS                  VMCS_CONTROL_BIT(VIRTUAL_NMIS)
+#define PIN_BASED_VMX_PREEMPTION_TIMER          VMCS_CONTROL_BIT(PREEMPTION_TIMER)
+#define PIN_BASED_POSTED_INTR                   VMCS_CONTROL_BIT(POSTED_INTR)
+
+#define PIN_BASED_ALWAYSON_WITHOUT_TRUE_MSR	0x00000016
+
+#define VM_EXIT_SAVE_DEBUG_CONTROLS             0x00000004
+#define VM_EXIT_HOST_ADDR_SPACE_SIZE            0x00000200
+#define VM_EXIT_LOAD_IA32_PERF_GLOBAL_CTRL      0x00001000
+#define VM_EXIT_ACK_INTR_ON_EXIT                0x00008000
+#define VM_EXIT_SAVE_IA32_PAT			0x00040000
+#define VM_EXIT_LOAD_IA32_PAT			0x00080000
+#define VM_EXIT_SAVE_IA32_EFER                  0x00100000
+#define VM_EXIT_LOAD_IA32_EFER                  0x00200000
+#define VM_EXIT_SAVE_VMX_PREEMPTION_TIMER       0x00400000
+#define VM_EXIT_CLEAR_BNDCFGS                   0x00800000
+#define VM_EXIT_PT_CONCEAL_PIP			0x01000000
+#define VM_EXIT_CLEAR_IA32_RTIT_CTL		0x02000000
+
+#define VM_EXIT_ALWAYSON_WITHOUT_TRUE_MSR	0x00036dff
+
+#define VM_ENTRY_LOAD_DEBUG_CONTROLS            0x00000004
+#define VM_ENTRY_IA32E_MODE                     0x00000200
+#define VM_ENTRY_SMM                            0x00000400
+#define VM_ENTRY_DEACT_DUAL_MONITOR             0x00000800
+#define VM_ENTRY_LOAD_IA32_PERF_GLOBAL_CTRL     0x00002000
+#define VM_ENTRY_LOAD_IA32_PAT			0x00004000
+#define VM_ENTRY_LOAD_IA32_EFER                 0x00008000
+#define VM_ENTRY_LOAD_BNDCFGS                   0x00010000
+#define VM_ENTRY_PT_CONCEAL_PIP			0x00020000
+#define VM_ENTRY_LOAD_IA32_RTIT_CTL		0x00040000
+
+#define VM_ENTRY_ALWAYSON_WITHOUT_TRUE_MSR	0x000011ff
+
+#define VMX_MISC_PREEMPTION_TIMER_RATE_MASK	0x0000001f
+#define VMX_MISC_SAVE_EFER_LMA			0x00000020
+#define VMX_MISC_ACTIVITY_HLT			0x00000040
+#define VMX_MISC_ACTIVITY_WAIT_SIPI		0x00000100
+#define VMX_MISC_ZERO_LEN_INS			0x40000000
+#define VMX_MISC_MSR_LIST_MULTIPLIER		512
+
+/* VMFUNC functions */
+#define VMFUNC_CONTROL_BIT(x)	BIT((VMX_FEATURE_##x &amp; 0x1f) - 28)
+
+#define VMX_VMFUNC_EPTP_SWITCHING               VMFUNC_CONTROL_BIT(EPTP_SWITCHING)
+#define VMFUNC_EPTP_ENTRIES  512
+
+static inline u32 vmx_basic_vmcs_revision_id(u64 vmx_basic)
+{
+<yellow>	return vmx_basic & GENMASK_ULL(30, 0);</yellow>
+}
+
+static inline u32 vmx_basic_vmcs_size(u64 vmx_basic)
+{
+<yellow>	return (vmx_basic & GENMASK_ULL(44, 32)) >> 32;</yellow>
+}
+
+static inline int vmx_misc_preemption_timer_rate(u64 vmx_misc)
+{
+<yellow>	return vmx_misc & VMX_MISC_PREEMPTION_TIMER_RATE_MASK;</yellow>
+}
+
+static inline int vmx_misc_cr3_count(u64 vmx_misc)
+{
+<yellow>	return (vmx_misc & GENMASK_ULL(24, 16)) >> 16;</yellow>
+}
+
+static inline int vmx_misc_max_msr(u64 vmx_misc)
+{
+<yellow>	return (vmx_misc & GENMASK_ULL(27, 25)) >> 25;</yellow>
+}
+
+static inline int vmx_misc_mseg_revid(u64 vmx_misc)
+{
+<yellow>	return (vmx_misc & GENMASK_ULL(63, 32)) >> 32;</yellow>
+}
+
+/* VMCS Encodings */
+enum vmcs_field {
+	VIRTUAL_PROCESSOR_ID            = 0x00000000,
+	POSTED_INTR_NV                  = 0x00000002,
+	LAST_PID_POINTER_INDEX		= 0x00000008,
+	GUEST_ES_SELECTOR               = 0x00000800,
+	GUEST_CS_SELECTOR               = 0x00000802,
+	GUEST_SS_SELECTOR               = 0x00000804,
+	GUEST_DS_SELECTOR               = 0x00000806,
+	GUEST_FS_SELECTOR               = 0x00000808,
+	GUEST_GS_SELECTOR               = 0x0000080a,
+	GUEST_LDTR_SELECTOR             = 0x0000080c,
+	GUEST_TR_SELECTOR               = 0x0000080e,
+	GUEST_INTR_STATUS               = 0x00000810,
+	GUEST_PML_INDEX			= 0x00000812,
+	HOST_ES_SELECTOR                = 0x00000c00,
+	HOST_CS_SELECTOR                = 0x00000c02,
+	HOST_SS_SELECTOR                = 0x00000c04,
+	HOST_DS_SELECTOR                = 0x00000c06,
+	HOST_FS_SELECTOR                = 0x00000c08,
+	HOST_GS_SELECTOR                = 0x00000c0a,
+	HOST_TR_SELECTOR                = 0x00000c0c,
+	IO_BITMAP_A                     = 0x00002000,
+	IO_BITMAP_A_HIGH                = 0x00002001,
+	IO_BITMAP_B                     = 0x00002002,
+	IO_BITMAP_B_HIGH                = 0x00002003,
+	MSR_BITMAP                      = 0x00002004,
+	MSR_BITMAP_HIGH                 = 0x00002005,
+	VM_EXIT_MSR_STORE_ADDR          = 0x00002006,
+	VM_EXIT_MSR_STORE_ADDR_HIGH     = 0x00002007,
+	VM_EXIT_MSR_LOAD_ADDR           = 0x00002008,
+	VM_EXIT_MSR_LOAD_ADDR_HIGH      = 0x00002009,
+	VM_ENTRY_MSR_LOAD_ADDR          = 0x0000200a,
+	VM_ENTRY_MSR_LOAD_ADDR_HIGH     = 0x0000200b,
+	PML_ADDRESS			= 0x0000200e,
+	PML_ADDRESS_HIGH		= 0x0000200f,
+	TSC_OFFSET                      = 0x00002010,
+	TSC_OFFSET_HIGH                 = 0x00002011,
+	VIRTUAL_APIC_PAGE_ADDR          = 0x00002012,
+	VIRTUAL_APIC_PAGE_ADDR_HIGH     = 0x00002013,
+	APIC_ACCESS_ADDR		= 0x00002014,
+	APIC_ACCESS_ADDR_HIGH		= 0x00002015,
+	POSTED_INTR_DESC_ADDR           = 0x00002016,
+	POSTED_INTR_DESC_ADDR_HIGH      = 0x00002017,
+	VM_FUNCTION_CONTROL             = 0x00002018,
+	VM_FUNCTION_CONTROL_HIGH        = 0x00002019,
+	EPT_POINTER                     = 0x0000201a,
+	EPT_POINTER_HIGH                = 0x0000201b,
+	EOI_EXIT_BITMAP0                = 0x0000201c,
+	EOI_EXIT_BITMAP0_HIGH           = 0x0000201d,
+	EOI_EXIT_BITMAP1                = 0x0000201e,
+	EOI_EXIT_BITMAP1_HIGH           = 0x0000201f,
+	EOI_EXIT_BITMAP2                = 0x00002020,
+	EOI_EXIT_BITMAP2_HIGH           = 0x00002021,
+	EOI_EXIT_BITMAP3                = 0x00002022,
+	EOI_EXIT_BITMAP3_HIGH           = 0x00002023,
+	EPTP_LIST_ADDRESS               = 0x00002024,
+	EPTP_LIST_ADDRESS_HIGH          = 0x00002025,
+	VMREAD_BITMAP                   = 0x00002026,
+	VMREAD_BITMAP_HIGH              = 0x00002027,
+	VMWRITE_BITMAP                  = 0x00002028,
+	VMWRITE_BITMAP_HIGH             = 0x00002029,
+	XSS_EXIT_BITMAP                 = 0x0000202C,
+	XSS_EXIT_BITMAP_HIGH            = 0x0000202D,
+	ENCLS_EXITING_BITMAP		= 0x0000202E,
+	ENCLS_EXITING_BITMAP_HIGH	= 0x0000202F,
+	TSC_MULTIPLIER                  = 0x00002032,
+	TSC_MULTIPLIER_HIGH             = 0x00002033,
+	TERTIARY_VM_EXEC_CONTROL	= 0x00002034,
+	TERTIARY_VM_EXEC_CONTROL_HIGH	= 0x00002035,
+	PID_POINTER_TABLE		= 0x00002042,
+	PID_POINTER_TABLE_HIGH		= 0x00002043,
+	GUEST_PHYSICAL_ADDRESS          = 0x00002400,
+	GUEST_PHYSICAL_ADDRESS_HIGH     = 0x00002401,
+	VMCS_LINK_POINTER               = 0x00002800,
+	VMCS_LINK_POINTER_HIGH          = 0x00002801,
+	GUEST_IA32_DEBUGCTL             = 0x00002802,
+	GUEST_IA32_DEBUGCTL_HIGH        = 0x00002803,
+	GUEST_IA32_PAT			= 0x00002804,
+	GUEST_IA32_PAT_HIGH		= 0x00002805,
+	GUEST_IA32_EFER			= 0x00002806,
+	GUEST_IA32_EFER_HIGH		= 0x00002807,
+	GUEST_IA32_PERF_GLOBAL_CTRL	= 0x00002808,
+	GUEST_IA32_PERF_GLOBAL_CTRL_HIGH= 0x00002809,
+	GUEST_PDPTR0                    = 0x0000280a,
+	GUEST_PDPTR0_HIGH               = 0x0000280b,
+	GUEST_PDPTR1                    = 0x0000280c,
+	GUEST_PDPTR1_HIGH               = 0x0000280d,
+	GUEST_PDPTR2                    = 0x0000280e,
+	GUEST_PDPTR2_HIGH               = 0x0000280f,
+	GUEST_PDPTR3                    = 0x00002810,
+	GUEST_PDPTR3_HIGH               = 0x00002811,
+	GUEST_BNDCFGS                   = 0x00002812,
+	GUEST_BNDCFGS_HIGH              = 0x00002813,
+	GUEST_IA32_RTIT_CTL		= 0x00002814,
+	GUEST_IA32_RTIT_CTL_HIGH	= 0x00002815,
+	HOST_IA32_PAT			= 0x00002c00,
+	HOST_IA32_PAT_HIGH		= 0x00002c01,
+	HOST_IA32_EFER			= 0x00002c02,
+	HOST_IA32_EFER_HIGH		= 0x00002c03,
+	HOST_IA32_PERF_GLOBAL_CTRL	= 0x00002c04,
+	HOST_IA32_PERF_GLOBAL_CTRL_HIGH	= 0x00002c05,
+	PIN_BASED_VM_EXEC_CONTROL       = 0x00004000,
+	CPU_BASED_VM_EXEC_CONTROL       = 0x00004002,
+	EXCEPTION_BITMAP                = 0x00004004,
+	PAGE_FAULT_ERROR_CODE_MASK      = 0x00004006,
+	PAGE_FAULT_ERROR_CODE_MATCH     = 0x00004008,
+	CR3_TARGET_COUNT                = 0x0000400a,
+	VM_EXIT_CONTROLS                = 0x0000400c,
+	VM_EXIT_MSR_STORE_COUNT         = 0x0000400e,
+	VM_EXIT_MSR_LOAD_COUNT          = 0x00004010,
+	VM_ENTRY_CONTROLS               = 0x00004012,
+	VM_ENTRY_MSR_LOAD_COUNT         = 0x00004014,
+	VM_ENTRY_INTR_INFO_FIELD        = 0x00004016,
+	VM_ENTRY_EXCEPTION_ERROR_CODE   = 0x00004018,
+	VM_ENTRY_INSTRUCTION_LEN        = 0x0000401a,
+	TPR_THRESHOLD                   = 0x0000401c,
+	SECONDARY_VM_EXEC_CONTROL       = 0x0000401e,
+	PLE_GAP                         = 0x00004020,
+	PLE_WINDOW                      = 0x00004022,
+	NOTIFY_WINDOW                   = 0x00004024,
+	VM_INSTRUCTION_ERROR            = 0x00004400,
+	VM_EXIT_REASON                  = 0x00004402,
+	VM_EXIT_INTR_INFO               = 0x00004404,
+	VM_EXIT_INTR_ERROR_CODE         = 0x00004406,
+	IDT_VECTORING_INFO_FIELD        = 0x00004408,
+	IDT_VECTORING_ERROR_CODE        = 0x0000440a,
+	VM_EXIT_INSTRUCTION_LEN         = 0x0000440c,
+	VMX_INSTRUCTION_INFO            = 0x0000440e,
+	GUEST_ES_LIMIT                  = 0x00004800,
+	GUEST_CS_LIMIT                  = 0x00004802,
+	GUEST_SS_LIMIT                  = 0x00004804,
+	GUEST_DS_LIMIT                  = 0x00004806,
+	GUEST_FS_LIMIT                  = 0x00004808,
+	GUEST_GS_LIMIT                  = 0x0000480a,
+	GUEST_LDTR_LIMIT                = 0x0000480c,
+	GUEST_TR_LIMIT                  = 0x0000480e,
+	GUEST_GDTR_LIMIT                = 0x00004810,
+	GUEST_IDTR_LIMIT                = 0x00004812,
+	GUEST_ES_AR_BYTES               = 0x00004814,
+	GUEST_CS_AR_BYTES               = 0x00004816,
+	GUEST_SS_AR_BYTES               = 0x00004818,
+	GUEST_DS_AR_BYTES               = 0x0000481a,
+	GUEST_FS_AR_BYTES               = 0x0000481c,
+	GUEST_GS_AR_BYTES               = 0x0000481e,
+	GUEST_LDTR_AR_BYTES             = 0x00004820,
+	GUEST_TR_AR_BYTES               = 0x00004822,
+	GUEST_INTERRUPTIBILITY_INFO     = 0x00004824,
+	GUEST_ACTIVITY_STATE            = 0x00004826,
+	GUEST_SYSENTER_CS               = 0x0000482A,
+	VMX_PREEMPTION_TIMER_VALUE      = 0x0000482E,
+	HOST_IA32_SYSENTER_CS           = 0x00004c00,
+	CR0_GUEST_HOST_MASK             = 0x00006000,
+	CR4_GUEST_HOST_MASK             = 0x00006002,
+	CR0_READ_SHADOW                 = 0x00006004,
+	CR4_READ_SHADOW                 = 0x00006006,
+	CR3_TARGET_VALUE0               = 0x00006008,
+	CR3_TARGET_VALUE1               = 0x0000600a,
+	CR3_TARGET_VALUE2               = 0x0000600c,
+	CR3_TARGET_VALUE3               = 0x0000600e,
+	EXIT_QUALIFICATION              = 0x00006400,
+	GUEST_LINEAR_ADDRESS            = 0x0000640a,
+	GUEST_CR0                       = 0x00006800,
+	GUEST_CR3                       = 0x00006802,
+	GUEST_CR4                       = 0x00006804,
+	GUEST_ES_BASE                   = 0x00006806,
+	GUEST_CS_BASE                   = 0x00006808,
+	GUEST_SS_BASE                   = 0x0000680a,
+	GUEST_DS_BASE                   = 0x0000680c,
+	GUEST_FS_BASE                   = 0x0000680e,
+	GUEST_GS_BASE                   = 0x00006810,
+	GUEST_LDTR_BASE                 = 0x00006812,
+	GUEST_TR_BASE                   = 0x00006814,
+	GUEST_GDTR_BASE                 = 0x00006816,
+	GUEST_IDTR_BASE                 = 0x00006818,
+	GUEST_DR7                       = 0x0000681a,
+	GUEST_RSP                       = 0x0000681c,
+	GUEST_RIP                       = 0x0000681e,
+	GUEST_RFLAGS                    = 0x00006820,
+	GUEST_PENDING_DBG_EXCEPTIONS    = 0x00006822,
+	GUEST_SYSENTER_ESP              = 0x00006824,
+	GUEST_SYSENTER_EIP              = 0x00006826,
+	HOST_CR0                        = 0x00006c00,
+	HOST_CR3                        = 0x00006c02,
+	HOST_CR4                        = 0x00006c04,
+	HOST_FS_BASE                    = 0x00006c06,
+	HOST_GS_BASE                    = 0x00006c08,
+	HOST_TR_BASE                    = 0x00006c0a,
+	HOST_GDTR_BASE                  = 0x00006c0c,
+	HOST_IDTR_BASE                  = 0x00006c0e,
+	HOST_IA32_SYSENTER_ESP          = 0x00006c10,
+	HOST_IA32_SYSENTER_EIP          = 0x00006c12,
+	HOST_RSP                        = 0x00006c14,
+	HOST_RIP                        = 0x00006c16,
+};
+
+/*
+ * Interruption-information format
+ */
+#define INTR_INFO_VECTOR_MASK           0xff            /* 7:0 */
+#define INTR_INFO_INTR_TYPE_MASK        0x700           /* 10:8 */
+#define INTR_INFO_DELIVER_CODE_MASK     0x800           /* 11 */
+#define INTR_INFO_UNBLOCK_NMI		0x1000		/* 12 */
+#define INTR_INFO_VALID_MASK            0x80000000      /* 31 */
+#define INTR_INFO_RESVD_BITS_MASK       0x7ffff000
+
+#define VECTORING_INFO_VECTOR_MASK           	INTR_INFO_VECTOR_MASK
+#define VECTORING_INFO_TYPE_MASK        	INTR_INFO_INTR_TYPE_MASK
+#define VECTORING_INFO_DELIVER_CODE_MASK    	INTR_INFO_DELIVER_CODE_MASK
+#define VECTORING_INFO_VALID_MASK       	INTR_INFO_VALID_MASK
+
+#define INTR_TYPE_EXT_INTR              (0 &lt;&lt; 8) /* external interrupt */
+#define INTR_TYPE_RESERVED              (1 &lt;&lt; 8) /* reserved */
+#define INTR_TYPE_NMI_INTR		(2 &lt;&lt; 8) /* NMI */
+#define INTR_TYPE_HARD_EXCEPTION	(3 &lt;&lt; 8) /* processor exception */
+#define INTR_TYPE_SOFT_INTR             (4 &lt;&lt; 8) /* software interrupt */
+#define INTR_TYPE_PRIV_SW_EXCEPTION	(5 &lt;&lt; 8) /* ICE breakpoint - undocumented */
+#define INTR_TYPE_SOFT_EXCEPTION	(6 &lt;&lt; 8) /* software exception */
+#define INTR_TYPE_OTHER_EVENT           (7 &lt;&lt; 8) /* other event */
+
+/* GUEST_INTERRUPTIBILITY_INFO flags. */
+#define GUEST_INTR_STATE_STI		0x00000001
+#define GUEST_INTR_STATE_MOV_SS		0x00000002
+#define GUEST_INTR_STATE_SMI		0x00000004
+#define GUEST_INTR_STATE_NMI		0x00000008
+#define GUEST_INTR_STATE_ENCLAVE_INTR	0x00000010
+
+/* GUEST_ACTIVITY_STATE flags */
+#define GUEST_ACTIVITY_ACTIVE		0
+#define GUEST_ACTIVITY_HLT		1
+#define GUEST_ACTIVITY_SHUTDOWN		2
+#define GUEST_ACTIVITY_WAIT_SIPI	3
+
+/*
+ * Exit Qualifications for MOV for Control Register Access
+ */
+#define CONTROL_REG_ACCESS_NUM          0x7     /* 2:0, number of control reg.*/
+#define CONTROL_REG_ACCESS_TYPE         0x30    /* 5:4, access type */
+#define CONTROL_REG_ACCESS_REG          0xf00   /* 10:8, general purpose reg. */
+#define LMSW_SOURCE_DATA_SHIFT 16
+#define LMSW_SOURCE_DATA  (0xFFFF &lt;&lt; LMSW_SOURCE_DATA_SHIFT) /* 16:31 lmsw source */
+#define REG_EAX                         (0 &lt;&lt; 8)
+#define REG_ECX                         (1 &lt;&lt; 8)
+#define REG_EDX                         (2 &lt;&lt; 8)
+#define REG_EBX                         (3 &lt;&lt; 8)
+#define REG_ESP                         (4 &lt;&lt; 8)
+#define REG_EBP                         (5 &lt;&lt; 8)
+#define REG_ESI                         (6 &lt;&lt; 8)
+#define REG_EDI                         (7 &lt;&lt; 8)
+#define REG_R8                         (8 &lt;&lt; 8)
+#define REG_R9                         (9 &lt;&lt; 8)
+#define REG_R10                        (10 &lt;&lt; 8)
+#define REG_R11                        (11 &lt;&lt; 8)
+#define REG_R12                        (12 &lt;&lt; 8)
+#define REG_R13                        (13 &lt;&lt; 8)
+#define REG_R14                        (14 &lt;&lt; 8)
+#define REG_R15                        (15 &lt;&lt; 8)
+
+/*
+ * Exit Qualifications for MOV for Debug Register Access
+ */
+#define DEBUG_REG_ACCESS_NUM            0x7     /* 2:0, number of debug reg. */
+#define DEBUG_REG_ACCESS_TYPE           0x10    /* 4, direction of access */
+#define TYPE_MOV_TO_DR                  (0 &lt;&lt; 4)
+#define TYPE_MOV_FROM_DR                (1 &lt;&lt; 4)
+#define DEBUG_REG_ACCESS_REG(eq)        (((eq) &gt;&gt; 8) &amp; 0xf) /* 11:8, general purpose reg. */
+
+
+/*
+ * Exit Qualifications for APIC-Access
+ */
+#define APIC_ACCESS_OFFSET              0xfff   /* 11:0, offset within the APIC page */
+#define APIC_ACCESS_TYPE                0xf000  /* 15:12, access type */
+#define TYPE_LINEAR_APIC_INST_READ      (0 &lt;&lt; 12)
+#define TYPE_LINEAR_APIC_INST_WRITE     (1 &lt;&lt; 12)
+#define TYPE_LINEAR_APIC_INST_FETCH     (2 &lt;&lt; 12)
+#define TYPE_LINEAR_APIC_EVENT          (3 &lt;&lt; 12)
+#define TYPE_PHYSICAL_APIC_EVENT        (10 &lt;&lt; 12)
+#define TYPE_PHYSICAL_APIC_INST         (15 &lt;&lt; 12)
+
+/* segment AR in VMCS -- these are different from what LAR reports */
+#define VMX_SEGMENT_AR_L_MASK (1 &lt;&lt; 13)
+
+#define VMX_AR_TYPE_ACCESSES_MASK 1
+#define VMX_AR_TYPE_READABLE_MASK (1 &lt;&lt; 1)
+#define VMX_AR_TYPE_WRITEABLE_MASK (1 &lt;&lt; 2)
+#define VMX_AR_TYPE_CODE_MASK (1 &lt;&lt; 3)
+#define VMX_AR_TYPE_MASK 0x0f
+#define VMX_AR_TYPE_BUSY_64_TSS 11
+#define VMX_AR_TYPE_BUSY_32_TSS 11
+#define VMX_AR_TYPE_BUSY_16_TSS 3
+#define VMX_AR_TYPE_LDT 2
+
+#define VMX_AR_UNUSABLE_MASK (1 &lt;&lt; 16)
+#define VMX_AR_S_MASK (1 &lt;&lt; 4)
+#define VMX_AR_P_MASK (1 &lt;&lt; 7)
+#define VMX_AR_L_MASK (1 &lt;&lt; 13)
+#define VMX_AR_DB_MASK (1 &lt;&lt; 14)
+#define VMX_AR_G_MASK (1 &lt;&lt; 15)
+#define VMX_AR_DPL_SHIFT 5
+#define VMX_AR_DPL(ar) (((ar) &gt;&gt; VMX_AR_DPL_SHIFT) &amp; 3)
+
+#define VMX_AR_RESERVD_MASK 0xfffe0f00
+
+#define TSS_PRIVATE_MEMSLOT			(KVM_USER_MEM_SLOTS + 0)
+#define APIC_ACCESS_PAGE_PRIVATE_MEMSLOT	(KVM_USER_MEM_SLOTS + 1)
+#define IDENTITY_PAGETABLE_PRIVATE_MEMSLOT	(KVM_USER_MEM_SLOTS + 2)
+
+#define VMX_NR_VPIDS				(1 &lt;&lt; 16)
+#define VMX_VPID_EXTENT_INDIVIDUAL_ADDR		0
+#define VMX_VPID_EXTENT_SINGLE_CONTEXT		1
+#define VMX_VPID_EXTENT_ALL_CONTEXT		2
+#define VMX_VPID_EXTENT_SINGLE_NON_GLOBAL	3
+
+#define VMX_EPT_EXTENT_CONTEXT			1
+#define VMX_EPT_EXTENT_GLOBAL			2
+#define VMX_EPT_EXTENT_SHIFT			24
+
+#define VMX_EPT_EXECUTE_ONLY_BIT		(1ull)
+#define VMX_EPT_PAGE_WALK_4_BIT			(1ull &lt;&lt; 6)
+#define VMX_EPT_PAGE_WALK_5_BIT			(1ull &lt;&lt; 7)
+#define VMX_EPTP_UC_BIT				(1ull &lt;&lt; 8)
+#define VMX_EPTP_WB_BIT				(1ull &lt;&lt; 14)
+#define VMX_EPT_2MB_PAGE_BIT			(1ull &lt;&lt; 16)
+#define VMX_EPT_1GB_PAGE_BIT			(1ull &lt;&lt; 17)
+#define VMX_EPT_INVEPT_BIT			(1ull &lt;&lt; 20)
+#define VMX_EPT_AD_BIT				    (1ull &lt;&lt; 21)
+#define VMX_EPT_EXTENT_CONTEXT_BIT		(1ull &lt;&lt; 25)
+#define VMX_EPT_EXTENT_GLOBAL_BIT		(1ull &lt;&lt; 26)
+
+#define VMX_VPID_INVVPID_BIT                    (1ull &lt;&lt; 0) /* (32 - 32) */
+#define VMX_VPID_EXTENT_INDIVIDUAL_ADDR_BIT     (1ull &lt;&lt; 8) /* (40 - 32) */
+#define VMX_VPID_EXTENT_SINGLE_CONTEXT_BIT      (1ull &lt;&lt; 9) /* (41 - 32) */
+#define VMX_VPID_EXTENT_GLOBAL_CONTEXT_BIT      (1ull &lt;&lt; 10) /* (42 - 32) */
+#define VMX_VPID_EXTENT_SINGLE_NON_GLOBAL_BIT   (1ull &lt;&lt; 11) /* (43 - 32) */
+
+#define VMX_EPT_MT_EPTE_SHIFT			3
+#define VMX_EPTP_PWL_MASK			0x38ull
+#define VMX_EPTP_PWL_4				0x18ull
+#define VMX_EPTP_PWL_5				0x20ull
+#define VMX_EPTP_AD_ENABLE_BIT			(1ull &lt;&lt; 6)
+#define VMX_EPTP_MT_MASK			0x7ull
+#define VMX_EPTP_MT_WB				0x6ull
+#define VMX_EPTP_MT_UC				0x0ull
+#define VMX_EPT_READABLE_MASK			0x1ull
+#define VMX_EPT_WRITABLE_MASK			0x2ull
+#define VMX_EPT_EXECUTABLE_MASK			0x4ull
+#define VMX_EPT_IPAT_BIT    			(1ull &lt;&lt; 6)
+#define VMX_EPT_ACCESS_BIT			(1ull &lt;&lt; 8)
+#define VMX_EPT_DIRTY_BIT			(1ull &lt;&lt; 9)
+#define VMX_EPT_RWX_MASK                        (VMX_EPT_READABLE_MASK |       \
+						 VMX_EPT_WRITABLE_MASK |       \
+						 VMX_EPT_EXECUTABLE_MASK)
+#define VMX_EPT_MT_MASK				(7ull &lt;&lt; VMX_EPT_MT_EPTE_SHIFT)
+
+static inline u8 vmx_eptp_page_walk_level(u64 eptp)
+{
+	u64 encoded_level = eptp &amp; VMX_EPTP_PWL_MASK;
+
+<yellow>	if (encoded_level == VMX_EPTP_PWL_5)</yellow>
+		return 5;
+
+	/* @eptp must be pre-validated by the caller. */
+<yellow>	WARN_ON_ONCE(encoded_level != VMX_EPTP_PWL_4);</yellow>
+	return 4;
+}
+
+/* The mask to use to trigger an EPT Misconfiguration in order to track MMIO */
+#define VMX_EPT_MISCONFIG_WX_VALUE		(VMX_EPT_WRITABLE_MASK |       \
+						 VMX_EPT_EXECUTABLE_MASK)
+
+#define VMX_EPT_IDENTITY_PAGETABLE_ADDR		0xfffbc000ul
+
+struct vmx_msr_entry {
+	u32 index;
+	u32 reserved;
+	u64 value;
+} __aligned(16);
+
+/*
+ * Exit Qualifications for entry failure during or after loading guest state
+ */
+enum vm_entry_failure_code {
+	ENTRY_FAIL_DEFAULT		= 0,
+	ENTRY_FAIL_PDPTE		= 2,
+	ENTRY_FAIL_NMI			= 3,
+	ENTRY_FAIL_VMCS_LINK_PTR	= 4,
+};
+
+/*
+ * Exit Qualifications for EPT Violations
+ */
+#define EPT_VIOLATION_ACC_READ_BIT	0
+#define EPT_VIOLATION_ACC_WRITE_BIT	1
+#define EPT_VIOLATION_ACC_INSTR_BIT	2
+#define EPT_VIOLATION_RWX_SHIFT		3
+#define EPT_VIOLATION_GVA_IS_VALID_BIT	7
+#define EPT_VIOLATION_GVA_TRANSLATED_BIT 8
+#define EPT_VIOLATION_ACC_READ		(1 &lt;&lt; EPT_VIOLATION_ACC_READ_BIT)
+#define EPT_VIOLATION_ACC_WRITE		(1 &lt;&lt; EPT_VIOLATION_ACC_WRITE_BIT)
+#define EPT_VIOLATION_ACC_INSTR		(1 &lt;&lt; EPT_VIOLATION_ACC_INSTR_BIT)
+#define EPT_VIOLATION_RWX_MASK		(VMX_EPT_RWX_MASK &lt;&lt; EPT_VIOLATION_RWX_SHIFT)
+#define EPT_VIOLATION_GVA_IS_VALID	(1 &lt;&lt; EPT_VIOLATION_GVA_IS_VALID_BIT)
+#define EPT_VIOLATION_GVA_TRANSLATED	(1 &lt;&lt; EPT_VIOLATION_GVA_TRANSLATED_BIT)
+
+/*
+ * Exit Qualifications for NOTIFY VM EXIT
+ */
+#define NOTIFY_VM_CONTEXT_INVALID     BIT(0)
+
+/*
+ * VM-instruction error numbers
+ */
+enum vm_instruction_error_number {
+	VMXERR_VMCALL_IN_VMX_ROOT_OPERATION = 1,
+	VMXERR_VMCLEAR_INVALID_ADDRESS = 2,
+	VMXERR_VMCLEAR_VMXON_POINTER = 3,
+	VMXERR_VMLAUNCH_NONCLEAR_VMCS = 4,
+	VMXERR_VMRESUME_NONLAUNCHED_VMCS = 5,
+	VMXERR_VMRESUME_AFTER_VMXOFF = 6,
+	VMXERR_ENTRY_INVALID_CONTROL_FIELD = 7,
+	VMXERR_ENTRY_INVALID_HOST_STATE_FIELD = 8,
+	VMXERR_VMPTRLD_INVALID_ADDRESS = 9,
+	VMXERR_VMPTRLD_VMXON_POINTER = 10,
+	VMXERR_VMPTRLD_INCORRECT_VMCS_REVISION_ID = 11,
+	VMXERR_UNSUPPORTED_VMCS_COMPONENT = 12,
+	VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT = 13,
+	VMXERR_VMXON_IN_VMX_ROOT_OPERATION = 15,
+	VMXERR_ENTRY_INVALID_EXECUTIVE_VMCS_POINTER = 16,
+	VMXERR_ENTRY_NONLAUNCHED_EXECUTIVE_VMCS = 17,
+	VMXERR_ENTRY_EXECUTIVE_VMCS_POINTER_NOT_VMXON_POINTER = 18,
+	VMXERR_VMCALL_NONCLEAR_VMCS = 19,
+	VMXERR_VMCALL_INVALID_VM_EXIT_CONTROL_FIELDS = 20,
+	VMXERR_VMCALL_INCORRECT_MSEG_REVISION_ID = 22,
+	VMXERR_VMXOFF_UNDER_DUAL_MONITOR_TREATMENT_OF_SMIS_AND_SMM = 23,
+	VMXERR_VMCALL_INVALID_SMM_MONITOR_FEATURES = 24,
+	VMXERR_ENTRY_INVALID_VM_EXECUTION_CONTROL_FIELDS_IN_EXECUTIVE_VMCS = 25,
+	VMXERR_ENTRY_EVENTS_BLOCKED_BY_MOV_SS = 26,
+	VMXERR_INVALID_OPERAND_TO_INVEPT_INVVPID = 28,
+};
+
+/*
+ * VM-instruction errors that can be encountered on VM-Enter, used to trace
+ * nested VM-Enter failures reported by hardware.  Errors unique to VM-Enter
+ * from a SMI Transfer Monitor are not included as things have gone seriously
+ * sideways if we get one of those...
+ */
+#define VMX_VMENTER_INSTRUCTION_ERRORS \
+	{ VMXERR_VMLAUNCH_NONCLEAR_VMCS,		&quot;VMLAUNCH_NONCLEAR_VMCS&quot; }, \
+	{ VMXERR_VMRESUME_NONLAUNCHED_VMCS,		&quot;VMRESUME_NONLAUNCHED_VMCS&quot; }, \
+	{ VMXERR_VMRESUME_AFTER_VMXOFF,			&quot;VMRESUME_AFTER_VMXOFF&quot; }, \
+	{ VMXERR_ENTRY_INVALID_CONTROL_FIELD,		&quot;VMENTRY_INVALID_CONTROL_FIELD&quot; }, \
+	{ VMXERR_ENTRY_INVALID_HOST_STATE_FIELD,	&quot;VMENTRY_INVALID_HOST_STATE_FIELD&quot; }, \
+	{ VMXERR_ENTRY_EVENTS_BLOCKED_BY_MOV_SS,	&quot;VMENTRY_EVENTS_BLOCKED_BY_MOV_SS&quot; }
+
+enum vmx_l1d_flush_state {
+	VMENTER_L1D_FLUSH_AUTO,
+	VMENTER_L1D_FLUSH_NEVER,
+	VMENTER_L1D_FLUSH_COND,
+	VMENTER_L1D_FLUSH_ALWAYS,
+	VMENTER_L1D_FLUSH_EPT_DISABLED,
+	VMENTER_L1D_FLUSH_NOT_REQUIRED,
+};
+
+extern enum vmx_l1d_flush_state l1tf_vmx_mitigation;
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

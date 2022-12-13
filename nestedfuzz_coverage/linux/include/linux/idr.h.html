@@ -1,0 +1,370 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br>230.<br>231.<br>232.<br>233.<br>234.<br>235.<br>236.<br>237.<br>238.<br>239.<br>240.<br>241.<br>242.<br>243.<br>244.<br>245.<br>246.<br>247.<br>248.<br>249.<br>250.<br>251.<br>252.<br>253.<br>254.<br>255.<br>256.<br>257.<br>258.<br>259.<br>260.<br>261.<br>262.<br>263.<br>264.<br>265.<br>266.<br>267.<br>268.<br>269.<br>270.<br>271.<br>272.<br>273.<br>274.<br>275.<br>276.<br>277.<br>278.<br>279.<br>280.<br>281.<br>282.<br>283.<br>284.<br>285.<br>286.<br>287.<br>288.<br>289.<br>290.<br>291.<br>292.<br>293.<br>294.<br>295.<br>296.<br>297.<br>298.<br>299.<br>300.<br>301.<br>302.<br>303.<br>304.<br>305.<br>306.<br>307.<br>308.<br>309.<br>310.<br>311.<br>312.<br>313.<br>314.<br>315.<br>316.<br>317.<br>318.<br>319.<br>320.<br>321.<br>322.<br>323.<br>324.<br>325.<br>326.<br>327.<br>328.<br>329.<br>330.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+/*
+ * include/linux/idr.h
+ * 
+ * 2002-10-18  written by Jim Houston jim.houston@ccur.com
+ *	Copyright (C) 2002 by Concurrent Computer Corporation
+ *
+ * Small id to pointer translation service avoiding fixed sized
+ * tables.
+ */
+
+#ifndef __IDR_H__
+#define __IDR_H__
+
+#include &lt;linux/radix-tree.h&gt;
+#include &lt;linux/gfp.h&gt;
+#include &lt;linux/percpu.h&gt;
+
+struct idr {
+	struct radix_tree_root	idr_rt;
+	unsigned int		idr_base;
+	unsigned int		idr_next;
+};
+
+/*
+ * The IDR API does not expose the tagging functionality of the radix tree
+ * to users.  Use tag 0 to track whether a node has free space below it.
+ */
+#define IDR_FREE	0
+
+/* Set the IDR flag and the IDR_FREE tag */
+#define IDR_RT_MARKER	(ROOT_IS_IDR | (__force gfp_t)			\
+					(1 &lt;&lt; (ROOT_TAG_SHIFT + IDR_FREE)))
+
+#define IDR_INIT_BASE(name, base) {					\
+	.idr_rt = RADIX_TREE_INIT(name, IDR_RT_MARKER),			\
+	.idr_base = (base),						\
+	.idr_next = 0,							\
+}
+
+/**
+ * IDR_INIT() - Initialise an IDR.
+ * @name: Name of IDR.
+ *
+ * A freshly-initialised IDR contains no IDs.
+ */
+#define IDR_INIT(name)	IDR_INIT_BASE(name, 0)
+
+/**
+ * DEFINE_IDR() - Define a statically-allocated IDR.
+ * @name: Name of IDR.
+ *
+ * An IDR defined using this macro is ready for use with no additional
+ * initialisation required.  It contains no IDs.
+ */
+#define DEFINE_IDR(name)	struct idr name = IDR_INIT(name)
+
+/**
+ * idr_get_cursor - Return the current position of the cyclic allocator
+ * @idr: idr handle
+ *
+ * The value returned is the value that will be next returned from
+ * idr_alloc_cyclic() if it is free (otherwise the search will start from
+ * this position).
+ */
+static inline unsigned int idr_get_cursor(const struct idr *idr)
+{
+	return READ_ONCE(idr-&gt;idr_next);
+}
+
+/**
+ * idr_set_cursor - Set the current position of the cyclic allocator
+ * @idr: idr handle
+ * @val: new position
+ *
+ * The next call to idr_alloc_cyclic() will return @val if it is free
+ * (otherwise the search will start from this position).
+ */
+static inline void idr_set_cursor(struct idr *idr, unsigned int val)
+{
+	WRITE_ONCE(idr-&gt;idr_next, val);
+}
+
+/**
+ * DOC: idr sync
+ * idr synchronization (stolen from radix-tree.h)
+ *
+ * idr_find() is able to be called locklessly, using RCU. The caller must
+ * ensure calls to this function are made within rcu_read_lock() regions.
+ * Other readers (lock-free or otherwise) and modifications may be running
+ * concurrently.
+ *
+ * It is still required that the caller manage the synchronization and
+ * lifetimes of the items. So if RCU lock-free lookups are used, typically
+ * this would mean that the items have their own locks, or are amenable to
+ * lock-free access; and that the items are freed by RCU (or only freed after
+ * having been deleted from the idr tree *and* a synchronize_rcu() grace
+ * period).
+ */
+
+#define idr_lock(idr)		xa_lock(&amp;(idr)-&gt;idr_rt)
+#define idr_unlock(idr)		xa_unlock(&amp;(idr)-&gt;idr_rt)
+#define idr_lock_bh(idr)	xa_lock_bh(&amp;(idr)-&gt;idr_rt)
+#define idr_unlock_bh(idr)	xa_unlock_bh(&amp;(idr)-&gt;idr_rt)
+#define idr_lock_irq(idr)	xa_lock_irq(&amp;(idr)-&gt;idr_rt)
+#define idr_unlock_irq(idr)	xa_unlock_irq(&amp;(idr)-&gt;idr_rt)
+#define idr_lock_irqsave(idr, flags) \
+				xa_lock_irqsave(&amp;(idr)-&gt;idr_rt, flags)
+#define idr_unlock_irqrestore(idr, flags) \
+				xa_unlock_irqrestore(&amp;(idr)-&gt;idr_rt, flags)
+
+void idr_preload(gfp_t gfp_mask);
+
+int idr_alloc(struct idr *, void *ptr, int start, int end, gfp_t);
+int __must_check idr_alloc_u32(struct idr *, void *ptr, u32 *id,
+				unsigned long max, gfp_t);
+int idr_alloc_cyclic(struct idr *, void *ptr, int start, int end, gfp_t);
+void *idr_remove(struct idr *, unsigned long id);
+void *idr_find(const struct idr *, unsigned long id);
+int idr_for_each(const struct idr *,
+		 int (*fn)(int id, void *p, void *data), void *data);
+void *idr_get_next(struct idr *, int *nextid);
+void *idr_get_next_ul(struct idr *, unsigned long *nextid);
+void *idr_replace(struct idr *, void *, unsigned long id);
+void idr_destroy(struct idr *);
+
+/**
+ * idr_init_base() - Initialise an IDR.
+ * @idr: IDR handle.
+ * @base: The base value for the IDR.
+ *
+ * This variation of idr_init() creates an IDR which will allocate IDs
+ * starting at %base.
+ */
+static inline void idr_init_base(struct idr *idr, int base)
+{
+<yellow>	INIT_RADIX_TREE(&idr->idr_rt, IDR_RT_MARKER);</yellow>
+	idr-&gt;idr_base = base;
+	idr-&gt;idr_next = 0;
+}
+
+/**
+ * idr_init() - Initialise an IDR.
+ * @idr: IDR handle.
+ *
+ * Initialise a dynamically allocated IDR.  To initialise a
+ * statically allocated IDR, use DEFINE_IDR().
+ */
+static inline void idr_init(struct idr *idr)
+{
+<yellow>	idr_init_base(idr, 0);</yellow>
+}
+
+/**
+ * idr_is_empty() - Are there any IDs allocated?
+ * @idr: IDR handle.
+ *
+ * Return: %true if any IDs have been allocated from this IDR.
+ */
+static inline bool idr_is_empty(const struct idr *idr)
+{
+	return radix_tree_empty(&amp;idr-&gt;idr_rt) &amp;&amp;
+		radix_tree_tagged(&amp;idr-&gt;idr_rt, IDR_FREE);
+}
+
+/**
+ * idr_preload_end - end preload section started with idr_preload()
+ *
+ * Each idr_preload() should be matched with an invocation of this
+ * function.  See idr_preload() for details.
+ */
+static inline void idr_preload_end(void)
+{
+	local_unlock(&amp;radix_tree_preloads.lock);
+}
+
+/**
+ * idr_for_each_entry() - Iterate over an IDR&#x27;s elements of a given type.
+ * @idr: IDR handle.
+ * @entry: The type * to use as cursor
+ * @id: Entry ID.
+ *
+ * @entry and @id do not need to be initialized before the loop, and
+ * after normal termination @entry is left with the value NULL.  This
+ * is convenient for a &quot;not found&quot; value.
+ */
+#define idr_for_each_entry(idr, entry, id)			\
+	for (id = 0; ((entry) = idr_get_next(idr, &amp;(id))) != NULL; id += 1U)
+
+/**
+ * idr_for_each_entry_ul() - Iterate over an IDR&#x27;s elements of a given type.
+ * @idr: IDR handle.
+ * @entry: The type * to use as cursor.
+ * @tmp: A temporary placeholder for ID.
+ * @id: Entry ID.
+ *
+ * @entry and @id do not need to be initialized before the loop, and
+ * after normal termination @entry is left with the value NULL.  This
+ * is convenient for a &quot;not found&quot; value.
+ */
+#define idr_for_each_entry_ul(idr, entry, tmp, id)			\
+	for (tmp = 0, id = 0;						\
+	     tmp &lt;= id &amp;&amp; ((entry) = idr_get_next_ul(idr, &amp;(id))) != NULL; \
+	     tmp = id, ++id)
+
+/**
+ * idr_for_each_entry_continue() - Continue iteration over an IDR&#x27;s elements of a given type
+ * @idr: IDR handle.
+ * @entry: The type * to use as a cursor.
+ * @id: Entry ID.
+ *
+ * Continue to iterate over entries, continuing after the current position.
+ */
+#define idr_for_each_entry_continue(idr, entry, id)			\
+	for ((entry) = idr_get_next((idr), &amp;(id));			\
+	     entry;							\
+	     ++id, (entry) = idr_get_next((idr), &amp;(id)))
+
+/**
+ * idr_for_each_entry_continue_ul() - Continue iteration over an IDR&#x27;s elements of a given type
+ * @idr: IDR handle.
+ * @entry: The type * to use as a cursor.
+ * @tmp: A temporary placeholder for ID.
+ * @id: Entry ID.
+ *
+ * Continue to iterate over entries, continuing after the current position.
+ */
+#define idr_for_each_entry_continue_ul(idr, entry, tmp, id)		\
+	for (tmp = id;							\
+	     tmp &lt;= id &amp;&amp; ((entry) = idr_get_next_ul(idr, &amp;(id))) != NULL; \
+	     tmp = id, ++id)
+
+/*
+ * IDA - ID Allocator, use when translation from id to pointer isn&#x27;t necessary.
+ */
+#define IDA_CHUNK_SIZE		128	/* 128 bytes per chunk */
+#define IDA_BITMAP_LONGS	(IDA_CHUNK_SIZE / sizeof(long))
+#define IDA_BITMAP_BITS 	(IDA_BITMAP_LONGS * sizeof(long) * 8)
+
+struct ida_bitmap {
+	unsigned long		bitmap[IDA_BITMAP_LONGS];
+};
+
+struct ida {
+	struct xarray xa;
+};
+
+#define IDA_INIT_FLAGS	(XA_FLAGS_LOCK_IRQ | XA_FLAGS_ALLOC)
+
+#define IDA_INIT(name)	{						\
+	.xa = XARRAY_INIT(name, IDA_INIT_FLAGS)				\
+}
+#define DEFINE_IDA(name)	struct ida name = IDA_INIT(name)
+
+int ida_alloc_range(struct ida *, unsigned int min, unsigned int max, gfp_t);
+void ida_free(struct ida *, unsigned int id);
+void ida_destroy(struct ida *ida);
+
+/**
+ * ida_alloc() - Allocate an unused ID.
+ * @ida: IDA handle.
+ * @gfp: Memory allocation flags.
+ *
+ * Allocate an ID between 0 and %INT_MAX, inclusive.
+ *
+ * Context: Any context. It is safe to call this function without
+ * locking in your code.
+ * Return: The allocated ID, or %-ENOMEM if memory could not be allocated,
+ * or %-ENOSPC if there are no free IDs.
+ */
+static inline int ida_alloc(struct ida *ida, gfp_t gfp)
+{
+	return ida_alloc_range(ida, 0, ~0, gfp);
+}
+
+/**
+ * ida_alloc_min() - Allocate an unused ID.
+ * @ida: IDA handle.
+ * @min: Lowest ID to allocate.
+ * @gfp: Memory allocation flags.
+ *
+ * Allocate an ID between @min and %INT_MAX, inclusive.
+ *
+ * Context: Any context. It is safe to call this function without
+ * locking in your code.
+ * Return: The allocated ID, or %-ENOMEM if memory could not be allocated,
+ * or %-ENOSPC if there are no free IDs.
+ */
+static inline int ida_alloc_min(struct ida *ida, unsigned int min, gfp_t gfp)
+{
+	return ida_alloc_range(ida, min, ~0, gfp);
+}
+
+/**
+ * ida_alloc_max() - Allocate an unused ID.
+ * @ida: IDA handle.
+ * @max: Highest ID to allocate.
+ * @gfp: Memory allocation flags.
+ *
+ * Allocate an ID between 0 and @max, inclusive.
+ *
+ * Context: Any context. It is safe to call this function without
+ * locking in your code.
+ * Return: The allocated ID, or %-ENOMEM if memory could not be allocated,
+ * or %-ENOSPC if there are no free IDs.
+ */
+static inline int ida_alloc_max(struct ida *ida, unsigned int max, gfp_t gfp)
+{
+	return ida_alloc_range(ida, 0, max, gfp);
+}
+
+static inline void ida_init(struct ida *ida)
+{
+	xa_init_flags(&amp;ida-&gt;xa, IDA_INIT_FLAGS);
+}
+
+/*
+ * ida_simple_get() and ida_simple_remove() are deprecated. Use
+ * ida_alloc() and ida_free() instead respectively.
+ */
+#define ida_simple_get(ida, start, end, gfp)	\
+			ida_alloc_range(ida, start, (end) - 1, gfp)
+#define ida_simple_remove(ida, id)	ida_free(ida, id)
+
+static inline bool ida_is_empty(const struct ida *ida)
+{
+	return xa_empty(&amp;ida-&gt;xa);
+}
+#endif /* __IDR_H__ */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

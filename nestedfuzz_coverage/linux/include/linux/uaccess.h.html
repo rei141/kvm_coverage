@@ -1,0 +1,460 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br>230.<br>231.<br>232.<br>233.<br>234.<br>235.<br>236.<br>237.<br>238.<br>239.<br>240.<br>241.<br>242.<br>243.<br>244.<br>245.<br>246.<br>247.<br>248.<br>249.<br>250.<br>251.<br>252.<br>253.<br>254.<br>255.<br>256.<br>257.<br>258.<br>259.<br>260.<br>261.<br>262.<br>263.<br>264.<br>265.<br>266.<br>267.<br>268.<br>269.<br>270.<br>271.<br>272.<br>273.<br>274.<br>275.<br>276.<br>277.<br>278.<br>279.<br>280.<br>281.<br>282.<br>283.<br>284.<br>285.<br>286.<br>287.<br>288.<br>289.<br>290.<br>291.<br>292.<br>293.<br>294.<br>295.<br>296.<br>297.<br>298.<br>299.<br>300.<br>301.<br>302.<br>303.<br>304.<br>305.<br>306.<br>307.<br>308.<br>309.<br>310.<br>311.<br>312.<br>313.<br>314.<br>315.<br>316.<br>317.<br>318.<br>319.<br>320.<br>321.<br>322.<br>323.<br>324.<br>325.<br>326.<br>327.<br>328.<br>329.<br>330.<br>331.<br>332.<br>333.<br>334.<br>335.<br>336.<br>337.<br>338.<br>339.<br>340.<br>341.<br>342.<br>343.<br>344.<br>345.<br>346.<br>347.<br>348.<br>349.<br>350.<br>351.<br>352.<br>353.<br>354.<br>355.<br>356.<br>357.<br>358.<br>359.<br>360.<br>361.<br>362.<br>363.<br>364.<br>365.<br>366.<br>367.<br>368.<br>369.<br>370.<br>371.<br>372.<br>373.<br>374.<br>375.<br>376.<br>377.<br>378.<br>379.<br>380.<br>381.<br>382.<br>383.<br>384.<br>385.<br>386.<br>387.<br>388.<br>389.<br>390.<br>391.<br>392.<br>393.<br>394.<br>395.<br>396.<br>397.<br>398.<br>399.<br>400.<br>401.<br>402.<br>403.<br>404.<br>405.<br>406.<br>407.<br>408.<br>409.<br>410.<br>411.<br>412.<br>413.<br>414.<br>415.<br>416.<br>417.<br>418.<br>419.<br>420.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __LINUX_UACCESS_H__
+#define __LINUX_UACCESS_H__
+
+#include &lt;linux/fault-inject-usercopy.h&gt;
+#include &lt;linux/instrumented.h&gt;
+#include &lt;linux/minmax.h&gt;
+#include &lt;linux/sched.h&gt;
+#include &lt;linux/thread_info.h&gt;
+
+#include &lt;asm/uaccess.h&gt;
+
+/*
+ * Architectures should provide two primitives (raw_copy_{to,from}_user())
+ * and get rid of their private instances of copy_{to,from}_user() and
+ * __copy_{to,from}_user{,_inatomic}().
+ *
+ * raw_copy_{to,from}_user(to, from, size) should copy up to size bytes and
+ * return the amount left to copy.  They should assume that access_ok() has
+ * already been checked (and succeeded); they should *not* zero-pad anything.
+ * No KASAN or object size checks either - those belong here.
+ *
+ * Both of these functions should attempt to copy size bytes starting at from
+ * into the area starting at to.  They must not fetch or store anything
+ * outside of those areas.  Return value must be between 0 (everything
+ * copied successfully) and size (nothing copied).
+ *
+ * If raw_copy_{to,from}_user(to, from, size) returns N, size - N bytes starting
+ * at to must become equal to the bytes fetched from the corresponding area
+ * starting at from.  All data past to + size - N must be left unmodified.
+ *
+ * If copying succeeds, the return value must be 0.  If some data cannot be
+ * fetched, it is permitted to copy less than had been fetched; the only
+ * hard requirement is that not storing anything at all (i.e. returning size)
+ * should happen only when nothing could be copied.  In other words, you don&#x27;t
+ * have to squeeze as much as possible - it is allowed, but not necessary.
+ *
+ * For raw_copy_from_user() to always points to kernel memory and no faults
+ * on store should happen.  Interpretation of from is affected by set_fs().
+ * For raw_copy_to_user() it&#x27;s the other way round.
+ *
+ * Both can be inlined - it&#x27;s up to architectures whether it wants to bother
+ * with that.  They should not be used directly; they are used to implement
+ * the 6 functions (copy_{to,from}_user(), __copy_{to,from}_user_inatomic())
+ * that are used instead.  Out of those, __... ones are inlined.  Plain
+ * copy_{to,from}_user() might or might not be inlined.  If you want them
+ * inlined, have asm/uaccess.h define INLINE_COPY_{TO,FROM}_USER.
+ *
+ * NOTE: only copy_from_user() zero-pads the destination in case of short copy.
+ * Neither __copy_from_user() nor __copy_from_user_inatomic() zero anything
+ * at all; their callers absolutely must check the return value.
+ *
+ * Biarch ones should also provide raw_copy_in_user() - similar to the above,
+ * but both source and destination are __user pointers (affected by set_fs()
+ * as usual) and both source and destination can trigger faults.
+ */
+
+static __always_inline __must_check unsigned long
+__copy_from_user_inatomic(void *to, const void __user *from, unsigned long n)
+{
+	unsigned long res;
+
+	instrument_copy_from_user_before(to, from, n);
+	check_object_size(to, n, false);
+	res = raw_copy_from_user(to, from, n);
+	instrument_copy_from_user_after(to, from, n, res);
+	return res;
+}
+
+static __always_inline __must_check unsigned long
+__copy_from_user(void *to, const void __user *from, unsigned long n)
+{
+	unsigned long res;
+
+	might_fault();
+<blue>	instrument_copy_from_user_before(to, from, n);</blue>
+	if (should_fail_usercopy())
+		return n;
+	check_object_size(to, n, false);
+	res = raw_copy_from_user(to, from, n);
+	instrument_copy_from_user_after(to, from, n, res);
+	return res;
+}
+
+/**
+ * __copy_to_user_inatomic: - Copy a block of data into user space, with less checking.
+ * @to:   Destination address, in user space.
+ * @from: Source address, in kernel space.
+ * @n:    Number of bytes to copy.
+ *
+ * Context: User context only.
+ *
+ * Copy data from kernel space to user space.  Caller must check
+ * the specified block with access_ok() before calling this function.
+ * The caller should also make sure he pins the user space address
+ * so that we don&#x27;t result in page fault and sleep.
+ */
+static __always_inline __must_check unsigned long
+__copy_to_user_inatomic(void __user *to, const void *from, unsigned long n)
+{
+	if (should_fail_usercopy())
+		return n;
+	instrument_copy_to_user(to, from, n);
+	check_object_size(from, n, true);
+	return raw_copy_to_user(to, from, n);
+}
+
+static __always_inline __must_check unsigned long
+__copy_to_user(void __user *to, const void *from, unsigned long n)
+{
+	might_fault();
+	if (should_fail_usercopy())
+		return n;
+<blue>	instrument_copy_to_user(to, from, n);</blue>
+	check_object_size(from, n, true);
+<yellow>	return raw_copy_to_user(to, from, n);</yellow>
+}
+
+#ifdef INLINE_COPY_FROM_USER
+static inline __must_check unsigned long
+_copy_from_user(void *to, const void __user *from, unsigned long n)
+{
+	unsigned long res = n;
+	might_fault();
+	if (!should_fail_usercopy() &amp;&amp; likely(access_ok(from, n))) {
+		instrument_copy_from_user_before(to, from, n);
+		res = raw_copy_from_user(to, from, n);
+		instrument_copy_from_user_after(to, from, n, res);
+	}
+	if (unlikely(res))
+		memset(to + (n - res), 0, res);
+	return res;
+}
+#else
+extern __must_check unsigned long
+_copy_from_user(void *, const void __user *, unsigned long);
+#endif
+
+#ifdef INLINE_COPY_TO_USER
+static inline __must_check unsigned long
+_copy_to_user(void __user *to, const void *from, unsigned long n)
+{
+	might_fault();
+	if (should_fail_usercopy())
+		return n;
+	if (access_ok(to, n)) {
+		instrument_copy_to_user(to, from, n);
+		n = raw_copy_to_user(to, from, n);
+	}
+	return n;
+}
+#else
+extern __must_check unsigned long
+_copy_to_user(void __user *, const void *, unsigned long);
+#endif
+
+static __always_inline unsigned long __must_check
+copy_from_user(void *to, const void __user *from, unsigned long n)
+{
+<yellow>	if (check_copy_size(to, n, false))</yellow>
+<yellow>		n = _copy_from_user(to, from, n);</yellow>
+	return n;
+}
+
+static __always_inline unsigned long __must_check
+copy_to_user(void __user *to, const void *from, unsigned long n)
+{
+<yellow>	if (check_copy_size(from, n, true))</yellow>
+<yellow>		n = _copy_to_user(to, from, n);</yellow>
+	return n;
+}
+
+#ifndef copy_mc_to_kernel
+/*
+ * Without arch opt-in this generic copy_mc_to_kernel() will not handle
+ * #MC (or arch equivalent) during source read.
+ */
+static inline unsigned long __must_check
+copy_mc_to_kernel(void *dst, const void *src, size_t cnt)
+{
+	memcpy(dst, src, cnt);
+	return 0;
+}
+#endif
+
+static __always_inline void pagefault_disabled_inc(void)
+{
+<yellow>	current->pagefault_disabled++;</yellow>
+}
+
+static __always_inline void pagefault_disabled_dec(void)
+{
+	current-&gt;pagefault_disabled--;
+}
+
+/*
+ * These routines enable/disable the pagefault handler. If disabled, it will
+ * not take any locks and go straight to the fixup table.
+ *
+ * User access methods will not sleep when called from a pagefault_disabled()
+ * environment.
+ */
+static inline void pagefault_disable(void)
+{
+<yellow>	pagefault_disabled_inc();</yellow>
+	/*
+	 * make sure to have issued the store before a pagefault
+	 * can hit.
+	 */
+	barrier();
+}
+
+static inline void pagefault_enable(void)
+{
+	/*
+	 * make sure to issue those last loads/stores before enabling
+	 * the pagefault handler again.
+	 */
+	barrier();
+	pagefault_disabled_dec();
+}
+
+/*
+ * Is the pagefault handler disabled? If so, user access methods will not sleep.
+ */
+static inline bool pagefault_disabled(void)
+{
+	return current-&gt;pagefault_disabled != 0;
+}
+
+/*
+ * The pagefault handler is in general disabled by pagefault_disable() or
+ * when in irq context (via in_atomic()).
+ *
+ * This function should only be used by the fault handlers. Other users should
+ * stick to pagefault_disabled().
+ * Please NEVER use preempt_disable() to disable the fault handler. With
+ * !CONFIG_PREEMPT_COUNT, this is like a NOP. So the handler won&#x27;t be disabled.
+ * in_atomic() will report different values based on !CONFIG_PREEMPT_COUNT.
+ */
+#define faulthandler_disabled() (pagefault_disabled() || in_atomic())
+
+#ifndef CONFIG_ARCH_HAS_SUBPAGE_FAULTS
+
+/**
+ * probe_subpage_writeable: probe the user range for write faults at sub-page
+ *			    granularity (e.g. arm64 MTE)
+ * @uaddr: start of address range
+ * @size: size of address range
+ *
+ * Returns 0 on success, the number of bytes not probed on fault.
+ *
+ * It is expected that the caller checked for the write permission of each
+ * page in the range either by put_user() or GUP. The architecture port can
+ * implement a more efficient get_user() probing if the same sub-page faults
+ * are triggered by either a read or a write.
+ */
+static inline size_t probe_subpage_writeable(char __user *uaddr, size_t size)
+{
+	return 0;
+}
+
+#endif /* CONFIG_ARCH_HAS_SUBPAGE_FAULTS */
+
+#ifndef ARCH_HAS_NOCACHE_UACCESS
+
+static inline __must_check unsigned long
+__copy_from_user_inatomic_nocache(void *to, const void __user *from,
+				  unsigned long n)
+{
+	return __copy_from_user_inatomic(to, from, n);
+}
+
+#endif		/* ARCH_HAS_NOCACHE_UACCESS */
+
+extern __must_check int check_zeroed_user(const void __user *from, size_t size);
+
+/**
+ * copy_struct_from_user: copy a struct from userspace
+ * @dst:   Destination address, in kernel space. This buffer must be @ksize
+ *         bytes long.
+ * @ksize: Size of @dst struct.
+ * @src:   Source address, in userspace.
+ * @usize: (Alleged) size of @src struct.
+ *
+ * Copies a struct from userspace to kernel space, in a way that guarantees
+ * backwards-compatibility for struct syscall arguments (as long as future
+ * struct extensions are made such that all new fields are *appended* to the
+ * old struct, and zeroed-out new fields have the same meaning as the old
+ * struct).
+ *
+ * @ksize is just sizeof(*dst), and @usize should&#x27;ve been passed by userspace.
+ * The recommended usage is something like the following:
+ *
+ *   SYSCALL_DEFINE2(foobar, const struct foo __user *, uarg, size_t, usize)
+ *   {
+ *      int err;
+ *      struct foo karg = {};
+ *
+ *      if (usize &gt; PAGE_SIZE)
+ *        return -E2BIG;
+ *      if (usize &lt; FOO_SIZE_VER0)
+ *        return -EINVAL;
+ *
+ *      err = copy_struct_from_user(&amp;karg, sizeof(karg), uarg, usize);
+ *      if (err)
+ *        return err;
+ *
+ *      // ...
+ *   }
+ *
+ * There are three cases to consider:
+ *  * If @usize == @ksize, then it&#x27;s copied verbatim.
+ *  * If @usize &lt; @ksize, then the userspace has passed an old struct to a
+ *    newer kernel. The rest of the trailing bytes in @dst (@ksize - @usize)
+ *    are to be zero-filled.
+ *  * If @usize &gt; @ksize, then the userspace has passed a new struct to an
+ *    older kernel. The trailing bytes unknown to the kernel (@usize - @ksize)
+ *    are checked to ensure they are zeroed, otherwise -E2BIG is returned.
+ *
+ * Returns (in all cases, some data may have been copied):
+ *  * -E2BIG:  (@usize &gt; @ksize) and there are non-zero trailing bytes in @src.
+ *  * -EFAULT: access to userspace failed.
+ */
+static __always_inline __must_check int
+copy_struct_from_user(void *dst, size_t ksize, const void __user *src,
+		      size_t usize)
+{
+	size_t size = min(ksize, usize);
+	size_t rest = max(ksize, usize) - size;
+
+	/* Deal with trailing bytes. */
+	if (usize &lt; ksize) {
+		memset(dst + size, 0, rest);
+	} else if (usize &gt; ksize) {
+		int ret = check_zeroed_user(src + size, rest);
+		if (ret &lt;= 0)
+			return ret ?: -E2BIG;
+	}
+	/* Copy the interoperable parts of the struct. */
+	if (copy_from_user(dst, src, size))
+		return -EFAULT;
+	return 0;
+}
+
+bool copy_from_kernel_nofault_allowed(const void *unsafe_src, size_t size);
+
+long copy_from_kernel_nofault(void *dst, const void *src, size_t size);
+long notrace copy_to_kernel_nofault(void *dst, const void *src, size_t size);
+
+long copy_from_user_nofault(void *dst, const void __user *src, size_t size);
+long notrace copy_to_user_nofault(void __user *dst, const void *src,
+		size_t size);
+
+long strncpy_from_kernel_nofault(char *dst, const void *unsafe_addr,
+		long count);
+
+long strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr,
+		long count);
+long strnlen_user_nofault(const void __user *unsafe_addr, long count);
+
+#ifndef __get_kernel_nofault
+#define __get_kernel_nofault(dst, src, type, label)	\
+do {							\
+	type __user *p = (type __force __user *)(src);	\
+	type data;					\
+	if (__get_user(data, p))			\
+		goto label;				\
+	*(type *)dst = data;				\
+} while (0)
+
+#define __put_kernel_nofault(dst, src, type, label)	\
+do {							\
+	type __user *p = (type __force __user *)(dst);	\
+	type data = *(type *)src;			\
+	if (__put_user(data, p))			\
+		goto label;				\
+} while (0)
+#endif
+
+/**
+ * get_kernel_nofault(): safely attempt to read from a location
+ * @val: read into this variable
+ * @ptr: address to read from
+ *
+ * Returns 0 on success, or -EFAULT.
+ */
+#define get_kernel_nofault(val, ptr) ({				\
+	const typeof(val) *__gk_ptr = (ptr);			\
+	copy_from_kernel_nofault(&amp;(val), __gk_ptr, sizeof(val));\
+})
+
+#ifndef user_access_begin
+#define user_access_begin(ptr,len) access_ok(ptr, len)
+#define user_access_end() do { } while (0)
+#define unsafe_op_wrap(op, err) do { if (unlikely(op)) goto err; } while (0)
+#define unsafe_get_user(x,p,e) unsafe_op_wrap(__get_user(x,p),e)
+#define unsafe_put_user(x,p,e) unsafe_op_wrap(__put_user(x,p),e)
+#define unsafe_copy_to_user(d,s,l,e) unsafe_op_wrap(__copy_to_user(d,s,l),e)
+#define unsafe_copy_from_user(d,s,l,e) unsafe_op_wrap(__copy_from_user(d,s,l),e)
+static inline unsigned long user_access_save(void) { return 0UL; }
+static inline void user_access_restore(unsigned long flags) { }
+#endif
+#ifndef user_write_access_begin
+#define user_write_access_begin user_access_begin
+#define user_write_access_end user_access_end
+#endif
+#ifndef user_read_access_begin
+#define user_read_access_begin user_access_begin
+#define user_read_access_end user_access_end
+#endif
+
+#ifdef CONFIG_HARDENED_USERCOPY
+void __noreturn usercopy_abort(const char *name, const char *detail,
+			       bool to_user, unsigned long offset,
+			       unsigned long len);
+#endif
+
+#endif		/* __LINUX_UACCESS_H__ */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
