@@ -1,0 +1,269 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * kvm asynchronous fault support
+ *
+ * Copyright 2010 Red Hat, Inc.
+ *
+ * Author:
+ *      Gleb Natapov &lt;gleb@redhat.com&gt;
+ */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/slab.h&gt;
+#include &lt;linux/module.h&gt;
+#include &lt;linux/mmu_context.h&gt;
+#include &lt;linux/sched/mm.h&gt;
+
+#include &quot;async_pf.h&quot;
+#include &lt;trace/events/kvm.h&gt;
+
+static struct kmem_cache *async_pf_cache;
+
+int kvm_async_pf_init(void)
+{
+<yellow>	async_pf_cache = KMEM_CACHE(kvm_async_pf, 0);</yellow>
+
+	if (!async_pf_cache)
+<yellow>		return -ENOMEM;</yellow>
+
+	return 0;
+}
+
+void kvm_async_pf_deinit(void)
+{
+<yellow>	kmem_cache_destroy(async_pf_cache);</yellow>
+	async_pf_cache = NULL;
+}
+
+void kvm_async_pf_vcpu_init(struct kvm_vcpu *vcpu)
+{
+<blue>	INIT_LIST_HEAD(&vcpu->async_pf.done);</blue>
+	INIT_LIST_HEAD(&amp;vcpu-&gt;async_pf.queue);
+	spin_lock_init(&amp;vcpu-&gt;async_pf.lock);
+}
+
+static void async_pf_execute(struct work_struct *work)
+{
+	struct kvm_async_pf *apf =
+		container_of(work, struct kvm_async_pf, work);
+<yellow>	struct mm_struct *mm = apf->mm;</yellow>
+	struct kvm_vcpu *vcpu = apf-&gt;vcpu;
+	unsigned long addr = apf-&gt;addr;
+	gpa_t cr2_or_gpa = apf-&gt;cr2_or_gpa;
+	int locked = 1;
+	bool first;
+
+	might_sleep();
+
+	/*
+	 * This work is run asynchronously to the task which owns
+	 * mm and might be done in another context, so we must
+	 * access remotely.
+	 */
+<yellow>	mmap_read_lock(mm);</yellow>
+<yellow>	get_user_pages_remote(mm, addr, 1, FOLL_WRITE, NULL, NULL,</yellow>
+			&amp;locked);
+	if (locked)
+<yellow>		mmap_read_unlock(mm);</yellow>
+
+	if (IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC))
+		kvm_arch_async_page_present(vcpu, apf);
+
+<yellow>	spin_lock(&vcpu->async_pf.lock);</yellow>
+	first = list_empty(&amp;vcpu-&gt;async_pf.done);
+	list_add_tail(&amp;apf-&gt;link, &amp;vcpu-&gt;async_pf.done);
+	apf-&gt;vcpu = NULL;
+	spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+
+	if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC) &amp;&amp; first)
+<yellow>		kvm_arch_async_page_present_queued(vcpu);</yellow>
+
+	/*
+	 * apf may be freed by kvm_check_async_pf_completion() after
+	 * this point
+	 */
+
+<yellow>	trace_kvm_async_pf_completed(addr, cr2_or_gpa);</yellow>
+
+<yellow>	__kvm_vcpu_wake_up(vcpu);</yellow>
+
+	mmput(mm);
+	kvm_put_kvm(vcpu-&gt;kvm);
+}
+
+void kvm_clear_async_pf_completion_queue(struct kvm_vcpu *vcpu)
+{
+<blue>	spin_lock(&vcpu->async_pf.lock);</blue>
+
+	/* cancel outstanding work queue item */
+<blue>	while (!list_empty(&vcpu->async_pf.queue)) {</blue>
+		struct kvm_async_pf *work =
+<yellow>			list_first_entry(&vcpu->async_pf.queue,</yellow>
+					 typeof(*work), queue);
+		list_del(&amp;work-&gt;queue);
+
+		/*
+		 * We know it&#x27;s present in vcpu-&gt;async_pf.done, do
+		 * nothing here.
+		 */
+		if (!work-&gt;vcpu)
+			continue;
+
+		spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+#ifdef CONFIG_KVM_ASYNC_PF_SYNC
+		flush_work(&amp;work-&gt;work);
+#else
+<yellow>		if (cancel_work_sync(&work->work)) {</yellow>
+<yellow>			mmput(work->mm);</yellow>
+			kvm_put_kvm(vcpu-&gt;kvm); /* == work-&gt;vcpu-&gt;kvm */
+			kmem_cache_free(async_pf_cache, work);
+		}
+#endif
+<yellow>		spin_lock(&vcpu->async_pf.lock);</yellow>
+	}
+
+<blue>	while (!list_empty(&vcpu->async_pf.done)) {</blue>
+		struct kvm_async_pf *work =
+<blue>			list_first_entry(&vcpu->async_pf.done,</blue>
+					 typeof(*work), link);
+		list_del(&amp;work-&gt;link);
+		kmem_cache_free(async_pf_cache, work);
+	}
+<blue>	spin_unlock(&vcpu->async_pf.lock);</blue>
+
+	vcpu-&gt;async_pf.queued = 0;
+}
+
+void kvm_check_async_pf_completion(struct kvm_vcpu *vcpu)
+{
+	struct kvm_async_pf *work;
+
+<blue>	while (!list_empty_careful(&vcpu->async_pf.done) &&</blue>
+<blue>	      kvm_arch_can_dequeue_async_page_present(vcpu)) {</blue>
+<yellow>		spin_lock(&vcpu->async_pf.lock);</yellow>
+		work = list_first_entry(&amp;vcpu-&gt;async_pf.done, typeof(*work),
+					      link);
+		list_del(&amp;work-&gt;link);
+		spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+
+		kvm_arch_async_page_ready(vcpu, work);
+		if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC))
+			kvm_arch_async_page_present(vcpu, work);
+
+		list_del(&amp;work-&gt;queue);
+		vcpu-&gt;async_pf.queued--;
+		kmem_cache_free(async_pf_cache, work);
+	}
+<blue>}</blue>
+
+/*
+ * Try to schedule a job to handle page fault asynchronously. Returns &#x27;true&#x27; on
+ * success, &#x27;false&#x27; on failure (page fault has to be handled synchronously).
+ */
+bool kvm_setup_async_pf(struct kvm_vcpu *vcpu, gpa_t cr2_or_gpa,
+			unsigned long hva, struct kvm_arch_async_pf *arch)
+{
+	struct kvm_async_pf *work;
+
+<yellow>	if (vcpu->async_pf.queued >= ASYNC_PF_PER_VCPU)</yellow>
+		return false;
+
+	/* Arch specific code should not do async PF in this case */
+<yellow>	if (unlikely(kvm_is_error_hva(hva)))</yellow>
+		return false;
+
+	/*
+	 * do alloc nowait since if we are going to sleep anyway we
+	 * may as well sleep faulting in page
+	 */
+<yellow>	work = kmem_cache_zalloc(async_pf_cache, GFP_NOWAIT | __GFP_NOWARN);</yellow>
+	if (!work)
+		return false;
+
+<yellow>	work->wakeup_all = false;</yellow>
+	work-&gt;vcpu = vcpu;
+	work-&gt;cr2_or_gpa = cr2_or_gpa;
+	work-&gt;addr = hva;
+	work-&gt;arch = *arch;
+	work-&gt;mm = current-&gt;mm;
+	mmget(work-&gt;mm);
+	kvm_get_kvm(work-&gt;vcpu-&gt;kvm);
+
+	INIT_WORK(&amp;work-&gt;work, async_pf_execute);
+
+	list_add_tail(&amp;work-&gt;queue, &amp;vcpu-&gt;async_pf.queue);
+	vcpu-&gt;async_pf.queued++;
+	work-&gt;notpresent_injected = kvm_arch_async_page_not_present(vcpu, work);
+
+	schedule_work(&amp;work-&gt;work);
+
+	return true;
+<yellow>}</yellow>
+
+int kvm_async_pf_wakeup_all(struct kvm_vcpu *vcpu)
+{
+	struct kvm_async_pf *work;
+	bool first;
+
+<blue>	if (!list_empty_careful(&vcpu->async_pf.done))</blue>
+		return 0;
+
+<blue>	work = kmem_cache_zalloc(async_pf_cache, GFP_ATOMIC);</blue>
+	if (!work)
+		return -ENOMEM;
+
+<blue>	work->wakeup_all = true;</blue>
+	INIT_LIST_HEAD(&amp;work-&gt;queue); /* for list_del to work */
+
+	spin_lock(&amp;vcpu-&gt;async_pf.lock);
+	first = list_empty(&amp;vcpu-&gt;async_pf.done);
+	list_add_tail(&amp;work-&gt;link, &amp;vcpu-&gt;async_pf.done);
+	spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+
+	if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC) &amp;&amp; first)
+<blue>		kvm_arch_async_page_present_queued(vcpu);</blue>
+
+<blue>	vcpu->async_pf.queued++;</blue>
+	return 0;
+<blue>}</blue>
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

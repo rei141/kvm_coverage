@@ -1,0 +1,181 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+
+#ifndef __KVM_FPU_H_
+#define __KVM_FPU_H_
+
+#include &lt;asm/fpu/api.h&gt;
+
+typedef u32		__attribute__((vector_size(16))) sse128_t;
+#define __sse128_u	union { sse128_t vec; u64 as_u64[2]; u32 as_u32[4]; }
+#define sse128_lo(x)	({ __sse128_u t; t.vec = x; t.as_u64[0]; })
+#define sse128_hi(x)	({ __sse128_u t; t.vec = x; t.as_u64[1]; })
+#define sse128_l0(x)	({ __sse128_u t; t.vec = x; t.as_u32[0]; })
+#define sse128_l1(x)	({ __sse128_u t; t.vec = x; t.as_u32[1]; })
+#define sse128_l2(x)	({ __sse128_u t; t.vec = x; t.as_u32[2]; })
+#define sse128_l3(x)	({ __sse128_u t; t.vec = x; t.as_u32[3]; })
+#define sse128(lo, hi)	({ __sse128_u t; t.as_u64[0] = lo; t.as_u64[1] = hi; t.vec; })
+
+static inline void _kvm_read_sse_reg(int reg, sse128_t *data)
+{
+<blue>	switch (reg) {</blue>
+<blue>	case 0: asm("movdqa %%xmm0, %0" : "=m"(*data)); break;</blue>
+<blue>	case 1: asm("movdqa %%xmm1, %0" : "=m"(*data)); break;</blue>
+<blue>	case 2: asm("movdqa %%xmm2, %0" : "=m"(*data)); break;</blue>
+<blue>	case 3: asm("movdqa %%xmm3, %0" : "=m"(*data)); break;</blue>
+<blue>	case 4: asm("movdqa %%xmm4, %0" : "=m"(*data)); break;</blue>
+<blue>	case 5: asm("movdqa %%xmm5, %0" : "=m"(*data)); break;</blue>
+<blue>	case 6: asm("movdqa %%xmm6, %0" : "=m"(*data)); break;</blue>
+<blue>	case 7: asm("movdqa %%xmm7, %0" : "=m"(*data)); break;</blue>
+#ifdef CONFIG_X86_64
+<yellow>	case 8: asm("movdqa %%xmm8, %0" : "=m"(*data)); break;</yellow>
+<blue>	case 9: asm("movdqa %%xmm9, %0" : "=m"(*data)); break;</blue>
+<yellow>	case 10: asm("movdqa %%xmm10, %0" : "=m"(*data)); break;</yellow>
+<yellow>	case 11: asm("movdqa %%xmm11, %0" : "=m"(*data)); break;</yellow>
+<yellow>	case 12: asm("movdqa %%xmm12, %0" : "=m"(*data)); break;</yellow>
+<yellow>	case 13: asm("movdqa %%xmm13, %0" : "=m"(*data)); break;</yellow>
+<yellow>	case 14: asm("movdqa %%xmm14, %0" : "=m"(*data)); break;</yellow>
+<yellow>	case 15: asm("movdqa %%xmm15, %0" : "=m"(*data)); break;</yellow>
+#endif
+<yellow>	default: BUG();</yellow>
+	}
+}
+
+static inline void _kvm_write_sse_reg(int reg, const sse128_t *data)
+{
+<yellow>	switch (reg) {</yellow>
+<yellow>	case 0: asm("movdqa %0, %%xmm0" : : "m"(*data)); break;</yellow>
+<yellow>	case 1: asm("movdqa %0, %%xmm1" : : "m"(*data)); break;</yellow>
+<yellow>	case 2: asm("movdqa %0, %%xmm2" : : "m"(*data)); break;</yellow>
+<yellow>	case 3: asm("movdqa %0, %%xmm3" : : "m"(*data)); break;</yellow>
+<yellow>	case 4: asm("movdqa %0, %%xmm4" : : "m"(*data)); break;</yellow>
+<yellow>	case 5: asm("movdqa %0, %%xmm5" : : "m"(*data)); break;</yellow>
+<yellow>	case 6: asm("movdqa %0, %%xmm6" : : "m"(*data)); break;</yellow>
+<yellow>	case 7: asm("movdqa %0, %%xmm7" : : "m"(*data)); break;</yellow>
+#ifdef CONFIG_X86_64
+<yellow>	case 8: asm("movdqa %0, %%xmm8" : : "m"(*data)); break;</yellow>
+<yellow>	case 9: asm("movdqa %0, %%xmm9" : : "m"(*data)); break;</yellow>
+<yellow>	case 10: asm("movdqa %0, %%xmm10" : : "m"(*data)); break;</yellow>
+<yellow>	case 11: asm("movdqa %0, %%xmm11" : : "m"(*data)); break;</yellow>
+<yellow>	case 12: asm("movdqa %0, %%xmm12" : : "m"(*data)); break;</yellow>
+<yellow>	case 13: asm("movdqa %0, %%xmm13" : : "m"(*data)); break;</yellow>
+<yellow>	case 14: asm("movdqa %0, %%xmm14" : : "m"(*data)); break;</yellow>
+<yellow>	case 15: asm("movdqa %0, %%xmm15" : : "m"(*data)); break;</yellow>
+#endif
+<yellow>	default: BUG();</yellow>
+	}
+}
+
+static inline void _kvm_read_mmx_reg(int reg, u64 *data)
+{
+<blue>	switch (reg) {</blue>
+<yellow>	case 0: asm("movq %%mm0, %0" : "=m"(*data)); break;</yellow>
+<blue>	case 1: asm("movq %%mm1, %0" : "=m"(*data)); break;</blue>
+<blue>	case 2: asm("movq %%mm2, %0" : "=m"(*data)); break;</blue>
+<yellow>	case 3: asm("movq %%mm3, %0" : "=m"(*data)); break;</yellow>
+<yellow>	case 4: asm("movq %%mm4, %0" : "=m"(*data)); break;</yellow>
+<blue>	case 5: asm("movq %%mm5, %0" : "=m"(*data)); break;</blue>
+<yellow>	case 6: asm("movq %%mm6, %0" : "=m"(*data)); break;</yellow>
+<blue>	case 7: asm("movq %%mm7, %0" : "=m"(*data)); break;</blue>
+<yellow>	default: BUG();</yellow>
+	}
+}
+
+static inline void _kvm_write_mmx_reg(int reg, const u64 *data)
+{
+<blue>	switch (reg) {</blue>
+<blue>	case 0: asm("movq %0, %%mm0" : : "m"(*data)); break;</blue>
+<blue>	case 1: asm("movq %0, %%mm1" : : "m"(*data)); break;</blue>
+<yellow>	case 2: asm("movq %0, %%mm2" : : "m"(*data)); break;</yellow>
+<yellow>	case 3: asm("movq %0, %%mm3" : : "m"(*data)); break;</yellow>
+<yellow>	case 4: asm("movq %0, %%mm4" : : "m"(*data)); break;</yellow>
+<yellow>	case 5: asm("movq %0, %%mm5" : : "m"(*data)); break;</yellow>
+<yellow>	case 6: asm("movq %0, %%mm6" : : "m"(*data)); break;</yellow>
+<yellow>	case 7: asm("movq %0, %%mm7" : : "m"(*data)); break;</yellow>
+<yellow>	default: BUG();</yellow>
+	}
+}
+
+static inline void kvm_fpu_get(void)
+{
+<blue>	fpregs_lock();</blue>
+
+	fpregs_assert_state_consistent();
+	if (test_thread_flag(TIF_NEED_FPU_LOAD))
+<yellow>		switch_fpu_return();</yellow>
+}
+
+static inline void kvm_fpu_put(void)
+{
+<blue>	fpregs_unlock();</blue>
+}
+
+static inline void kvm_read_sse_reg(int reg, sse128_t *data)
+{
+<blue>	kvm_fpu_get();</blue>
+<blue>	_kvm_read_sse_reg(reg, data);</blue>
+<blue>	kvm_fpu_put();</blue>
+}
+
+static inline void kvm_write_sse_reg(int reg, const sse128_t *data)
+{
+<yellow>	kvm_fpu_get();</yellow>
+<yellow>	_kvm_write_sse_reg(reg, data);</yellow>
+<yellow>	kvm_fpu_put();</yellow>
+}
+
+static inline void kvm_read_mmx_reg(int reg, u64 *data)
+{
+<blue>	kvm_fpu_get();</blue>
+<blue>	_kvm_read_mmx_reg(reg, data);</blue>
+<blue>	kvm_fpu_put();</blue>
+}
+
+static inline void kvm_write_mmx_reg(int reg, const u64 *data)
+{
+<blue>	kvm_fpu_get();</blue>
+<blue>	_kvm_write_mmx_reg(reg, data);</blue>
+<blue>	kvm_fpu_put();</blue>
+}
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
