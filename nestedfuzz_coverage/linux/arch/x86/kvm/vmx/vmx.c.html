@@ -1844,7 +1844,7 @@ u64 vmx_get_l2_tsc_multiplier(struct kvm_vcpu *vcpu)
 
 <yellow>	if (nested_cpu_has(vmcs12, CPU_BASED_USE_TSC_OFFSETTING) &&</yellow>
 <blue>	    nested_cpu_has2(vmcs12, SECONDARY_EXEC_TSC_SCALING))</blue>
-<yellow>		return vmcs12->tsc_multiplier;</yellow>
+<blue>		return vmcs12->tsc_multiplier;</blue>
 
 <blue>	return kvm_caps.default_tsc_scaling_ratio;</blue>
 <blue>}</blue>
@@ -4041,15 +4041,15 @@ static bool vmx_guest_apic_has_interrupt(struct kvm_vcpu *vcpu)
 
 <blue>	if (WARN_ON_ONCE(!is_guest_mode(vcpu)) ||</blue>
 <blue>		!nested_cpu_has_vid(get_vmcs12(vcpu)) ||</blue>
-<yellow>		WARN_ON_ONCE(!vmx->nested.virtual_apic_map.gfn))</yellow>
+<blue>		WARN_ON_ONCE(!vmx->nested.virtual_apic_map.gfn))</blue>
 <yellow>		return false;</yellow>
 
-<yellow>	rvi = vmx_get_rvi();</yellow>
+<blue>	rvi = vmx_get_rvi();</blue>
 
-<yellow>	vapic_page = vmx->nested.virtual_apic_map.hva;</yellow>
+<blue>	vapic_page = vmx->nested.virtual_apic_map.hva;</blue>
 <yellow>	vppr = *((u32 *)(vapic_page + APIC_PROCPRI));</yellow>
 
-<yellow>	return ((rvi & 0xf0) > (vppr & 0xf0));</yellow>
+<blue>	return ((rvi & 0xf0) > (vppr & 0xf0));</blue>
 <blue>}</blue>
 
 static void vmx_msr_filter_changed(struct kvm_vcpu *vcpu)
@@ -4900,19 +4900,19 @@ static void vmx_inject_nmi(struct kvm_vcpu *vcpu)
 <yellow>	vmx_clear_hlt(vcpu);</yellow>
 <yellow>}</yellow>
 
-<yellow>bool vmx_get_nmi_mask(struct kvm_vcpu *vcpu)</yellow>
+<blue>bool vmx_get_nmi_mask(struct kvm_vcpu *vcpu)</blue>
 <yellow>{</yellow>
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	bool masked;
 
-<yellow>	if (!enable_vnmi)</yellow>
-<yellow>		return vmx->loaded_vmcs->soft_vnmi_blocked;</yellow>
-<yellow>	if (vmx->loaded_vmcs->nmi_known_unmasked)</yellow>
+<blue>	if (!enable_vnmi)</blue>
+<blue>		return vmx->loaded_vmcs->soft_vnmi_blocked;</blue>
+<blue>	if (vmx->loaded_vmcs->nmi_known_unmasked)</blue>
 <yellow>		return false;</yellow>
-<yellow>	masked = vmcs_read32(GUEST_INTERRUPTIBILITY_INFO) & GUEST_INTR_STATE_NMI;</yellow>
-<yellow>	vmx->loaded_vmcs->nmi_known_unmasked = !masked;</yellow>
+<blue>	masked = vmcs_read32(GUEST_INTERRUPTIBILITY_INFO) & GUEST_INTR_STATE_NMI;</blue>
+<blue>	vmx->loaded_vmcs->nmi_known_unmasked = !masked;</blue>
 	return masked;
-<yellow>}</yellow>
+<blue>}</blue>
 
 void vmx_set_nmi_mask(struct kvm_vcpu *vcpu, bool masked)
 {
@@ -5333,7 +5333,7 @@ static int handle_set_cr0(struct kvm_vcpu *vcpu, unsigned long val)
 static int handle_set_cr4(struct kvm_vcpu *vcpu, unsigned long val)
 {
 <blue>	if (is_guest_mode(vcpu)) {</blue>
-<yellow>		struct vmcs12 *vmcs12 = get_vmcs12(vcpu);</yellow>
+<blue>		struct vmcs12 *vmcs12 = get_vmcs12(vcpu);</blue>
 		unsigned long orig_val = val;
 
 		/* analogously to handle_set_cr0 */
@@ -5822,7 +5822,7 @@ static void shrink_ple_window(struct kvm_vcpu *vcpu)
 					      ple_window);
 
 <yellow>	if (vmx->ple_window != old) {</yellow>
-<yellow>		vmx->ple_window_dirty = true;</yellow>
+<blue>		vmx->ple_window_dirty = true;</blue>
 <yellow>		trace_kvm_ple_window_update(vcpu->vcpu_id,</yellow>
 					    vmx-&gt;ple_window, old);
 	}
@@ -6833,7 +6833,7 @@ static void handle_exception_nmi_irqoff(struct vcpu_vmx *vmx)
 
 	/* if exit due to PF check for async PF */
 <yellow>	if (is_page_fault(intr_info))</yellow>
-<yellow>		vmx->vcpu.arch.apf.host_apf_flags = kvm_read_and_reset_apf_flags();</yellow>
+<blue>		vmx->vcpu.arch.apf.host_apf_flags = kvm_read_and_reset_apf_flags();</blue>
 	/* if exit due to NM, handle before interrupts are enabled */
 <blue>	else if (is_nm_fault(intr_info))</blue>
 <blue>		handle_nm_fault_irqoff(&vmx->vcpu);</blue>
@@ -7270,7 +7270,7 @@ static fastpath_t vmx_vcpu_run(struct kvm_vcpu *vcpu)
 <blue>	vmx->idt_vectoring_info = 0;</blue>
 
 	if (unlikely(vmx-&gt;fail)) {
-<yellow>		vmx->exit_reason.full = 0xdead;</yellow>
+<blue>		vmx->exit_reason.full = 0xdead;</blue>
 		return EXIT_FASTPATH_NONE;
 	}
 

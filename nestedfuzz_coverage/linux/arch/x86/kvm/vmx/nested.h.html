@@ -153,7 +153,7 @@ static inline bool nested_cpu_has_zero_length_injection(struct kvm_vcpu *vcpu)
 
 static inline bool nested_cpu_supports_monitor_trap_flag(struct kvm_vcpu *vcpu)
 {
-<yellow>	return to_vmx(vcpu)->nested.msrs.procbased_ctls_high &</yellow>
+<blue>	return to_vmx(vcpu)->nested.msrs.procbased_ctls_high &</blue>
 			CPU_BASED_MONITOR_TRAP_FLAG;
 }
 

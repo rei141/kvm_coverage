@@ -109,12 +109,12 @@ static void reprogram_counters(struct kvm_pmu *pmu, u64 diff)
 	int bit;
 	struct kvm_pmc *pmc;
 
-<yellow>	for_each_set_bit(bit, (unsigned long *)&diff, X86_PMC_IDX_MAX) {</yellow>
-<yellow>		pmc = intel_pmc_idx_to_pmc(pmu, bit);</yellow>
-<yellow>		if (pmc)</yellow>
-<yellow>			reprogram_counter(pmc);</yellow>
+<blue>	for_each_set_bit(bit, (unsigned long *)&diff, X86_PMC_IDX_MAX) {</blue>
+<blue>		pmc = intel_pmc_idx_to_pmc(pmu, bit);</blue>
+<blue>		if (pmc)</blue>
+<blue>			reprogram_counter(pmc);</blue>
 	}
-<yellow>}</yellow>
+<blue>}</blue>
 
 static bool intel_hw_event_available(struct kvm_pmc *pmc)
 {
@@ -449,9 +449,9 @@ static int intel_pmu_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 	case MSR_CORE_PERF_GLOBAL_CTRL:
 <blue>		if (pmu->global_ctrl == data)</blue>
 			return 0;
-<yellow>		if (kvm_valid_perf_global_ctrl(pmu, data)) {</yellow>
+<blue>		if (kvm_valid_perf_global_ctrl(pmu, data)) {</blue>
 			diff = pmu-&gt;global_ctrl ^ data;
-<yellow>			pmu->global_ctrl = data;</yellow>
+<blue>			pmu->global_ctrl = data;</blue>
 			reprogram_counters(pmu, diff);
 			return 0;
 		}

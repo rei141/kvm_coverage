@@ -1990,7 +1990,7 @@ static inline int mmu_invalidate_retry_hva(struct kvm *kvm,
 	 */
 	if (unlikely(kvm-&gt;mmu_invalidate_in_progress) &amp;&amp;
 	    hva &gt;= kvm-&gt;mmu_invalidate_range_start &amp;&amp;
-<yellow>	    hva < kvm->mmu_invalidate_range_end)</yellow>
+<blue>	    hva < kvm->mmu_invalidate_range_end)</blue>
 		return 1;
 <blue>	if (kvm->mmu_invalidate_seq != mmu_seq)</blue>
 		return 1;

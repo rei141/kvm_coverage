@@ -399,10 +399,10 @@ static void handle_changed_spte(struct kvm *kvm, int as_id, gfn_t gfn,
 <blue>	if (level > PG_LEVEL_4K)</blue>
 		return;
 
-<yellow>	pfn_changed = spte_to_pfn(old_spte) != spte_to_pfn(new_spte);</yellow>
+<blue>	pfn_changed = spte_to_pfn(old_spte) != spte_to_pfn(new_spte);</blue>
 
 	if ((!is_writable_pte(old_spte) || pfn_changed) &amp;&amp;
-<yellow>	    is_writable_pte(new_spte)) {</yellow>
+<blue>	    is_writable_pte(new_spte)) {</blue>
 <yellow>		slot = __gfn_to_memslot(__kvm_memslots(kvm, as_id), gfn);</yellow>
 <yellow>		mark_page_dirty_in_slot(kvm, slot, gfn);</yellow>
 	}
@@ -634,7 +634,7 @@ static void __handle_changed_spte(struct kvm *kvm, int as_id, gfn_t gfn,
 
 <blue>	if (was_leaf && is_dirty_spte(old_spte) &&</blue>
 <yellow>	    (!is_present || !is_dirty_spte(new_spte) || pfn_changed))</yellow>
-<yellow>		kvm_set_pfn_dirty(spte_to_pfn(old_spte));</yellow>
+<blue>		kvm_set_pfn_dirty(spte_to_pfn(old_spte));</blue>
 
 	/*
 	 * Recursively handle child PTs if the change removed a subtree from

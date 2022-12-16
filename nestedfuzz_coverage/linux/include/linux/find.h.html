@@ -92,7 +92,7 @@ unsigned long find_next_bit(const unsigned long *addr, unsigned long size,
 			return size;
 
 <blue>		val = *addr & GENMASK(size - 1, offset);</blue>
-<yellow>		return val ? __ffs(val) : size;</yellow>
+<blue>		return val ? __ffs(val) : size;</blue>
 	}
 
 <yellow>	return _find_next_bit(addr, size, offset);</yellow>

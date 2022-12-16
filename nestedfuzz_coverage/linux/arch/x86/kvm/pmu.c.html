@@ -330,15 +330,15 @@ out:
 }
 
 void reprogram_counter(struct kvm_pmc *pmc)
-<yellow>{</yellow>
-<yellow>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</yellow>
+<blue>{</blue>
+<blue>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</blue>
 	u64 eventsel = pmc-&gt;eventsel;
 	u64 new_config = eventsel;
 	u8 fixed_ctr_ctrl;
 
 <yellow>	pmc_pause_counter(pmc);</yellow>
 
-<yellow>	if (!pmc_speculative_in_use(pmc) || !pmc_is_enabled(pmc))</yellow>
+<blue>	if (!pmc_speculative_in_use(pmc) || !pmc_is_enabled(pmc))</blue>
 		return;
 
 <yellow>	if (!check_pmu_event_filter(pmc))</yellow>

@@ -119,7 +119,7 @@ static __always_inline unsigned long __vmcs_readl(unsigned long field)
 			  : &quot;cc&quot;
 			  : do_fail, do_exception);
 
-<yellow>	return value;</yellow>
+<blue>	return value;</blue>
 
 do_fail:
 <yellow>	WARN_ONCE(1, "kvm: vmread failed: field=%lx\n", field);</yellow>

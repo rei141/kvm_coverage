@@ -236,7 +236,7 @@ struct page *kvm_pfn_to_refcounted_page(kvm_pfn_t pfn)
 		return page;
 
 	/* The ZERO_PAGE(s) is marked PG_reserved, but is refcounted. */
-<yellow>	if (is_zero_pfn(pfn))</yellow>
+<blue>	if (is_zero_pfn(pfn))</blue>
 		return page;
 
 	/*
@@ -751,7 +751,7 @@ static void kvm_mmu_notifier_change_pte(struct mmu_notifier *mn,
 <blue>	kvm_handle_hva_range(mn, address, address + 1, pte, kvm_set_spte_gfn);</blue>
 }
 
-<yellow>void kvm_mmu_invalidate_begin(struct kvm *kvm, unsigned long start,</yellow>
+<blue>void kvm_mmu_invalidate_begin(struct kvm *kvm, unsigned long start,</blue>
 			      unsigned long end)
 {
 	/*
@@ -774,7 +774,7 @@ static void kvm_mmu_notifier_change_pte(struct mmu_notifier *mn,
 		 * complete.
 		 */
 		kvm-&gt;mmu_invalidate_range_start =
-<yellow>			min(kvm->mmu_invalidate_range_start, start);</yellow>
+<blue>			min(kvm->mmu_invalidate_range_start, start);</blue>
 		kvm-&gt;mmu_invalidate_range_end =
 			max(kvm-&gt;mmu_invalidate_range_end, end);
 	}
@@ -2982,14 +2982,14 @@ EXPORT_SYMBOL_GPL(kvm_release_pfn_dirty);
  * directly marking a page dirty/accessed.  Unlike the &quot;release&quot; helpers, the
  * &quot;set&quot; helpers are not to be used when the pfn might point at garbage.
  */
-<yellow>void kvm_set_pfn_dirty(kvm_pfn_t pfn)</yellow>
+<blue>void kvm_set_pfn_dirty(kvm_pfn_t pfn)</blue>
 {
-<yellow>	if (WARN_ON(is_error_noslot_pfn(pfn)))</yellow>
+<blue>	if (WARN_ON(is_error_noslot_pfn(pfn)))</blue>
 		return;
 
-<yellow>	if (pfn_valid(pfn))</yellow>
-<yellow>		kvm_set_page_dirty(pfn_to_page(pfn));</yellow>
-<yellow>}</yellow>
+<blue>	if (pfn_valid(pfn))</blue>
+<blue>		kvm_set_page_dirty(pfn_to_page(pfn));</blue>
+<blue>}</blue>
 EXPORT_SYMBOL_GPL(kvm_set_pfn_dirty);
 
 <blue>void kvm_set_pfn_accessed(kvm_pfn_t pfn)</blue>

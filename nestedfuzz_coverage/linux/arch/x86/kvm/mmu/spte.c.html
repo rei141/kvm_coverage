@@ -163,7 +163,7 @@ bool spte_has_volatile_bits(u64 spte)
 
 	if (spte_ad_enabled(spte)) {
 <blue>		if (!(spte & shadow_accessed_mask) ||</blue>
-<yellow>		    (is_writable_pte(spte) && !(spte & shadow_dirty_mask)))</yellow>
+<blue>		    (is_writable_pte(spte) && !(spte & shadow_dirty_mask)))</blue>
 			return true;
 	}
 

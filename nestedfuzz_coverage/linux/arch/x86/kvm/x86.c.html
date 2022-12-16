@@ -655,7 +655,7 @@ static void kvm_queue_exception_vmexit(struct kvm_vcpu *vcpu, unsigned int vecto
 {
 	struct kvm_queued_exception *ex = &amp;vcpu-&gt;arch.exception_vmexit;
 
-<yellow>	ex->vector = vector;</yellow>
+<blue>	ex->vector = vector;</blue>
 	ex-&gt;injected = false;
 	ex-&gt;pending = true;
 	ex-&gt;has_error_code = has_error_code;
@@ -688,7 +688,7 @@ static void kvm_multiple_exception(struct kvm_vcpu *vcpu,
 	 */
 <blue>	if (!reinject && is_guest_mode(vcpu) &&</blue>
 <blue>	    kvm_x86_ops.nested_ops->is_exception_vmexit(vcpu, nr, error_code)) {</blue>
-<yellow>		kvm_queue_exception_vmexit(vcpu, nr, has_error, error_code,</yellow>
+<blue>		kvm_queue_exception_vmexit(vcpu, nr, has_error, error_code,</blue>
 					   has_payload, payload);
 		return;
 	}
@@ -781,10 +781,10 @@ static void kvm_queue_exception_e_p(struct kvm_vcpu *vcpu, unsigned nr,
 			       true, payload, false);
 }
 
-<yellow>int kvm_complete_insn_gp(struct kvm_vcpu *vcpu, int err)</yellow>
+<blue>int kvm_complete_insn_gp(struct kvm_vcpu *vcpu, int err)</blue>
 {
 <blue>	if (err)</blue>
-<yellow>		kvm_inject_gp(vcpu, 0);</yellow>
+<blue>		kvm_inject_gp(vcpu, 0);</blue>
 	else
 <blue>		return kvm_skip_emulated_instruction(vcpu);</blue>
 
@@ -2574,7 +2574,7 @@ u64 kvm_calc_nested_tsc_offset(u64 l1_offset, u64 l2_offset, u64 l2_multiplier)
 <blue>	if (l2_multiplier == kvm_caps.default_tsc_scaling_ratio)</blue>
 		nested_offset = l1_offset;
 	else
-<yellow>		nested_offset = mul_s64_u64_shr((s64) l1_offset, l2_multiplier,</yellow>
+<blue>		nested_offset = mul_s64_u64_shr((s64) l1_offset, l2_multiplier,</blue>
 						kvm_caps.tsc_scaling_ratio_frac_bits);
 
 <blue>	nested_offset += l2_offset;</blue>
@@ -2582,10 +2582,10 @@ u64 kvm_calc_nested_tsc_offset(u64 l1_offset, u64 l2_offset, u64 l2_multiplier)
 }
 EXPORT_SYMBOL_GPL(kvm_calc_nested_tsc_offset);
 
-<yellow>u64 kvm_calc_nested_tsc_multiplier(u64 l1_multiplier, u64 l2_multiplier)</yellow>
+<blue>u64 kvm_calc_nested_tsc_multiplier(u64 l1_multiplier, u64 l2_multiplier)</blue>
 {
 <blue>	if (l2_multiplier != kvm_caps.default_tsc_scaling_ratio)</blue>
-<yellow>		return mul_u64_u64_shr(l1_multiplier, l2_multiplier,</yellow>
+<blue>		return mul_u64_u64_shr(l1_multiplier, l2_multiplier,</blue>
 				       kvm_caps.tsc_scaling_ratio_frac_bits);
 
 	return l1_multiplier;
@@ -10904,7 +10904,7 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
 
 cancel_injection:
 <blue>	if (req_immediate_exit)</blue>
-<yellow>		kvm_make_request(KVM_REQ_EVENT, vcpu);</yellow>
+<blue>		kvm_make_request(KVM_REQ_EVENT, vcpu);</blue>
 <blue>	static_call(kvm_x86_cancel_injection)(vcpu);</blue>
 	if (unlikely(vcpu-&gt;arch.apic_attention))
 <yellow>		kvm_lapic_sync_from_vapic(vcpu);</yellow>

@@ -202,7 +202,7 @@ static inline u64 mul_u64_u32_shr(u64 a, u32 mul, unsigned int shift)
 #ifndef mul_u64_u64_shr
 static inline u64 mul_u64_u64_shr(u64 a, u64 mul, unsigned int shift)
 {
-<yellow>	return (u64)(((unsigned __int128)a * mul) >> shift);</yellow>
+<blue>	return (u64)(((unsigned __int128)a * mul) >> shift);</blue>
 }
 #endif /* mul_u64_u64_shr */
 
@@ -280,10 +280,10 @@ static inline u64 mul_s64_u64_shr(s64 a, u64 b, unsigned int shift)
 	 * Extract the sign before the multiplication and put it back
 	 * afterwards if needed.
 	 */
-<yellow>	ret = mul_u64_u64_shr(abs(a), b, shift);</yellow>
+<blue>	ret = mul_u64_u64_shr(abs(a), b, shift);</blue>
 
 	if (a &lt; 0)
-<yellow>		ret = -((s64) ret);</yellow>
+<blue>		ret = -((s64) ret);</blue>
 
 	return ret;
 }
