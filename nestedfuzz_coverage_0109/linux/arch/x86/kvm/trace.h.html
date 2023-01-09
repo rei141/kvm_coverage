@@ -1,0 +1,1875 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br>230.<br>231.<br>232.<br>233.<br>234.<br>235.<br>236.<br>237.<br>238.<br>239.<br>240.<br>241.<br>242.<br>243.<br>244.<br>245.<br>246.<br>247.<br>248.<br>249.<br>250.<br>251.<br>252.<br>253.<br>254.<br>255.<br>256.<br>257.<br>258.<br>259.<br>260.<br>261.<br>262.<br>263.<br>264.<br>265.<br>266.<br>267.<br>268.<br>269.<br>270.<br>271.<br>272.<br>273.<br>274.<br>275.<br>276.<br>277.<br>278.<br>279.<br>280.<br>281.<br>282.<br>283.<br>284.<br>285.<br>286.<br>287.<br>288.<br>289.<br>290.<br>291.<br>292.<br>293.<br>294.<br>295.<br>296.<br>297.<br>298.<br>299.<br>300.<br>301.<br>302.<br>303.<br>304.<br>305.<br>306.<br>307.<br>308.<br>309.<br>310.<br>311.<br>312.<br>313.<br>314.<br>315.<br>316.<br>317.<br>318.<br>319.<br>320.<br>321.<br>322.<br>323.<br>324.<br>325.<br>326.<br>327.<br>328.<br>329.<br>330.<br>331.<br>332.<br>333.<br>334.<br>335.<br>336.<br>337.<br>338.<br>339.<br>340.<br>341.<br>342.<br>343.<br>344.<br>345.<br>346.<br>347.<br>348.<br>349.<br>350.<br>351.<br>352.<br>353.<br>354.<br>355.<br>356.<br>357.<br>358.<br>359.<br>360.<br>361.<br>362.<br>363.<br>364.<br>365.<br>366.<br>367.<br>368.<br>369.<br>370.<br>371.<br>372.<br>373.<br>374.<br>375.<br>376.<br>377.<br>378.<br>379.<br>380.<br>381.<br>382.<br>383.<br>384.<br>385.<br>386.<br>387.<br>388.<br>389.<br>390.<br>391.<br>392.<br>393.<br>394.<br>395.<br>396.<br>397.<br>398.<br>399.<br>400.<br>401.<br>402.<br>403.<br>404.<br>405.<br>406.<br>407.<br>408.<br>409.<br>410.<br>411.<br>412.<br>413.<br>414.<br>415.<br>416.<br>417.<br>418.<br>419.<br>420.<br>421.<br>422.<br>423.<br>424.<br>425.<br>426.<br>427.<br>428.<br>429.<br>430.<br>431.<br>432.<br>433.<br>434.<br>435.<br>436.<br>437.<br>438.<br>439.<br>440.<br>441.<br>442.<br>443.<br>444.<br>445.<br>446.<br>447.<br>448.<br>449.<br>450.<br>451.<br>452.<br>453.<br>454.<br>455.<br>456.<br>457.<br>458.<br>459.<br>460.<br>461.<br>462.<br>463.<br>464.<br>465.<br>466.<br>467.<br>468.<br>469.<br>470.<br>471.<br>472.<br>473.<br>474.<br>475.<br>476.<br>477.<br>478.<br>479.<br>480.<br>481.<br>482.<br>483.<br>484.<br>485.<br>486.<br>487.<br>488.<br>489.<br>490.<br>491.<br>492.<br>493.<br>494.<br>495.<br>496.<br>497.<br>498.<br>499.<br>500.<br>501.<br>502.<br>503.<br>504.<br>505.<br>506.<br>507.<br>508.<br>509.<br>510.<br>511.<br>512.<br>513.<br>514.<br>515.<br>516.<br>517.<br>518.<br>519.<br>520.<br>521.<br>522.<br>523.<br>524.<br>525.<br>526.<br>527.<br>528.<br>529.<br>530.<br>531.<br>532.<br>533.<br>534.<br>535.<br>536.<br>537.<br>538.<br>539.<br>540.<br>541.<br>542.<br>543.<br>544.<br>545.<br>546.<br>547.<br>548.<br>549.<br>550.<br>551.<br>552.<br>553.<br>554.<br>555.<br>556.<br>557.<br>558.<br>559.<br>560.<br>561.<br>562.<br>563.<br>564.<br>565.<br>566.<br>567.<br>568.<br>569.<br>570.<br>571.<br>572.<br>573.<br>574.<br>575.<br>576.<br>577.<br>578.<br>579.<br>580.<br>581.<br>582.<br>583.<br>584.<br>585.<br>586.<br>587.<br>588.<br>589.<br>590.<br>591.<br>592.<br>593.<br>594.<br>595.<br>596.<br>597.<br>598.<br>599.<br>600.<br>601.<br>602.<br>603.<br>604.<br>605.<br>606.<br>607.<br>608.<br>609.<br>610.<br>611.<br>612.<br>613.<br>614.<br>615.<br>616.<br>617.<br>618.<br>619.<br>620.<br>621.<br>622.<br>623.<br>624.<br>625.<br>626.<br>627.<br>628.<br>629.<br>630.<br>631.<br>632.<br>633.<br>634.<br>635.<br>636.<br>637.<br>638.<br>639.<br>640.<br>641.<br>642.<br>643.<br>644.<br>645.<br>646.<br>647.<br>648.<br>649.<br>650.<br>651.<br>652.<br>653.<br>654.<br>655.<br>656.<br>657.<br>658.<br>659.<br>660.<br>661.<br>662.<br>663.<br>664.<br>665.<br>666.<br>667.<br>668.<br>669.<br>670.<br>671.<br>672.<br>673.<br>674.<br>675.<br>676.<br>677.<br>678.<br>679.<br>680.<br>681.<br>682.<br>683.<br>684.<br>685.<br>686.<br>687.<br>688.<br>689.<br>690.<br>691.<br>692.<br>693.<br>694.<br>695.<br>696.<br>697.<br>698.<br>699.<br>700.<br>701.<br>702.<br>703.<br>704.<br>705.<br>706.<br>707.<br>708.<br>709.<br>710.<br>711.<br>712.<br>713.<br>714.<br>715.<br>716.<br>717.<br>718.<br>719.<br>720.<br>721.<br>722.<br>723.<br>724.<br>725.<br>726.<br>727.<br>728.<br>729.<br>730.<br>731.<br>732.<br>733.<br>734.<br>735.<br>736.<br>737.<br>738.<br>739.<br>740.<br>741.<br>742.<br>743.<br>744.<br>745.<br>746.<br>747.<br>748.<br>749.<br>750.<br>751.<br>752.<br>753.<br>754.<br>755.<br>756.<br>757.<br>758.<br>759.<br>760.<br>761.<br>762.<br>763.<br>764.<br>765.<br>766.<br>767.<br>768.<br>769.<br>770.<br>771.<br>772.<br>773.<br>774.<br>775.<br>776.<br>777.<br>778.<br>779.<br>780.<br>781.<br>782.<br>783.<br>784.<br>785.<br>786.<br>787.<br>788.<br>789.<br>790.<br>791.<br>792.<br>793.<br>794.<br>795.<br>796.<br>797.<br>798.<br>799.<br>800.<br>801.<br>802.<br>803.<br>804.<br>805.<br>806.<br>807.<br>808.<br>809.<br>810.<br>811.<br>812.<br>813.<br>814.<br>815.<br>816.<br>817.<br>818.<br>819.<br>820.<br>821.<br>822.<br>823.<br>824.<br>825.<br>826.<br>827.<br>828.<br>829.<br>830.<br>831.<br>832.<br>833.<br>834.<br>835.<br>836.<br>837.<br>838.<br>839.<br>840.<br>841.<br>842.<br>843.<br>844.<br>845.<br>846.<br>847.<br>848.<br>849.<br>850.<br>851.<br>852.<br>853.<br>854.<br>855.<br>856.<br>857.<br>858.<br>859.<br>860.<br>861.<br>862.<br>863.<br>864.<br>865.<br>866.<br>867.<br>868.<br>869.<br>870.<br>871.<br>872.<br>873.<br>874.<br>875.<br>876.<br>877.<br>878.<br>879.<br>880.<br>881.<br>882.<br>883.<br>884.<br>885.<br>886.<br>887.<br>888.<br>889.<br>890.<br>891.<br>892.<br>893.<br>894.<br>895.<br>896.<br>897.<br>898.<br>899.<br>900.<br>901.<br>902.<br>903.<br>904.<br>905.<br>906.<br>907.<br>908.<br>909.<br>910.<br>911.<br>912.<br>913.<br>914.<br>915.<br>916.<br>917.<br>918.<br>919.<br>920.<br>921.<br>922.<br>923.<br>924.<br>925.<br>926.<br>927.<br>928.<br>929.<br>930.<br>931.<br>932.<br>933.<br>934.<br>935.<br>936.<br>937.<br>938.<br>939.<br>940.<br>941.<br>942.<br>943.<br>944.<br>945.<br>946.<br>947.<br>948.<br>949.<br>950.<br>951.<br>952.<br>953.<br>954.<br>955.<br>956.<br>957.<br>958.<br>959.<br>960.<br>961.<br>962.<br>963.<br>964.<br>965.<br>966.<br>967.<br>968.<br>969.<br>970.<br>971.<br>972.<br>973.<br>974.<br>975.<br>976.<br>977.<br>978.<br>979.<br>980.<br>981.<br>982.<br>983.<br>984.<br>985.<br>986.<br>987.<br>988.<br>989.<br>990.<br>991.<br>992.<br>993.<br>994.<br>995.<br>996.<br>997.<br>998.<br>999.<br>1000.<br>1001.<br>1002.<br>1003.<br>1004.<br>1005.<br>1006.<br>1007.<br>1008.<br>1009.<br>1010.<br>1011.<br>1012.<br>1013.<br>1014.<br>1015.<br>1016.<br>1017.<br>1018.<br>1019.<br>1020.<br>1021.<br>1022.<br>1023.<br>1024.<br>1025.<br>1026.<br>1027.<br>1028.<br>1029.<br>1030.<br>1031.<br>1032.<br>1033.<br>1034.<br>1035.<br>1036.<br>1037.<br>1038.<br>1039.<br>1040.<br>1041.<br>1042.<br>1043.<br>1044.<br>1045.<br>1046.<br>1047.<br>1048.<br>1049.<br>1050.<br>1051.<br>1052.<br>1053.<br>1054.<br>1055.<br>1056.<br>1057.<br>1058.<br>1059.<br>1060.<br>1061.<br>1062.<br>1063.<br>1064.<br>1065.<br>1066.<br>1067.<br>1068.<br>1069.<br>1070.<br>1071.<br>1072.<br>1073.<br>1074.<br>1075.<br>1076.<br>1077.<br>1078.<br>1079.<br>1080.<br>1081.<br>1082.<br>1083.<br>1084.<br>1085.<br>1086.<br>1087.<br>1088.<br>1089.<br>1090.<br>1091.<br>1092.<br>1093.<br>1094.<br>1095.<br>1096.<br>1097.<br>1098.<br>1099.<br>1100.<br>1101.<br>1102.<br>1103.<br>1104.<br>1105.<br>1106.<br>1107.<br>1108.<br>1109.<br>1110.<br>1111.<br>1112.<br>1113.<br>1114.<br>1115.<br>1116.<br>1117.<br>1118.<br>1119.<br>1120.<br>1121.<br>1122.<br>1123.<br>1124.<br>1125.<br>1126.<br>1127.<br>1128.<br>1129.<br>1130.<br>1131.<br>1132.<br>1133.<br>1134.<br>1135.<br>1136.<br>1137.<br>1138.<br>1139.<br>1140.<br>1141.<br>1142.<br>1143.<br>1144.<br>1145.<br>1146.<br>1147.<br>1148.<br>1149.<br>1150.<br>1151.<br>1152.<br>1153.<br>1154.<br>1155.<br>1156.<br>1157.<br>1158.<br>1159.<br>1160.<br>1161.<br>1162.<br>1163.<br>1164.<br>1165.<br>1166.<br>1167.<br>1168.<br>1169.<br>1170.<br>1171.<br>1172.<br>1173.<br>1174.<br>1175.<br>1176.<br>1177.<br>1178.<br>1179.<br>1180.<br>1181.<br>1182.<br>1183.<br>1184.<br>1185.<br>1186.<br>1187.<br>1188.<br>1189.<br>1190.<br>1191.<br>1192.<br>1193.<br>1194.<br>1195.<br>1196.<br>1197.<br>1198.<br>1199.<br>1200.<br>1201.<br>1202.<br>1203.<br>1204.<br>1205.<br>1206.<br>1207.<br>1208.<br>1209.<br>1210.<br>1211.<br>1212.<br>1213.<br>1214.<br>1215.<br>1216.<br>1217.<br>1218.<br>1219.<br>1220.<br>1221.<br>1222.<br>1223.<br>1224.<br>1225.<br>1226.<br>1227.<br>1228.<br>1229.<br>1230.<br>1231.<br>1232.<br>1233.<br>1234.<br>1235.<br>1236.<br>1237.<br>1238.<br>1239.<br>1240.<br>1241.<br>1242.<br>1243.<br>1244.<br>1245.<br>1246.<br>1247.<br>1248.<br>1249.<br>1250.<br>1251.<br>1252.<br>1253.<br>1254.<br>1255.<br>1256.<br>1257.<br>1258.<br>1259.<br>1260.<br>1261.<br>1262.<br>1263.<br>1264.<br>1265.<br>1266.<br>1267.<br>1268.<br>1269.<br>1270.<br>1271.<br>1272.<br>1273.<br>1274.<br>1275.<br>1276.<br>1277.<br>1278.<br>1279.<br>1280.<br>1281.<br>1282.<br>1283.<br>1284.<br>1285.<br>1286.<br>1287.<br>1288.<br>1289.<br>1290.<br>1291.<br>1292.<br>1293.<br>1294.<br>1295.<br>1296.<br>1297.<br>1298.<br>1299.<br>1300.<br>1301.<br>1302.<br>1303.<br>1304.<br>1305.<br>1306.<br>1307.<br>1308.<br>1309.<br>1310.<br>1311.<br>1312.<br>1313.<br>1314.<br>1315.<br>1316.<br>1317.<br>1318.<br>1319.<br>1320.<br>1321.<br>1322.<br>1323.<br>1324.<br>1325.<br>1326.<br>1327.<br>1328.<br>1329.<br>1330.<br>1331.<br>1332.<br>1333.<br>1334.<br>1335.<br>1336.<br>1337.<br>1338.<br>1339.<br>1340.<br>1341.<br>1342.<br>1343.<br>1344.<br>1345.<br>1346.<br>1347.<br>1348.<br>1349.<br>1350.<br>1351.<br>1352.<br>1353.<br>1354.<br>1355.<br>1356.<br>1357.<br>1358.<br>1359.<br>1360.<br>1361.<br>1362.<br>1363.<br>1364.<br>1365.<br>1366.<br>1367.<br>1368.<br>1369.<br>1370.<br>1371.<br>1372.<br>1373.<br>1374.<br>1375.<br>1376.<br>1377.<br>1378.<br>1379.<br>1380.<br>1381.<br>1382.<br>1383.<br>1384.<br>1385.<br>1386.<br>1387.<br>1388.<br>1389.<br>1390.<br>1391.<br>1392.<br>1393.<br>1394.<br>1395.<br>1396.<br>1397.<br>1398.<br>1399.<br>1400.<br>1401.<br>1402.<br>1403.<br>1404.<br>1405.<br>1406.<br>1407.<br>1408.<br>1409.<br>1410.<br>1411.<br>1412.<br>1413.<br>1414.<br>1415.<br>1416.<br>1417.<br>1418.<br>1419.<br>1420.<br>1421.<br>1422.<br>1423.<br>1424.<br>1425.<br>1426.<br>1427.<br>1428.<br>1429.<br>1430.<br>1431.<br>1432.<br>1433.<br>1434.<br>1435.<br>1436.<br>1437.<br>1438.<br>1439.<br>1440.<br>1441.<br>1442.<br>1443.<br>1444.<br>1445.<br>1446.<br>1447.<br>1448.<br>1449.<br>1450.<br>1451.<br>1452.<br>1453.<br>1454.<br>1455.<br>1456.<br>1457.<br>1458.<br>1459.<br>1460.<br>1461.<br>1462.<br>1463.<br>1464.<br>1465.<br>1466.<br>1467.<br>1468.<br>1469.<br>1470.<br>1471.<br>1472.<br>1473.<br>1474.<br>1475.<br>1476.<br>1477.<br>1478.<br>1479.<br>1480.<br>1481.<br>1482.<br>1483.<br>1484.<br>1485.<br>1486.<br>1487.<br>1488.<br>1489.<br>1490.<br>1491.<br>1492.<br>1493.<br>1494.<br>1495.<br>1496.<br>1497.<br>1498.<br>1499.<br>1500.<br>1501.<br>1502.<br>1503.<br>1504.<br>1505.<br>1506.<br>1507.<br>1508.<br>1509.<br>1510.<br>1511.<br>1512.<br>1513.<br>1514.<br>1515.<br>1516.<br>1517.<br>1518.<br>1519.<br>1520.<br>1521.<br>1522.<br>1523.<br>1524.<br>1525.<br>1526.<br>1527.<br>1528.<br>1529.<br>1530.<br>1531.<br>1532.<br>1533.<br>1534.<br>1535.<br>1536.<br>1537.<br>1538.<br>1539.<br>1540.<br>1541.<br>1542.<br>1543.<br>1544.<br>1545.<br>1546.<br>1547.<br>1548.<br>1549.<br>1550.<br>1551.<br>1552.<br>1553.<br>1554.<br>1555.<br>1556.<br>1557.<br>1558.<br>1559.<br>1560.<br>1561.<br>1562.<br>1563.<br>1564.<br>1565.<br>1566.<br>1567.<br>1568.<br>1569.<br>1570.<br>1571.<br>1572.<br>1573.<br>1574.<br>1575.<br>1576.<br>1577.<br>1578.<br>1579.<br>1580.<br>1581.<br>1582.<br>1583.<br>1584.<br>1585.<br>1586.<br>1587.<br>1588.<br>1589.<br>1590.<br>1591.<br>1592.<br>1593.<br>1594.<br>1595.<br>1596.<br>1597.<br>1598.<br>1599.<br>1600.<br>1601.<br>1602.<br>1603.<br>1604.<br>1605.<br>1606.<br>1607.<br>1608.<br>1609.<br>1610.<br>1611.<br>1612.<br>1613.<br>1614.<br>1615.<br>1616.<br>1617.<br>1618.<br>1619.<br>1620.<br>1621.<br>1622.<br>1623.<br>1624.<br>1625.<br>1626.<br>1627.<br>1628.<br>1629.<br>1630.<br>1631.<br>1632.<br>1633.<br>1634.<br>1635.<br>1636.<br>1637.<br>1638.<br>1639.<br>1640.<br>1641.<br>1642.<br>1643.<br>1644.<br>1645.<br>1646.<br>1647.<br>1648.<br>1649.<br>1650.<br>1651.<br>1652.<br>1653.<br>1654.<br>1655.<br>1656.<br>1657.<br>1658.<br>1659.<br>1660.<br>1661.<br>1662.<br>1663.<br>1664.<br>1665.<br>1666.<br>1667.<br>1668.<br>1669.<br>1670.<br>1671.<br>1672.<br>1673.<br>1674.<br>1675.<br>1676.<br>1677.<br>1678.<br>1679.<br>1680.<br>1681.<br>1682.<br>1683.<br>1684.<br>1685.<br>1686.<br>1687.<br>1688.<br>1689.<br>1690.<br>1691.<br>1692.<br>1693.<br>1694.<br>1695.<br>1696.<br>1697.<br>1698.<br>1699.<br>1700.<br>1701.<br>1702.<br>1703.<br>1704.<br>1705.<br>1706.<br>1707.<br>1708.<br>1709.<br>1710.<br>1711.<br>1712.<br>1713.<br>1714.<br>1715.<br>1716.<br>1717.<br>1718.<br>1719.<br>1720.<br>1721.<br>1722.<br>1723.<br>1724.<br>1725.<br>1726.<br>1727.<br>1728.<br>1729.<br>1730.<br>1731.<br>1732.<br>1733.<br>1734.<br>1735.<br>1736.<br>1737.<br>1738.<br>1739.<br>1740.<br>1741.<br>1742.<br>1743.<br>1744.<br>1745.<br>1746.<br>1747.<br>1748.<br>1749.<br>1750.<br>1751.<br>1752.<br>1753.<br>1754.<br>1755.<br>1756.<br>1757.<br>1758.<br>1759.<br>1760.<br>1761.<br>1762.<br>1763.<br>1764.<br>1765.<br>1766.<br>1767.<br>1768.<br>1769.<br>1770.<br>1771.<br>1772.<br>1773.<br>1774.<br>1775.<br>1776.<br>1777.<br>1778.<br>1779.<br>1780.<br>1781.<br>1782.<br>1783.<br>1784.<br>1785.<br>1786.<br>1787.<br>1788.<br>1789.<br>1790.<br>1791.<br>1792.<br>1793.<br>1794.<br>1795.<br>1796.<br>1797.<br>1798.<br>1799.<br>1800.<br>1801.<br>1802.<br>1803.<br>1804.<br>1805.<br>1806.<br>1807.<br>1808.<br>1809.<br>1810.<br>1811.<br>1812.<br>1813.<br>1814.<br>1815.<br>1816.<br>1817.<br>1818.<br>1819.<br>1820.<br>1821.<br>1822.<br>1823.<br>1824.<br>1825.<br>1826.<br>1827.<br>1828.<br>1829.<br>1830.<br>1831.<br>1832.<br>1833.<br>1834.<br>1835.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#if !defined(_TRACE_KVM_H) || defined(TRACE_HEADER_MULTI_READ)
+#define _TRACE_KVM_H
+
+#include &lt;linux/tracepoint.h&gt;
+#include &lt;asm/vmx.h&gt;
+#include &lt;asm/svm.h&gt;
+#include &lt;asm/clocksource.h&gt;
+#include &lt;asm/pvclock-abi.h&gt;
+
+#undef TRACE_SYSTEM
+#define TRACE_SYSTEM kvm
+
+/*
+ * Tracepoint for guest mode entry.
+ */
+<blue>TRACE_EVENT(kvm_entry,</blue>
+	TP_PROTO(struct kvm_vcpu *vcpu),
+	TP_ARGS(vcpu),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id		)
+		__field(	unsigned long,	rip		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id        = vcpu-&gt;vcpu_id;
+		__entry-&gt;rip		= kvm_rip_read(vcpu);
+	),
+
+	TP_printk(&quot;vcpu %u, rip 0x%lx&quot;, __entry-&gt;vcpu_id, __entry-&gt;rip)
+);
+
+/*
+ * Tracepoint for hypercall.
+ */
+<yellow>TRACE_EVENT(kvm_hypercall,</yellow>
+	TP_PROTO(unsigned long nr, unsigned long a0, unsigned long a1,
+		 unsigned long a2, unsigned long a3),
+	TP_ARGS(nr, a0, a1, a2, a3),
+
+	TP_STRUCT__entry(
+		__field(	unsigned long, 	nr		)
+		__field(	unsigned long,	a0		)
+		__field(	unsigned long,	a1		)
+		__field(	unsigned long,	a2		)
+		__field(	unsigned long,	a3		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;nr		= nr;
+		__entry-&gt;a0		= a0;
+		__entry-&gt;a1		= a1;
+		__entry-&gt;a2		= a2;
+		__entry-&gt;a3		= a3;
+	),
+
+	TP_printk(&quot;nr 0x%lx a0 0x%lx a1 0x%lx a2 0x%lx a3 0x%lx&quot;,
+		 __entry-&gt;nr, __entry-&gt;a0, __entry-&gt;a1,  __entry-&gt;a2,
+		 __entry-&gt;a3)
+);
+
+/*
+ * Tracepoint for hypercall.
+ */
+<yellow>TRACE_EVENT(kvm_hv_hypercall,</yellow>
+	TP_PROTO(__u16 code, bool fast,  __u16 var_cnt, __u16 rep_cnt,
+		 __u16 rep_idx, __u64 ingpa, __u64 outgpa),
+	TP_ARGS(code, fast, var_cnt, rep_cnt, rep_idx, ingpa, outgpa),
+
+	TP_STRUCT__entry(
+		__field(	__u16,		rep_cnt		)
+		__field(	__u16,		rep_idx		)
+		__field(	__u64,		ingpa		)
+		__field(	__u64,		outgpa		)
+		__field(	__u16, 		code		)
+		__field(	__u16,		var_cnt		)
+		__field(	bool,		fast		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rep_cnt	= rep_cnt;
+		__entry-&gt;rep_idx	= rep_idx;
+		__entry-&gt;ingpa		= ingpa;
+		__entry-&gt;outgpa		= outgpa;
+		__entry-&gt;code		= code;
+		__entry-&gt;var_cnt	= var_cnt;
+		__entry-&gt;fast		= fast;
+	),
+
+	TP_printk(&quot;code 0x%x %s var_cnt 0x%x rep_cnt 0x%x idx 0x%x in 0x%llx out 0x%llx&quot;,
+		  __entry-&gt;code, __entry-&gt;fast ? &quot;fast&quot; : &quot;slow&quot;,
+		  __entry-&gt;var_cnt, __entry-&gt;rep_cnt, __entry-&gt;rep_idx,
+		  __entry-&gt;ingpa, __entry-&gt;outgpa)
+);
+
+<yellow>TRACE_EVENT(kvm_hv_hypercall_done,</yellow>
+	TP_PROTO(u64 result),
+	TP_ARGS(result),
+
+	TP_STRUCT__entry(
+		__field(__u64, result)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;result	= result;
+	),
+
+	TP_printk(&quot;result 0x%llx&quot;, __entry-&gt;result)
+);
+
+/*
+ * Tracepoint for Xen hypercall.
+ */
+<yellow>TRACE_EVENT(kvm_xen_hypercall,</yellow>
+	TP_PROTO(unsigned long nr, unsigned long a0, unsigned long a1,
+		 unsigned long a2, unsigned long a3, unsigned long a4,
+		 unsigned long a5),
+	    TP_ARGS(nr, a0, a1, a2, a3, a4, a5),
+
+	TP_STRUCT__entry(
+		__field(unsigned long, nr)
+		__field(unsigned long, a0)
+		__field(unsigned long, a1)
+		__field(unsigned long, a2)
+		__field(unsigned long, a3)
+		__field(unsigned long, a4)
+		__field(unsigned long, a5)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;nr = nr;
+		__entry-&gt;a0 = a0;
+		__entry-&gt;a1 = a1;
+		__entry-&gt;a2 = a2;
+		__entry-&gt;a3 = a3;
+		__entry-&gt;a4 = a4;
+		__entry-&gt;a4 = a5;
+	),
+
+	TP_printk(&quot;nr 0x%lx a0 0x%lx a1 0x%lx a2 0x%lx a3 0x%lx a4 0x%lx a5 %lx&quot;,
+		  __entry-&gt;nr, __entry-&gt;a0, __entry-&gt;a1,  __entry-&gt;a2,
+		  __entry-&gt;a3, __entry-&gt;a4, __entry-&gt;a5)
+);
+
+
+
+/*
+ * Tracepoint for PIO.
+ */
+
+#define KVM_PIO_IN   0
+#define KVM_PIO_OUT  1
+
+<blue>TRACE_EVENT(kvm_pio,</blue>
+	TP_PROTO(unsigned int rw, unsigned int port, unsigned int size,
+		 unsigned int count, const void *data),
+	TP_ARGS(rw, port, size, count, data),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int, 	rw		)
+		__field(	unsigned int, 	port		)
+		__field(	unsigned int, 	size		)
+		__field(	unsigned int,	count		)
+		__field(	unsigned int,	val		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rw		= rw;
+		__entry-&gt;port		= port;
+		__entry-&gt;size		= size;
+		__entry-&gt;count		= count;
+		if (size == 1)
+			__entry-&gt;val	= *(unsigned char *)data;
+		else if (size == 2)
+			__entry-&gt;val	= *(unsigned short *)data;
+		else
+			__entry-&gt;val	= *(unsigned int *)data;
+	),
+
+	TP_printk(&quot;pio_%s at 0x%x size %d count %d val 0x%x %s&quot;,
+		  __entry-&gt;rw ? &quot;write&quot; : &quot;read&quot;,
+		  __entry-&gt;port, __entry-&gt;size, __entry-&gt;count, __entry-&gt;val,
+		  __entry-&gt;count &gt; 1 ? &quot;(...)&quot; : &quot;&quot;)
+);
+
+/*
+ * Tracepoint for fast mmio.
+ */
+<yellow>TRACE_EVENT(kvm_fast_mmio,</yellow>
+	TP_PROTO(u64 gpa),
+	TP_ARGS(gpa),
+
+	TP_STRUCT__entry(
+		__field(u64,	gpa)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;gpa		= gpa;
+	),
+
+	TP_printk(&quot;fast mmio at gpa 0x%llx&quot;, __entry-&gt;gpa)
+);
+
+/*
+ * Tracepoint for cpuid.
+ */
+<yellow>TRACE_EVENT(kvm_cpuid,</yellow>
+	TP_PROTO(unsigned int function, unsigned int index, unsigned long rax,
+		 unsigned long rbx, unsigned long rcx, unsigned long rdx,
+		 bool found, bool used_max_basic),
+	TP_ARGS(function, index, rax, rbx, rcx, rdx, found, used_max_basic),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	function	)
+		__field(	unsigned int,	index		)
+		__field(	unsigned long,	rax		)
+		__field(	unsigned long,	rbx		)
+		__field(	unsigned long,	rcx		)
+		__field(	unsigned long,	rdx		)
+		__field(	bool,		found		)
+		__field(	bool,		used_max_basic	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;function	= function;
+		__entry-&gt;index		= index;
+		__entry-&gt;rax		= rax;
+		__entry-&gt;rbx		= rbx;
+		__entry-&gt;rcx		= rcx;
+		__entry-&gt;rdx		= rdx;
+		__entry-&gt;found		= found;
+		__entry-&gt;used_max_basic	= used_max_basic;
+	),
+
+	TP_printk(&quot;func %x idx %x rax %lx rbx %lx rcx %lx rdx %lx, cpuid entry %s%s&quot;,
+		  __entry-&gt;function, __entry-&gt;index, __entry-&gt;rax,
+		  __entry-&gt;rbx, __entry-&gt;rcx, __entry-&gt;rdx,
+		  __entry-&gt;found ? &quot;found&quot; : &quot;not found&quot;,
+		  __entry-&gt;used_max_basic ? &quot;, used max basic&quot; : &quot;&quot;)
+);
+
+#define AREG(x) { APIC_##x, &quot;APIC_&quot; #x }
+
+#define kvm_trace_symbol_apic						    \
+	AREG(ID), AREG(LVR), AREG(TASKPRI), AREG(ARBPRI), AREG(PROCPRI),    \
+	AREG(EOI), AREG(RRR), AREG(LDR), AREG(DFR), AREG(SPIV), AREG(ISR),  \
+	AREG(TMR), AREG(IRR), AREG(ESR), AREG(ICR), AREG(ICR2), AREG(LVTT), \
+	AREG(LVTTHMR), AREG(LVTPC), AREG(LVT0), AREG(LVT1), AREG(LVTERR),   \
+	AREG(TMICT), AREG(TMCCT), AREG(TDCR), AREG(SELF_IPI), AREG(EFEAT),  \
+	AREG(ECTRL)
+/*
+ * Tracepoint for apic access.
+ */
+<blue>TRACE_EVENT(kvm_apic,</blue>
+	TP_PROTO(unsigned int rw, unsigned int reg, u64 val),
+	TP_ARGS(rw, reg, val),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	rw		)
+		__field(	unsigned int,	reg		)
+		__field(	u64,		val		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rw		= rw;
+		__entry-&gt;reg		= reg;
+		__entry-&gt;val		= val;
+	),
+
+	TP_printk(&quot;apic_%s %s = 0x%llx&quot;,
+		  __entry-&gt;rw ? &quot;write&quot; : &quot;read&quot;,
+		  __print_symbolic(__entry-&gt;reg, kvm_trace_symbol_apic),
+		  __entry-&gt;val)
+);
+
+#define trace_kvm_apic_read(reg, val)		trace_kvm_apic(0, reg, val)
+#define trace_kvm_apic_write(reg, val)		trace_kvm_apic(1, reg, val)
+
+#define KVM_ISA_VMX   1
+#define KVM_ISA_SVM   2
+
+#define kvm_print_exit_reason(exit_reason, isa)				\
+	(isa == KVM_ISA_VMX) ?						\
+	__print_symbolic(exit_reason &amp; 0xffff, VMX_EXIT_REASONS) :	\
+	__print_symbolic(exit_reason, SVM_EXIT_REASONS),		\
+	(isa == KVM_ISA_VMX &amp;&amp; exit_reason &amp; ~0xffff) ? &quot; &quot; : &quot;&quot;,	\
+	(isa == KVM_ISA_VMX) ?						\
+	__print_flags(exit_reason &amp; ~0xffff, &quot; &quot;, VMX_EXIT_REASON_FLAGS) : &quot;&quot;
+
+#define TRACE_EVENT_KVM_EXIT(name)					     \
+TRACE_EVENT(name,							     \
+	TP_PROTO(struct kvm_vcpu *vcpu, u32 isa),			     \
+	TP_ARGS(vcpu, isa),						     \
+									     \
+	TP_STRUCT__entry(						     \
+		__field(	unsigned int,	exit_reason	)	     \
+		__field(	unsigned long,	guest_rip	)	     \
+		__field(	u32,	        isa             )	     \
+		__field(	u64,	        info1           )	     \
+		__field(	u64,	        info2           )	     \
+		__field(	u32,	        intr_info	)	     \
+		__field(	u32,	        error_code	)	     \
+		__field(	unsigned int,	vcpu_id         )	     \
+	),								     \
+									     \
+	TP_fast_assign(							     \
+		__entry-&gt;guest_rip	= kvm_rip_read(vcpu);		     \
+		__entry-&gt;isa            = isa;				     \
+		__entry-&gt;vcpu_id        = vcpu-&gt;vcpu_id;		     \
+		static_call(kvm_x86_get_exit_info)(vcpu,		     \
+					  &amp;__entry-&gt;exit_reason,	     \
+					  &amp;__entry-&gt;info1,		     \
+					  &amp;__entry-&gt;info2,		     \
+					  &amp;__entry-&gt;intr_info,		     \
+					  &amp;__entry-&gt;error_code);	     \
+	),								     \
+									     \
+	TP_printk(&quot;vcpu %u reason %s%s%s rip 0x%lx info1 0x%016llx &quot;	     \
+		  &quot;info2 0x%016llx intr_info 0x%08x error_code 0x%08x&quot;,	     \
+		  __entry-&gt;vcpu_id,					     \
+		  kvm_print_exit_reason(__entry-&gt;exit_reason, __entry-&gt;isa), \
+		  __entry-&gt;guest_rip, __entry-&gt;info1, __entry-&gt;info2,	     \
+		  __entry-&gt;intr_info, __entry-&gt;error_code)		     \
+)
+
+/*
+ * Tracepoint for kvm guest exit:
+ */
+<blue>TRACE_EVENT_KVM_EXIT(kvm_exit);</blue>
+
+/*
+ * Tracepoint for kvm interrupt injection:
+ */
+<blue>TRACE_EVENT(kvm_inj_virq,</blue>
+	TP_PROTO(unsigned int vector, bool soft, bool reinjected),
+	TP_ARGS(vector, soft, reinjected),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vector		)
+		__field(	bool,		soft		)
+		__field(	bool,		reinjected	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vector		= vector;
+		__entry-&gt;soft		= soft;
+		__entry-&gt;reinjected	= reinjected;
+	),
+
+	TP_printk(&quot;%s 0x%x%s&quot;,
+		  __entry-&gt;soft ? &quot;Soft/INTn&quot; : &quot;IRQ&quot;, __entry-&gt;vector,
+		  __entry-&gt;reinjected ? &quot; [reinjected]&quot; : &quot;&quot;)
+);
+
+#define EXS(x) { x##_VECTOR, &quot;#&quot; #x }
+
+#define kvm_trace_sym_exc						\
+	EXS(DE), EXS(DB), EXS(BP), EXS(OF), EXS(BR), EXS(UD), EXS(NM),	\
+	EXS(DF), EXS(TS), EXS(NP), EXS(SS), EXS(GP), EXS(PF),		\
+	EXS(MF), EXS(AC), EXS(MC)
+
+/*
+ * Tracepoint for kvm interrupt injection:
+ */
+<yellow>TRACE_EVENT(kvm_inj_exception,</yellow>
+	TP_PROTO(unsigned exception, bool has_error, unsigned error_code,
+		 bool reinjected),
+	TP_ARGS(exception, has_error, error_code, reinjected),
+
+	TP_STRUCT__entry(
+		__field(	u8,	exception	)
+		__field(	u8,	has_error	)
+		__field(	u32,	error_code	)
+		__field(	bool,	reinjected	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;exception	= exception;
+		__entry-&gt;has_error	= has_error;
+		__entry-&gt;error_code	= error_code;
+		__entry-&gt;reinjected	= reinjected;
+	),
+
+	TP_printk(&quot;%s%s%s%s%s&quot;,
+		  __print_symbolic(__entry-&gt;exception, kvm_trace_sym_exc),
+		  !__entry-&gt;has_error ? &quot;&quot; : &quot; (&quot;,
+		  !__entry-&gt;has_error ? &quot;&quot; : __print_symbolic(__entry-&gt;error_code, { }),
+		  !__entry-&gt;has_error ? &quot;&quot; : &quot;)&quot;,
+		  __entry-&gt;reinjected ? &quot; [reinjected]&quot; : &quot;&quot;)
+);
+
+/*
+ * Tracepoint for page fault.
+ */
+<blue>TRACE_EVENT(kvm_page_fault,</blue>
+	TP_PROTO(struct kvm_vcpu *vcpu, u64 fault_address, u64 error_code),
+	TP_ARGS(vcpu, fault_address, error_code),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id		)
+		__field(	unsigned long,	guest_rip	)
+		__field(	u64,		fault_address	)
+		__field(	u64,		error_code	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id	= vcpu-&gt;vcpu_id;
+		__entry-&gt;guest_rip	= kvm_rip_read(vcpu);
+		__entry-&gt;fault_address	= fault_address;
+		__entry-&gt;error_code	= error_code;
+	),
+
+	TP_printk(&quot;vcpu %u rip 0x%lx address 0x%016llx error_code 0x%llx&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;guest_rip,
+		  __entry-&gt;fault_address, __entry-&gt;error_code)
+);
+
+/*
+ * Tracepoint for guest MSR access.
+ */
+<blue>TRACE_EVENT(kvm_msr,</blue>
+	TP_PROTO(unsigned write, u32 ecx, u64 data, bool exception),
+	TP_ARGS(write, ecx, data, exception),
+
+	TP_STRUCT__entry(
+		__field(	unsigned,	write		)
+		__field(	u32,		ecx		)
+		__field(	u64,		data		)
+		__field(	u8,		exception	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;write		= write;
+		__entry-&gt;ecx		= ecx;
+		__entry-&gt;data		= data;
+		__entry-&gt;exception	= exception;
+	),
+
+	TP_printk(&quot;msr_%s %x = 0x%llx%s&quot;,
+		  __entry-&gt;write ? &quot;write&quot; : &quot;read&quot;,
+		  __entry-&gt;ecx, __entry-&gt;data,
+		  __entry-&gt;exception ? &quot; (#GP)&quot; : &quot;&quot;)
+);
+
+#define trace_kvm_msr_read(ecx, data)      trace_kvm_msr(0, ecx, data, false)
+#define trace_kvm_msr_write(ecx, data)     trace_kvm_msr(1, ecx, data, false)
+#define trace_kvm_msr_read_ex(ecx)         trace_kvm_msr(0, ecx, 0, true)
+#define trace_kvm_msr_write_ex(ecx, data)  trace_kvm_msr(1, ecx, data, true)
+
+/*
+ * Tracepoint for guest CR access.
+ */
+<blue>TRACE_EVENT(kvm_cr,</blue>
+	TP_PROTO(unsigned int rw, unsigned int cr, unsigned long val),
+	TP_ARGS(rw, cr, val),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	rw		)
+		__field(	unsigned int,	cr		)
+		__field(	unsigned long,	val		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rw		= rw;
+		__entry-&gt;cr		= cr;
+		__entry-&gt;val		= val;
+	),
+
+	TP_printk(&quot;cr_%s %x = 0x%lx&quot;,
+		  __entry-&gt;rw ? &quot;write&quot; : &quot;read&quot;,
+		  __entry-&gt;cr, __entry-&gt;val)
+);
+
+#define trace_kvm_cr_read(cr, val)		trace_kvm_cr(0, cr, val)
+#define trace_kvm_cr_write(cr, val)		trace_kvm_cr(1, cr, val)
+
+<yellow>TRACE_EVENT(kvm_pic_set_irq,</yellow>
+	    TP_PROTO(__u8 chip, __u8 pin, __u8 elcr, __u8 imr, bool coalesced),
+	    TP_ARGS(chip, pin, elcr, imr, coalesced),
+
+	TP_STRUCT__entry(
+		__field(	__u8,		chip		)
+		__field(	__u8,		pin		)
+		__field(	__u8,		elcr		)
+		__field(	__u8,		imr		)
+		__field(	bool,		coalesced	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;chip		= chip;
+		__entry-&gt;pin		= pin;
+		__entry-&gt;elcr		= elcr;
+		__entry-&gt;imr		= imr;
+		__entry-&gt;coalesced	= coalesced;
+	),
+
+	TP_printk(&quot;chip %u pin %u (%s%s)%s&quot;,
+		  __entry-&gt;chip, __entry-&gt;pin,
+		  (__entry-&gt;elcr &amp; (1 &lt;&lt; __entry-&gt;pin)) ? &quot;level&quot;:&quot;edge&quot;,
+		  (__entry-&gt;imr &amp; (1 &lt;&lt; __entry-&gt;pin)) ? &quot;|masked&quot;:&quot;&quot;,
+		  __entry-&gt;coalesced ? &quot; (coalesced)&quot; : &quot;&quot;)
+);
+
+#define kvm_apic_dst_shorthand		\
+	{0x0, &quot;dst&quot;},			\
+	{0x1, &quot;self&quot;},			\
+	{0x2, &quot;all&quot;},			\
+	{0x3, &quot;all-but-self&quot;}
+
+<yellow>TRACE_EVENT(kvm_apic_ipi,</yellow>
+	    TP_PROTO(__u32 icr_low, __u32 dest_id),
+	    TP_ARGS(icr_low, dest_id),
+
+	TP_STRUCT__entry(
+		__field(	__u32,		icr_low		)
+		__field(	__u32,		dest_id		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;icr_low	= icr_low;
+		__entry-&gt;dest_id	= dest_id;
+	),
+
+	TP_printk(&quot;dst %x vec %u (%s|%s|%s|%s|%s)&quot;,
+		  __entry-&gt;dest_id, (u8)__entry-&gt;icr_low,
+		  __print_symbolic((__entry-&gt;icr_low &gt;&gt; 8 &amp; 0x7),
+				   kvm_deliver_mode),
+		  (__entry-&gt;icr_low &amp; (1&lt;&lt;11)) ? &quot;logical&quot; : &quot;physical&quot;,
+		  (__entry-&gt;icr_low &amp; (1&lt;&lt;14)) ? &quot;assert&quot; : &quot;de-assert&quot;,
+		  (__entry-&gt;icr_low &amp; (1&lt;&lt;15)) ? &quot;level&quot; : &quot;edge&quot;,
+		  __print_symbolic((__entry-&gt;icr_low &gt;&gt; 18 &amp; 0x3),
+				   kvm_apic_dst_shorthand))
+);
+
+<yellow>TRACE_EVENT(kvm_apic_accept_irq,</yellow>
+	    TP_PROTO(__u32 apicid, __u16 dm, __u16 tm, __u8 vec),
+	    TP_ARGS(apicid, dm, tm, vec),
+
+	TP_STRUCT__entry(
+		__field(	__u32,		apicid		)
+		__field(	__u16,		dm		)
+		__field(	__u16,		tm		)
+		__field(	__u8,		vec		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;apicid		= apicid;
+		__entry-&gt;dm		= dm;
+		__entry-&gt;tm		= tm;
+		__entry-&gt;vec		= vec;
+	),
+
+	TP_printk(&quot;apicid %x vec %u (%s|%s)&quot;,
+		  __entry-&gt;apicid, __entry-&gt;vec,
+		  __print_symbolic((__entry-&gt;dm &gt;&gt; 8 &amp; 0x7), kvm_deliver_mode),
+		  __entry-&gt;tm ? &quot;level&quot; : &quot;edge&quot;)
+);
+
+<yellow>TRACE_EVENT(kvm_eoi,</yellow>
+	    TP_PROTO(struct kvm_lapic *apic, int vector),
+	    TP_ARGS(apic, vector),
+
+	TP_STRUCT__entry(
+		__field(	__u32,		apicid		)
+		__field(	int,		vector		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;apicid		= apic-&gt;vcpu-&gt;vcpu_id;
+		__entry-&gt;vector		= vector;
+	),
+
+	TP_printk(&quot;apicid %x vector %d&quot;, __entry-&gt;apicid, __entry-&gt;vector)
+);
+
+<yellow>TRACE_EVENT(kvm_pv_eoi,</yellow>
+	    TP_PROTO(struct kvm_lapic *apic, int vector),
+	    TP_ARGS(apic, vector),
+
+	TP_STRUCT__entry(
+		__field(	__u32,		apicid		)
+		__field(	int,		vector		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;apicid		= apic-&gt;vcpu-&gt;vcpu_id;
+		__entry-&gt;vector		= vector;
+	),
+
+	TP_printk(&quot;apicid %x vector %d&quot;, __entry-&gt;apicid, __entry-&gt;vector)
+);
+
+/*
+ * Tracepoint for nested VMRUN
+ */
+<yellow>TRACE_EVENT(kvm_nested_vmenter,</yellow>
+	    TP_PROTO(__u64 rip, __u64 vmcb, __u64 nested_rip, __u32 int_ctl,
+		     __u32 event_inj, bool tdp_enabled, __u64 guest_tdp_pgd,
+		     __u64 guest_cr3, __u32 isa),
+	    TP_ARGS(rip, vmcb, nested_rip, int_ctl, event_inj, tdp_enabled,
+		    guest_tdp_pgd, guest_cr3, isa),
+
+	TP_STRUCT__entry(
+		__field(	__u64,		rip		)
+		__field(	__u64,		vmcb		)
+		__field(	__u64,		nested_rip	)
+		__field(	__u32,		int_ctl		)
+		__field(	__u32,		event_inj	)
+		__field(	bool,		tdp_enabled	)
+		__field(	__u64,		guest_pgd	)
+		__field(	__u32,		isa		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rip		= rip;
+		__entry-&gt;vmcb		= vmcb;
+		__entry-&gt;nested_rip	= nested_rip;
+		__entry-&gt;int_ctl	= int_ctl;
+		__entry-&gt;event_inj	= event_inj;
+		__entry-&gt;tdp_enabled	= tdp_enabled;
+		__entry-&gt;guest_pgd	= tdp_enabled ? guest_tdp_pgd : guest_cr3;
+		__entry-&gt;isa		= isa;
+	),
+
+	TP_printk(&quot;rip: 0x%016llx %s: 0x%016llx nested_rip: 0x%016llx &quot;
+		  &quot;int_ctl: 0x%08x event_inj: 0x%08x nested_%s=%s %s: 0x%016llx&quot;,
+		  __entry-&gt;rip,
+		  __entry-&gt;isa == KVM_ISA_VMX ? &quot;vmcs&quot; : &quot;vmcb&quot;,
+		  __entry-&gt;vmcb,
+		  __entry-&gt;nested_rip,
+		  __entry-&gt;int_ctl,
+		  __entry-&gt;event_inj,
+		  __entry-&gt;isa == KVM_ISA_VMX ? &quot;ept&quot; : &quot;npt&quot;,
+		  __entry-&gt;tdp_enabled ? &quot;y&quot; : &quot;n&quot;,
+		  !__entry-&gt;tdp_enabled ? &quot;guest_cr3&quot; :
+		  __entry-&gt;isa == KVM_ISA_VMX ? &quot;nested_eptp&quot; : &quot;nested_cr3&quot;,
+		  __entry-&gt;guest_pgd)
+);
+
+TRACE_EVENT(kvm_nested_intercepts,
+	    TP_PROTO(__u16 cr_read, __u16 cr_write, __u32 exceptions,
+		     __u32 intercept1, __u32 intercept2, __u32 intercept3),
+	    TP_ARGS(cr_read, cr_write, exceptions, intercept1,
+		    intercept2, intercept3),
+
+	TP_STRUCT__entry(
+		__field(	__u16,		cr_read		)
+		__field(	__u16,		cr_write	)
+		__field(	__u32,		exceptions	)
+		__field(	__u32,		intercept1	)
+		__field(	__u32,		intercept2	)
+		__field(	__u32,		intercept3	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;cr_read	= cr_read;
+		__entry-&gt;cr_write	= cr_write;
+		__entry-&gt;exceptions	= exceptions;
+		__entry-&gt;intercept1	= intercept1;
+		__entry-&gt;intercept2	= intercept2;
+		__entry-&gt;intercept3	= intercept3;
+	),
+
+	TP_printk(&quot;cr_read: %04x cr_write: %04x excp: %08x &quot;
+		  &quot;intercepts: %08x %08x %08x&quot;,
+		  __entry-&gt;cr_read, __entry-&gt;cr_write, __entry-&gt;exceptions,
+		  __entry-&gt;intercept1, __entry-&gt;intercept2, __entry-&gt;intercept3)
+);
+/*
+ * Tracepoint for #VMEXIT while nested
+ */
+<blue>TRACE_EVENT_KVM_EXIT(kvm_nested_vmexit);</blue>
+
+/*
+ * Tracepoint for #VMEXIT reinjected to the guest
+ */
+<yellow>TRACE_EVENT(kvm_nested_vmexit_inject,</yellow>
+	    TP_PROTO(__u32 exit_code,
+		     __u64 exit_info1, __u64 exit_info2,
+		     __u32 exit_int_info, __u32 exit_int_info_err, __u32 isa),
+	    TP_ARGS(exit_code, exit_info1, exit_info2,
+		    exit_int_info, exit_int_info_err, isa),
+
+	TP_STRUCT__entry(
+		__field(	__u32,		exit_code		)
+		__field(	__u64,		exit_info1		)
+		__field(	__u64,		exit_info2		)
+		__field(	__u32,		exit_int_info		)
+		__field(	__u32,		exit_int_info_err	)
+		__field(	__u32,		isa			)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;exit_code		= exit_code;
+		__entry-&gt;exit_info1		= exit_info1;
+		__entry-&gt;exit_info2		= exit_info2;
+		__entry-&gt;exit_int_info		= exit_int_info;
+		__entry-&gt;exit_int_info_err	= exit_int_info_err;
+		__entry-&gt;isa			= isa;
+	),
+
+	TP_printk(&quot;reason: %s%s%s ext_inf1: 0x%016llx &quot;
+		  &quot;ext_inf2: 0x%016llx ext_int: 0x%08x ext_int_err: 0x%08x&quot;,
+		  kvm_print_exit_reason(__entry-&gt;exit_code, __entry-&gt;isa),
+		  __entry-&gt;exit_info1, __entry-&gt;exit_info2,
+		  __entry-&gt;exit_int_info, __entry-&gt;exit_int_info_err)
+);
+
+/*
+ * Tracepoint for nested #vmexit because of interrupt pending
+ */
+TRACE_EVENT(kvm_nested_intr_vmexit,
+	    TP_PROTO(__u64 rip),
+	    TP_ARGS(rip),
+
+	TP_STRUCT__entry(
+		__field(	__u64,	rip	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rip	=	rip
+	),
+
+	TP_printk(&quot;rip: 0x%016llx&quot;, __entry-&gt;rip)
+);
+
+/*
+ * Tracepoint for nested #vmexit because of interrupt pending
+ */
+TRACE_EVENT(kvm_invlpga,
+	    TP_PROTO(__u64 rip, int asid, u64 address),
+	    TP_ARGS(rip, asid, address),
+
+	TP_STRUCT__entry(
+		__field(	__u64,	rip	)
+		__field(	int,	asid	)
+		__field(	__u64,	address	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rip		=	rip;
+		__entry-&gt;asid		=	asid;
+		__entry-&gt;address	=	address;
+	),
+
+	TP_printk(&quot;rip: 0x%016llx asid: %d address: 0x%016llx&quot;,
+		  __entry-&gt;rip, __entry-&gt;asid, __entry-&gt;address)
+);
+
+/*
+ * Tracepoint for nested #vmexit because of interrupt pending
+ */
+TRACE_EVENT(kvm_skinit,
+	    TP_PROTO(__u64 rip, __u32 slb),
+	    TP_ARGS(rip, slb),
+
+	TP_STRUCT__entry(
+		__field(	__u64,	rip	)
+		__field(	__u32,	slb	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;rip		=	rip;
+		__entry-&gt;slb		=	slb;
+	),
+
+	TP_printk(&quot;rip: 0x%016llx slb: 0x%08x&quot;,
+		  __entry-&gt;rip, __entry-&gt;slb)
+);
+
+#define KVM_EMUL_INSN_F_CR0_PE (1 &lt;&lt; 0)
+#define KVM_EMUL_INSN_F_EFL_VM (1 &lt;&lt; 1)
+#define KVM_EMUL_INSN_F_CS_D   (1 &lt;&lt; 2)
+#define KVM_EMUL_INSN_F_CS_L   (1 &lt;&lt; 3)
+
+#define kvm_trace_symbol_emul_flags	                  \
+	{ 0,   			    &quot;real&quot; },		  \
+	{ KVM_EMUL_INSN_F_CR0_PE			  \
+	  | KVM_EMUL_INSN_F_EFL_VM, &quot;vm16&quot; },		  \
+	{ KVM_EMUL_INSN_F_CR0_PE,   &quot;prot16&quot; },		  \
+	{ KVM_EMUL_INSN_F_CR0_PE			  \
+	  | KVM_EMUL_INSN_F_CS_D,   &quot;prot32&quot; },		  \
+	{ KVM_EMUL_INSN_F_CR0_PE			  \
+	  | KVM_EMUL_INSN_F_CS_L,   &quot;prot64&quot; }
+
+#define kei_decode_mode(mode) ({			\
+	u8 flags = 0xff;				\
+	switch (mode) {					\
+	case X86EMUL_MODE_REAL:				\
+		flags = 0;				\
+		break;					\
+	case X86EMUL_MODE_VM86:				\
+		flags = KVM_EMUL_INSN_F_EFL_VM;		\
+		break;					\
+	case X86EMUL_MODE_PROT16:			\
+		flags = KVM_EMUL_INSN_F_CR0_PE;		\
+		break;					\
+	case X86EMUL_MODE_PROT32:			\
+		flags = KVM_EMUL_INSN_F_CR0_PE		\
+			| KVM_EMUL_INSN_F_CS_D;		\
+		break;					\
+	case X86EMUL_MODE_PROT64:			\
+		flags = KVM_EMUL_INSN_F_CR0_PE		\
+			| KVM_EMUL_INSN_F_CS_L;		\
+		break;					\
+	}						\
+	flags;						\
+	})
+
+<yellow>TRACE_EVENT(kvm_emulate_insn,</yellow>
+	TP_PROTO(struct kvm_vcpu *vcpu, __u8 failed),
+	TP_ARGS(vcpu, failed),
+
+	TP_STRUCT__entry(
+		__field(    __u64, rip                       )
+		__field(    __u32, csbase                    )
+		__field(    __u8,  len                       )
+		__array(    __u8,  insn,    15	             )
+		__field(    __u8,  flags       	   	     )
+		__field(    __u8,  failed                    )
+		),
+
+	TP_fast_assign(
+		__entry-&gt;csbase = static_call(kvm_x86_get_segment_base)(vcpu, VCPU_SREG_CS);
+		__entry-&gt;len = vcpu-&gt;arch.emulate_ctxt-&gt;fetch.ptr
+			       - vcpu-&gt;arch.emulate_ctxt-&gt;fetch.data;
+		__entry-&gt;rip = vcpu-&gt;arch.emulate_ctxt-&gt;_eip - __entry-&gt;len;
+		memcpy(__entry-&gt;insn,
+		       vcpu-&gt;arch.emulate_ctxt-&gt;fetch.data,
+		       15);
+		__entry-&gt;flags = kei_decode_mode(vcpu-&gt;arch.emulate_ctxt-&gt;mode);
+		__entry-&gt;failed = failed;
+		),
+
+	TP_printk(&quot;%x:%llx:%s (%s)%s&quot;,
+		  __entry-&gt;csbase, __entry-&gt;rip,
+		  __print_hex(__entry-&gt;insn, __entry-&gt;len),
+		  __print_symbolic(__entry-&gt;flags,
+				   kvm_trace_symbol_emul_flags),
+		  __entry-&gt;failed ? &quot; failed&quot; : &quot;&quot;
+		)
+	);
+
+#define trace_kvm_emulate_insn_start(vcpu) trace_kvm_emulate_insn(vcpu, 0)
+#define trace_kvm_emulate_insn_failed(vcpu) trace_kvm_emulate_insn(vcpu, 1)
+
+<blue>TRACE_EVENT(</blue>
+	vcpu_match_mmio,
+	TP_PROTO(gva_t gva, gpa_t gpa, bool write, bool gpa_match),
+	TP_ARGS(gva, gpa, write, gpa_match),
+
+	TP_STRUCT__entry(
+		__field(gva_t, gva)
+		__field(gpa_t, gpa)
+		__field(bool, write)
+		__field(bool, gpa_match)
+		),
+
+	TP_fast_assign(
+		__entry-&gt;gva = gva;
+		__entry-&gt;gpa = gpa;
+		__entry-&gt;write = write;
+		__entry-&gt;gpa_match = gpa_match
+		),
+
+	TP_printk(&quot;gva %#lx gpa %#llx %s %s&quot;, __entry-&gt;gva, __entry-&gt;gpa,
+		  __entry-&gt;write ? &quot;Write&quot; : &quot;Read&quot;,
+		  __entry-&gt;gpa_match ? &quot;GPA&quot; : &quot;GVA&quot;)
+);
+
+<yellow>TRACE_EVENT(kvm_write_tsc_offset,</yellow>
+	TP_PROTO(unsigned int vcpu_id, __u64 previous_tsc_offset,
+		 __u64 next_tsc_offset),
+	TP_ARGS(vcpu_id, previous_tsc_offset, next_tsc_offset),
+
+	TP_STRUCT__entry(
+		__field( unsigned int,	vcpu_id				)
+		__field(	__u64,	previous_tsc_offset		)
+		__field(	__u64,	next_tsc_offset			)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id		= vcpu_id;
+		__entry-&gt;previous_tsc_offset	= previous_tsc_offset;
+		__entry-&gt;next_tsc_offset	= next_tsc_offset;
+	),
+
+	TP_printk(&quot;vcpu=%u prev=%llu next=%llu&quot;, __entry-&gt;vcpu_id,
+		  __entry-&gt;previous_tsc_offset, __entry-&gt;next_tsc_offset)
+);
+
+#ifdef CONFIG_X86_64
+
+#define host_clocks					\
+	{VDSO_CLOCKMODE_NONE, &quot;none&quot;},			\
+	{VDSO_CLOCKMODE_TSC,  &quot;tsc&quot;}			\
+
+<blue>TRACE_EVENT(kvm_update_master_clock,</blue>
+	TP_PROTO(bool use_master_clock, unsigned int host_clock, bool offset_matched),
+	TP_ARGS(use_master_clock, host_clock, offset_matched),
+
+	TP_STRUCT__entry(
+		__field(		bool,	use_master_clock	)
+		__field(	unsigned int,	host_clock		)
+		__field(		bool,	offset_matched		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;use_master_clock	= use_master_clock;
+		__entry-&gt;host_clock		= host_clock;
+		__entry-&gt;offset_matched		= offset_matched;
+	),
+
+	TP_printk(&quot;masterclock %d hostclock %s offsetmatched %u&quot;,
+		  __entry-&gt;use_master_clock,
+		  __print_symbolic(__entry-&gt;host_clock, host_clocks),
+		  __entry-&gt;offset_matched)
+);
+
+<yellow>TRACE_EVENT(kvm_track_tsc,</yellow>
+	TP_PROTO(unsigned int vcpu_id, unsigned int nr_matched,
+		 unsigned int online_vcpus, bool use_master_clock,
+		 unsigned int host_clock),
+	TP_ARGS(vcpu_id, nr_matched, online_vcpus, use_master_clock,
+		host_clock),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id			)
+		__field(	unsigned int,	nr_vcpus_matched_tsc	)
+		__field(	unsigned int,	online_vcpus		)
+		__field(	bool,		use_master_clock	)
+		__field(	unsigned int,	host_clock		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id		= vcpu_id;
+		__entry-&gt;nr_vcpus_matched_tsc	= nr_matched;
+		__entry-&gt;online_vcpus		= online_vcpus;
+		__entry-&gt;use_master_clock	= use_master_clock;
+		__entry-&gt;host_clock		= host_clock;
+	),
+
+	TP_printk(&quot;vcpu_id %u masterclock %u offsetmatched %u nr_online %u&quot;
+		  &quot; hostclock %s&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;use_master_clock,
+		  __entry-&gt;nr_vcpus_matched_tsc, __entry-&gt;online_vcpus,
+		  __print_symbolic(__entry-&gt;host_clock, host_clocks))
+);
+
+#endif /* CONFIG_X86_64 */
+
+/*
+ * Tracepoint for PML full VMEXIT.
+ */
+<yellow>TRACE_EVENT(kvm_pml_full,</yellow>
+	TP_PROTO(unsigned int vcpu_id),
+	TP_ARGS(vcpu_id),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id			)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id		= vcpu_id;
+	),
+
+	TP_printk(&quot;vcpu %d: PML full&quot;, __entry-&gt;vcpu_id)
+);
+
+<yellow>TRACE_EVENT(kvm_ple_window_update,</yellow>
+	TP_PROTO(unsigned int vcpu_id, unsigned int new, unsigned int old),
+	TP_ARGS(vcpu_id, new, old),
+
+	TP_STRUCT__entry(
+		__field(        unsigned int,   vcpu_id         )
+		__field(        unsigned int,       new         )
+		__field(        unsigned int,       old         )
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id        = vcpu_id;
+		__entry-&gt;new            = new;
+		__entry-&gt;old            = old;
+	),
+
+	TP_printk(&quot;vcpu %u old %u new %u (%s)&quot;,
+	          __entry-&gt;vcpu_id, __entry-&gt;old, __entry-&gt;new,
+		  __entry-&gt;old &lt; __entry-&gt;new ? &quot;growed&quot; : &quot;shrinked&quot;)
+);
+
+<yellow>TRACE_EVENT(kvm_pvclock_update,</yellow>
+	TP_PROTO(unsigned int vcpu_id, struct pvclock_vcpu_time_info *pvclock),
+	TP_ARGS(vcpu_id, pvclock),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id			)
+		__field(	__u32,		version			)
+		__field(	__u64,		tsc_timestamp		)
+		__field(	__u64,		system_time		)
+		__field(	__u32,		tsc_to_system_mul	)
+		__field(	__s8,		tsc_shift		)
+		__field(	__u8,		flags			)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id	   = vcpu_id;
+		__entry-&gt;version	   = pvclock-&gt;version;
+		__entry-&gt;tsc_timestamp	   = pvclock-&gt;tsc_timestamp;
+		__entry-&gt;system_time	   = pvclock-&gt;system_time;
+		__entry-&gt;tsc_to_system_mul = pvclock-&gt;tsc_to_system_mul;
+		__entry-&gt;tsc_shift	   = pvclock-&gt;tsc_shift;
+		__entry-&gt;flags		   = pvclock-&gt;flags;
+	),
+
+	TP_printk(&quot;vcpu_id %u, pvclock { version %u, tsc_timestamp 0x%llx, &quot;
+		  &quot;system_time 0x%llx, tsc_to_system_mul 0x%x, tsc_shift %d, &quot;
+		  &quot;flags 0x%x }&quot;,
+		  __entry-&gt;vcpu_id,
+		  __entry-&gt;version,
+		  __entry-&gt;tsc_timestamp,
+		  __entry-&gt;system_time,
+		  __entry-&gt;tsc_to_system_mul,
+		  __entry-&gt;tsc_shift,
+		  __entry-&gt;flags)
+);
+
+<yellow>TRACE_EVENT(kvm_wait_lapic_expire,</yellow>
+	TP_PROTO(unsigned int vcpu_id, s64 delta),
+	TP_ARGS(vcpu_id, delta),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id		)
+		__field(	s64,		delta		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id	   = vcpu_id;
+		__entry-&gt;delta             = delta;
+	),
+
+	TP_printk(&quot;vcpu %u: delta %lld (%s)&quot;,
+		  __entry-&gt;vcpu_id,
+		  __entry-&gt;delta,
+		  __entry-&gt;delta &lt; 0 ? &quot;early&quot; : &quot;late&quot;)
+);
+
+<yellow>TRACE_EVENT(kvm_smm_transition,</yellow>
+	TP_PROTO(unsigned int vcpu_id, u64 smbase, bool entering),
+	TP_ARGS(vcpu_id, smbase, entering),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id		)
+		__field(	u64,		smbase		)
+		__field(	bool,		entering	)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id	= vcpu_id;
+		__entry-&gt;smbase		= smbase;
+		__entry-&gt;entering	= entering;
+	),
+
+	TP_printk(&quot;vcpu %u: %s SMM, smbase 0x%llx&quot;,
+		  __entry-&gt;vcpu_id,
+		  __entry-&gt;entering ? &quot;entering&quot; : &quot;leaving&quot;,
+		  __entry-&gt;smbase)
+);
+
+/*
+ * Tracepoint for VT-d posted-interrupts.
+ */
+<yellow>TRACE_EVENT(kvm_pi_irte_update,</yellow>
+	TP_PROTO(unsigned int host_irq, unsigned int vcpu_id,
+		 unsigned int gsi, unsigned int gvec,
+		 u64 pi_desc_addr, bool set),
+	TP_ARGS(host_irq, vcpu_id, gsi, gvec, pi_desc_addr, set),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	host_irq	)
+		__field(	unsigned int,	vcpu_id		)
+		__field(	unsigned int,	gsi		)
+		__field(	unsigned int,	gvec		)
+		__field(	u64,		pi_desc_addr	)
+		__field(	bool,		set		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;host_irq	= host_irq;
+		__entry-&gt;vcpu_id	= vcpu_id;
+		__entry-&gt;gsi		= gsi;
+		__entry-&gt;gvec		= gvec;
+		__entry-&gt;pi_desc_addr	= pi_desc_addr;
+		__entry-&gt;set		= set;
+	),
+
+	TP_printk(&quot;VT-d PI is %s for irq %u, vcpu %u, gsi: 0x%x, &quot;
+		  &quot;gvec: 0x%x, pi_desc_addr: 0x%llx&quot;,
+		  __entry-&gt;set ? &quot;enabled and being updated&quot; : &quot;disabled&quot;,
+		  __entry-&gt;host_irq,
+		  __entry-&gt;vcpu_id,
+		  __entry-&gt;gsi,
+		  __entry-&gt;gvec,
+		  __entry-&gt;pi_desc_addr)
+);
+
+/*
+ * Tracepoint for kvm_hv_notify_acked_sint.
+ */
+<yellow>TRACE_EVENT(kvm_hv_notify_acked_sint,</yellow>
+	TP_PROTO(int vcpu_id, u32 sint),
+	TP_ARGS(vcpu_id, sint),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(u32, sint)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;sint = sint;
+	),
+
+	TP_printk(&quot;vcpu_id %d sint %u&quot;, __entry-&gt;vcpu_id, __entry-&gt;sint)
+);
+
+/*
+ * Tracepoint for synic_set_irq.
+ */
+<yellow>TRACE_EVENT(kvm_hv_synic_set_irq,</yellow>
+	TP_PROTO(int vcpu_id, u32 sint, int vector, int ret),
+	TP_ARGS(vcpu_id, sint, vector, ret),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(u32, sint)
+		__field(int, vector)
+		__field(int, ret)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;sint = sint;
+		__entry-&gt;vector = vector;
+		__entry-&gt;ret = ret;
+	),
+
+	TP_printk(&quot;vcpu_id %d sint %u vector %d ret %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;sint, __entry-&gt;vector,
+		  __entry-&gt;ret)
+);
+
+/*
+ * Tracepoint for kvm_hv_synic_send_eoi.
+ */
+<yellow>TRACE_EVENT(kvm_hv_synic_send_eoi,</yellow>
+	TP_PROTO(int vcpu_id, int vector),
+	TP_ARGS(vcpu_id, vector),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(u32, sint)
+		__field(int, vector)
+		__field(int, ret)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;vector	= vector;
+	),
+
+	TP_printk(&quot;vcpu_id %d vector %d&quot;, __entry-&gt;vcpu_id, __entry-&gt;vector)
+);
+
+/*
+ * Tracepoint for synic_set_msr.
+ */
+<yellow>TRACE_EVENT(kvm_hv_synic_set_msr,</yellow>
+	TP_PROTO(int vcpu_id, u32 msr, u64 data, bool host),
+	TP_ARGS(vcpu_id, msr, data, host),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(u32, msr)
+		__field(u64, data)
+		__field(bool, host)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;msr = msr;
+		__entry-&gt;data = data;
+		__entry-&gt;host = host
+	),
+
+	TP_printk(&quot;vcpu_id %d msr 0x%x data 0x%llx host %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;msr, __entry-&gt;data, __entry-&gt;host)
+);
+
+/*
+ * Tracepoint for stimer_set_config.
+ */
+<yellow>TRACE_EVENT(kvm_hv_stimer_set_config,</yellow>
+	TP_PROTO(int vcpu_id, int timer_index, u64 config, bool host),
+	TP_ARGS(vcpu_id, timer_index, config, host),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(int, timer_index)
+		__field(u64, config)
+		__field(bool, host)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;timer_index = timer_index;
+		__entry-&gt;config = config;
+		__entry-&gt;host = host;
+	),
+
+	TP_printk(&quot;vcpu_id %d timer %d config 0x%llx host %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;timer_index, __entry-&gt;config,
+		  __entry-&gt;host)
+);
+
+/*
+ * Tracepoint for stimer_set_count.
+ */
+<yellow>TRACE_EVENT(kvm_hv_stimer_set_count,</yellow>
+	TP_PROTO(int vcpu_id, int timer_index, u64 count, bool host),
+	TP_ARGS(vcpu_id, timer_index, count, host),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(int, timer_index)
+		__field(u64, count)
+		__field(bool, host)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;timer_index = timer_index;
+		__entry-&gt;count = count;
+		__entry-&gt;host = host;
+	),
+
+	TP_printk(&quot;vcpu_id %d timer %d count %llu host %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;timer_index, __entry-&gt;count,
+		  __entry-&gt;host)
+);
+
+/*
+ * Tracepoint for stimer_start(periodic timer case).
+ */
+<yellow>TRACE_EVENT(kvm_hv_stimer_start_periodic,</yellow>
+	TP_PROTO(int vcpu_id, int timer_index, u64 time_now, u64 exp_time),
+	TP_ARGS(vcpu_id, timer_index, time_now, exp_time),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(int, timer_index)
+		__field(u64, time_now)
+		__field(u64, exp_time)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;timer_index = timer_index;
+		__entry-&gt;time_now = time_now;
+		__entry-&gt;exp_time = exp_time;
+	),
+
+	TP_printk(&quot;vcpu_id %d timer %d time_now %llu exp_time %llu&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;timer_index, __entry-&gt;time_now,
+		  __entry-&gt;exp_time)
+);
+
+/*
+ * Tracepoint for stimer_start(one-shot timer case).
+ */
+<yellow>TRACE_EVENT(kvm_hv_stimer_start_one_shot,</yellow>
+	TP_PROTO(int vcpu_id, int timer_index, u64 time_now, u64 count),
+	TP_ARGS(vcpu_id, timer_index, time_now, count),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(int, timer_index)
+		__field(u64, time_now)
+		__field(u64, count)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;timer_index = timer_index;
+		__entry-&gt;time_now = time_now;
+		__entry-&gt;count = count;
+	),
+
+	TP_printk(&quot;vcpu_id %d timer %d time_now %llu count %llu&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;timer_index, __entry-&gt;time_now,
+		  __entry-&gt;count)
+);
+
+/*
+ * Tracepoint for stimer_timer_callback.
+ */
+<yellow>TRACE_EVENT(kvm_hv_stimer_callback,</yellow>
+	TP_PROTO(int vcpu_id, int timer_index),
+	TP_ARGS(vcpu_id, timer_index),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(int, timer_index)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;timer_index = timer_index;
+	),
+
+	TP_printk(&quot;vcpu_id %d timer %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;timer_index)
+);
+
+/*
+ * Tracepoint for stimer_expiration.
+ */
+<yellow>TRACE_EVENT(kvm_hv_stimer_expiration,</yellow>
+	TP_PROTO(int vcpu_id, int timer_index, int direct, int msg_send_result),
+	TP_ARGS(vcpu_id, timer_index, direct, msg_send_result),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(int, timer_index)
+		__field(int, direct)
+		__field(int, msg_send_result)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;timer_index = timer_index;
+		__entry-&gt;direct = direct;
+		__entry-&gt;msg_send_result = msg_send_result;
+	),
+
+	TP_printk(&quot;vcpu_id %d timer %d direct %d send result %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;timer_index,
+		  __entry-&gt;direct, __entry-&gt;msg_send_result)
+);
+
+/*
+ * Tracepoint for stimer_cleanup.
+ */
+<yellow>TRACE_EVENT(kvm_hv_stimer_cleanup,</yellow>
+	TP_PROTO(int vcpu_id, int timer_index),
+	TP_ARGS(vcpu_id, timer_index),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(int, timer_index)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;timer_index = timer_index;
+	),
+
+	TP_printk(&quot;vcpu_id %d timer %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;timer_index)
+);
+
+<yellow>TRACE_EVENT(kvm_apicv_inhibit_changed,</yellow>
+	    TP_PROTO(int reason, bool set, unsigned long inhibits),
+	    TP_ARGS(reason, set, inhibits),
+
+	TP_STRUCT__entry(
+		__field(int, reason)
+		__field(bool, set)
+		__field(unsigned long, inhibits)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;reason = reason;
+		__entry-&gt;set = set;
+		__entry-&gt;inhibits = inhibits;
+	),
+
+	TP_printk(&quot;%s reason=%u, inhibits=0x%lx&quot;,
+		  __entry-&gt;set ? &quot;set&quot; : &quot;cleared&quot;,
+		  __entry-&gt;reason, __entry-&gt;inhibits)
+);
+
+<yellow>TRACE_EVENT(kvm_apicv_accept_irq,</yellow>
+	    TP_PROTO(__u32 apicid, __u16 dm, __u16 tm, __u8 vec),
+	    TP_ARGS(apicid, dm, tm, vec),
+
+	TP_STRUCT__entry(
+		__field(	__u32,		apicid		)
+		__field(	__u16,		dm		)
+		__field(	__u16,		tm		)
+		__field(	__u8,		vec		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;apicid		= apicid;
+		__entry-&gt;dm		= dm;
+		__entry-&gt;tm		= tm;
+		__entry-&gt;vec		= vec;
+	),
+
+	TP_printk(&quot;apicid %x vec %u (%s|%s)&quot;,
+		  __entry-&gt;apicid, __entry-&gt;vec,
+		  __print_symbolic((__entry-&gt;dm &gt;&gt; 8 &amp; 0x7), kvm_deliver_mode),
+		  __entry-&gt;tm ? &quot;level&quot; : &quot;edge&quot;)
+);
+
+/*
+ * Tracepoint for AMD AVIC
+ */
+TRACE_EVENT(kvm_avic_incomplete_ipi,
+	    TP_PROTO(u32 vcpu, u32 icrh, u32 icrl, u32 id, u32 index),
+	    TP_ARGS(vcpu, icrh, icrl, id, index),
+
+	TP_STRUCT__entry(
+		__field(u32, vcpu)
+		__field(u32, icrh)
+		__field(u32, icrl)
+		__field(u32, id)
+		__field(u32, index)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu = vcpu;
+		__entry-&gt;icrh = icrh;
+		__entry-&gt;icrl = icrl;
+		__entry-&gt;id = id;
+		__entry-&gt;index = index;
+	),
+
+	TP_printk(&quot;vcpu=%u, icrh:icrl=%#010x:%08x, id=%u, index=%u&quot;,
+		  __entry-&gt;vcpu, __entry-&gt;icrh, __entry-&gt;icrl,
+		  __entry-&gt;id, __entry-&gt;index)
+);
+
+TRACE_EVENT(kvm_avic_unaccelerated_access,
+	    TP_PROTO(u32 vcpu, u32 offset, bool ft, bool rw, u32 vec),
+	    TP_ARGS(vcpu, offset, ft, rw, vec),
+
+	TP_STRUCT__entry(
+		__field(u32, vcpu)
+		__field(u32, offset)
+		__field(bool, ft)
+		__field(bool, rw)
+		__field(u32, vec)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu = vcpu;
+		__entry-&gt;offset = offset;
+		__entry-&gt;ft = ft;
+		__entry-&gt;rw = rw;
+		__entry-&gt;vec = vec;
+	),
+
+	TP_printk(&quot;vcpu=%u, offset=%#x(%s), %s, %s, vec=%#x&quot;,
+		  __entry-&gt;vcpu,
+		  __entry-&gt;offset,
+		  __print_symbolic(__entry-&gt;offset, kvm_trace_symbol_apic),
+		  __entry-&gt;ft ? &quot;trap&quot; : &quot;fault&quot;,
+		  __entry-&gt;rw ? &quot;write&quot; : &quot;read&quot;,
+		  __entry-&gt;vec)
+);
+
+TRACE_EVENT(kvm_avic_ga_log,
+	    TP_PROTO(u32 vmid, u32 vcpuid),
+	    TP_ARGS(vmid, vcpuid),
+
+	TP_STRUCT__entry(
+		__field(u32, vmid)
+		__field(u32, vcpuid)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vmid = vmid;
+		__entry-&gt;vcpuid = vcpuid;
+	),
+
+	TP_printk(&quot;vmid=%u, vcpuid=%u&quot;,
+		  __entry-&gt;vmid, __entry-&gt;vcpuid)
+);
+
+TRACE_EVENT(kvm_avic_kick_vcpu_slowpath,
+	    TP_PROTO(u32 icrh, u32 icrl, u32 index),
+	    TP_ARGS(icrh, icrl, index),
+
+	TP_STRUCT__entry(
+		__field(u32, icrh)
+		__field(u32, icrl)
+		__field(u32, index)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;icrh = icrh;
+		__entry-&gt;icrl = icrl;
+		__entry-&gt;index = index;
+	),
+
+	TP_printk(&quot;icrh:icrl=%#08x:%08x, index=%u&quot;,
+		  __entry-&gt;icrh, __entry-&gt;icrl, __entry-&gt;index)
+);
+
+TRACE_EVENT(kvm_avic_doorbell,
+	    TP_PROTO(u32 vcpuid, u32 apicid),
+	    TP_ARGS(vcpuid, apicid),
+
+	TP_STRUCT__entry(
+		__field(u32, vcpuid)
+		__field(u32, apicid)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpuid = vcpuid;
+		__entry-&gt;apicid = apicid;
+	),
+
+	TP_printk(&quot;vcpuid=%u, apicid=%u&quot;,
+		  __entry-&gt;vcpuid, __entry-&gt;apicid)
+);
+
+<yellow>TRACE_EVENT(kvm_hv_timer_state,</yellow>
+		TP_PROTO(unsigned int vcpu_id, unsigned int hv_timer_in_use),
+		TP_ARGS(vcpu_id, hv_timer_in_use),
+		TP_STRUCT__entry(
+			__field(unsigned int, vcpu_id)
+			__field(unsigned int, hv_timer_in_use)
+			),
+		TP_fast_assign(
+			__entry-&gt;vcpu_id = vcpu_id;
+			__entry-&gt;hv_timer_in_use = hv_timer_in_use;
+			),
+		TP_printk(&quot;vcpu_id %x hv_timer %x&quot;,
+			__entry-&gt;vcpu_id,
+			__entry-&gt;hv_timer_in_use)
+);
+
+/*
+ * Tracepoint for kvm_hv_flush_tlb.
+ */
+<yellow>TRACE_EVENT(kvm_hv_flush_tlb,</yellow>
+	TP_PROTO(u64 processor_mask, u64 address_space, u64 flags),
+	TP_ARGS(processor_mask, address_space, flags),
+
+	TP_STRUCT__entry(
+		__field(u64, processor_mask)
+		__field(u64, address_space)
+		__field(u64, flags)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;processor_mask = processor_mask;
+		__entry-&gt;address_space = address_space;
+		__entry-&gt;flags = flags;
+	),
+
+	TP_printk(&quot;processor_mask 0x%llx address_space 0x%llx flags 0x%llx&quot;,
+		  __entry-&gt;processor_mask, __entry-&gt;address_space,
+		  __entry-&gt;flags)
+);
+
+/*
+ * Tracepoint for kvm_hv_flush_tlb_ex.
+ */
+<yellow>TRACE_EVENT(kvm_hv_flush_tlb_ex,</yellow>
+	TP_PROTO(u64 valid_bank_mask, u64 format, u64 address_space, u64 flags),
+	TP_ARGS(valid_bank_mask, format, address_space, flags),
+
+	TP_STRUCT__entry(
+		__field(u64, valid_bank_mask)
+		__field(u64, format)
+		__field(u64, address_space)
+		__field(u64, flags)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;valid_bank_mask = valid_bank_mask;
+		__entry-&gt;format = format;
+		__entry-&gt;address_space = address_space;
+		__entry-&gt;flags = flags;
+	),
+
+	TP_printk(&quot;valid_bank_mask 0x%llx format 0x%llx &quot;
+		  &quot;address_space 0x%llx flags 0x%llx&quot;,
+		  __entry-&gt;valid_bank_mask, __entry-&gt;format,
+		  __entry-&gt;address_space, __entry-&gt;flags)
+);
+
+/*
+ * Tracepoints for kvm_hv_send_ipi.
+ */
+<yellow>TRACE_EVENT(kvm_hv_send_ipi,</yellow>
+	TP_PROTO(u32 vector, u64 processor_mask),
+	TP_ARGS(vector, processor_mask),
+
+	TP_STRUCT__entry(
+		__field(u32, vector)
+		__field(u64, processor_mask)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vector = vector;
+		__entry-&gt;processor_mask = processor_mask;
+	),
+
+	TP_printk(&quot;vector %x processor_mask 0x%llx&quot;,
+		  __entry-&gt;vector, __entry-&gt;processor_mask)
+);
+
+<yellow>TRACE_EVENT(kvm_hv_send_ipi_ex,</yellow>
+	TP_PROTO(u32 vector, u64 format, u64 valid_bank_mask),
+	TP_ARGS(vector, format, valid_bank_mask),
+
+	TP_STRUCT__entry(
+		__field(u32, vector)
+		__field(u64, format)
+		__field(u64, valid_bank_mask)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vector = vector;
+		__entry-&gt;format = format;
+		__entry-&gt;valid_bank_mask = valid_bank_mask;
+	),
+
+	TP_printk(&quot;vector %x format %llx valid_bank_mask 0x%llx&quot;,
+		  __entry-&gt;vector, __entry-&gt;format,
+		  __entry-&gt;valid_bank_mask)
+);
+
+<yellow>TRACE_EVENT(kvm_pv_tlb_flush,</yellow>
+	TP_PROTO(unsigned int vcpu_id, bool need_flush_tlb),
+	TP_ARGS(vcpu_id, need_flush_tlb),
+
+	TP_STRUCT__entry(
+		__field(	unsigned int,	vcpu_id		)
+		__field(	bool,	need_flush_tlb		)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id	= vcpu_id;
+		__entry-&gt;need_flush_tlb = need_flush_tlb;
+	),
+
+	TP_printk(&quot;vcpu %u need_flush_tlb %s&quot;, __entry-&gt;vcpu_id,
+		__entry-&gt;need_flush_tlb ? &quot;true&quot; : &quot;false&quot;)
+);
+
+/*
+ * Tracepoint for failed nested VMX VM-Enter.
+ */
+<blue>TRACE_EVENT(kvm_nested_vmenter_failed,</blue>
+	TP_PROTO(const char *msg, u32 err),
+	TP_ARGS(msg, err),
+
+	TP_STRUCT__entry(
+		__string(msg, msg)
+		__field(u32, err)
+	),
+
+	TP_fast_assign(
+		__assign_str(msg, msg);
+		__entry-&gt;err = err;
+	),
+
+	TP_printk(&quot;%s%s&quot;, __get_str(msg), !__entry-&gt;err ? &quot;&quot; :
+		__print_symbolic(__entry-&gt;err, VMX_VMENTER_INSTRUCTION_ERRORS))
+);
+
+/*
+ * Tracepoint for syndbg_set_msr.
+ */
+<yellow>TRACE_EVENT(kvm_hv_syndbg_set_msr,</yellow>
+	TP_PROTO(int vcpu_id, u32 vp_index, u32 msr, u64 data),
+	TP_ARGS(vcpu_id, vp_index, msr, data),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(u32, vp_index)
+		__field(u32, msr)
+		__field(u64, data)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;vp_index = vp_index;
+		__entry-&gt;msr = msr;
+		__entry-&gt;data = data;
+	),
+
+	TP_printk(&quot;vcpu_id %d vp_index %u msr 0x%x data 0x%llx&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;vp_index, __entry-&gt;msr,
+		  __entry-&gt;data)
+);
+
+/*
+ * Tracepoint for syndbg_get_msr.
+ */
+<yellow>TRACE_EVENT(kvm_hv_syndbg_get_msr,</yellow>
+	TP_PROTO(int vcpu_id, u32 vp_index, u32 msr, u64 data),
+	TP_ARGS(vcpu_id, vp_index, msr, data),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(u32, vp_index)
+		__field(u32, msr)
+		__field(u64, data)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu_id;
+		__entry-&gt;vp_index = vp_index;
+		__entry-&gt;msr = msr;
+		__entry-&gt;data = data;
+	),
+
+	TP_printk(&quot;vcpu_id %d vp_index %u msr 0x%x data 0x%llx&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;vp_index, __entry-&gt;msr,
+		  __entry-&gt;data)
+);
+
+/*
+ * Tracepoint for the start of VMGEXIT processing
+ */
+TRACE_EVENT(kvm_vmgexit_enter,
+	TP_PROTO(unsigned int vcpu_id, struct ghcb *ghcb),
+	TP_ARGS(vcpu_id, ghcb),
+
+	TP_STRUCT__entry(
+		__field(unsigned int, vcpu_id)
+		__field(u64, exit_reason)
+		__field(u64, info1)
+		__field(u64, info2)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id     = vcpu_id;
+		__entry-&gt;exit_reason = ghcb-&gt;save.sw_exit_code;
+		__entry-&gt;info1       = ghcb-&gt;save.sw_exit_info_1;
+		__entry-&gt;info2       = ghcb-&gt;save.sw_exit_info_2;
+	),
+
+	TP_printk(&quot;vcpu %u, exit_reason %llx, exit_info1 %llx, exit_info2 %llx&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;exit_reason,
+		  __entry-&gt;info1, __entry-&gt;info2)
+);
+
+/*
+ * Tracepoint for the end of VMGEXIT processing
+ */
+TRACE_EVENT(kvm_vmgexit_exit,
+	TP_PROTO(unsigned int vcpu_id, struct ghcb *ghcb),
+	TP_ARGS(vcpu_id, ghcb),
+
+	TP_STRUCT__entry(
+		__field(unsigned int, vcpu_id)
+		__field(u64, exit_reason)
+		__field(u64, info1)
+		__field(u64, info2)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id     = vcpu_id;
+		__entry-&gt;exit_reason = ghcb-&gt;save.sw_exit_code;
+		__entry-&gt;info1       = ghcb-&gt;save.sw_exit_info_1;
+		__entry-&gt;info2       = ghcb-&gt;save.sw_exit_info_2;
+	),
+
+	TP_printk(&quot;vcpu %u, exit_reason %llx, exit_info1 %llx, exit_info2 %llx&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;exit_reason,
+		  __entry-&gt;info1, __entry-&gt;info2)
+);
+
+/*
+ * Tracepoint for the start of VMGEXIT MSR procotol processing
+ */
+TRACE_EVENT(kvm_vmgexit_msr_protocol_enter,
+	TP_PROTO(unsigned int vcpu_id, u64 ghcb_gpa),
+	TP_ARGS(vcpu_id, ghcb_gpa),
+
+	TP_STRUCT__entry(
+		__field(unsigned int, vcpu_id)
+		__field(u64, ghcb_gpa)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id  = vcpu_id;
+		__entry-&gt;ghcb_gpa = ghcb_gpa;
+	),
+
+	TP_printk(&quot;vcpu %u, ghcb_gpa %016llx&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;ghcb_gpa)
+);
+
+/*
+ * Tracepoint for the end of VMGEXIT MSR procotol processing
+ */
+TRACE_EVENT(kvm_vmgexit_msr_protocol_exit,
+	TP_PROTO(unsigned int vcpu_id, u64 ghcb_gpa, int result),
+	TP_ARGS(vcpu_id, ghcb_gpa, result),
+
+	TP_STRUCT__entry(
+		__field(unsigned int, vcpu_id)
+		__field(u64, ghcb_gpa)
+		__field(int, result)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id  = vcpu_id;
+		__entry-&gt;ghcb_gpa = ghcb_gpa;
+		__entry-&gt;result   = result;
+	),
+
+	TP_printk(&quot;vcpu %u, ghcb_gpa %016llx, result %d&quot;,
+		  __entry-&gt;vcpu_id, __entry-&gt;ghcb_gpa, __entry-&gt;result)
+);
+
+#endif /* _TRACE_KVM_H */
+
+#undef TRACE_INCLUDE_PATH
+#define TRACE_INCLUDE_PATH ../../arch/x86/kvm
+#undef TRACE_INCLUDE_FILE
+#define TRACE_INCLUDE_FILE trace
+
+/* This part must be outside protection */
+#include &lt;trace/define_trace.h&gt;
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Kernel-based Virtual Machine driver for Linux
+ *
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+ */
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/debugfs.h&gt;
+#include &quot;lapic.h&quot;
+#include &quot;mmu.h&quot;
+#include &quot;mmu/mmu_internal.h&quot;
+
+static int vcpu_get_timer_advance_ns(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->arch.apic->lapic_timer.timer_advance_ns;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_timer_advance_ns_fops, vcpu_get_timer_advance_ns, NULL, "%llu\n");</yellow>
+
+static int vcpu_get_guest_mode(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->stat.guest_mode;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_guest_mode_fops, vcpu_get_guest_mode, NULL, "%lld\n");</yellow>
+
+static int vcpu_get_tsc_offset(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->arch.tsc_offset;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_tsc_offset_fops, vcpu_get_tsc_offset, NULL, "%lld\n");</yellow>
+
+static int vcpu_get_tsc_scaling_ratio(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->arch.tsc_scaling_ratio;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_tsc_scaling_fops, vcpu_get_tsc_scaling_ratio, NULL, "%llu\n");</yellow>
+
+static int vcpu_get_tsc_scaling_frac_bits(void *data, u64 *val)
+{
+<yellow>	*val = kvm_caps.tsc_scaling_ratio_frac_bits;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_tsc_scaling_frac_fops, vcpu_get_tsc_scaling_frac_bits, NULL, "%llu\n");</yellow>
+
+void kvm_arch_create_vcpu_debugfs(struct kvm_vcpu *vcpu, struct dentry *debugfs_dentry)
+{
+<blue>	debugfs_create_file("guest_mode", 0444, debugfs_dentry, vcpu,</blue>
+			    &amp;vcpu_guest_mode_fops);
+	debugfs_create_file(&quot;tsc-offset&quot;, 0444, debugfs_dentry, vcpu,
+			    &amp;vcpu_tsc_offset_fops);
+
+<yellow>	if (lapic_in_kernel(vcpu))</yellow>
+<blue>		debugfs_create_file("lapic_timer_advance_ns", 0444,</blue>
+				    debugfs_dentry, vcpu,
+				    &amp;vcpu_timer_advance_ns_fops);
+
+<blue>	if (kvm_caps.has_tsc_control) {</blue>
+<blue>		debugfs_create_file("tsc-scaling-ratio", 0444,</blue>
+				    debugfs_dentry, vcpu,
+				    &amp;vcpu_tsc_scaling_fops);
+		debugfs_create_file(&quot;tsc-scaling-ratio-frac-bits&quot;, 0444,
+				    debugfs_dentry, vcpu,
+				    &amp;vcpu_tsc_scaling_frac_fops);
+	}
+<blue>}</blue>
+
+/*
+ * This covers statistics &lt;1024 (11=log(1024)+1), which should be enough to
+ * cover RMAP_RECYCLE_THRESHOLD.
+ */
+#define  RMAP_LOG_SIZE  11
+
+static const char *kvm_lpage_str[KVM_NR_PAGE_SIZES] = { &quot;4K&quot;, &quot;2M&quot;, &quot;1G&quot; };
+
+static int kvm_mmu_rmaps_stat_show(struct seq_file *m, void *v)
+<yellow>{</yellow>
+	struct kvm_rmap_head *rmap;
+<yellow>	struct kvm *kvm = m->private;</yellow>
+	struct kvm_memory_slot *slot;
+	struct kvm_memslots *slots;
+	unsigned int lpage_size, index;
+	/* Still small enough to be on the stack */
+	unsigned int *log[KVM_NR_PAGE_SIZES], *cur;
+	int i, j, k, l, ret;
+
+<yellow>	if (!kvm_memslots_have_rmaps(kvm))</yellow>
+		return 0;
+
+	ret = -ENOMEM;
+<yellow>	memset(log, 0, sizeof(log));</yellow>
+<yellow>	for (i = 0; i < KVM_NR_PAGE_SIZES; i++) {</yellow>
+<yellow>		log[i] = kcalloc(RMAP_LOG_SIZE, sizeof(unsigned int), GFP_KERNEL);</yellow>
+		if (!log[i])
+			goto out;
+	}
+
+<yellow>	mutex_lock(&kvm->slots_lock);</yellow>
+	write_lock(&amp;kvm-&gt;mmu_lock);
+
+<yellow>	for (i = 0; i < KVM_ADDRESS_SPACE_NUM; i++) {</yellow>
+		int bkt;
+
+<yellow>		slots = __kvm_memslots(kvm, i);</yellow>
+<yellow>		kvm_for_each_memslot(slot, bkt, slots)</yellow>
+<yellow>			for (k = 0; k < KVM_NR_PAGE_SIZES; k++) {</yellow>
+<yellow>				rmap = slot->arch.rmap[k];</yellow>
+				lpage_size = kvm_mmu_slot_lpages(slot, k + 1);
+				cur = log[k];
+				for (l = 0; l &lt; lpage_size; l++) {
+<yellow>					index = ffs(pte_list_count(&rmap[l]));</yellow>
+<yellow>					if (WARN_ON_ONCE(index >= RMAP_LOG_SIZE))</yellow>
+						index = RMAP_LOG_SIZE - 1;
+<yellow>					cur[index]++;</yellow>
+				}
+			}
+	}
+
+	write_unlock(&amp;kvm-&gt;mmu_lock);
+	mutex_unlock(&amp;kvm-&gt;slots_lock);
+
+	/* index=0 counts no rmap; index=1 counts 1 rmap */
+	seq_printf(m, &quot;Rmap_Count:\t0\t1\t&quot;);
+<yellow>	for (i = 2; i < RMAP_LOG_SIZE; i++) {</yellow>
+		j = 1 &lt;&lt; (i - 1);
+<yellow>		k = (1 << i) - 1;</yellow>
+		seq_printf(m, &quot;%d-%d\t&quot;, j, k);
+	}
+<yellow>	seq_printf(m, "\n");</yellow>
+
+	for (i = 0; i &lt; KVM_NR_PAGE_SIZES; i++) {
+<yellow>		seq_printf(m, "Level=%s:\t", kvm_lpage_str[i]);</yellow>
+		cur = log[i];
+		for (j = 0; j &lt; RMAP_LOG_SIZE; j++)
+<yellow>			seq_printf(m, "%d\t", cur[j]);</yellow>
+<yellow>		seq_printf(m, "\n");</yellow>
+	}
+
+	ret = 0;
+out:
+	for (i = 0; i &lt; KVM_NR_PAGE_SIZES; i++)
+<yellow>		kfree(log[i]);</yellow>
+
+	return ret;
+}
+
+static int kvm_mmu_rmaps_stat_open(struct inode *inode, struct file *file)
+{
+<yellow>	struct kvm *kvm = inode->i_private;</yellow>
+	int r;
+
+	if (!kvm_get_kvm_safe(kvm))
+		return -ENOENT;
+
+<yellow>	r = single_open(file, kvm_mmu_rmaps_stat_show, kvm);</yellow>
+	if (r &lt; 0)
+<yellow>		kvm_put_kvm(kvm);</yellow>
+
+	return r;
+<yellow>}</yellow>
+
+static int kvm_mmu_rmaps_stat_release(struct inode *inode, struct file *file)
+{
+<yellow>	struct kvm *kvm = inode->i_private;</yellow>
+
+	kvm_put_kvm(kvm);
+
+	return single_release(inode, file);
+}
+
+static const struct file_operations mmu_rmaps_stat_fops = {
+	.open		= kvm_mmu_rmaps_stat_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= kvm_mmu_rmaps_stat_release,
+};
+
+int kvm_arch_create_vm_debugfs(struct kvm *kvm)
+{
+<blue>	debugfs_create_file("mmu_rmaps_stat", 0644, kvm->debugfs_dentry, kvm,</blue>
+			    &amp;mmu_rmaps_stat_fops);
+	return 0;
+}
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
