@@ -1,0 +1,248 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __KVM_X86_PMU_H
+#define __KVM_X86_PMU_H
+
+#include &lt;linux/nospec.h&gt;
+
+#define vcpu_to_pmu(vcpu) (&amp;(vcpu)-&gt;arch.pmu)
+#define pmu_to_vcpu(pmu)  (container_of((pmu), struct kvm_vcpu, arch.pmu))
+#define pmc_to_pmu(pmc)   (&amp;(pmc)-&gt;vcpu-&gt;arch.pmu)
+
+#define MSR_IA32_MISC_ENABLE_PMU_RO_MASK (MSR_IA32_MISC_ENABLE_PEBS_UNAVAIL |	\
+					  MSR_IA32_MISC_ENABLE_BTS_UNAVAIL)
+
+/* retrieve the 4 bits for EN and PMI out of IA32_FIXED_CTR_CTRL */
+#define fixed_ctrl_field(ctrl_reg, idx) (((ctrl_reg) &gt;&gt; ((idx)*4)) &amp; 0xf)
+
+#define VMWARE_BACKDOOR_PMC_HOST_TSC		0x10000
+#define VMWARE_BACKDOOR_PMC_REAL_TIME		0x10001
+#define VMWARE_BACKDOOR_PMC_APPARENT_TIME	0x10002
+
+struct kvm_event_hw_type_mapping {
+	u8 eventsel;
+	u8 unit_mask;
+	unsigned event_type;
+};
+
+struct kvm_pmu_ops {
+	bool (*hw_event_available)(struct kvm_pmc *pmc);
+	bool (*pmc_is_enabled)(struct kvm_pmc *pmc);
+	struct kvm_pmc *(*pmc_idx_to_pmc)(struct kvm_pmu *pmu, int pmc_idx);
+	struct kvm_pmc *(*rdpmc_ecx_to_pmc)(struct kvm_vcpu *vcpu,
+		unsigned int idx, u64 *mask);
+	struct kvm_pmc *(*msr_idx_to_pmc)(struct kvm_vcpu *vcpu, u32 msr);
+	bool (*is_valid_rdpmc_ecx)(struct kvm_vcpu *vcpu, unsigned int idx);
+	bool (*is_valid_msr)(struct kvm_vcpu *vcpu, u32 msr);
+	int (*get_msr)(struct kvm_vcpu *vcpu, struct msr_data *msr_info);
+	int (*set_msr)(struct kvm_vcpu *vcpu, struct msr_data *msr_info);
+	void (*refresh)(struct kvm_vcpu *vcpu);
+	void (*init)(struct kvm_vcpu *vcpu);
+	void (*reset)(struct kvm_vcpu *vcpu);
+	void (*deliver_pmi)(struct kvm_vcpu *vcpu);
+	void (*cleanup)(struct kvm_vcpu *vcpu);
+};
+
+void kvm_pmu_ops_update(const struct kvm_pmu_ops *pmu_ops);
+
+static inline u64 pmc_bitmask(struct kvm_pmc *pmc)
+{
+<blue>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</blue>
+
+<yellow>	return pmu->counter_bitmask[pmc->type];</yellow>
+}
+
+static inline u64 pmc_read_counter(struct kvm_pmc *pmc)
+{
+	u64 counter, enabled, running;
+
+<blue>	counter = pmc->counter;</blue>
+<yellow>	if (pmc->perf_event && !pmc->is_paused)</yellow>
+<yellow>		counter += perf_event_read_value(pmc->perf_event,</yellow>
+						 &amp;enabled, &amp;running);
+	/* FIXME: Scaling needed? */
+<blue>	return counter & pmc_bitmask(pmc);</blue>
+}
+
+static inline void pmc_release_perf_event(struct kvm_pmc *pmc)
+{
+	if (pmc-&gt;perf_event) {
+<yellow>		perf_event_release_kernel(pmc->perf_event);</yellow>
+		pmc-&gt;perf_event = NULL;
+		pmc-&gt;current_config = 0;
+		pmc_to_pmu(pmc)-&gt;event_count--;
+	}
+}
+
+<yellow>static inline void pmc_stop_counter(struct kvm_pmc *pmc)</yellow>
+{
+	if (pmc-&gt;perf_event) {
+<yellow>		pmc->counter = pmc_read_counter(pmc);</yellow>
+<yellow>		pmc_release_perf_event(pmc);</yellow>
+	}
+}
+
+static inline bool pmc_is_gp(struct kvm_pmc *pmc)
+{
+	return pmc-&gt;type == KVM_PMC_GP;
+}
+
+static inline bool pmc_is_fixed(struct kvm_pmc *pmc)
+{
+	return pmc-&gt;type == KVM_PMC_FIXED;
+}
+
+static inline bool kvm_valid_perf_global_ctrl(struct kvm_pmu *pmu,
+						 u64 data)
+{
+<yellow>	return !(pmu->global_ctrl_mask & data);</yellow>
+}
+
+/* returns general purpose PMC with the specified MSR. Note that it can be
+ * used for both PERFCTRn and EVNTSELn; that is why it accepts base as a
+ * parameter to tell them apart.
+ */
+static inline struct kvm_pmc *get_gp_pmc(struct kvm_pmu *pmu, u32 msr,
+					 u32 base)
+{
+<blue>	if (msr >= base && msr < base + pmu->nr_arch_gp_counters) {</blue>
+<blue>		u32 index = array_index_nospec(msr - base,</blue>
+					       pmu-&gt;nr_arch_gp_counters);
+
+		return &amp;pmu-&gt;gp_counters[index];
+	}
+
+	return NULL;
+}
+
+/* returns fixed PMC with the specified MSR */
+static inline struct kvm_pmc *get_fixed_pmc(struct kvm_pmu *pmu, u32 msr)
+{
+	int base = MSR_CORE_PERF_FIXED_CTR0;
+
+<blue>	if (msr >= base && msr < base + pmu->nr_arch_fixed_counters) {</blue>
+<blue>		u32 index = array_index_nospec(msr - base,</blue>
+					       pmu-&gt;nr_arch_fixed_counters);
+
+		return &amp;pmu-&gt;fixed_counters[index];
+	}
+
+	return NULL;
+}
+
+static inline u64 get_sample_period(struct kvm_pmc *pmc, u64 counter_value)
+{
+	u64 sample_period = (-counter_value) &amp; pmc_bitmask(pmc);
+
+	if (!sample_period)
+<yellow>		sample_period = pmc_bitmask(pmc) + 1;</yellow>
+	return sample_period;
+}
+
+<yellow>static inline void pmc_update_sample_period(struct kvm_pmc *pmc)</yellow>
+{
+<yellow>	if (!pmc->perf_event || pmc->is_paused)</yellow>
+		return;
+
+<yellow>	perf_event_period(pmc->perf_event,</yellow>
+			  get_sample_period(pmc, pmc-&gt;counter));
+}
+
+static inline bool pmc_speculative_in_use(struct kvm_pmc *pmc)
+{
+<yellow>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</yellow>
+
+	if (pmc_is_fixed(pmc))
+<yellow>		return fixed_ctrl_field(pmu->fixed_ctr_ctrl,</yellow>
+					pmc-&gt;idx - INTEL_PMC_IDX_FIXED) &amp; 0x3;
+
+<yellow>	return pmc->eventsel & ARCH_PERFMON_EVENTSEL_ENABLE;</yellow>
+}
+
+extern struct x86_pmu_capability kvm_pmu_cap;
+
+static inline void kvm_init_pmu_capability(void)
+{
+	bool is_intel = boot_cpu_data.x86_vendor == X86_VENDOR_INTEL;
+
+	perf_get_x86_pmu_capability(&amp;kvm_pmu_cap);
+
+	 /*
+	  * For Intel, only support guest architectural pmu
+	  * on a host with architectural pmu.
+	  */
+	if ((is_intel &amp;&amp; !kvm_pmu_cap.version) || !kvm_pmu_cap.num_counters_gp)
+		enable_pmu = false;
+
+	if (!enable_pmu) {
+		memset(&amp;kvm_pmu_cap, 0, sizeof(kvm_pmu_cap));
+		return;
+	}
+
+	kvm_pmu_cap.version = min(kvm_pmu_cap.version, 2);
+	kvm_pmu_cap.num_counters_fixed = min(kvm_pmu_cap.num_counters_fixed,
+					     KVM_PMC_MAX_FIXED);
+}
+
+void reprogram_counter(struct kvm_pmc *pmc);
+
+void kvm_pmu_deliver_pmi(struct kvm_vcpu *vcpu);
+void kvm_pmu_handle_event(struct kvm_vcpu *vcpu);
+int kvm_pmu_rdpmc(struct kvm_vcpu *vcpu, unsigned pmc, u64 *data);
+bool kvm_pmu_is_valid_rdpmc_ecx(struct kvm_vcpu *vcpu, unsigned int idx);
+bool kvm_pmu_is_valid_msr(struct kvm_vcpu *vcpu, u32 msr);
+int kvm_pmu_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info);
+int kvm_pmu_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info);
+void kvm_pmu_refresh(struct kvm_vcpu *vcpu);
+void kvm_pmu_reset(struct kvm_vcpu *vcpu);
+void kvm_pmu_init(struct kvm_vcpu *vcpu);
+void kvm_pmu_cleanup(struct kvm_vcpu *vcpu);
+void kvm_pmu_destroy(struct kvm_vcpu *vcpu);
+int kvm_vm_ioctl_set_pmu_event_filter(struct kvm *kvm, void __user *argp);
+void kvm_pmu_trigger_event(struct kvm_vcpu *vcpu, u64 perf_hw_id);
+
+bool is_vmware_backdoor_pmc(u32 pmc_idx);
+
+extern struct kvm_pmu_ops intel_pmu_ops;
+extern struct kvm_pmu_ops amd_pmu_ops;
+#endif /* __KVM_X86_PMU_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
