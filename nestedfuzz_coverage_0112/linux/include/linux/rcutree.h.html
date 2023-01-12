@@ -1,0 +1,161 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0+ */
+/*
+ * Read-Copy Update mechanism for mutual exclusion (tree-based version)
+ *
+ * Copyright IBM Corporation, 2008
+ *
+ * Author: Dipankar Sarma &lt;dipankar@in.ibm.com&gt;
+ *	   Paul E. McKenney &lt;paulmck@linux.ibm.com&gt; Hierarchical algorithm
+ *
+ * Based on the original work by Paul McKenney &lt;paulmck@linux.ibm.com&gt;
+ * and inputs from Rusty Russell, Andrea Arcangeli and Andi Kleen.
+ *
+ * For detailed explanation of Read-Copy Update mechanism see -
+ *	Documentation/RCU
+ */
+
+#ifndef __LINUX_RCUTREE_H
+#define __LINUX_RCUTREE_H
+
+void rcu_softirq_qs(void);
+void rcu_note_context_switch(bool preempt);
+int rcu_needs_cpu(void);
+void rcu_cpu_stall_reset(void);
+
+/*
+ * Note a virtualization-based context switch.  This is simply a
+ * wrapper around rcu_note_context_switch(), which allows TINY_RCU
+ * to save a few bytes. The caller must have disabled interrupts.
+ */
+static inline void rcu_virt_note_context_switch(int cpu)
+{
+<blue>	rcu_note_context_switch(false);</blue>
+<yellow>}</yellow>
+
+void synchronize_rcu_expedited(void);
+void kvfree_call_rcu(struct rcu_head *head, rcu_callback_t func);
+
+void rcu_barrier(void);
+bool rcu_eqs_special_set(int cpu);
+void rcu_momentary_dyntick_idle(void);
+void kfree_rcu_scheduler_running(void);
+bool rcu_gp_might_be_stalled(void);
+
+struct rcu_gp_oldstate {
+	unsigned long rgos_norm;
+	unsigned long rgos_exp;
+};
+
+// Maximum number of rcu_gp_oldstate values corresponding to
+// not-yet-completed RCU grace periods.
+#define NUM_ACTIVE_RCU_POLL_FULL_OLDSTATE 4
+
+/**
+ * same_state_synchronize_rcu_full - Are two old-state values identical?
+ * @rgosp1: First old-state value.
+ * @rgosp2: Second old-state value.
+ *
+ * The two old-state values must have been obtained from either
+ * get_state_synchronize_rcu_full(), start_poll_synchronize_rcu_full(),
+ * or get_completed_synchronize_rcu_full().  Returns @true if the two
+ * values are identical and @false otherwise.  This allows structures
+ * whose lifetimes are tracked by old-state values to push these values
+ * to a list header, allowing those structures to be slightly smaller.
+ *
+ * Note that equality is judged on a bitwise basis, so that an
+ * @rcu_gp_oldstate structure with an already-completed state in one field
+ * will compare not-equal to a structure with an already-completed state
+ * in the other field.  After all, the @rcu_gp_oldstate structure is opaque
+ * so how did such a situation come to pass in the first place?
+ */
+static inline bool same_state_synchronize_rcu_full(struct rcu_gp_oldstate *rgosp1,
+						   struct rcu_gp_oldstate *rgosp2)
+{
+	return rgosp1-&gt;rgos_norm == rgosp2-&gt;rgos_norm &amp;&amp; rgosp1-&gt;rgos_exp == rgosp2-&gt;rgos_exp;
+}
+
+unsigned long start_poll_synchronize_rcu_expedited(void);
+void start_poll_synchronize_rcu_expedited_full(struct rcu_gp_oldstate *rgosp);
+void cond_synchronize_rcu_expedited(unsigned long oldstate);
+void cond_synchronize_rcu_expedited_full(struct rcu_gp_oldstate *rgosp);
+unsigned long get_state_synchronize_rcu(void);
+void get_state_synchronize_rcu_full(struct rcu_gp_oldstate *rgosp);
+unsigned long start_poll_synchronize_rcu(void);
+void start_poll_synchronize_rcu_full(struct rcu_gp_oldstate *rgosp);
+bool poll_state_synchronize_rcu(unsigned long oldstate);
+bool poll_state_synchronize_rcu_full(struct rcu_gp_oldstate *rgosp);
+void cond_synchronize_rcu(unsigned long oldstate);
+void cond_synchronize_rcu_full(struct rcu_gp_oldstate *rgosp);
+
+bool rcu_is_idle_cpu(int cpu);
+
+#ifdef CONFIG_PROVE_RCU
+void rcu_irq_exit_check_preempt(void);
+#else
+static inline void rcu_irq_exit_check_preempt(void) { }
+#endif
+
+struct task_struct;
+void rcu_preempt_deferred_qs(struct task_struct *t);
+
+void exit_rcu(void);
+
+void rcu_scheduler_starting(void);
+extern int rcu_scheduler_active;
+void rcu_end_inkernel_boot(void);
+bool rcu_inkernel_boot_has_ended(void);
+bool rcu_is_watching(void);
+#ifndef CONFIG_PREEMPTION
+void rcu_all_qs(void);
+#endif
+
+/* RCUtree hotplug events */
+int rcutree_prepare_cpu(unsigned int cpu);
+int rcutree_online_cpu(unsigned int cpu);
+int rcutree_offline_cpu(unsigned int cpu);
+int rcutree_dead_cpu(unsigned int cpu);
+int rcutree_dying_cpu(unsigned int cpu);
+void rcu_cpu_starting(unsigned int cpu);
+
+#endif /* __LINUX_RCUTREE_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

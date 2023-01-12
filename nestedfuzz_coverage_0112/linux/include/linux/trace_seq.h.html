@@ -1,0 +1,184 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_TRACE_SEQ_H
+#define _LINUX_TRACE_SEQ_H
+
+#include &lt;linux/seq_buf.h&gt;
+
+#include &lt;asm/page.h&gt;
+
+/*
+ * Trace sequences are used to allow a function to call several other functions
+ * to create a string of data to use (up to a max of PAGE_SIZE).
+ */
+
+struct trace_seq {
+	char			buffer[PAGE_SIZE];
+	struct seq_buf		seq;
+	int			full;
+};
+
+static inline void
+trace_seq_init(struct trace_seq *s)
+{
+	seq_buf_init(&amp;s-&gt;seq, s-&gt;buffer, PAGE_SIZE);
+	s-&gt;full = 0;
+}
+
+/**
+ * trace_seq_used - amount of actual data written to buffer
+ * @s: trace sequence descriptor
+ *
+ * Returns the amount of data written to the buffer.
+ *
+ * IMPORTANT!
+ *
+ * Use this instead of @s-&gt;seq.len if you need to pass the amount
+ * of data from the buffer to another buffer (userspace, or what not).
+ * The @s-&gt;seq.len on overflow is bigger than the buffer size and
+ * using it can cause access to undefined memory.
+ */
+static inline int trace_seq_used(struct trace_seq *s)
+{
+	return seq_buf_used(&amp;s-&gt;seq);
+}
+
+/**
+ * trace_seq_buffer_ptr - return pointer to next location in buffer
+ * @s: trace sequence descriptor
+ *
+ * Returns the pointer to the buffer where the next write to
+ * the buffer will happen. This is useful to save the location
+ * that is about to be written to and then return the result
+ * of that write.
+ */
+static inline char *
+trace_seq_buffer_ptr(struct trace_seq *s)
+{
+<yellow>	return s->buffer + seq_buf_used(&s->seq);</yellow>
+}
+
+/**
+ * trace_seq_has_overflowed - return true if the trace_seq took too much
+ * @s: trace sequence descriptor
+ *
+ * Returns true if too much data was added to the trace_seq and it is
+ * now full and will not take anymore.
+ */
+static inline bool trace_seq_has_overflowed(struct trace_seq *s)
+{
+	return s-&gt;full || seq_buf_has_overflowed(&amp;s-&gt;seq);
+}
+
+/*
+ * Currently only defined when tracing is enabled.
+ */
+#ifdef CONFIG_TRACING
+extern __printf(2, 3)
+void trace_seq_printf(struct trace_seq *s, const char *fmt, ...);
+extern __printf(2, 0)
+void trace_seq_vprintf(struct trace_seq *s, const char *fmt, va_list args);
+extern void
+trace_seq_bprintf(struct trace_seq *s, const char *fmt, const u32 *binary);
+extern int trace_print_seq(struct seq_file *m, struct trace_seq *s);
+extern int trace_seq_to_user(struct trace_seq *s, char __user *ubuf,
+			     int cnt);
+extern void trace_seq_puts(struct trace_seq *s, const char *str);
+extern void trace_seq_putc(struct trace_seq *s, unsigned char c);
+extern void trace_seq_putmem(struct trace_seq *s, const void *mem, unsigned int len);
+extern void trace_seq_putmem_hex(struct trace_seq *s, const void *mem,
+				unsigned int len);
+extern int trace_seq_path(struct trace_seq *s, const struct path *path);
+
+extern void trace_seq_bitmask(struct trace_seq *s, const unsigned long *maskp,
+			     int nmaskbits);
+
+extern int trace_seq_hex_dump(struct trace_seq *s, const char *prefix_str,
+			      int prefix_type, int rowsize, int groupsize,
+			      const void *buf, size_t len, bool ascii);
+
+#else /* CONFIG_TRACING */
+static inline void trace_seq_printf(struct trace_seq *s, const char *fmt, ...)
+{
+}
+static inline void
+trace_seq_bprintf(struct trace_seq *s, const char *fmt, const u32 *binary)
+{
+}
+
+static inline void
+trace_seq_bitmask(struct trace_seq *s, const unsigned long *maskp,
+		  int nmaskbits)
+{
+}
+
+static inline int trace_print_seq(struct seq_file *m, struct trace_seq *s)
+{
+	return 0;
+}
+static inline int trace_seq_to_user(struct trace_seq *s, char __user *ubuf,
+				    int cnt)
+{
+	return 0;
+}
+static inline void trace_seq_puts(struct trace_seq *s, const char *str)
+{
+}
+static inline void trace_seq_putc(struct trace_seq *s, unsigned char c)
+{
+}
+static inline void
+trace_seq_putmem(struct trace_seq *s, const void *mem, unsigned int len)
+{
+}
+static inline void trace_seq_putmem_hex(struct trace_seq *s, const void *mem,
+				       unsigned int len)
+{
+}
+static inline int trace_seq_path(struct trace_seq *s, const struct path *path)
+{
+	return 0;
+}
+#endif /* CONFIG_TRACING */
+
+#endif /* _LINUX_TRACE_SEQ_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
