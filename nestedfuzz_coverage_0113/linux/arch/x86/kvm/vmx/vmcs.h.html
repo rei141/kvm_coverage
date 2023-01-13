@@ -1,0 +1,234 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __KVM_X86_VMX_VMCS_H
+#define __KVM_X86_VMX_VMCS_H
+
+#include &lt;linux/ktime.h&gt;
+#include &lt;linux/list.h&gt;
+#include &lt;linux/nospec.h&gt;
+
+#include &lt;asm/kvm.h&gt;
+#include &lt;asm/vmx.h&gt;
+
+#include &quot;capabilities.h&quot;
+
+#define ROL16(val, n) ((u16)(((u16)(val) &lt;&lt; (n)) | ((u16)(val) &gt;&gt; (16 - (n)))))
+
+struct vmcs_hdr {
+	u32 revision_id:31;
+	u32 shadow_vmcs:1;
+};
+
+struct vmcs {
+	struct vmcs_hdr hdr;
+	u32 abort;
+	char data[];
+};
+
+DECLARE_PER_CPU(struct vmcs *, current_vmcs);
+
+/*
+ * vmcs_host_state tracks registers that are loaded from the VMCS on VMEXIT
+ * and whose values change infrequently, but are not constant.  I.e. this is
+ * used as a write-through cache of the corresponding VMCS fields.
+ */
+struct vmcs_host_state {
+	unsigned long cr3;	/* May not match real cr3 */
+	unsigned long cr4;	/* May not match real cr4 */
+	unsigned long gs_base;
+	unsigned long fs_base;
+	unsigned long rsp;
+
+	u16           fs_sel, gs_sel, ldt_sel;
+#ifdef CONFIG_X86_64
+	u16           ds_sel, es_sel;
+#endif
+};
+
+struct vmcs_controls_shadow {
+	u32 vm_entry;
+	u32 vm_exit;
+	u32 pin;
+	u32 exec;
+	u32 secondary_exec;
+	u64 tertiary_exec;
+};
+
+/*
+ * Track a VMCS that may be loaded on a certain CPU. If it is (cpu!=-1), also
+ * remember whether it was VMLAUNCHed, and maintain a linked list of all VMCSs
+ * loaded on this CPU (so we can clear them if the CPU goes down).
+ */
+struct loaded_vmcs {
+	struct vmcs *vmcs;
+	struct vmcs *shadow_vmcs;
+	int cpu;
+	bool launched;
+	bool nmi_known_unmasked;
+	bool hv_timer_soft_disabled;
+	/* Support for vnmi-less CPUs */
+	int soft_vnmi_blocked;
+	ktime_t entry_time;
+	s64 vnmi_blocked_time;
+	unsigned long *msr_bitmap;
+	struct list_head loaded_vmcss_on_cpu_link;
+	struct vmcs_host_state host_state;
+	struct vmcs_controls_shadow controls_shadow;
+};
+
+static inline bool is_intr_type(u32 intr_info, u32 type)
+{
+	const u32 mask = INTR_INFO_VALID_MASK | INTR_INFO_INTR_TYPE_MASK;
+
+<blue>	return (intr_info & mask) == (INTR_INFO_VALID_MASK | type);</blue>
+}
+
+static inline bool is_intr_type_n(u32 intr_info, u32 type, u8 vector)
+{
+	const u32 mask = INTR_INFO_VALID_MASK | INTR_INFO_INTR_TYPE_MASK |
+			 INTR_INFO_VECTOR_MASK;
+
+<blue>	return (intr_info & mask) == (INTR_INFO_VALID_MASK | type | vector);</blue>
+}
+
+static inline bool is_exception_n(u32 intr_info, u8 vector)
+{
+<blue>	return is_intr_type_n(intr_info, INTR_TYPE_HARD_EXCEPTION, vector);</blue>
+}
+
+static inline bool is_debug(u32 intr_info)
+{
+	return is_exception_n(intr_info, DB_VECTOR);
+}
+
+static inline bool is_breakpoint(u32 intr_info)
+{
+	return is_exception_n(intr_info, BP_VECTOR);
+}
+
+static inline bool is_double_fault(u32 intr_info)
+{
+<blue>	return is_exception_n(intr_info, DF_VECTOR);</blue>
+}
+
+static inline bool is_page_fault(u32 intr_info)
+{
+<blue>	return is_exception_n(intr_info, PF_VECTOR);</blue>
+}
+
+static inline bool is_invalid_opcode(u32 intr_info)
+{
+	return is_exception_n(intr_info, UD_VECTOR);
+}
+
+static inline bool is_gp_fault(u32 intr_info)
+{
+	return is_exception_n(intr_info, GP_VECTOR);
+}
+
+static inline bool is_alignment_check(u32 intr_info)
+{
+	return is_exception_n(intr_info, AC_VECTOR);
+}
+
+static inline bool is_machine_check(u32 intr_info)
+{
+	return is_exception_n(intr_info, MC_VECTOR);
+}
+
+static inline bool is_nm_fault(u32 intr_info)
+{
+	return is_exception_n(intr_info, NM_VECTOR);
+}
+
+/* Undocumented: icebp/int1 */
+static inline bool is_icebp(u32 intr_info)
+{
+	return is_intr_type(intr_info, INTR_TYPE_PRIV_SW_EXCEPTION);
+}
+
+static inline bool is_nmi(u32 intr_info)
+{
+<blue>	return is_intr_type(intr_info, INTR_TYPE_NMI_INTR);</blue>
+}
+
+static inline bool is_external_intr(u32 intr_info)
+{
+<yellow>	return is_intr_type(intr_info, INTR_TYPE_EXT_INTR);</yellow>
+}
+
+static inline bool is_exception_with_error_code(u32 intr_info)
+{
+	const u32 mask = INTR_INFO_VALID_MASK | INTR_INFO_DELIVER_CODE_MASK;
+
+	return (intr_info &amp; mask) == mask;
+}
+
+enum vmcs_field_width {
+	VMCS_FIELD_WIDTH_U16 = 0,
+	VMCS_FIELD_WIDTH_U64 = 1,
+	VMCS_FIELD_WIDTH_U32 = 2,
+	VMCS_FIELD_WIDTH_NATURAL_WIDTH = 3
+};
+
+static inline int vmcs_field_width(unsigned long field)
+{
+<blue>	if (0x1 & field)	/* the *_HIGH fields are all 32 bit */</blue>
+		return VMCS_FIELD_WIDTH_U32;
+<blue>	return (field >> 13) & 0x3;</blue>
+}
+
+static inline int vmcs_field_readonly(unsigned long field)
+{
+<blue>	return (((field >> 10) & 0x3) == 1);</blue>
+}
+
+#define VMCS_FIELD_INDEX_SHIFT		(1)
+#define VMCS_FIELD_INDEX_MASK		GENMASK(9, 1)
+
+static inline unsigned int vmcs_field_index(unsigned long field)
+{
+	return (field &amp; VMCS_FIELD_INDEX_MASK) &gt;&gt; VMCS_FIELD_INDEX_SHIFT;
+}
+
+#endif /* __KVM_X86_VMX_VMCS_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

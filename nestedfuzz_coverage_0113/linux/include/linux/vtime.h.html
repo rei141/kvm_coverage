@@ -1,0 +1,203 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_KERNEL_VTIME_H
+#define _LINUX_KERNEL_VTIME_H
+
+#include &lt;linux/context_tracking_state.h&gt;
+#include &lt;linux/sched.h&gt;
+
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING_NATIVE
+#include &lt;asm/vtime.h&gt;
+#endif
+
+/*
+ * Common vtime APIs
+ */
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING
+extern void vtime_account_kernel(struct task_struct *tsk);
+extern void vtime_account_idle(struct task_struct *tsk);
+#endif /* !CONFIG_VIRT_CPU_ACCOUNTING */
+
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN
+extern void arch_vtime_task_switch(struct task_struct *tsk);
+extern void vtime_user_enter(struct task_struct *tsk);
+extern void vtime_user_exit(struct task_struct *tsk);
+extern void vtime_guest_enter(struct task_struct *tsk);
+extern void vtime_guest_exit(struct task_struct *tsk);
+extern void vtime_init_idle(struct task_struct *tsk, int cpu);
+#else /* !CONFIG_VIRT_CPU_ACCOUNTING_GEN  */
+static inline void vtime_user_enter(struct task_struct *tsk) { }
+static inline void vtime_user_exit(struct task_struct *tsk) { }
+static inline void vtime_guest_enter(struct task_struct *tsk) { }
+static inline void vtime_guest_exit(struct task_struct *tsk) { }
+static inline void vtime_init_idle(struct task_struct *tsk, int cpu) { }
+#endif
+
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING_NATIVE
+extern void vtime_account_irq(struct task_struct *tsk, unsigned int offset);
+extern void vtime_account_softirq(struct task_struct *tsk);
+extern void vtime_account_hardirq(struct task_struct *tsk);
+extern void vtime_flush(struct task_struct *tsk);
+#else /* !CONFIG_VIRT_CPU_ACCOUNTING_NATIVE */
+static inline void vtime_account_irq(struct task_struct *tsk, unsigned int offset) { }
+static inline void vtime_account_softirq(struct task_struct *tsk) { }
+static inline void vtime_account_hardirq(struct task_struct *tsk) { }
+static inline void vtime_flush(struct task_struct *tsk) { }
+#endif
+
+/*
+ * vtime_accounting_enabled_this_cpu() definitions/declarations
+ */
+#if defined(CONFIG_VIRT_CPU_ACCOUNTING_NATIVE)
+
+static inline bool vtime_accounting_enabled_this_cpu(void) { return true; }
+extern void vtime_task_switch(struct task_struct *prev);
+
+static __always_inline void vtime_account_guest_enter(void)
+{
+	vtime_account_kernel(current);
+	current-&gt;flags |= PF_VCPU;
+}
+
+static __always_inline void vtime_account_guest_exit(void)
+{
+	vtime_account_kernel(current);
+	current-&gt;flags &amp;= ~PF_VCPU;
+}
+
+#elif defined(CONFIG_VIRT_CPU_ACCOUNTING_GEN)
+
+/*
+ * Checks if vtime is enabled on some CPU. Cputime readers want to be careful
+ * in that case and compute the tickless cputime.
+ * For now vtime state is tied to context tracking. We might want to decouple
+ * those later if necessary.
+ */
+static inline bool vtime_accounting_enabled(void)
+{
+	return context_tracking_enabled();
+}
+
+static inline bool vtime_accounting_enabled_cpu(int cpu)
+{
+	return context_tracking_enabled_cpu(cpu);
+}
+
+static inline bool vtime_accounting_enabled_this_cpu(void)
+{
+	return context_tracking_enabled_this_cpu();
+}
+
+extern void vtime_task_switch_generic(struct task_struct *prev);
+
+static inline void vtime_task_switch(struct task_struct *prev)
+{
+	if (vtime_accounting_enabled_this_cpu())
+		vtime_task_switch_generic(prev);
+}
+
+static __always_inline void vtime_account_guest_enter(void)
+{
+	if (vtime_accounting_enabled_this_cpu())
+		vtime_guest_enter(current);
+	else
+		current-&gt;flags |= PF_VCPU;
+}
+
+static __always_inline void vtime_account_guest_exit(void)
+{
+	if (vtime_accounting_enabled_this_cpu())
+		vtime_guest_exit(current);
+	else
+		current-&gt;flags &amp;= ~PF_VCPU;
+}
+
+#else /* !CONFIG_VIRT_CPU_ACCOUNTING */
+
+static inline bool vtime_accounting_enabled_this_cpu(void) { return false; }
+static inline void vtime_task_switch(struct task_struct *prev) { }
+
+static __always_inline void vtime_account_guest_enter(void)
+{
+<blue>	current->flags |= PF_VCPU;</blue>
+}
+
+static __always_inline void vtime_account_guest_exit(void)
+{
+	current-&gt;flags &amp;= ~PF_VCPU;
+}
+
+#endif
+
+
+#ifdef CONFIG_IRQ_TIME_ACCOUNTING
+extern void irqtime_account_irq(struct task_struct *tsk, unsigned int offset);
+#else
+static inline void irqtime_account_irq(struct task_struct *tsk, unsigned int offset) { }
+#endif
+
+static inline void account_softirq_enter(struct task_struct *tsk)
+{
+	vtime_account_irq(tsk, SOFTIRQ_OFFSET);
+	irqtime_account_irq(tsk, SOFTIRQ_OFFSET);
+}
+
+static inline void account_softirq_exit(struct task_struct *tsk)
+{
+	vtime_account_softirq(tsk);
+	irqtime_account_irq(tsk, 0);
+}
+
+static inline void account_hardirq_enter(struct task_struct *tsk)
+{
+	vtime_account_irq(tsk, HARDIRQ_OFFSET);
+	irqtime_account_irq(tsk, HARDIRQ_OFFSET);
+}
+
+static inline void account_hardirq_exit(struct task_struct *tsk)
+{
+	vtime_account_hardirq(tsk);
+	irqtime_account_irq(tsk, 0);
+}
+
+#endif /* _LINUX_KERNEL_VTIME_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
