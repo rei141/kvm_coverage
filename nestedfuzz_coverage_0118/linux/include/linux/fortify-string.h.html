@@ -1,0 +1,665 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br>230.<br>231.<br>232.<br>233.<br>234.<br>235.<br>236.<br>237.<br>238.<br>239.<br>240.<br>241.<br>242.<br>243.<br>244.<br>245.<br>246.<br>247.<br>248.<br>249.<br>250.<br>251.<br>252.<br>253.<br>254.<br>255.<br>256.<br>257.<br>258.<br>259.<br>260.<br>261.<br>262.<br>263.<br>264.<br>265.<br>266.<br>267.<br>268.<br>269.<br>270.<br>271.<br>272.<br>273.<br>274.<br>275.<br>276.<br>277.<br>278.<br>279.<br>280.<br>281.<br>282.<br>283.<br>284.<br>285.<br>286.<br>287.<br>288.<br>289.<br>290.<br>291.<br>292.<br>293.<br>294.<br>295.<br>296.<br>297.<br>298.<br>299.<br>300.<br>301.<br>302.<br>303.<br>304.<br>305.<br>306.<br>307.<br>308.<br>309.<br>310.<br>311.<br>312.<br>313.<br>314.<br>315.<br>316.<br>317.<br>318.<br>319.<br>320.<br>321.<br>322.<br>323.<br>324.<br>325.<br>326.<br>327.<br>328.<br>329.<br>330.<br>331.<br>332.<br>333.<br>334.<br>335.<br>336.<br>337.<br>338.<br>339.<br>340.<br>341.<br>342.<br>343.<br>344.<br>345.<br>346.<br>347.<br>348.<br>349.<br>350.<br>351.<br>352.<br>353.<br>354.<br>355.<br>356.<br>357.<br>358.<br>359.<br>360.<br>361.<br>362.<br>363.<br>364.<br>365.<br>366.<br>367.<br>368.<br>369.<br>370.<br>371.<br>372.<br>373.<br>374.<br>375.<br>376.<br>377.<br>378.<br>379.<br>380.<br>381.<br>382.<br>383.<br>384.<br>385.<br>386.<br>387.<br>388.<br>389.<br>390.<br>391.<br>392.<br>393.<br>394.<br>395.<br>396.<br>397.<br>398.<br>399.<br>400.<br>401.<br>402.<br>403.<br>404.<br>405.<br>406.<br>407.<br>408.<br>409.<br>410.<br>411.<br>412.<br>413.<br>414.<br>415.<br>416.<br>417.<br>418.<br>419.<br>420.<br>421.<br>422.<br>423.<br>424.<br>425.<br>426.<br>427.<br>428.<br>429.<br>430.<br>431.<br>432.<br>433.<br>434.<br>435.<br>436.<br>437.<br>438.<br>439.<br>440.<br>441.<br>442.<br>443.<br>444.<br>445.<br>446.<br>447.<br>448.<br>449.<br>450.<br>451.<br>452.<br>453.<br>454.<br>455.<br>456.<br>457.<br>458.<br>459.<br>460.<br>461.<br>462.<br>463.<br>464.<br>465.<br>466.<br>467.<br>468.<br>469.<br>470.<br>471.<br>472.<br>473.<br>474.<br>475.<br>476.<br>477.<br>478.<br>479.<br>480.<br>481.<br>482.<br>483.<br>484.<br>485.<br>486.<br>487.<br>488.<br>489.<br>490.<br>491.<br>492.<br>493.<br>494.<br>495.<br>496.<br>497.<br>498.<br>499.<br>500.<br>501.<br>502.<br>503.<br>504.<br>505.<br>506.<br>507.<br>508.<br>509.<br>510.<br>511.<br>512.<br>513.<br>514.<br>515.<br>516.<br>517.<br>518.<br>519.<br>520.<br>521.<br>522.<br>523.<br>524.<br>525.<br>526.<br>527.<br>528.<br>529.<br>530.<br>531.<br>532.<br>533.<br>534.<br>535.<br>536.<br>537.<br>538.<br>539.<br>540.<br>541.<br>542.<br>543.<br>544.<br>545.<br>546.<br>547.<br>548.<br>549.<br>550.<br>551.<br>552.<br>553.<br>554.<br>555.<br>556.<br>557.<br>558.<br>559.<br>560.<br>561.<br>562.<br>563.<br>564.<br>565.<br>566.<br>567.<br>568.<br>569.<br>570.<br>571.<br>572.<br>573.<br>574.<br>575.<br>576.<br>577.<br>578.<br>579.<br>580.<br>581.<br>582.<br>583.<br>584.<br>585.<br>586.<br>587.<br>588.<br>589.<br>590.<br>591.<br>592.<br>593.<br>594.<br>595.<br>596.<br>597.<br>598.<br>599.<br>600.<br>601.<br>602.<br>603.<br>604.<br>605.<br>606.<br>607.<br>608.<br>609.<br>610.<br>611.<br>612.<br>613.<br>614.<br>615.<br>616.<br>617.<br>618.<br>619.<br>620.<br>621.<br>622.<br>623.<br>624.<br>625.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_FORTIFY_STRING_H_
+#define _LINUX_FORTIFY_STRING_H_
+
+#include &lt;linux/bug.h&gt;
+#include &lt;linux/const.h&gt;
+#include &lt;linux/limits.h&gt;
+
+#define __FORTIFY_INLINE extern __always_inline __gnu_inline __overloadable
+#define __RENAME(x) __asm__(#x)
+
+void fortify_panic(const char *name) __noreturn __cold;
+void __read_overflow(void) __compiletime_error(&quot;detected read beyond size of object (1st parameter)&quot;);
+void __read_overflow2(void) __compiletime_error(&quot;detected read beyond size of object (2nd parameter)&quot;);
+void __read_overflow2_field(size_t avail, size_t wanted) __compiletime_warning(&quot;detected read beyond size of field (2nd parameter); maybe use struct_group()?&quot;);
+void __write_overflow(void) __compiletime_error(&quot;detected write beyond size of object (1st parameter)&quot;);
+void __write_overflow_field(size_t avail, size_t wanted) __compiletime_warning(&quot;detected write beyond size of field (1st parameter); maybe use struct_group()?&quot;);
+
+#define __compiletime_strlen(p)					\
+({								\
+	unsigned char *__p = (unsigned char *)(p);		\
+	size_t __ret = SIZE_MAX;				\
+	size_t __p_size = __member_size(p);			\
+	if (__p_size != SIZE_MAX &amp;&amp;				\
+	    __builtin_constant_p(*__p)) {			\
+		size_t __p_len = __p_size - 1;			\
+		if (__builtin_constant_p(__p[__p_len]) &amp;&amp;	\
+		    __p[__p_len] == &#x27;\0&#x27;)			\
+			__ret = __builtin_strlen(__p);		\
+	}							\
+	__ret;							\
+})
+
+#if defined(CONFIG_KASAN_GENERIC) || defined(CONFIG_KASAN_SW_TAGS)
+extern void *__underlying_memchr(const void *p, int c, __kernel_size_t size) __RENAME(memchr);
+extern int __underlying_memcmp(const void *p, const void *q, __kernel_size_t size) __RENAME(memcmp);
+extern void *__underlying_memcpy(void *p, const void *q, __kernel_size_t size) __RENAME(memcpy);
+extern void *__underlying_memmove(void *p, const void *q, __kernel_size_t size) __RENAME(memmove);
+extern void *__underlying_memset(void *p, int c, __kernel_size_t size) __RENAME(memset);
+extern char *__underlying_strcat(char *p, const char *q) __RENAME(strcat);
+extern char *__underlying_strcpy(char *p, const char *q) __RENAME(strcpy);
+extern __kernel_size_t __underlying_strlen(const char *p) __RENAME(strlen);
+extern char *__underlying_strncat(char *p, const char *q, __kernel_size_t count) __RENAME(strncat);
+extern char *__underlying_strncpy(char *p, const char *q, __kernel_size_t size) __RENAME(strncpy);
+#else
+
+#if defined(__SANITIZE_MEMORY__)
+/*
+ * For KMSAN builds all memcpy/memset/memmove calls should be replaced by the
+ * corresponding __msan_XXX functions.
+ */
+#include &lt;linux/kmsan_string.h&gt;
+#define __underlying_memcpy	__msan_memcpy
+#define __underlying_memmove	__msan_memmove
+#define __underlying_memset	__msan_memset
+#else
+#define __underlying_memcpy	__builtin_memcpy
+#define __underlying_memmove	__builtin_memmove
+#define __underlying_memset	__builtin_memset
+#endif
+
+#define __underlying_memchr	__builtin_memchr
+#define __underlying_memcmp	__builtin_memcmp
+#define __underlying_strcat	__builtin_strcat
+#define __underlying_strcpy	__builtin_strcpy
+#define __underlying_strlen	__builtin_strlen
+#define __underlying_strncat	__builtin_strncat
+#define __underlying_strncpy	__builtin_strncpy
+#endif
+
+/**
+ * unsafe_memcpy - memcpy implementation with no FORTIFY bounds checking
+ *
+ * @dst: Destination memory address to write to
+ * @src: Source memory address to read from
+ * @bytes: How many bytes to write to @dst from @src
+ * @justification: Free-form text or comment describing why the use is needed
+ *
+ * This should be used for corner cases where the compiler cannot do the
+ * right thing, or during transitions between APIs, etc. It should be used
+ * very rarely, and includes a place for justification detailing where bounds
+ * checking has happened, and why existing solutions cannot be employed.
+ */
+#define unsafe_memcpy(dst, src, bytes, justification)		\
+	__underlying_memcpy(dst, src, bytes)
+
+/*
+ * Clang&#x27;s use of __builtin_*object_size() within inlines needs hinting via
+ * __pass_*object_size(). The preference is to only ever use type 1 (member
+ * size, rather than struct size), but there remain some stragglers using
+ * type 0 that will be converted in the future.
+ */
+#define POS			__pass_object_size(1)
+#define POS0			__pass_object_size(0)
+#define __struct_size(p)	__builtin_object_size(p, 0)
+#define __member_size(p)	__builtin_object_size(p, 1)
+
+#define __compiletime_lessthan(bounds, length)	(	\
+	__builtin_constant_p((bounds) &lt; (length)) &amp;&amp;	\
+	(bounds) &lt; (length)				\
+)
+
+/**
+ * strncpy - Copy a string to memory with non-guaranteed NUL padding
+ *
+ * @p: pointer to destination of copy
+ * @q: pointer to NUL-terminated source string to copy
+ * @size: bytes to write at @p
+ *
+ * If strlen(@q) &gt;= @size, the copy of @q will stop after @size bytes,
+ * and @p will NOT be NUL-terminated
+ *
+ * If strlen(@q) &lt; @size, following the copy of @q, trailing NUL bytes
+ * will be written to @p until @size total bytes have been written.
+ *
+ * Do not use this function. While FORTIFY_SOURCE tries to avoid
+ * over-reads of @q, it cannot defend against writing unterminated
+ * results to @p. Using strncpy() remains ambiguous and fragile.
+ * Instead, please choose an alternative, so that the expectation
+ * of @p&#x27;s contents is unambiguous:
+ *
+ * +--------------------+-----------------+------------+
+ * | @p needs to be:    | padded to @size | not padded |
+ * +====================+=================+============+
+ * |     NUL-terminated | strscpy_pad()   | strscpy()  |
+ * +--------------------+-----------------+------------+
+ * | not NUL-terminated | strtomem_pad()  | strtomem() |
+ * +--------------------+-----------------+------------+
+ *
+ * Note strscpy*()&#x27;s differing return values for detecting truncation,
+ * and strtomem*()&#x27;s expectation that the destination is marked with
+ * __nonstring when it is a character array.
+ *
+ */
+__FORTIFY_INLINE __diagnose_as(__builtin_strncpy, 1, 2, 3)
+char *strncpy(char * const POS p, const char *q, __kernel_size_t size)
+{
+	size_t p_size = __member_size(p);
+
+	if (__compiletime_lessthan(p_size, size))
+		__write_overflow();
+	if (p_size &lt; size)
+		fortify_panic(__func__);
+	return __underlying_strncpy(p, q, size);
+}
+
+__FORTIFY_INLINE __diagnose_as(__builtin_strcat, 1, 2)
+char *strcat(char * const POS p, const char *q)
+{
+	size_t p_size = __member_size(p);
+
+	if (p_size == SIZE_MAX)
+		return __underlying_strcat(p, q);
+	if (strlcat(p, q, p_size) &gt;= p_size)
+		fortify_panic(__func__);
+	return p;
+}
+
+extern __kernel_size_t __real_strnlen(const char *, __kernel_size_t) __RENAME(strnlen);
+__FORTIFY_INLINE __kernel_size_t strnlen(const char * const POS p, __kernel_size_t maxlen)
+{
+	size_t p_size = __member_size(p);
+	size_t p_len = __compiletime_strlen(p);
+	size_t ret;
+
+	/* We can take compile-time actions when maxlen is const. */
+	if (__builtin_constant_p(maxlen) &amp;&amp; p_len != SIZE_MAX) {
+		/* If p is const, we can use its compile-time-known len. */
+		if (maxlen &gt;= p_size)
+			return p_len;
+	}
+
+	/* Do not check characters beyond the end of p. */
+	ret = __real_strnlen(p, maxlen &lt; p_size ? maxlen : p_size);
+	if (p_size &lt;= ret &amp;&amp; maxlen != ret)
+		fortify_panic(__func__);
+	return ret;
+}
+
+/*
+ * Defined after fortified strnlen to reuse it. However, it must still be
+ * possible for strlen() to be used on compile-time strings for use in
+ * static initializers (i.e. as a constant expression).
+ */
+#define strlen(p)							\
+	__builtin_choose_expr(__is_constexpr(__builtin_strlen(p)),	\
+		__builtin_strlen(p), __fortify_strlen(p))
+__FORTIFY_INLINE __diagnose_as(__builtin_strlen, 1)
+__kernel_size_t __fortify_strlen(const char * const POS p)
+{
+	__kernel_size_t ret;
+	size_t p_size = __member_size(p);
+
+	/* Give up if we don&#x27;t know how large p is. */
+	if (p_size == SIZE_MAX)
+<yellow>		return __underlying_strlen(p);</yellow>
+	ret = strnlen(p, p_size);
+	if (p_size &lt;= ret)
+		fortify_panic(__func__);
+	return ret;
+}
+
+/* defined after fortified strlen to reuse it */
+extern size_t __real_strlcpy(char *, const char *, size_t) __RENAME(strlcpy);
+__FORTIFY_INLINE size_t strlcpy(char * const POS p, const char * const POS q, size_t size)
+{
+	size_t p_size = __member_size(p);
+	size_t q_size = __member_size(q);
+	size_t q_len;	/* Full count of source string length. */
+	size_t len;	/* Count of characters going into destination. */
+
+	if (p_size == SIZE_MAX &amp;&amp; q_size == SIZE_MAX)
+		return __real_strlcpy(p, q, size);
+	q_len = strlen(q);
+	len = (q_len &gt;= size) ? size - 1 : q_len;
+	if (__builtin_constant_p(size) &amp;&amp; __builtin_constant_p(q_len) &amp;&amp; size) {
+		/* Write size is always larger than destination. */
+		if (len &gt;= p_size)
+			__write_overflow();
+	}
+	if (size) {
+		if (len &gt;= p_size)
+			fortify_panic(__func__);
+		__underlying_memcpy(p, q, len);
+		p[len] = &#x27;\0&#x27;;
+	}
+	return q_len;
+}
+
+/* defined after fortified strnlen to reuse it */
+extern ssize_t __real_strscpy(char *, const char *, size_t) __RENAME(strscpy);
+__FORTIFY_INLINE ssize_t strscpy(char * const POS p, const char * const POS q, size_t size)
+{
+	size_t len;
+	/* Use string size rather than possible enclosing struct size. */
+	size_t p_size = __member_size(p);
+	size_t q_size = __member_size(q);
+
+	/* If we cannot get size of p and q default to call strscpy. */
+	if (p_size == SIZE_MAX &amp;&amp; q_size == SIZE_MAX)
+		return __real_strscpy(p, q, size);
+
+	/*
+	 * If size can be known at compile time and is greater than
+	 * p_size, generate a compile time write overflow error.
+	 */
+	if (__compiletime_lessthan(p_size, size))
+		__write_overflow();
+
+	/*
+	 * This call protects from read overflow, because len will default to q
+	 * length if it smaller than size.
+	 */
+	len = strnlen(q, size);
+	/*
+	 * If len equals size, we will copy only size bytes which leads to
+	 * -E2BIG being returned.
+	 * Otherwise we will copy len + 1 because of the final &#x27;\O&#x27;.
+	 */
+	len = len == size ? size : len + 1;
+
+	/*
+	 * Generate a runtime write overflow error if len is greater than
+	 * p_size.
+	 */
+	if (len &gt; p_size)
+		fortify_panic(__func__);
+
+	/*
+	 * We can now safely call vanilla strscpy because we are protected from:
+	 * 1. Read overflow thanks to call to strnlen().
+	 * 2. Write overflow thanks to above ifs.
+	 */
+	return __real_strscpy(p, q, len);
+}
+
+/* defined after fortified strlen and strnlen to reuse them */
+__FORTIFY_INLINE __diagnose_as(__builtin_strncat, 1, 2, 3)
+char *strncat(char * const POS p, const char * const POS q, __kernel_size_t count)
+{
+	size_t p_len, copy_len;
+	size_t p_size = __member_size(p);
+	size_t q_size = __member_size(q);
+
+	if (p_size == SIZE_MAX &amp;&amp; q_size == SIZE_MAX)
+		return __underlying_strncat(p, q, count);
+	p_len = strlen(p);
+	copy_len = strnlen(q, count);
+	if (p_size &lt; p_len + copy_len + 1)
+		fortify_panic(__func__);
+	__underlying_memcpy(p + p_len, q, copy_len);
+	p[p_len + copy_len] = &#x27;\0&#x27;;
+	return p;
+}
+
+__FORTIFY_INLINE void fortify_memset_chk(__kernel_size_t size,
+					 const size_t p_size,
+					 const size_t p_size_field)
+{
+	if (__builtin_constant_p(size)) {
+		/*
+		 * Length argument is a constant expression, so we
+		 * can perform compile-time bounds checking where
+		 * buffer sizes are also known at compile time.
+		 */
+
+		/* Error when size is larger than enclosing struct. */
+		if (__compiletime_lessthan(p_size_field, p_size) &amp;&amp;
+		    __compiletime_lessthan(p_size, size))
+			__write_overflow();
+
+		/* Warn when write size is larger than dest field. */
+		if (__compiletime_lessthan(p_size_field, size))
+			__write_overflow_field(p_size_field, size);
+	}
+	/*
+	 * At this point, length argument may not be a constant expression,
+	 * so run-time bounds checking can be done where buffer sizes are
+	 * known. (This is not an &quot;else&quot; because the above checks may only
+	 * be compile-time warnings, and we want to still warn for run-time
+	 * overflows.)
+	 */
+
+	/*
+	 * Always stop accesses beyond the struct that contains the
+	 * field, when the buffer&#x27;s remaining size is known.
+	 * (The SIZE_MAX test is to optimize away checks where the buffer
+	 * lengths are unknown.)
+	 */
+	if (p_size != SIZE_MAX &amp;&amp; p_size &lt; size)
+		fortify_panic(&quot;memset&quot;);
+}
+
+#define __fortify_memset_chk(p, c, size, p_size, p_size_field) ({	\
+	size_t __fortify_size = (size_t)(size);				\
+	fortify_memset_chk(__fortify_size, p_size, p_size_field),	\
+	__underlying_memset(p, c, __fortify_size);			\
+})
+
+/*
+ * __struct_size() vs __member_size() must be captured here to avoid
+ * evaluating argument side-effects further into the macro layers.
+ */
+#ifndef CONFIG_KMSAN
+#define memset(p, c, s) __fortify_memset_chk(p, c, s,			\
+		__struct_size(p), __member_size(p))
+#endif
+
+/*
+ * To make sure the compiler can enforce protection against buffer overflows,
+ * memcpy(), memmove(), and memset() must not be used beyond individual
+ * struct members. If you need to copy across multiple members, please use
+ * struct_group() to create a named mirror of an anonymous struct union.
+ * (e.g. see struct sk_buff.) Read overflow checking is currently only
+ * done when a write overflow is also present, or when building with W=1.
+ *
+ * Mitigation coverage matrix
+ *					Bounds checking at:
+ *					+-------+-------+-------+-------+
+ *					| Compile time  |   Run time    |
+ * memcpy() argument sizes:		| write | read  | write | read  |
+ *        dest     source   length      +-------+-------+-------+-------+
+ * memcpy(known,   known,   constant)	|   y   |   y   |  n/a  |  n/a  |
+ * memcpy(known,   unknown, constant)	|   y   |   n   |  n/a  |   V   |
+ * memcpy(known,   known,   dynamic)	|   n   |   n   |   B   |   B   |
+ * memcpy(known,   unknown, dynamic)	|   n   |   n   |   B   |   V   |
+ * memcpy(unknown, known,   constant)	|   n   |   y   |   V   |  n/a  |
+ * memcpy(unknown, unknown, constant)	|   n   |   n   |   V   |   V   |
+ * memcpy(unknown, known,   dynamic)	|   n   |   n   |   V   |   B   |
+ * memcpy(unknown, unknown, dynamic)	|   n   |   n   |   V   |   V   |
+ *					+-------+-------+-------+-------+
+ *
+ * y = perform deterministic compile-time bounds checking
+ * n = cannot perform deterministic compile-time bounds checking
+ * n/a = no run-time bounds checking needed since compile-time deterministic
+ * B = can perform run-time bounds checking (currently unimplemented)
+ * V = vulnerable to run-time overflow (will need refactoring to solve)
+ *
+ */
+__FORTIFY_INLINE bool fortify_memcpy_chk(__kernel_size_t size,
+					 const size_t p_size,
+					 const size_t q_size,
+					 const size_t p_size_field,
+					 const size_t q_size_field,
+					 const char *func)
+{
+	if (__builtin_constant_p(size)) {
+		/*
+		 * Length argument is a constant expression, so we
+		 * can perform compile-time bounds checking where
+		 * buffer sizes are also known at compile time.
+		 */
+
+		/* Error when size is larger than enclosing struct. */
+		if (__compiletime_lessthan(p_size_field, p_size) &amp;&amp;
+		    __compiletime_lessthan(p_size, size))
+			__write_overflow();
+		if (__compiletime_lessthan(q_size_field, q_size) &amp;&amp;
+		    __compiletime_lessthan(q_size, size))
+			__read_overflow2();
+
+		/* Warn when write size argument larger than dest field. */
+		if (__compiletime_lessthan(p_size_field, size))
+			__write_overflow_field(p_size_field, size);
+		/*
+		 * Warn for source field over-read when building with W=1
+		 * or when an over-write happened, so both can be fixed at
+		 * the same time.
+		 */
+		if ((IS_ENABLED(KBUILD_EXTRA_WARN1) ||
+		     __compiletime_lessthan(p_size_field, size)) &amp;&amp;
+		    __compiletime_lessthan(q_size_field, size))
+			__read_overflow2_field(q_size_field, size);
+	}
+	/*
+	 * At this point, length argument may not be a constant expression,
+	 * so run-time bounds checking can be done where buffer sizes are
+	 * known. (This is not an &quot;else&quot; because the above checks may only
+	 * be compile-time warnings, and we want to still warn for run-time
+	 * overflows.)
+	 */
+
+	/*
+	 * Always stop accesses beyond the struct that contains the
+	 * field, when the buffer&#x27;s remaining size is known.
+	 * (The SIZE_MAX test is to optimize away checks where the buffer
+	 * lengths are unknown.)
+	 */
+	if ((p_size != SIZE_MAX &amp;&amp; p_size &lt; size) ||
+	    (q_size != SIZE_MAX &amp;&amp; q_size &lt; size))
+		fortify_panic(func);
+
+	/*
+	 * Warn when writing beyond destination field size.
+	 *
+	 * We must ignore p_size_field == 0 for existing 0-element
+	 * fake flexible arrays, until they are all converted to
+	 * proper flexible arrays.
+	 *
+	 * The implementation of __builtin_*object_size() behaves
+	 * like sizeof() when not directly referencing a flexible
+	 * array member, which means there will be many bounds checks
+	 * that will appear at run-time, without a way for them to be
+	 * detected at compile-time (as can be done when the destination
+	 * is specifically the flexible array member).
+	 * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101832
+	 */
+	if (p_size_field != 0 &amp;&amp; p_size_field != SIZE_MAX &amp;&amp;
+<blue>	    p_size != p_size_field && p_size_field < size)</blue>
+		return true;
+
+	return false;
+}
+
+#define __fortify_memcpy_chk(p, q, size, p_size, q_size,		\
+			     p_size_field, q_size_field, op) ({		\
+	const size_t __fortify_size = (size_t)(size);			\
+	const size_t __p_size = (p_size);				\
+	const size_t __q_size = (q_size);				\
+	const size_t __p_size_field = (p_size_field);			\
+	const size_t __q_size_field = (q_size_field);			\
+	WARN_ONCE(fortify_memcpy_chk(__fortify_size, __p_size,		\
+				     __q_size, __p_size_field,		\
+				     __q_size_field, #op),		\
+		  #op &quot;: detected field-spanning write (size %zu) of single %s (size %zu)\n&quot;, \
+		  __fortify_size,					\
+		  &quot;field \&quot;&quot; #p &quot;\&quot; at &quot; __FILE__ &quot;:&quot; __stringify(__LINE__), \
+		  __p_size_field);					\
+	__underlying_##op(p, q, __fortify_size);			\
+})
+
+/*
+ * Notes about compile-time buffer size detection:
+ *
+ * With these types...
+ *
+ *	struct middle {
+ *		u16 a;
+ *		u8 middle_buf[16];
+ *		int b;
+ *	};
+ *	struct end {
+ *		u16 a;
+ *		u8 end_buf[16];
+ *	};
+ *	struct flex {
+ *		int a;
+ *		u8 flex_buf[];
+ *	};
+ *
+ *	void func(TYPE *ptr) { ... }
+ *
+ * Cases where destination size cannot be currently detected:
+ * - the size of ptr&#x27;s object (seemingly by design, gcc &amp; clang fail):
+ *	__builtin_object_size(ptr, 1) == SIZE_MAX
+ * - the size of flexible arrays in ptr&#x27;s obj (by design, dynamic size):
+ *	__builtin_object_size(ptr-&gt;flex_buf, 1) == SIZE_MAX
+ * - the size of ANY array at the end of ptr&#x27;s obj (gcc and clang bug):
+ *	__builtin_object_size(ptr-&gt;end_buf, 1) == SIZE_MAX
+ *	https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101836
+ *
+ * Cases where destination size is currently detected:
+ * - the size of non-array members within ptr&#x27;s object:
+ *	__builtin_object_size(ptr-&gt;a, 1) == 2
+ * - the size of non-flexible-array in the middle of ptr&#x27;s obj:
+ *	__builtin_object_size(ptr-&gt;middle_buf, 1) == 16
+ *
+ */
+
+/*
+ * __struct_size() vs __member_size() must be captured here to avoid
+ * evaluating argument side-effects further into the macro layers.
+ */
+#define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,			\
+		__struct_size(p), __struct_size(q),			\
+		__member_size(p), __member_size(q),			\
+		memcpy)
+#define memmove(p, q, s)  __fortify_memcpy_chk(p, q, s,			\
+		__struct_size(p), __struct_size(q),			\
+		__member_size(p), __member_size(q),			\
+		memmove)
+
+extern void *__real_memscan(void *, int, __kernel_size_t) __RENAME(memscan);
+__FORTIFY_INLINE void *memscan(void * const POS0 p, int c, __kernel_size_t size)
+{
+	size_t p_size = __struct_size(p);
+
+	if (__compiletime_lessthan(p_size, size))
+		__read_overflow();
+	if (p_size &lt; size)
+		fortify_panic(__func__);
+	return __real_memscan(p, c, size);
+}
+
+__FORTIFY_INLINE __diagnose_as(__builtin_memcmp, 1, 2, 3)
+int memcmp(const void * const POS0 p, const void * const POS0 q, __kernel_size_t size)
+{
+	size_t p_size = __struct_size(p);
+	size_t q_size = __struct_size(q);
+
+	if (__builtin_constant_p(size)) {
+		if (__compiletime_lessthan(p_size, size))
+			__read_overflow();
+		if (__compiletime_lessthan(q_size, size))
+			__read_overflow2();
+	}
+	if (p_size &lt; size || q_size &lt; size)
+		fortify_panic(__func__);
+<yellow>	return __underlying_memcmp(p, q, size);</yellow>
+}
+
+__FORTIFY_INLINE __diagnose_as(__builtin_memchr, 1, 2, 3)
+void *memchr(const void * const POS0 p, int c, __kernel_size_t size)
+{
+	size_t p_size = __struct_size(p);
+
+	if (__compiletime_lessthan(p_size, size))
+		__read_overflow();
+	if (p_size &lt; size)
+		fortify_panic(__func__);
+	return __underlying_memchr(p, c, size);
+}
+
+void *__real_memchr_inv(const void *s, int c, size_t n) __RENAME(memchr_inv);
+__FORTIFY_INLINE void *memchr_inv(const void * const POS0 p, int c, size_t size)
+{
+	size_t p_size = __struct_size(p);
+
+	if (__compiletime_lessthan(p_size, size))
+		__read_overflow();
+	if (p_size &lt; size)
+		fortify_panic(__func__);
+	return __real_memchr_inv(p, c, size);
+}
+
+extern void *__real_kmemdup(const void *src, size_t len, gfp_t gfp) __RENAME(kmemdup);
+__FORTIFY_INLINE void *kmemdup(const void * const POS0 p, size_t size, gfp_t gfp)
+{
+	size_t p_size = __struct_size(p);
+
+	if (__compiletime_lessthan(p_size, size))
+		__read_overflow();
+	if (p_size &lt; size)
+		fortify_panic(__func__);
+	return __real_kmemdup(p, size, gfp);
+}
+
+/* Defined after fortified strlen to reuse it. */
+__FORTIFY_INLINE __diagnose_as(__builtin_strcpy, 1, 2)
+char *strcpy(char * const POS p, const char * const POS q)
+{
+	size_t p_size = __member_size(p);
+	size_t q_size = __member_size(q);
+	size_t size;
+
+	/* If neither buffer size is known, immediately give up. */
+	if (__builtin_constant_p(p_size) &amp;&amp;
+	    __builtin_constant_p(q_size) &amp;&amp;
+	    p_size == SIZE_MAX &amp;&amp; q_size == SIZE_MAX)
+		return __underlying_strcpy(p, q);
+	size = strlen(q) + 1;
+	/* Compile-time check for const size overflow. */
+	if (__compiletime_lessthan(p_size, size))
+		__write_overflow();
+	/* Run-time check for dynamic size overflow. */
+	if (p_size &lt; size)
+		fortify_panic(__func__);
+	__underlying_memcpy(p, q, size);
+	return p;
+}
+
+/* Don&#x27;t use these outside the FORITFY_SOURCE implementation */
+#undef __underlying_memchr
+#undef __underlying_memcmp
+#undef __underlying_strcat
+#undef __underlying_strcpy
+#undef __underlying_strlen
+#undef __underlying_strncat
+#undef __underlying_strncpy
+
+#undef POS
+#undef POS0
+
+#endif /* _LINUX_FORTIFY_STRING_H_ */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
