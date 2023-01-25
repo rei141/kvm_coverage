@@ -1,0 +1,159 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0
+
+#ifndef __KVM_X86_MMU_TDP_ITER_H
+#define __KVM_X86_MMU_TDP_ITER_H
+
+#include &lt;linux/kvm_host.h&gt;
+
+#include &quot;mmu.h&quot;
+#include &quot;spte.h&quot;
+
+/*
+ * TDP MMU SPTEs are RCU protected to allow paging structures (non-leaf SPTEs)
+ * to be zapped while holding mmu_lock for read, and to allow TLB flushes to be
+ * batched without having to collect the list of zapped SPs.  Flows that can
+ * remove SPs must service pending TLB flushes prior to dropping RCU protection.
+ */
+static inline u64 kvm_tdp_mmu_read_spte(tdp_ptep_t sptep)
+{
+<yellow>	return READ_ONCE(*rcu_dereference(sptep));</yellow>
+}
+
+static inline u64 kvm_tdp_mmu_write_spte_atomic(tdp_ptep_t sptep, u64 new_spte)
+{
+<blue>	return xchg(rcu_dereference(sptep), new_spte);</blue>
+}
+
+static inline void __kvm_tdp_mmu_write_spte(tdp_ptep_t sptep, u64 new_spte)
+{
+<blue>	WRITE_ONCE(*rcu_dereference(sptep), new_spte);</blue>
+}
+
+<yellow>static inline u64 kvm_tdp_mmu_write_spte(tdp_ptep_t sptep, u64 old_spte,</yellow>
+					 u64 new_spte, int level)
+{
+	/*
+	 * Atomically write the SPTE if it is a shadow-present, leaf SPTE with
+	 * volatile bits, i.e. has bits that can be set outside of mmu_lock.
+	 * The Writable bit can be set by KVM&#x27;s fast page fault handler, and
+	 * Accessed and Dirty bits can be set by the CPU.
+	 *
+	 * Note, non-leaf SPTEs do have Accessed bits and those bits are
+	 * technically volatile, but KVM doesn&#x27;t consume the Accessed bit of
+	 * non-leaf SPTEs, i.e. KVM doesn&#x27;t care if it clobbers the bit.  This
+	 * logic needs to be reassessed if KVM were to use non-leaf Accessed
+	 * bits, e.g. to skip stepping down into child SPTEs when aging SPTEs.
+	 */
+<blue>	if (is_shadow_present_pte(old_spte) && is_last_spte(old_spte, level) &&</blue>
+<blue>	    spte_has_volatile_bits(old_spte))</blue>
+<yellow>		return kvm_tdp_mmu_write_spte_atomic(sptep, new_spte);</yellow>
+
+<blue>	__kvm_tdp_mmu_write_spte(sptep, new_spte);</blue>
+	return old_spte;
+}
+
+/*
+ * A TDP iterator performs a pre-order walk over a TDP paging structure.
+ */
+struct tdp_iter {
+	/*
+	 * The iterator will traverse the paging structure towards the mapping
+	 * for this GFN.
+	 */
+	gfn_t next_last_level_gfn;
+	/*
+	 * The next_last_level_gfn at the time when the thread last
+	 * yielded. Only yielding when the next_last_level_gfn !=
+	 * yielded_gfn helps ensure forward progress.
+	 */
+	gfn_t yielded_gfn;
+	/* Pointers to the page tables traversed to reach the current SPTE */
+	tdp_ptep_t pt_path[PT64_ROOT_MAX_LEVEL];
+	/* A pointer to the current SPTE */
+	tdp_ptep_t sptep;
+	/* The lowest GFN mapped by the current SPTE */
+	gfn_t gfn;
+	/* The level of the root page given to the iterator */
+	int root_level;
+	/* The lowest level the iterator should traverse to */
+	int min_level;
+	/* The iterator&#x27;s current level within the paging structure */
+	int level;
+	/* The address space ID, i.e. SMM vs. regular. */
+	int as_id;
+	/* A snapshot of the value at sptep */
+	u64 old_spte;
+	/*
+	 * Whether the iterator has a valid state. This will be false if the
+	 * iterator walks off the end of the paging structure.
+	 */
+	bool valid;
+	/*
+	 * True if KVM dropped mmu_lock and yielded in the middle of a walk, in
+	 * which case tdp_iter_next() needs to restart the walk at the root
+	 * level instead of advancing to the next entry.
+	 */
+	bool yielded;
+};
+
+/*
+ * Iterates over every SPTE mapping the GFN range [start, end) in a
+ * preorder traversal.
+ */
+#define for_each_tdp_pte_min_level(iter, root, min_level, start, end) \
+	for (tdp_iter_start(&amp;iter, root, min_level, start); \
+	     iter.valid &amp;&amp; iter.gfn &lt; end;		     \
+	     tdp_iter_next(&amp;iter))
+
+#define for_each_tdp_pte(iter, root, start, end) \
+	for_each_tdp_pte_min_level(iter, root, PG_LEVEL_4K, start, end)
+
+tdp_ptep_t spte_to_child_pt(u64 pte, int level);
+
+void tdp_iter_start(struct tdp_iter *iter, struct kvm_mmu_page *root,
+		    int min_level, gfn_t next_last_level_gfn);
+void tdp_iter_next(struct tdp_iter *iter);
+void tdp_iter_restart(struct tdp_iter *iter);
+
+#endif /* __KVM_X86_MMU_TDP_ITER_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
