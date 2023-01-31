@@ -1,0 +1,286 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br>136.<br>137.<br>138.<br>139.<br>140.<br>141.<br>142.<br>143.<br>144.<br>145.<br>146.<br>147.<br>148.<br>149.<br>150.<br>151.<br>152.<br>153.<br>154.<br>155.<br>156.<br>157.<br>158.<br>159.<br>160.<br>161.<br>162.<br>163.<br>164.<br>165.<br>166.<br>167.<br>168.<br>169.<br>170.<br>171.<br>172.<br>173.<br>174.<br>175.<br>176.<br>177.<br>178.<br>179.<br>180.<br>181.<br>182.<br>183.<br>184.<br>185.<br>186.<br>187.<br>188.<br>189.<br>190.<br>191.<br>192.<br>193.<br>194.<br>195.<br>196.<br>197.<br>198.<br>199.<br>200.<br>201.<br>202.<br>203.<br>204.<br>205.<br>206.<br>207.<br>208.<br>209.<br>210.<br>211.<br>212.<br>213.<br>214.<br>215.<br>216.<br>217.<br>218.<br>219.<br>220.<br>221.<br>222.<br>223.<br>224.<br>225.<br>226.<br>227.<br>228.<br>229.<br>230.<br>231.<br>232.<br>233.<br>234.<br>235.<br>236.<br>237.<br>238.<br>239.<br>240.<br>241.<br>242.<br>243.<br>244.<br>245.<br>246.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __KVM_X86_VMX_EVMCS_H
+#define __KVM_X86_VMX_EVMCS_H
+
+#include &lt;linux/jump_label.h&gt;
+
+#include &lt;asm/hyperv-tlfs.h&gt;
+#include &lt;asm/mshyperv.h&gt;
+#include &lt;asm/vmx.h&gt;
+
+#include &quot;capabilities.h&quot;
+#include &quot;vmcs.h&quot;
+#include &quot;vmcs12.h&quot;
+
+struct vmcs_config;
+
+DECLARE_STATIC_KEY_FALSE(enable_evmcs);
+
+#define current_evmcs ((struct hv_enlightened_vmcs *)this_cpu_read(current_vmcs))
+
+#define KVM_EVMCS_VERSION 1
+
+/*
+ * Enlightened VMCSv1 doesn&#x27;t support these:
+ *
+ *	POSTED_INTR_NV                  = 0x00000002,
+ *	GUEST_INTR_STATUS               = 0x00000810,
+ *	APIC_ACCESS_ADDR		= 0x00002014,
+ *	POSTED_INTR_DESC_ADDR           = 0x00002016,
+ *	EOI_EXIT_BITMAP0                = 0x0000201c,
+ *	EOI_EXIT_BITMAP1                = 0x0000201e,
+ *	EOI_EXIT_BITMAP2                = 0x00002020,
+ *	EOI_EXIT_BITMAP3                = 0x00002022,
+ *	GUEST_PML_INDEX			= 0x00000812,
+ *	PML_ADDRESS			= 0x0000200e,
+ *	VM_FUNCTION_CONTROL             = 0x00002018,
+ *	EPTP_LIST_ADDRESS               = 0x00002024,
+ *	VMREAD_BITMAP                   = 0x00002026,
+ *	VMWRITE_BITMAP                  = 0x00002028,
+ *
+ *	TSC_MULTIPLIER                  = 0x00002032,
+ *	PLE_GAP                         = 0x00004020,
+ *	PLE_WINDOW                      = 0x00004022,
+ *	VMX_PREEMPTION_TIMER_VALUE      = 0x0000482E,
+ *
+ * Currently unsupported in KVM:
+ *	GUEST_IA32_RTIT_CTL		= 0x00002814,
+ */
+#define EVMCS1_UNSUPPORTED_PINCTRL (PIN_BASED_POSTED_INTR | \
+				    PIN_BASED_VMX_PREEMPTION_TIMER)
+#define EVMCS1_UNSUPPORTED_EXEC_CTRL (CPU_BASED_ACTIVATE_TERTIARY_CONTROLS)
+#define EVMCS1_UNSUPPORTED_2NDEXEC					\
+	(SECONDARY_EXEC_VIRTUAL_INTR_DELIVERY |				\
+	 SECONDARY_EXEC_VIRTUALIZE_APIC_ACCESSES |			\
+	 SECONDARY_EXEC_APIC_REGISTER_VIRT |				\
+	 SECONDARY_EXEC_ENABLE_PML |					\
+	 SECONDARY_EXEC_ENABLE_VMFUNC |					\
+	 SECONDARY_EXEC_SHADOW_VMCS |					\
+	 SECONDARY_EXEC_TSC_SCALING |					\
+	 SECONDARY_EXEC_PAUSE_LOOP_EXITING)
+#define EVMCS1_UNSUPPORTED_VMEXIT_CTRL					\
+	(VM_EXIT_SAVE_VMX_PREEMPTION_TIMER)
+#define EVMCS1_UNSUPPORTED_VMENTRY_CTRL (0)
+#define EVMCS1_UNSUPPORTED_VMFUNC (VMX_VMFUNC_EPTP_SWITCHING)
+
+struct evmcs_field {
+	u16 offset;
+	u16 clean_field;
+};
+
+extern const struct evmcs_field vmcs_field_to_evmcs_1[];
+extern const unsigned int nr_evmcs_1_fields;
+
+static __always_inline int evmcs_field_offset(unsigned long field,
+					      u16 *clean_field)
+{
+<yellow>	unsigned int index = ROL16(field, 6);</yellow>
+	const struct evmcs_field *evmcs_field;
+
+<blue>	if (unlikely(index >= nr_evmcs_1_fields))</blue>
+		return -ENOENT;
+
+	evmcs_field = &amp;vmcs_field_to_evmcs_1[index];
+
+	/*
+	 * Use offset=0 to detect holes in eVMCS. This offset belongs to
+	 * &#x27;revision_id&#x27; but this field has no encoding and is supposed to
+	 * be accessed directly.
+	 */
+<blue>	if (unlikely(!evmcs_field->offset))</blue>
+		return -ENOENT;
+
+	if (clean_field)
+<yellow>		*clean_field = evmcs_field->clean_field;</yellow>
+
+<yellow>	return evmcs_field->offset;</yellow>
+}
+
+static inline u64 evmcs_read_any(struct hv_enlightened_vmcs *evmcs,
+				 unsigned long field, u16 offset)
+{
+	/*
+	 * vmcs12_read_any() doesn&#x27;t care whether the supplied structure
+	 * is &#x27;struct vmcs12&#x27; or &#x27;struct hv_enlightened_vmcs&#x27; as it takes
+	 * the exact offset of the required field, use it for convenience
+	 * here.
+	 */
+<blue>	return vmcs12_read_any((void *)evmcs, field, offset);</blue>
+}
+
+#if IS_ENABLED(CONFIG_HYPERV)
+
+static __always_inline int get_evmcs_offset(unsigned long field,
+					    u16 *clean_field)
+{
+<yellow>	int offset = evmcs_field_offset(field, clean_field);</yellow>
+
+<yellow>	WARN_ONCE(offset < 0, "KVM: accessing unsupported EVMCS field %lx\n",</yellow>
+		  field);
+
+	return offset;
+}
+
+static __always_inline void evmcs_write64(unsigned long field, u64 value)
+{
+	u16 clean_field;
+<yellow>	int offset = get_evmcs_offset(field, &clean_field);</yellow>
+
+	if (offset &lt; 0)
+		return;
+
+	*(u64 *)((char *)current_evmcs + offset) = value;
+
+	current_evmcs-&gt;hv_clean_fields &amp;= ~clean_field;
+}
+
+static inline void evmcs_write32(unsigned long field, u32 value)
+{
+	u16 clean_field;
+<yellow>	int offset = get_evmcs_offset(field, &clean_field);</yellow>
+
+	if (offset &lt; 0)
+		return;
+
+	*(u32 *)((char *)current_evmcs + offset) = value;
+	current_evmcs-&gt;hv_clean_fields &amp;= ~clean_field;
+<yellow>}</yellow>
+
+static inline void evmcs_write16(unsigned long field, u16 value)
+{
+	u16 clean_field;
+<yellow>	int offset = get_evmcs_offset(field, &clean_field);</yellow>
+
+	if (offset &lt; 0)
+		return;
+
+	*(u16 *)((char *)current_evmcs + offset) = value;
+	current_evmcs-&gt;hv_clean_fields &amp;= ~clean_field;
+<yellow>}</yellow>
+
+static inline u64 evmcs_read64(unsigned long field)
+{
+<yellow>	int offset = get_evmcs_offset(field, NULL);</yellow>
+
+	if (offset &lt; 0)
+<yellow>		return 0;</yellow>
+
+<yellow>	return *(u64 *)((char *)current_evmcs + offset);</yellow>
+<yellow>}</yellow>
+
+static inline u32 evmcs_read32(unsigned long field)
+{
+<yellow>	int offset = get_evmcs_offset(field, NULL);</yellow>
+
+	if (offset &lt; 0)
+<yellow>		return 0;</yellow>
+
+<yellow>	return *(u32 *)((char *)current_evmcs + offset);</yellow>
+<yellow>}</yellow>
+
+static inline u16 evmcs_read16(unsigned long field)
+<yellow>{</yellow>
+<yellow>	int offset = get_evmcs_offset(field, NULL);</yellow>
+
+	if (offset &lt; 0)
+<yellow>		return 0;</yellow>
+
+<yellow>	return *(u16 *)((char *)current_evmcs + offset);</yellow>
+<yellow>}</yellow>
+
+static inline void evmcs_touch_msr_bitmap(void)
+{
+<yellow>	if (unlikely(!current_evmcs))</yellow>
+		return;
+
+<yellow>	if (current_evmcs->hv_enlightenments_control.msr_bitmap)</yellow>
+<yellow>		current_evmcs->hv_clean_fields &=</yellow>
+			~HV_VMX_ENLIGHTENED_CLEAN_FIELD_MSR_BITMAP;
+}
+
+static inline void evmcs_load(u64 phys_addr)
+{
+	struct hv_vp_assist_page *vp_ap =
+<yellow>		hv_get_vp_assist_page(smp_processor_id());</yellow>
+
+<yellow>	if (current_evmcs->hv_enlightenments_control.nested_flush_hypercall)</yellow>
+<yellow>		vp_ap->nested_control.features.directhypercall = 1;</yellow>
+<yellow>	vp_ap->current_nested_vmcs = phys_addr;</yellow>
+	vp_ap-&gt;enlighten_vmentry = 1;
+}
+
+#else /* !IS_ENABLED(CONFIG_HYPERV) */
+static __always_inline void evmcs_write64(unsigned long field, u64 value) {}
+static inline void evmcs_write32(unsigned long field, u32 value) {}
+static inline void evmcs_write16(unsigned long field, u16 value) {}
+static inline u64 evmcs_read64(unsigned long field) { return 0; }
+static inline u32 evmcs_read32(unsigned long field) { return 0; }
+static inline u16 evmcs_read16(unsigned long field) { return 0; }
+static inline void evmcs_load(u64 phys_addr) {}
+static inline void evmcs_touch_msr_bitmap(void) {}
+#endif /* IS_ENABLED(CONFIG_HYPERV) */
+
+#define EVMPTR_INVALID (-1ULL)
+#define EVMPTR_MAP_PENDING (-2ULL)
+
+static inline bool evmptr_is_valid(u64 evmptr)
+{
+	return evmptr != EVMPTR_INVALID &amp;&amp; evmptr != EVMPTR_MAP_PENDING;
+}
+
+enum nested_evmptrld_status {
+	EVMPTRLD_DISABLED,
+	EVMPTRLD_SUCCEEDED,
+	EVMPTRLD_VMFAIL,
+	EVMPTRLD_ERROR,
+};
+
+bool nested_enlightened_vmentry(struct kvm_vcpu *vcpu, u64 *evmcs_gpa);
+uint16_t nested_get_evmcs_version(struct kvm_vcpu *vcpu);
+int nested_enable_evmcs(struct kvm_vcpu *vcpu,
+			uint16_t *vmcs_version);
+void nested_evmcs_filter_control_msr(struct kvm_vcpu *vcpu, u32 msr_index, u64 *pdata);
+int nested_evmcs_check_controls(struct vmcs12 *vmcs12);
+
+#endif /* __KVM_X86_VMX_EVMCS_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

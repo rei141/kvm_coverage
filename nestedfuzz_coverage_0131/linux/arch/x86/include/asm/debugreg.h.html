@@ -1,0 +1,175 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.<br>2.<br>3.<br>4.<br>5.<br>6.<br>7.<br>8.<br>9.<br>10.<br>11.<br>12.<br>13.<br>14.<br>15.<br>16.<br>17.<br>18.<br>19.<br>20.<br>21.<br>22.<br>23.<br>24.<br>25.<br>26.<br>27.<br>28.<br>29.<br>30.<br>31.<br>32.<br>33.<br>34.<br>35.<br>36.<br>37.<br>38.<br>39.<br>40.<br>41.<br>42.<br>43.<br>44.<br>45.<br>46.<br>47.<br>48.<br>49.<br>50.<br>51.<br>52.<br>53.<br>54.<br>55.<br>56.<br>57.<br>58.<br>59.<br>60.<br>61.<br>62.<br>63.<br>64.<br>65.<br>66.<br>67.<br>68.<br>69.<br>70.<br>71.<br>72.<br>73.<br>74.<br>75.<br>76.<br>77.<br>78.<br>79.<br>80.<br>81.<br>82.<br>83.<br>84.<br>85.<br>86.<br>87.<br>88.<br>89.<br>90.<br>91.<br>92.<br>93.<br>94.<br>95.<br>96.<br>97.<br>98.<br>99.<br>100.<br>101.<br>102.<br>103.<br>104.<br>105.<br>106.<br>107.<br>108.<br>109.<br>110.<br>111.<br>112.<br>113.<br>114.<br>115.<br>116.<br>117.<br>118.<br>119.<br>120.<br>121.<br>122.<br>123.<br>124.<br>125.<br>126.<br>127.<br>128.<br>129.<br>130.<br>131.<br>132.<br>133.<br>134.<br>135.<br></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_DEBUGREG_H
+#define _ASM_X86_DEBUGREG_H
+
+
+#include &lt;linux/bug.h&gt;
+#include &lt;uapi/asm/debugreg.h&gt;
+
+DECLARE_PER_CPU(unsigned long, cpu_dr7);
+
+#ifndef CONFIG_PARAVIRT_XXL
+/*
+ * These special macros can be used to get or set a debugging register
+ */
+#define get_debugreg(var, register)				\
+	(var) = native_get_debugreg(register)
+#define set_debugreg(value, register)				\
+	native_set_debugreg(register, value)
+#endif
+
+static __always_inline unsigned long native_get_debugreg(int regno)
+{
+	unsigned long val = 0;	/* Damn you, gcc! */
+
+	switch (regno) {
+	case 0:
+		asm(&quot;mov %%db0, %0&quot; :&quot;=r&quot; (val));
+		break;
+	case 1:
+		asm(&quot;mov %%db1, %0&quot; :&quot;=r&quot; (val));
+		break;
+	case 2:
+		asm(&quot;mov %%db2, %0&quot; :&quot;=r&quot; (val));
+		break;
+	case 3:
+		asm(&quot;mov %%db3, %0&quot; :&quot;=r&quot; (val));
+		break;
+	case 6:
+		asm(&quot;mov %%db6, %0&quot; :&quot;=r&quot; (val));
+		break;
+	case 7:
+		asm(&quot;mov %%db7, %0&quot; :&quot;=r&quot; (val));
+		break;
+	default:
+		BUG();
+	}
+	return val;
+}
+
+static __always_inline void native_set_debugreg(int regno, unsigned long value)
+{
+	switch (regno) {
+	case 0:
+		asm(&quot;mov %0, %%db0&quot;	::&quot;r&quot; (value));
+		break;
+	case 1:
+		asm(&quot;mov %0, %%db1&quot;	::&quot;r&quot; (value));
+		break;
+	case 2:
+		asm(&quot;mov %0, %%db2&quot;	::&quot;r&quot; (value));
+		break;
+	case 3:
+		asm(&quot;mov %0, %%db3&quot;	::&quot;r&quot; (value));
+		break;
+	case 6:
+		asm(&quot;mov %0, %%db6&quot;	::&quot;r&quot; (value));
+		break;
+	case 7:
+		asm(&quot;mov %0, %%db7&quot;	::&quot;r&quot; (value));
+		break;
+	default:
+		BUG();
+	}
+}
+
+static inline void hw_breakpoint_disable(void)
+{
+	/* Zero the control register for HW Breakpoint */
+	set_debugreg(0UL, 7);
+
+	/* Zero-out the individual HW breakpoint address registers */
+	set_debugreg(0UL, 0);
+	set_debugreg(0UL, 1);
+	set_debugreg(0UL, 2);
+	set_debugreg(0UL, 3);
+}
+
+static __always_inline bool hw_breakpoint_active(void)
+{
+<blue>	return __this_cpu_read(cpu_dr7) & DR_GLOBAL_ENABLE_MASK;</blue>
+}
+
+extern void hw_breakpoint_restore(void);
+
+static __always_inline unsigned long local_db_save(void)
+{
+	unsigned long dr7;
+
+	if (static_cpu_has(X86_FEATURE_HYPERVISOR) &amp;&amp; !hw_breakpoint_active())
+		return 0;
+
+	get_debugreg(dr7, 7);
+	dr7 &amp;= ~0x400; /* architecturally set bit */
+	if (dr7)
+		set_debugreg(0, 7);
+	/*
+	 * Ensure the compiler doesn&#x27;t lower the above statements into
+	 * the critical section; disabling breakpoints late would not
+	 * be good.
+	 */
+	barrier();
+
+	return dr7;
+}
+
+static __always_inline void local_db_restore(unsigned long dr7)
+{
+	/*
+	 * Ensure the compiler doesn&#x27;t raise this statement into
+	 * the critical section; enabling breakpoints early would
+	 * not be good.
+	 */
+	barrier();
+	if (dr7)
+		set_debugreg(dr7, 7);
+}
+
+#ifdef CONFIG_CPU_SUP_AMD
+extern void set_dr_addr_mask(unsigned long mask, int dr);
+#else
+static inline void set_dr_addr_mask(unsigned long mask, int dr) { }
+#endif
+
+#endif /* _ASM_X86_DEBUGREG_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
