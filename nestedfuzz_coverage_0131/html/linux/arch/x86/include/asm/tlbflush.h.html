@@ -1,0 +1,776 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+274.
+275.
+276.
+277.
+278.
+279.
+280.
+281.
+282.
+283.
+284.
+285.
+286.
+287.
+288.
+289.
+290.
+291.
+292.
+293.
+294.
+295.
+296.
+297.
+298.
+299.
+300.
+301.
+302.
+303.
+304.
+305.
+306.
+307.
+308.
+309.
+310.
+311.
+312.
+313.
+314.
+315.
+316.
+317.
+318.
+319.
+320.
+321.
+322.
+323.
+324.
+325.
+326.
+327.
+328.
+329.
+330.
+331.
+332.
+333.
+334.
+335.
+336.
+337.
+338.
+339.
+340.
+341.
+342.
+343.
+344.
+345.
+346.
+347.
+348.
+349.
+350.
+351.
+352.
+353.
+354.
+355.
+356.
+357.
+358.
+359.
+360.
+361.
+362.
+363.
+364.
+365.
+366.
+367.
+368.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_TLBFLUSH_H
+#define _ASM_X86_TLBFLUSH_H
+
+#include &lt;linux/mm.h&gt;
+#include &lt;linux/sched.h&gt;
+
+#include &lt;asm/processor.h&gt;
+#include &lt;asm/cpufeature.h&gt;
+#include &lt;asm/special_insns.h&gt;
+#include &lt;asm/smp.h&gt;
+#include &lt;asm/invpcid.h&gt;
+#include &lt;asm/pti.h&gt;
+#include &lt;asm/processor-flags.h&gt;
+
+void __flush_tlb_all(void);
+
+#define TLB_FLUSH_ALL	-1UL
+#define TLB_GENERATION_INVALID	0
+
+void cr4_update_irqsoff(unsigned long set, unsigned long clear);
+unsigned long cr4_read_shadow(void);
+
+/* Set in this cpu&#x27;s CR4. */
+static inline void cr4_set_bits_irqsoff(unsigned long mask)
+{
+	cr4_update_irqsoff(mask, 0);
+}
+
+/* Clear in this cpu&#x27;s CR4. */
+static inline void cr4_clear_bits_irqsoff(unsigned long mask)
+{
+<yellow>	cr4_update_irqsoff(0, mask);</yellow>
+}
+
+/* Set in this cpu&#x27;s CR4. */
+static inline void cr4_set_bits(unsigned long mask)
+{
+	unsigned long flags;
+
+	local_irq_save(flags);
+	cr4_set_bits_irqsoff(mask);
+<yellow>	local_irq_restore(flags);</yellow>
+}
+
+/* Clear in this cpu&#x27;s CR4. */
+<yellow>static inline void cr4_clear_bits(unsigned long mask)</yellow>
+{
+	unsigned long flags;
+
+<yellow>	local_irq_save(flags);</yellow>
+<yellow>	cr4_clear_bits_irqsoff(mask);</yellow>
+<yellow>	local_irq_restore(flags);</yellow>
+<yellow>}</yellow>
+
+#ifndef MODULE
+/*
+ * 6 because 6 should be plenty and struct tlb_state will fit in two cache
+ * lines.
+ */
+#define TLB_NR_DYN_ASIDS	6
+
+struct tlb_context {
+	u64 ctx_id;
+	u64 tlb_gen;
+};
+
+struct tlb_state {
+	/*
+	 * cpu_tlbstate.loaded_mm should match CR3 whenever interrupts
+	 * are on.  This means that it may not match current-&gt;active_mm,
+	 * which will contain the previous user mm when we&#x27;re in lazy TLB
+	 * mode even if we&#x27;ve already switched back to swapper_pg_dir.
+	 *
+	 * During switch_mm_irqs_off(), loaded_mm will be set to
+	 * LOADED_MM_SWITCHING during the brief interrupts-off window
+	 * when CR3 and loaded_mm would otherwise be inconsistent.  This
+	 * is for nmi_uaccess_okay()&#x27;s benefit.
+	 */
+	struct mm_struct *loaded_mm;
+
+#define LOADED_MM_SWITCHING ((struct mm_struct *)1UL)
+
+	/* Last user mm for optimizing IBPB */
+	union {
+		struct mm_struct	*last_user_mm;
+		unsigned long		last_user_mm_spec;
+	};
+
+	u16 loaded_mm_asid;
+	u16 next_asid;
+
+	/*
+	 * If set we changed the page tables in such a way that we
+	 * needed an invalidation of all contexts (aka. PCIDs / ASIDs).
+	 * This tells us to go invalidate all the non-loaded ctxs[]
+	 * on the next context switch.
+	 *
+	 * The current ctx was kept up-to-date as it ran and does not
+	 * need to be invalidated.
+	 */
+	bool invalidate_other;
+
+	/*
+	 * Mask that contains TLB_NR_DYN_ASIDS+1 bits to indicate
+	 * the corresponding user PCID needs a flush next time we
+	 * switch to it; see SWITCH_TO_USER_CR3.
+	 */
+	unsigned short user_pcid_flush_mask;
+
+	/*
+	 * Access to this CR4 shadow and to H/W CR4 is protected by
+	 * disabling interrupts when modifying either one.
+	 */
+	unsigned long cr4;
+
+	/*
+	 * This is a list of all contexts that might exist in the TLB.
+	 * There is one per ASID that we use, and the ASID (what the
+	 * CPU calls PCID) is the index into ctxts.
+	 *
+	 * For each context, ctx_id indicates which mm the TLB&#x27;s user
+	 * entries came from.  As an invariant, the TLB will never
+	 * contain entries that are out-of-date as when that mm reached
+	 * the tlb_gen in the list.
+	 *
+	 * To be clear, this means that it&#x27;s legal for the TLB code to
+	 * flush the TLB without updating tlb_gen.  This can happen
+	 * (for now, at least) due to paravirt remote flushes.
+	 *
+	 * NB: context 0 is a bit special, since it&#x27;s also used by
+	 * various bits of init code.  This is fine -- code that
+	 * isn&#x27;t aware of PCID will end up harmlessly flushing
+	 * context 0.
+	 */
+	struct tlb_context ctxs[TLB_NR_DYN_ASIDS];
+};
+DECLARE_PER_CPU_ALIGNED(struct tlb_state, cpu_tlbstate);
+
+struct tlb_state_shared {
+	/*
+	 * We can be in one of several states:
+	 *
+	 *  - Actively using an mm.  Our CPU&#x27;s bit will be set in
+	 *    mm_cpumask(loaded_mm) and is_lazy == false;
+	 *
+	 *  - Not using a real mm.  loaded_mm == &amp;init_mm.  Our CPU&#x27;s bit
+	 *    will not be set in mm_cpumask(&amp;init_mm) and is_lazy == false.
+	 *
+	 *  - Lazily using a real mm.  loaded_mm != &amp;init_mm, our bit
+	 *    is set in mm_cpumask(loaded_mm), but is_lazy == true.
+	 *    We&#x27;re heuristically guessing that the CR3 load we
+	 *    skipped more than makes up for the overhead added by
+	 *    lazy mode.
+	 */
+	bool is_lazy;
+};
+DECLARE_PER_CPU_SHARED_ALIGNED(struct tlb_state_shared, cpu_tlbstate_shared);
+
+bool nmi_uaccess_okay(void);
+#define nmi_uaccess_okay nmi_uaccess_okay
+
+/* Initialize cr4 shadow for this CPU. */
+static inline void cr4_init_shadow(void)
+{
+	this_cpu_write(cpu_tlbstate.cr4, __read_cr4());
+}
+
+extern unsigned long mmu_cr4_features;
+extern u32 *trampoline_cr4_features;
+
+extern void initialize_tlbstate_and_flush(void);
+
+/*
+ * TLB flushing:
+ *
+ *  - flush_tlb_all() flushes all processes TLBs
+ *  - flush_tlb_mm(mm) flushes the specified mm context TLB&#x27;s
+ *  - flush_tlb_page(vma, vmaddr) flushes one page
+ *  - flush_tlb_range(vma, start, end) flushes a range of pages
+ *  - flush_tlb_kernel_range(start, end) flushes a range of kernel pages
+ *  - flush_tlb_multi(cpumask, info) flushes TLBs on multiple cpus
+ *
+ * ..but the i386 has somewhat limited tlb flushing capabilities,
+ * and page-granular flushes are available only on i486 and up.
+ */
+struct flush_tlb_info {
+	/*
+	 * We support several kinds of flushes.
+	 *
+	 * - Fully flush a single mm.  .mm will be set, .end will be
+	 *   TLB_FLUSH_ALL, and .new_tlb_gen will be the tlb_gen to
+	 *   which the IPI sender is trying to catch us up.
+	 *
+	 * - Partially flush a single mm.  .mm will be set, .start and
+	 *   .end will indicate the range, and .new_tlb_gen will be set
+	 *   such that the changes between generation .new_tlb_gen-1 and
+	 *   .new_tlb_gen are entirely contained in the indicated range.
+	 *
+	 * - Fully flush all mms whose tlb_gens have been updated.  .mm
+	 *   will be NULL, .end will be TLB_FLUSH_ALL, and .new_tlb_gen
+	 *   will be zero.
+	 */
+	struct mm_struct	*mm;
+	unsigned long		start;
+	unsigned long		end;
+	u64			new_tlb_gen;
+	unsigned int		initiating_cpu;
+	u8			stride_shift;
+	u8			freed_tables;
+};
+
+void flush_tlb_local(void);
+void flush_tlb_one_user(unsigned long addr);
+void flush_tlb_one_kernel(unsigned long addr);
+void flush_tlb_multi(const struct cpumask *cpumask,
+		      const struct flush_tlb_info *info);
+
+#ifdef CONFIG_PARAVIRT
+#include &lt;asm/paravirt.h&gt;
+#endif
+
+#define flush_tlb_mm(mm)						\
+		flush_tlb_mm_range(mm, 0UL, TLB_FLUSH_ALL, 0UL, true)
+
+#define flush_tlb_range(vma, start, end)				\
+	flush_tlb_mm_range((vma)-&gt;vm_mm, start, end,			\
+			   ((vma)-&gt;vm_flags &amp; VM_HUGETLB)		\
+				? huge_page_shift(hstate_vma(vma))	\
+				: PAGE_SHIFT, false)
+
+extern void flush_tlb_all(void);
+extern void flush_tlb_mm_range(struct mm_struct *mm, unsigned long start,
+				unsigned long end, unsigned int stride_shift,
+				bool freed_tables);
+extern void flush_tlb_kernel_range(unsigned long start, unsigned long end);
+
+static inline void flush_tlb_page(struct vm_area_struct *vma, unsigned long a)
+{
+	flush_tlb_mm_range(vma-&gt;vm_mm, a, a + PAGE_SIZE, PAGE_SHIFT, false);
+}
+
+static inline u64 inc_mm_tlb_gen(struct mm_struct *mm)
+{
+	/*
+	 * Bump the generation count.  This also serves as a full barrier
+	 * that synchronizes with switch_mm(): callers are required to order
+	 * their read of mm_cpumask after their writes to the paging
+	 * structures.
+	 */
+	return atomic64_inc_return(&amp;mm-&gt;context.tlb_gen);
+}
+
+static inline void arch_tlbbatch_add_mm(struct arch_tlbflush_unmap_batch *batch,
+					struct mm_struct *mm)
+{
+	inc_mm_tlb_gen(mm);
+	cpumask_or(&amp;batch-&gt;cpumask, &amp;batch-&gt;cpumask, mm_cpumask(mm));
+}
+
+extern void arch_tlbbatch_flush(struct arch_tlbflush_unmap_batch *batch);
+
+static inline bool pte_flags_need_flush(unsigned long oldflags,
+					unsigned long newflags,
+					bool ignore_access)
+{
+	/*
+	 * Flags that require a flush when cleared but not when they are set.
+	 * Only include flags that would not trigger spurious page-faults.
+	 * Non-present entries are not cached. Hardware would set the
+	 * dirty/access bit if needed without a fault.
+	 */
+	const pteval_t flush_on_clear = _PAGE_DIRTY | _PAGE_PRESENT |
+					_PAGE_ACCESSED;
+	const pteval_t software_flags = _PAGE_SOFTW1 | _PAGE_SOFTW2 |
+					_PAGE_SOFTW3 | _PAGE_SOFTW4;
+	const pteval_t flush_on_change = _PAGE_RW | _PAGE_USER | _PAGE_PWT |
+			  _PAGE_PCD | _PAGE_PSE | _PAGE_GLOBAL | _PAGE_PAT |
+			  _PAGE_PAT_LARGE | _PAGE_PKEY_BIT0 | _PAGE_PKEY_BIT1 |
+			  _PAGE_PKEY_BIT2 | _PAGE_PKEY_BIT3 | _PAGE_NX;
+	unsigned long diff = oldflags ^ newflags;
+
+	BUILD_BUG_ON(flush_on_clear &amp; software_flags);
+	BUILD_BUG_ON(flush_on_clear &amp; flush_on_change);
+	BUILD_BUG_ON(flush_on_change &amp; software_flags);
+
+	/* Ignore software flags */
+	diff &amp;= ~software_flags;
+
+	if (ignore_access)
+		diff &amp;= ~_PAGE_ACCESSED;
+
+	/*
+	 * Did any of the &#x27;flush_on_clear&#x27; flags was clleared set from between
+	 * &#x27;oldflags&#x27; and &#x27;newflags&#x27;?
+	 */
+	if (diff &amp; oldflags &amp; flush_on_clear)
+		return true;
+
+	/* Flush on modified flags. */
+	if (diff &amp; flush_on_change)
+		return true;
+
+	/* Ensure there are no flags that were left behind */
+	if (IS_ENABLED(CONFIG_DEBUG_VM) &amp;&amp;
+	    (diff &amp; ~(flush_on_clear | software_flags | flush_on_change))) {
+		VM_WARN_ON_ONCE(1);
+		return true;
+	}
+
+	return false;
+}
+
+/*
+ * pte_needs_flush() checks whether permissions were demoted and require a
+ * flush. It should only be used for userspace PTEs.
+ */
+static inline bool pte_needs_flush(pte_t oldpte, pte_t newpte)
+{
+	/* !PRESENT -&gt; * ; no need for flush */
+	if (!(pte_flags(oldpte) &amp; _PAGE_PRESENT))
+		return false;
+
+	/* PFN changed ; needs flush */
+	if (pte_pfn(oldpte) != pte_pfn(newpte))
+		return true;
+
+	/*
+	 * check PTE flags; ignore access-bit; see comment in
+	 * ptep_clear_flush_young().
+	 */
+	return pte_flags_need_flush(pte_flags(oldpte), pte_flags(newpte),
+				    true);
+}
+#define pte_needs_flush pte_needs_flush
+
+/*
+ * huge_pmd_needs_flush() checks whether permissions were demoted and require a
+ * flush. It should only be used for userspace huge PMDs.
+ */
+static inline bool huge_pmd_needs_flush(pmd_t oldpmd, pmd_t newpmd)
+{
+	/* !PRESENT -&gt; * ; no need for flush */
+	if (!(pmd_flags(oldpmd) &amp; _PAGE_PRESENT))
+		return false;
+
+	/* PFN changed ; needs flush */
+	if (pmd_pfn(oldpmd) != pmd_pfn(newpmd))
+		return true;
+
+	/*
+	 * check PMD flags; do not ignore access-bit; see
+	 * pmdp_clear_flush_young().
+	 */
+	return pte_flags_need_flush(pmd_flags(oldpmd), pmd_flags(newpmd),
+				    false);
+}
+#define huge_pmd_needs_flush huge_pmd_needs_flush
+
+#endif /* !MODULE */
+
+static inline void __native_tlb_flush_global(unsigned long cr4)
+{
+	native_write_cr4(cr4 ^ X86_CR4_PGE);
+	native_write_cr4(cr4);
+}
+#endif /* _ASM_X86_TLBFLUSH_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

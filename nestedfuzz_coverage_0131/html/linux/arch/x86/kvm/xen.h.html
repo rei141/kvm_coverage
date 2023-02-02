@@ -1,0 +1,462 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright © 2019 Oracle and/or its affiliates. All rights reserved.
+ * Copyright © 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * KVM Xen emulation
+ */
+
+#ifndef __ARCH_X86_KVM_XEN_H__
+#define __ARCH_X86_KVM_XEN_H__
+
+#ifdef CONFIG_KVM_XEN
+#include &lt;linux/jump_label_ratelimit.h&gt;
+
+extern struct static_key_false_deferred kvm_xen_enabled;
+
+int __kvm_xen_has_interrupt(struct kvm_vcpu *vcpu);
+void kvm_xen_inject_pending_events(struct kvm_vcpu *vcpu);
+int kvm_xen_vcpu_set_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data);
+int kvm_xen_vcpu_get_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data);
+int kvm_xen_hvm_set_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data);
+int kvm_xen_hvm_get_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data);
+int kvm_xen_hvm_evtchn_send(struct kvm *kvm, struct kvm_irq_routing_xen_evtchn *evt);
+int kvm_xen_write_hypercall_page(struct kvm_vcpu *vcpu, u64 data);
+int kvm_xen_hvm_config(struct kvm *kvm, struct kvm_xen_hvm_config *xhc);
+void kvm_xen_init_vm(struct kvm *kvm);
+void kvm_xen_destroy_vm(struct kvm *kvm);
+void kvm_xen_init_vcpu(struct kvm_vcpu *vcpu);
+void kvm_xen_destroy_vcpu(struct kvm_vcpu *vcpu);
+int kvm_xen_set_evtchn_fast(struct kvm_xen_evtchn *xe,
+			    struct kvm *kvm);
+int kvm_xen_setup_evtchn(struct kvm *kvm,
+			 struct kvm_kernel_irq_routing_entry *e,
+			 const struct kvm_irq_routing_entry *ue);
+
+static inline bool kvm_xen_msr_enabled(struct kvm *kvm)
+{
+	return static_branch_unlikely(&amp;kvm_xen_enabled.key) &amp;&amp;
+<yellow>		kvm->arch.xen_hvm_config.msr;</yellow>
+}
+
+static inline bool kvm_xen_hypercall_enabled(struct kvm *kvm)
+{
+<yellow>	return static_branch_unlikely(&kvm_xen_enabled.key) &&</yellow>
+<yellow>		(kvm->arch.xen_hvm_config.flags &</yellow>
+		 KVM_XEN_HVM_CONFIG_INTERCEPT_HCALL);
+}
+
+<yellow>static inline int kvm_xen_has_interrupt(struct kvm_vcpu *vcpu)</yellow>
+{
+<blue>	if (static_branch_unlikely(&kvm_xen_enabled.key) &&</blue>
+<yellow>	    vcpu->arch.xen.vcpu_info_cache.active &&</yellow>
+<yellow>	    vcpu->kvm->arch.xen.upcall_vector)</yellow>
+<yellow>		return __kvm_xen_has_interrupt(vcpu);</yellow>
+
+	return 0;
+}
+
+static inline bool kvm_xen_has_pending_events(struct kvm_vcpu *vcpu)
+{
+<blue>	return static_branch_unlikely(&kvm_xen_enabled.key) &&</blue>
+<yellow>		vcpu->arch.xen.evtchn_pending_sel;</yellow>
+}
+
+static inline bool kvm_xen_timer_enabled(struct kvm_vcpu *vcpu)
+{
+<blue>	return !!vcpu->arch.xen.timer_virq;</blue>
+}
+
+static inline int kvm_xen_has_pending_timer(struct kvm_vcpu *vcpu)
+{
+<yellow>	if (kvm_xen_hypercall_enabled(vcpu->kvm) && kvm_xen_timer_enabled(vcpu))</yellow>
+<yellow>		return atomic_read(&vcpu->arch.xen.timer_pending);</yellow>
+
+	return 0;
+}
+
+void kvm_xen_inject_timer_irqs(struct kvm_vcpu *vcpu);
+#else
+static inline int kvm_xen_write_hypercall_page(struct kvm_vcpu *vcpu, u64 data)
+{
+	return 1;
+}
+
+static inline void kvm_xen_init_vm(struct kvm *kvm)
+{
+}
+
+static inline void kvm_xen_destroy_vm(struct kvm *kvm)
+{
+}
+
+static inline void kvm_xen_init_vcpu(struct kvm_vcpu *vcpu)
+{
+}
+
+static inline void kvm_xen_destroy_vcpu(struct kvm_vcpu *vcpu)
+{
+}
+
+static inline bool kvm_xen_msr_enabled(struct kvm *kvm)
+{
+	return false;
+}
+
+static inline bool kvm_xen_hypercall_enabled(struct kvm *kvm)
+{
+	return false;
+}
+
+static inline int kvm_xen_has_interrupt(struct kvm_vcpu *vcpu)
+{
+	return 0;
+}
+
+static inline void kvm_xen_inject_pending_events(struct kvm_vcpu *vcpu)
+{
+}
+
+static inline bool kvm_xen_has_pending_events(struct kvm_vcpu *vcpu)
+{
+	return false;
+}
+
+static inline int kvm_xen_has_pending_timer(struct kvm_vcpu *vcpu)
+{
+	return 0;
+}
+
+static inline void kvm_xen_inject_timer_irqs(struct kvm_vcpu *vcpu)
+{
+}
+
+static inline bool kvm_xen_timer_enabled(struct kvm_vcpu *vcpu)
+{
+	return false;
+}
+#endif
+
+int kvm_xen_hypercall(struct kvm_vcpu *vcpu);
+
+#include &lt;asm/pvclock-abi.h&gt;
+#include &lt;asm/xen/interface.h&gt;
+#include &lt;xen/interface/vcpu.h&gt;
+
+void kvm_xen_update_runstate_guest(struct kvm_vcpu *vcpu, int state);
+
+static inline void kvm_xen_runstate_set_running(struct kvm_vcpu *vcpu)
+{
+<yellow>	kvm_xen_update_runstate_guest(vcpu, RUNSTATE_running);</yellow>
+}
+
+static inline void kvm_xen_runstate_set_preempted(struct kvm_vcpu *vcpu)
+{
+	/*
+	 * If the vCPU wasn&#x27;t preempted but took a normal exit for
+	 * some reason (hypercalls, I/O, etc.), that is accounted as
+	 * still RUNSTATE_running, as the VMM is still operating on
+	 * behalf of the vCPU. Only if the VMM does actually block
+	 * does it need to enter RUNSTATE_blocked.
+	 */
+<yellow>	if (WARN_ON_ONCE(!vcpu->preempted))</yellow>
+		return;
+
+<yellow>	kvm_xen_update_runstate_guest(vcpu, RUNSTATE_runnable);</yellow>
+}
+
+/* 32-bit compatibility definitions, also used natively in 32-bit build */
+struct compat_arch_vcpu_info {
+	unsigned int cr2;
+	unsigned int pad[5];
+};
+
+struct compat_vcpu_info {
+	uint8_t evtchn_upcall_pending;
+	uint8_t evtchn_upcall_mask;
+	uint16_t pad;
+	uint32_t evtchn_pending_sel;
+	struct compat_arch_vcpu_info arch;
+	struct pvclock_vcpu_time_info time;
+}; /* 64 bytes (x86) */
+
+struct compat_arch_shared_info {
+	unsigned int max_pfn;
+	unsigned int pfn_to_mfn_frame_list_list;
+	unsigned int nmi_reason;
+	unsigned int p2m_cr3;
+	unsigned int p2m_vaddr;
+	unsigned int p2m_generation;
+	uint32_t wc_sec_hi;
+};
+
+struct compat_shared_info {
+	struct compat_vcpu_info vcpu_info[MAX_VIRT_CPUS];
+	uint32_t evtchn_pending[32];
+	uint32_t evtchn_mask[32];
+	struct pvclock_wall_clock wc;
+	struct compat_arch_shared_info arch;
+};
+
+#define COMPAT_EVTCHN_2L_NR_CHANNELS (8 *				\
+				      sizeof_field(struct compat_shared_info, \
+						   evtchn_pending))
+struct compat_vcpu_runstate_info {
+    int state;
+    uint64_t state_entry_time;
+    uint64_t time[4];
+} __attribute__((packed));
+
+#endif /* __ARCH_X86_KVM_XEN_H__ */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

@@ -1,0 +1,586 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_ATOMIC_H
+#define _ASM_X86_ATOMIC_H
+
+#include &lt;linux/compiler.h&gt;
+#include &lt;linux/types.h&gt;
+#include &lt;asm/alternative.h&gt;
+#include &lt;asm/cmpxchg.h&gt;
+#include &lt;asm/rmwcc.h&gt;
+#include &lt;asm/barrier.h&gt;
+
+/*
+ * Atomic operations that C can&#x27;t guarantee us.  Useful for
+ * resource counting etc..
+ */
+
+/**
+ * arch_atomic_read - read atomic variable
+ * @v: pointer of type atomic_t
+ *
+ * Atomically reads the value of @v.
+ */
+static __always_inline int arch_atomic_read(const atomic_t *v)
+{
+	/*
+	 * Note for KASAN: we deliberately don&#x27;t use READ_ONCE_NOCHECK() here,
+	 * it&#x27;s non-inlined function that increases binary size and stack usage.
+	 */
+	return __READ_ONCE((v)-&gt;counter);
+}
+
+/**
+ * arch_atomic_set - set atomic variable
+ * @v: pointer of type atomic_t
+ * @i: required value
+ *
+ * Atomically sets the value of @v to @i.
+ */
+static __always_inline void arch_atomic_set(atomic_t *v, int i)
+{
+	__WRITE_ONCE(v-&gt;counter, i);
+}
+
+/**
+ * arch_atomic_add - add integer to atomic variable
+ * @i: integer value to add
+ * @v: pointer of type atomic_t
+ *
+ * Atomically adds @i to @v.
+ */
+static __always_inline void arch_atomic_add(int i, atomic_t *v)
+{
+	asm volatile(LOCK_PREFIX &quot;addl %1,%0&quot;
+		     : &quot;+m&quot; (v-&gt;counter)
+		     : &quot;ir&quot; (i) : &quot;memory&quot;);
+}
+
+/**
+ * arch_atomic_sub - subtract integer from atomic variable
+ * @i: integer value to subtract
+ * @v: pointer of type atomic_t
+ *
+ * Atomically subtracts @i from @v.
+ */
+static __always_inline void arch_atomic_sub(int i, atomic_t *v)
+{
+	asm volatile(LOCK_PREFIX &quot;subl %1,%0&quot;
+		     : &quot;+m&quot; (v-&gt;counter)
+		     : &quot;ir&quot; (i) : &quot;memory&quot;);
+}
+
+/**
+ * arch_atomic_sub_and_test - subtract value from variable and test result
+ * @i: integer value to subtract
+ * @v: pointer of type atomic_t
+ *
+ * Atomically subtracts @i from @v and returns
+ * true if the result is zero, or false for all
+ * other cases.
+ */
+static __always_inline bool arch_atomic_sub_and_test(int i, atomic_t *v)
+{
+	return GEN_BINARY_RMWcc(LOCK_PREFIX &quot;subl&quot;, v-&gt;counter, e, &quot;er&quot;, i);
+}
+#define arch_atomic_sub_and_test arch_atomic_sub_and_test
+
+/**
+ * arch_atomic_inc - increment atomic variable
+ * @v: pointer of type atomic_t
+ *
+ * Atomically increments @v by 1.
+ */
+static __always_inline void arch_atomic_inc(atomic_t *v)
+{
+	asm volatile(LOCK_PREFIX &quot;incl %0&quot;
+		     : &quot;+m&quot; (v-&gt;counter) :: &quot;memory&quot;);
+}
+#define arch_atomic_inc arch_atomic_inc
+
+/**
+ * arch_atomic_dec - decrement atomic variable
+ * @v: pointer of type atomic_t
+ *
+ * Atomically decrements @v by 1.
+ */
+static __always_inline void arch_atomic_dec(atomic_t *v)
+{
+	asm volatile(LOCK_PREFIX &quot;decl %0&quot;
+		     : &quot;+m&quot; (v-&gt;counter) :: &quot;memory&quot;);
+}
+#define arch_atomic_dec arch_atomic_dec
+
+/**
+ * arch_atomic_dec_and_test - decrement and test
+ * @v: pointer of type atomic_t
+ *
+ * Atomically decrements @v by 1 and
+ * returns true if the result is 0, or false for all other
+ * cases.
+ */
+static __always_inline bool arch_atomic_dec_and_test(atomic_t *v)
+{
+<yellow>	return GEN_UNARY_RMWcc(LOCK_PREFIX "decl", v->counter, e);</yellow>
+}
+#define arch_atomic_dec_and_test arch_atomic_dec_and_test
+
+/**
+ * arch_atomic_inc_and_test - increment and test
+ * @v: pointer of type atomic_t
+ *
+ * Atomically increments @v by 1
+ * and returns true if the result is zero, or false for all
+ * other cases.
+ */
+static __always_inline bool arch_atomic_inc_and_test(atomic_t *v)
+{
+	return GEN_UNARY_RMWcc(LOCK_PREFIX &quot;incl&quot;, v-&gt;counter, e);
+}
+#define arch_atomic_inc_and_test arch_atomic_inc_and_test
+
+/**
+ * arch_atomic_add_negative - add and test if negative
+ * @i: integer value to add
+ * @v: pointer of type atomic_t
+ *
+ * Atomically adds @i to @v and returns true
+ * if the result is negative, or false when
+ * result is greater than or equal to zero.
+ */
+static __always_inline bool arch_atomic_add_negative(int i, atomic_t *v)
+{
+	return GEN_BINARY_RMWcc(LOCK_PREFIX &quot;addl&quot;, v-&gt;counter, s, &quot;er&quot;, i);
+}
+#define arch_atomic_add_negative arch_atomic_add_negative
+
+/**
+ * arch_atomic_add_return - add integer and return
+ * @i: integer value to add
+ * @v: pointer of type atomic_t
+ *
+ * Atomically adds @i to @v and returns @i + @v
+ */
+static __always_inline int arch_atomic_add_return(int i, atomic_t *v)
+{
+	return i + xadd(&amp;v-&gt;counter, i);
+}
+#define arch_atomic_add_return arch_atomic_add_return
+
+/**
+ * arch_atomic_sub_return - subtract integer and return
+ * @v: pointer of type atomic_t
+ * @i: integer value to subtract
+ *
+ * Atomically subtracts @i from @v and returns @v - @i
+ */
+static __always_inline int arch_atomic_sub_return(int i, atomic_t *v)
+{
+	return arch_atomic_add_return(-i, v);
+}
+#define arch_atomic_sub_return arch_atomic_sub_return
+
+static __always_inline int arch_atomic_fetch_add(int i, atomic_t *v)
+{
+	return xadd(&amp;v-&gt;counter, i);
+}
+#define arch_atomic_fetch_add arch_atomic_fetch_add
+
+static __always_inline int arch_atomic_fetch_sub(int i, atomic_t *v)
+{
+<yellow>	return xadd(&v->counter, -i);</yellow>
+}
+#define arch_atomic_fetch_sub arch_atomic_fetch_sub
+
+static __always_inline int arch_atomic_cmpxchg(atomic_t *v, int old, int new)
+{
+	return arch_cmpxchg(&amp;v-&gt;counter, old, new);
+}
+#define arch_atomic_cmpxchg arch_atomic_cmpxchg
+
+static __always_inline bool arch_atomic_try_cmpxchg(atomic_t *v, int *old, int new)
+{
+<blue>	return arch_try_cmpxchg(&v->counter, old, new);</blue>
+}
+#define arch_atomic_try_cmpxchg arch_atomic_try_cmpxchg
+
+static __always_inline int arch_atomic_xchg(atomic_t *v, int new)
+{
+	return arch_xchg(&amp;v-&gt;counter, new);
+}
+#define arch_atomic_xchg arch_atomic_xchg
+
+static __always_inline void arch_atomic_and(int i, atomic_t *v)
+{
+	asm volatile(LOCK_PREFIX &quot;andl %1,%0&quot;
+			: &quot;+m&quot; (v-&gt;counter)
+			: &quot;ir&quot; (i)
+			: &quot;memory&quot;);
+}
+
+static __always_inline int arch_atomic_fetch_and(int i, atomic_t *v)
+{
+	int val = arch_atomic_read(v);
+
+	do { } while (!arch_atomic_try_cmpxchg(v, &amp;val, val &amp; i));
+
+	return val;
+}
+#define arch_atomic_fetch_and arch_atomic_fetch_and
+
+static __always_inline void arch_atomic_or(int i, atomic_t *v)
+{
+	asm volatile(LOCK_PREFIX &quot;orl %1,%0&quot;
+			: &quot;+m&quot; (v-&gt;counter)
+			: &quot;ir&quot; (i)
+			: &quot;memory&quot;);
+}
+
+static __always_inline int arch_atomic_fetch_or(int i, atomic_t *v)
+{
+	int val = arch_atomic_read(v);
+
+	do { } while (!arch_atomic_try_cmpxchg(v, &amp;val, val | i));
+
+	return val;
+}
+#define arch_atomic_fetch_or arch_atomic_fetch_or
+
+static __always_inline void arch_atomic_xor(int i, atomic_t *v)
+{
+	asm volatile(LOCK_PREFIX &quot;xorl %1,%0&quot;
+			: &quot;+m&quot; (v-&gt;counter)
+			: &quot;ir&quot; (i)
+			: &quot;memory&quot;);
+}
+
+static __always_inline int arch_atomic_fetch_xor(int i, atomic_t *v)
+{
+	int val = arch_atomic_read(v);
+
+	do { } while (!arch_atomic_try_cmpxchg(v, &amp;val, val ^ i));
+
+	return val;
+}
+#define arch_atomic_fetch_xor arch_atomic_fetch_xor
+
+#ifdef CONFIG_X86_32
+# include &lt;asm/atomic64_32.h&gt;
+#else
+# include &lt;asm/atomic64_64.h&gt;
+#endif
+
+#endif /* _ASM_X86_ATOMIC_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

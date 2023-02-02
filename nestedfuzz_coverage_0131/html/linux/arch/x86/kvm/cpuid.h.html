@@ -1,0 +1,512 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef ARCH_X86_KVM_CPUID_H
+#define ARCH_X86_KVM_CPUID_H
+
+#include &quot;x86.h&quot;
+#include &quot;reverse_cpuid.h&quot;
+#include &lt;asm/cpu.h&gt;
+#include &lt;asm/processor.h&gt;
+#include &lt;uapi/asm/kvm_para.h&gt;
+
+extern u32 kvm_cpu_caps[NR_KVM_CPU_CAPS] __read_mostly;
+void kvm_set_cpu_caps(void);
+
+void kvm_update_cpuid_runtime(struct kvm_vcpu *vcpu);
+void kvm_update_pv_runtime(struct kvm_vcpu *vcpu);
+struct kvm_cpuid_entry2 *kvm_find_cpuid_entry_index(struct kvm_vcpu *vcpu,
+						    u32 function, u32 index);
+struct kvm_cpuid_entry2 *kvm_find_cpuid_entry(struct kvm_vcpu *vcpu,
+					      u32 function);
+int kvm_dev_ioctl_get_cpuid(struct kvm_cpuid2 *cpuid,
+			    struct kvm_cpuid_entry2 __user *entries,
+			    unsigned int type);
+int kvm_vcpu_ioctl_set_cpuid(struct kvm_vcpu *vcpu,
+			     struct kvm_cpuid *cpuid,
+			     struct kvm_cpuid_entry __user *entries);
+int kvm_vcpu_ioctl_set_cpuid2(struct kvm_vcpu *vcpu,
+			      struct kvm_cpuid2 *cpuid,
+			      struct kvm_cpuid_entry2 __user *entries);
+int kvm_vcpu_ioctl_get_cpuid2(struct kvm_vcpu *vcpu,
+			      struct kvm_cpuid2 *cpuid,
+			      struct kvm_cpuid_entry2 __user *entries);
+bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
+	       u32 *ecx, u32 *edx, bool exact_only);
+
+u32 xstate_required_size(u64 xstate_bv, bool compacted);
+
+int cpuid_query_maxphyaddr(struct kvm_vcpu *vcpu);
+u64 kvm_vcpu_reserved_gpa_bits_raw(struct kvm_vcpu *vcpu);
+
+static inline int cpuid_maxphyaddr(struct kvm_vcpu *vcpu)
+{
+<blue>	return vcpu->arch.maxphyaddr;</blue>
+}
+
+static inline bool kvm_vcpu_is_legal_gpa(struct kvm_vcpu *vcpu, gpa_t gpa)
+{
+<blue>	return !(gpa & vcpu->arch.reserved_gpa_bits);</blue>
+}
+
+static inline bool kvm_vcpu_is_illegal_gpa(struct kvm_vcpu *vcpu, gpa_t gpa)
+{
+<blue>	return !kvm_vcpu_is_legal_gpa(vcpu, gpa);</blue>
+}
+
+static inline bool kvm_vcpu_is_legal_aligned_gpa(struct kvm_vcpu *vcpu,
+						 gpa_t gpa, gpa_t alignment)
+{
+<yellow>	return IS_ALIGNED(gpa, alignment) && kvm_vcpu_is_legal_gpa(vcpu, gpa);</yellow>
+}
+
+static inline bool page_address_valid(struct kvm_vcpu *vcpu, gpa_t gpa)
+{
+	return kvm_vcpu_is_legal_aligned_gpa(vcpu, gpa, PAGE_SIZE);
+}
+
+static __always_inline void cpuid_entry_override(struct kvm_cpuid_entry2 *entry,
+						 unsigned int leaf)
+{
+	u32 *reg = cpuid_entry_get_reg(entry, leaf * 32);
+
+	BUILD_BUG_ON(leaf &gt;= ARRAY_SIZE(kvm_cpu_caps));
+	*reg = kvm_cpu_caps[leaf];
+}
+
+static __always_inline u32 *guest_cpuid_get_register(struct kvm_vcpu *vcpu,
+						     unsigned int x86_feature)
+{
+	const struct cpuid_reg cpuid = x86_feature_cpuid(x86_feature);
+	struct kvm_cpuid_entry2 *entry;
+
+<blue>	entry = kvm_find_cpuid_entry_index(vcpu, cpuid.function, cpuid.index);</blue>
+<yellow>	if (!entry)</yellow>
+		return NULL;
+
+<yellow>	return __cpuid_entry_get_reg(entry, cpuid.reg);</yellow>
+}
+
+static __always_inline bool guest_cpuid_has(struct kvm_vcpu *vcpu,
+					    unsigned int x86_feature)
+{
+	u32 *reg;
+
+<blue>	reg = guest_cpuid_get_register(vcpu, x86_feature);</blue>
+<blue>	if (!reg)</blue>
+		return false;
+
+<blue>	return *reg & __feature_bit(x86_feature);</blue>
+}
+
+static __always_inline void guest_cpuid_clear(struct kvm_vcpu *vcpu,
+					      unsigned int x86_feature)
+{
+	u32 *reg;
+
+	reg = guest_cpuid_get_register(vcpu, x86_feature);
+	if (reg)
+		*reg &amp;= ~__feature_bit(x86_feature);
+}
+
+static inline bool guest_cpuid_is_amd_or_hygon(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0);
+	return best &amp;&amp;
+	       (is_guest_vendor_amd(best-&gt;ebx, best-&gt;ecx, best-&gt;edx) ||
+		is_guest_vendor_hygon(best-&gt;ebx, best-&gt;ecx, best-&gt;edx));
+}
+
+static inline bool guest_cpuid_is_intel(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0);
+	return best &amp;&amp; is_guest_vendor_intel(best-&gt;ebx, best-&gt;ecx, best-&gt;edx);
+}
+
+static inline int guest_cpuid_family(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0x1);
+	if (!best)
+		return -1;
+
+	return x86_family(best-&gt;eax);
+}
+
+static inline int guest_cpuid_model(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0x1);
+	if (!best)
+		return -1;
+
+<yellow>	return x86_model(best->eax);</yellow>
+}
+
+static inline bool cpuid_model_is_consistent(struct kvm_vcpu *vcpu)
+{
+<yellow>	return boot_cpu_data.x86_model == guest_cpuid_model(vcpu);</yellow>
+}
+
+static inline int guest_cpuid_stepping(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *best;
+
+	best = kvm_find_cpuid_entry(vcpu, 0x1);
+	if (!best)
+		return -1;
+
+	return x86_stepping(best-&gt;eax);
+}
+
+static inline bool guest_has_spec_ctrl_msr(struct kvm_vcpu *vcpu)
+{
+<yellow>	return (guest_cpuid_has(vcpu, X86_FEATURE_SPEC_CTRL) ||</yellow>
+<yellow>		guest_cpuid_has(vcpu, X86_FEATURE_AMD_STIBP) ||</yellow>
+<yellow>		guest_cpuid_has(vcpu, X86_FEATURE_AMD_IBRS) ||</yellow>
+<yellow>		guest_cpuid_has(vcpu, X86_FEATURE_AMD_SSBD));</yellow>
+}
+
+static inline bool guest_has_pred_cmd_msr(struct kvm_vcpu *vcpu)
+{
+<yellow>	return (guest_cpuid_has(vcpu, X86_FEATURE_SPEC_CTRL) ||</yellow>
+<yellow>		guest_cpuid_has(vcpu, X86_FEATURE_AMD_IBPB));</yellow>
+}
+
+static inline bool supports_cpuid_fault(struct kvm_vcpu *vcpu)
+{
+	return vcpu-&gt;arch.msr_platform_info &amp; MSR_PLATFORM_INFO_CPUID_FAULT;
+}
+
+static inline bool cpuid_fault_enabled(struct kvm_vcpu *vcpu)
+{
+	return vcpu-&gt;arch.msr_misc_features_enables &amp;
+		  MSR_MISC_FEATURES_ENABLES_CPUID_FAULT;
+}
+
+static __always_inline void kvm_cpu_cap_clear(unsigned int x86_feature)
+{
+	unsigned int x86_leaf = __feature_leaf(x86_feature);
+
+	reverse_cpuid_check(x86_leaf);
+	kvm_cpu_caps[x86_leaf] &amp;= ~__feature_bit(x86_feature);
+}
+
+static __always_inline void kvm_cpu_cap_set(unsigned int x86_feature)
+{
+	unsigned int x86_leaf = __feature_leaf(x86_feature);
+
+	reverse_cpuid_check(x86_leaf);
+	kvm_cpu_caps[x86_leaf] |= __feature_bit(x86_feature);
+}
+
+static __always_inline u32 kvm_cpu_cap_get(unsigned int x86_feature)
+{
+	unsigned int x86_leaf = __feature_leaf(x86_feature);
+
+	reverse_cpuid_check(x86_leaf);
+<blue>	return kvm_cpu_caps[x86_leaf] & __feature_bit(x86_feature);</blue>
+}
+
+static __always_inline bool kvm_cpu_cap_has(unsigned int x86_feature)
+{
+<blue>	return !!kvm_cpu_cap_get(x86_feature);</blue>
+}
+
+static __always_inline void kvm_cpu_cap_check_and_set(unsigned int x86_feature)
+{
+	if (boot_cpu_has(x86_feature))
+		kvm_cpu_cap_set(x86_feature);
+}
+
+static __always_inline bool guest_pv_has(struct kvm_vcpu *vcpu,
+					 unsigned int kvm_feature)
+{
+	if (!vcpu-&gt;arch.pv_cpuid.enforce)
+		return true;
+
+	return vcpu-&gt;arch.pv_cpuid.features &amp; (1u &lt;&lt; kvm_feature);
+}
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

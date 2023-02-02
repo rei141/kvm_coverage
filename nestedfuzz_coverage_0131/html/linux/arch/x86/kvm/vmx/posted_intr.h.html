@@ -1,0 +1,254 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __KVM_X86_VMX_POSTED_INTR_H
+#define __KVM_X86_VMX_POSTED_INTR_H
+
+#define POSTED_INTR_ON  0
+#define POSTED_INTR_SN  1
+
+#define PID_TABLE_ENTRY_VALID 1
+
+/* Posted-Interrupt Descriptor */
+struct pi_desc {
+	u32 pir[8];     /* Posted interrupt requested */
+	union {
+		struct {
+				/* bit 256 - Outstanding Notification */
+			u16	on	: 1,
+				/* bit 257 - Suppress Notification */
+				sn	: 1,
+				/* bit 271:258 - Reserved */
+				rsvd_1	: 14;
+				/* bit 279:272 - Notification Vector */
+			u8	nv;
+				/* bit 287:280 - Reserved */
+			u8	rsvd_2;
+				/* bit 319:288 - Notification Destination */
+			u32	ndst;
+		};
+		u64 control;
+	};
+	u32 rsvd[6];
+} __aligned(64);
+
+static inline bool pi_test_and_set_on(struct pi_desc *pi_desc)
+{
+<yellow>	return test_and_set_bit(POSTED_INTR_ON,</yellow>
+<yellow>			(unsigned long *)&pi_desc->control);</yellow>
+}
+
+static inline bool pi_test_and_clear_on(struct pi_desc *pi_desc)
+{
+	return test_and_clear_bit(POSTED_INTR_ON,
+			(unsigned long *)&amp;pi_desc-&gt;control);
+}
+
+static inline bool pi_test_and_clear_sn(struct pi_desc *pi_desc)
+{
+	return test_and_clear_bit(POSTED_INTR_SN,
+<blue>			(unsigned long *)&pi_desc->control);</blue>
+}
+
+static inline bool pi_test_and_set_pir(int vector, struct pi_desc *pi_desc)
+{
+<yellow>	return test_and_set_bit(vector, (unsigned long *)pi_desc->pir);</yellow>
+}
+
+static inline bool pi_is_pir_empty(struct pi_desc *pi_desc)
+{
+<blue>	return bitmap_empty((unsigned long *)pi_desc->pir, NR_VECTORS);</blue>
+}
+
+static inline void pi_set_sn(struct pi_desc *pi_desc)
+{
+	set_bit(POSTED_INTR_SN,
+<yellow>		(unsigned long *)&pi_desc->control);</yellow>
+}
+
+static inline void pi_set_on(struct pi_desc *pi_desc)
+{
+<yellow>	set_bit(POSTED_INTR_ON,</yellow>
+		(unsigned long *)&amp;pi_desc-&gt;control);
+}
+
+static inline void pi_clear_on(struct pi_desc *pi_desc)
+{
+<yellow>	clear_bit(POSTED_INTR_ON,</yellow>
+<blue>		(unsigned long *)&pi_desc->control);</blue>
+}
+
+static inline void pi_clear_sn(struct pi_desc *pi_desc)
+{
+	clear_bit(POSTED_INTR_SN,
+		(unsigned long *)&amp;pi_desc-&gt;control);
+}
+
+static inline bool pi_test_on(struct pi_desc *pi_desc)
+{
+<blue>	return test_bit(POSTED_INTR_ON,</blue>
+			(unsigned long *)&amp;pi_desc-&gt;control);
+}
+
+static inline bool pi_test_sn(struct pi_desc *pi_desc)
+{
+<yellow>	return test_bit(POSTED_INTR_SN,</yellow>
+			(unsigned long *)&amp;pi_desc-&gt;control);
+}
+
+void vmx_vcpu_pi_load(struct kvm_vcpu *vcpu, int cpu);
+void vmx_vcpu_pi_put(struct kvm_vcpu *vcpu);
+void pi_wakeup_handler(void);
+void __init pi_init_cpu(int cpu);
+bool pi_has_pending_interrupt(struct kvm_vcpu *vcpu);
+int vmx_pi_update_irte(struct kvm *kvm, unsigned int host_irq,
+		       uint32_t guest_irq, bool set);
+void vmx_pi_start_assignment(struct kvm *kvm);
+
+#endif /* __KVM_X86_VMX_POSTED_INTR_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

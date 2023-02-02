@@ -1,0 +1,170 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+
+#ifndef __KVM_IODEV_H__
+#define __KVM_IODEV_H__
+
+#include &lt;linux/kvm_types.h&gt;
+#include &lt;linux/errno.h&gt;
+
+struct kvm_io_device;
+struct kvm_vcpu;
+
+/**
+ * kvm_io_device_ops are called under kvm slots_lock.
+ * read and write handlers return 0 if the transaction has been handled,
+ * or non-zero to have it passed to the next device.
+ **/
+struct kvm_io_device_ops {
+	int (*read)(struct kvm_vcpu *vcpu,
+		    struct kvm_io_device *this,
+		    gpa_t addr,
+		    int len,
+		    void *val);
+	int (*write)(struct kvm_vcpu *vcpu,
+		     struct kvm_io_device *this,
+		     gpa_t addr,
+		     int len,
+		     const void *val);
+	void (*destructor)(struct kvm_io_device *this);
+};
+
+
+struct kvm_io_device {
+	const struct kvm_io_device_ops *ops;
+};
+
+static inline void kvm_iodevice_init(struct kvm_io_device *dev,
+				     const struct kvm_io_device_ops *ops)
+{
+<blue>	dev->ops = ops;</blue>
+}
+
+static inline int kvm_iodevice_read(struct kvm_vcpu *vcpu,
+				    struct kvm_io_device *dev, gpa_t addr,
+				    int l, void *v)
+{
+<blue>	return dev->ops->read ? dev->ops->read(vcpu, dev, addr, l, v)</blue>
+				: -EOPNOTSUPP;
+}
+
+static inline int kvm_iodevice_write(struct kvm_vcpu *vcpu,
+				     struct kvm_io_device *dev, gpa_t addr,
+				     int l, const void *v)
+{
+<blue>	return dev->ops->write ? dev->ops->write(vcpu, dev, addr, l, v)</blue>
+				 : -EOPNOTSUPP;
+}
+
+static inline void kvm_iodevice_destructor(struct kvm_io_device *dev)
+{
+<blue>	if (dev->ops->destructor)</blue>
+<blue>		dev->ops->destructor(dev);</blue>
+}
+
+#endif /* __KVM_IODEV_H__ */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

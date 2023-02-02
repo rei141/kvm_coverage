@@ -1,0 +1,326 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _X86_IRQFLAGS_H_
+#define _X86_IRQFLAGS_H_
+
+#include &lt;asm/processor-flags.h&gt;
+
+#ifndef __ASSEMBLY__
+
+#include &lt;asm/nospec-branch.h&gt;
+
+/* Provide __cpuidle; we can&#x27;t safely include &lt;linux/cpu.h&gt; */
+#define __cpuidle __section(&quot;.cpuidle.text&quot;)
+
+/*
+ * Interrupt control:
+ */
+
+/* Declaration required for gcc &lt; 4.9 to prevent -Werror=missing-prototypes */
+extern inline unsigned long native_save_fl(void);
+extern __always_inline unsigned long native_save_fl(void)
+{
+	unsigned long flags;
+
+	/*
+	 * &quot;=rm&quot; is safe here, because &quot;pop&quot; adjusts the stack before
+	 * it evaluates its effective address -- this is part of the
+	 * documented behavior of the &quot;pop&quot; instruction.
+	 */
+	asm volatile(&quot;# __raw_save_flags\n\t&quot;
+		     &quot;pushf ; pop %0&quot;
+		     : &quot;=rm&quot; (flags)
+		     : /* no input */
+		     : &quot;memory&quot;);
+
+	return flags;
+}
+
+static __always_inline void native_irq_disable(void)
+{
+	asm volatile(&quot;cli&quot;: : :&quot;memory&quot;);
+}
+
+static __always_inline void native_irq_enable(void)
+{
+	asm volatile(&quot;sti&quot;: : :&quot;memory&quot;);
+}
+
+static inline __cpuidle void native_safe_halt(void)
+{
+	mds_idle_clear_cpu_buffers();
+	asm volatile(&quot;sti; hlt&quot;: : :&quot;memory&quot;);
+}
+
+static inline __cpuidle void native_halt(void)
+{
+	mds_idle_clear_cpu_buffers();
+	asm volatile(&quot;hlt&quot;: : :&quot;memory&quot;);
+}
+
+#endif
+
+#ifdef CONFIG_PARAVIRT_XXL
+#include &lt;asm/paravirt.h&gt;
+#else
+#ifndef __ASSEMBLY__
+#include &lt;linux/types.h&gt;
+
+static __always_inline unsigned long arch_local_save_flags(void)
+{
+	return native_save_fl();
+}
+
+static __always_inline void arch_local_irq_disable(void)
+{
+	native_irq_disable();
+}
+
+static __always_inline void arch_local_irq_enable(void)
+{
+	native_irq_enable();
+}
+
+/*
+ * Used in the idle loop; sti takes one instruction cycle
+ * to complete:
+ */
+static inline __cpuidle void arch_safe_halt(void)
+{
+	native_safe_halt();
+}
+
+/*
+ * Used when interrupts are already enabled or to
+ * shutdown the processor:
+ */
+static inline __cpuidle void halt(void)
+{
+	native_halt();
+}
+
+/*
+ * For spinlocks, etc:
+ */
+static __always_inline unsigned long arch_local_irq_save(void)
+{
+	unsigned long flags = arch_local_save_flags();
+	arch_local_irq_disable();
+	return flags;
+}
+#else
+
+#ifdef CONFIG_X86_64
+#ifdef CONFIG_DEBUG_ENTRY
+#define SAVE_FLAGS		pushfq; popq %rax
+#endif
+
+#endif
+
+#endif /* __ASSEMBLY__ */
+#endif /* CONFIG_PARAVIRT_XXL */
+
+#ifndef __ASSEMBLY__
+static __always_inline int arch_irqs_disabled_flags(unsigned long flags)
+{
+<blue>	return !(flags & X86_EFLAGS_IF);</blue>
+}
+
+static __always_inline int arch_irqs_disabled(void)
+{
+	unsigned long flags = arch_local_save_flags();
+
+	return arch_irqs_disabled_flags(flags);
+}
+
+static __always_inline void arch_local_irq_restore(unsigned long flags)
+{
+<blue>	if (!arch_irqs_disabled_flags(flags))</blue>
+<blue>		arch_local_irq_enable();</blue>
+}
+#endif /* !__ASSEMBLY__ */
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

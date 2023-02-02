@@ -1,0 +1,1152 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+274.
+275.
+276.
+277.
+278.
+279.
+280.
+281.
+282.
+283.
+284.
+285.
+286.
+287.
+288.
+289.
+290.
+291.
+292.
+293.
+294.
+295.
+296.
+297.
+298.
+299.
+300.
+301.
+302.
+303.
+304.
+305.
+306.
+307.
+308.
+309.
+310.
+311.
+312.
+313.
+314.
+315.
+316.
+317.
+318.
+319.
+320.
+321.
+322.
+323.
+324.
+325.
+326.
+327.
+328.
+329.
+330.
+331.
+332.
+333.
+334.
+335.
+336.
+337.
+338.
+339.
+340.
+341.
+342.
+343.
+344.
+345.
+346.
+347.
+348.
+349.
+350.
+351.
+352.
+353.
+354.
+355.
+356.
+357.
+358.
+359.
+360.
+361.
+362.
+363.
+364.
+365.
+366.
+367.
+368.
+369.
+370.
+371.
+372.
+373.
+374.
+375.
+376.
+377.
+378.
+379.
+380.
+381.
+382.
+383.
+384.
+385.
+386.
+387.
+388.
+389.
+390.
+391.
+392.
+393.
+394.
+395.
+396.
+397.
+398.
+399.
+400.
+401.
+402.
+403.
+404.
+405.
+406.
+407.
+408.
+409.
+410.
+411.
+412.
+413.
+414.
+415.
+416.
+417.
+418.
+419.
+420.
+421.
+422.
+423.
+424.
+425.
+426.
+427.
+428.
+429.
+430.
+431.
+432.
+433.
+434.
+435.
+436.
+437.
+438.
+439.
+440.
+441.
+442.
+443.
+444.
+445.
+446.
+447.
+448.
+449.
+450.
+451.
+452.
+453.
+454.
+455.
+456.
+457.
+458.
+459.
+460.
+461.
+462.
+463.
+464.
+465.
+466.
+467.
+468.
+469.
+470.
+471.
+472.
+473.
+474.
+475.
+476.
+477.
+478.
+479.
+480.
+481.
+482.
+483.
+484.
+485.
+486.
+487.
+488.
+489.
+490.
+491.
+492.
+493.
+494.
+495.
+496.
+497.
+498.
+499.
+500.
+501.
+502.
+503.
+504.
+505.
+506.
+507.
+508.
+509.
+510.
+511.
+512.
+513.
+514.
+515.
+516.
+517.
+518.
+519.
+520.
+521.
+522.
+523.
+524.
+525.
+526.
+527.
+528.
+529.
+530.
+531.
+532.
+533.
+534.
+535.
+536.
+537.
+538.
+539.
+540.
+541.
+542.
+543.
+544.
+545.
+546.
+547.
+548.
+549.
+550.
+551.
+552.
+553.
+554.
+555.
+556.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_PGTABLE_DEFS_H
+#define _ASM_X86_PGTABLE_DEFS_H
+
+#include &lt;linux/const.h&gt;
+#include &lt;linux/mem_encrypt.h&gt;
+
+#include &lt;asm/page_types.h&gt;
+
+#define _PAGE_BIT_PRESENT	0	/* is present */
+#define _PAGE_BIT_RW		1	/* writeable */
+#define _PAGE_BIT_USER		2	/* userspace addressable */
+#define _PAGE_BIT_PWT		3	/* page write through */
+#define _PAGE_BIT_PCD		4	/* page cache disabled */
+#define _PAGE_BIT_ACCESSED	5	/* was accessed (raised by CPU) */
+#define _PAGE_BIT_DIRTY		6	/* was written to (raised by CPU) */
+#define _PAGE_BIT_PSE		7	/* 4 MB (or 2MB) page */
+#define _PAGE_BIT_PAT		7	/* on 4KB pages */
+#define _PAGE_BIT_GLOBAL	8	/* Global TLB entry PPro+ */
+#define _PAGE_BIT_SOFTW1	9	/* available for programmer */
+#define _PAGE_BIT_SOFTW2	10	/* &quot; */
+#define _PAGE_BIT_SOFTW3	11	/* &quot; */
+#define _PAGE_BIT_PAT_LARGE	12	/* On 2MB or 1GB pages */
+#define _PAGE_BIT_SOFTW4	58	/* available for programmer */
+#define _PAGE_BIT_PKEY_BIT0	59	/* Protection Keys, bit 1/4 */
+#define _PAGE_BIT_PKEY_BIT1	60	/* Protection Keys, bit 2/4 */
+#define _PAGE_BIT_PKEY_BIT2	61	/* Protection Keys, bit 3/4 */
+#define _PAGE_BIT_PKEY_BIT3	62	/* Protection Keys, bit 4/4 */
+#define _PAGE_BIT_NX		63	/* No execute: only valid after cpuid check */
+
+#define _PAGE_BIT_SPECIAL	_PAGE_BIT_SOFTW1
+#define _PAGE_BIT_CPA_TEST	_PAGE_BIT_SOFTW1
+#define _PAGE_BIT_UFFD_WP	_PAGE_BIT_SOFTW2 /* userfaultfd wrprotected */
+#define _PAGE_BIT_SOFT_DIRTY	_PAGE_BIT_SOFTW3 /* software dirty tracking */
+#define _PAGE_BIT_DEVMAP	_PAGE_BIT_SOFTW4
+
+/* If _PAGE_BIT_PRESENT is clear, we use these: */
+/* - if the user mapped it with PROT_NONE; pte_present gives true */
+#define _PAGE_BIT_PROTNONE	_PAGE_BIT_GLOBAL
+
+#define _PAGE_PRESENT	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PRESENT)
+#define _PAGE_RW	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_RW)
+#define _PAGE_USER	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_USER)
+#define _PAGE_PWT	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PWT)
+#define _PAGE_PCD	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PCD)
+#define _PAGE_ACCESSED	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_ACCESSED)
+#define _PAGE_DIRTY	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_DIRTY)
+#define _PAGE_PSE	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PSE)
+#define _PAGE_GLOBAL	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_GLOBAL)
+#define _PAGE_SOFTW1	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SOFTW1)
+#define _PAGE_SOFTW2	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SOFTW2)
+#define _PAGE_SOFTW3	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SOFTW3)
+#define _PAGE_PAT	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PAT)
+#define _PAGE_PAT_LARGE (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PAT_LARGE)
+#define _PAGE_SPECIAL	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SPECIAL)
+#define _PAGE_CPA_TEST	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_CPA_TEST)
+#ifdef CONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS
+#define _PAGE_PKEY_BIT0	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PKEY_BIT0)
+#define _PAGE_PKEY_BIT1	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PKEY_BIT1)
+#define _PAGE_PKEY_BIT2	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PKEY_BIT2)
+#define _PAGE_PKEY_BIT3	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PKEY_BIT3)
+#else
+#define _PAGE_PKEY_BIT0	(_AT(pteval_t, 0))
+#define _PAGE_PKEY_BIT1	(_AT(pteval_t, 0))
+#define _PAGE_PKEY_BIT2	(_AT(pteval_t, 0))
+#define _PAGE_PKEY_BIT3	(_AT(pteval_t, 0))
+#endif
+
+#define _PAGE_PKEY_MASK (_PAGE_PKEY_BIT0 | \
+			 _PAGE_PKEY_BIT1 | \
+			 _PAGE_PKEY_BIT2 | \
+			 _PAGE_PKEY_BIT3)
+
+#if defined(CONFIG_X86_64) || defined(CONFIG_X86_PAE)
+#define _PAGE_KNL_ERRATUM_MASK (_PAGE_DIRTY | _PAGE_ACCESSED)
+#else
+#define _PAGE_KNL_ERRATUM_MASK 0
+#endif
+
+#ifdef CONFIG_MEM_SOFT_DIRTY
+#define _PAGE_SOFT_DIRTY	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SOFT_DIRTY)
+#else
+#define _PAGE_SOFT_DIRTY	(_AT(pteval_t, 0))
+#endif
+
+/*
+ * Tracking soft dirty bit when a page goes to a swap is tricky.
+ * We need a bit which can be stored in pte _and_ not conflict
+ * with swap entry format. On x86 bits 1-4 are *not* involved
+ * into swap entry computation, but bit 7 is used for thp migration,
+ * so we borrow bit 1 for soft dirty tracking.
+ *
+ * Please note that this bit must be treated as swap dirty page
+ * mark if and only if the PTE/PMD has present bit clear!
+ */
+#ifdef CONFIG_MEM_SOFT_DIRTY
+#define _PAGE_SWP_SOFT_DIRTY	_PAGE_RW
+#else
+#define _PAGE_SWP_SOFT_DIRTY	(_AT(pteval_t, 0))
+#endif
+
+#ifdef CONFIG_HAVE_ARCH_USERFAULTFD_WP
+#define _PAGE_UFFD_WP		(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_UFFD_WP)
+#define _PAGE_SWP_UFFD_WP	_PAGE_USER
+#else
+#define _PAGE_UFFD_WP		(_AT(pteval_t, 0))
+#define _PAGE_SWP_UFFD_WP	(_AT(pteval_t, 0))
+#endif
+
+#if defined(CONFIG_X86_64) || defined(CONFIG_X86_PAE)
+#define _PAGE_NX	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_NX)
+#define _PAGE_DEVMAP	(_AT(u64, 1) &lt;&lt; _PAGE_BIT_DEVMAP)
+#define _PAGE_SOFTW4	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SOFTW4)
+#else
+#define _PAGE_NX	(_AT(pteval_t, 0))
+#define _PAGE_DEVMAP	(_AT(pteval_t, 0))
+#define _PAGE_SOFTW4	(_AT(pteval_t, 0))
+#endif
+
+#define _PAGE_PROTNONE	(_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PROTNONE)
+
+/*
+ * Set of bits not changed in pte_modify.  The pte&#x27;s
+ * protection key is treated like _PAGE_RW, for
+ * instance, and is *not* included in this mask since
+ * pte_modify() does modify it.
+ */
+#define _PAGE_CHG_MASK	(PTE_PFN_MASK | _PAGE_PCD | _PAGE_PWT |		\
+			 _PAGE_SPECIAL | _PAGE_ACCESSED | _PAGE_DIRTY |	\
+			 _PAGE_SOFT_DIRTY | _PAGE_DEVMAP | _PAGE_ENC |  \
+			 _PAGE_UFFD_WP)
+#define _HPAGE_CHG_MASK (_PAGE_CHG_MASK | _PAGE_PSE)
+
+/*
+ * The cache modes defined here are used to translate between pure SW usage
+ * and the HW defined cache mode bits and/or PAT entries.
+ *
+ * The resulting bits for PWT, PCD and PAT should be chosen in a way
+ * to have the WB mode at index 0 (all bits clear). This is the default
+ * right now and likely would break too much if changed.
+ */
+#ifndef __ASSEMBLY__
+enum page_cache_mode {
+	_PAGE_CACHE_MODE_WB       = 0,
+	_PAGE_CACHE_MODE_WC       = 1,
+	_PAGE_CACHE_MODE_UC_MINUS = 2,
+	_PAGE_CACHE_MODE_UC       = 3,
+	_PAGE_CACHE_MODE_WT       = 4,
+	_PAGE_CACHE_MODE_WP       = 5,
+
+	_PAGE_CACHE_MODE_NUM      = 8
+};
+#endif
+
+#define _PAGE_ENC		(_AT(pteval_t, sme_me_mask))
+
+#define _PAGE_CACHE_MASK	(_PAGE_PWT | _PAGE_PCD | _PAGE_PAT)
+#define _PAGE_LARGE_CACHE_MASK	(_PAGE_PWT | _PAGE_PCD | _PAGE_PAT_LARGE)
+
+#define _PAGE_NOCACHE		(cachemode2protval(_PAGE_CACHE_MODE_UC))
+#define _PAGE_CACHE_WP		(cachemode2protval(_PAGE_CACHE_MODE_WP))
+
+#define __PP _PAGE_PRESENT
+#define __RW _PAGE_RW
+#define _USR _PAGE_USER
+#define ___A _PAGE_ACCESSED
+#define ___D _PAGE_DIRTY
+#define ___G _PAGE_GLOBAL
+#define __NX _PAGE_NX
+
+#define _ENC _PAGE_ENC
+#define __WP _PAGE_CACHE_WP
+#define __NC _PAGE_NOCACHE
+#define _PSE _PAGE_PSE
+
+#define pgprot_val(x)		((x).pgprot)
+#define __pgprot(x)		((pgprot_t) { (x) } )
+#define __pg(x)			__pgprot(x)
+
+#define PAGE_NONE	     __pg(   0|   0|   0|___A|   0|   0|   0|___G)
+#define PAGE_SHARED	     __pg(__PP|__RW|_USR|___A|__NX|   0|   0|   0)
+#define PAGE_SHARED_EXEC     __pg(__PP|__RW|_USR|___A|   0|   0|   0|   0)
+#define PAGE_COPY_NOEXEC     __pg(__PP|   0|_USR|___A|__NX|   0|   0|   0)
+#define PAGE_COPY_EXEC	     __pg(__PP|   0|_USR|___A|   0|   0|   0|   0)
+#define PAGE_COPY	     __pg(__PP|   0|_USR|___A|__NX|   0|   0|   0)
+#define PAGE_READONLY	     __pg(__PP|   0|_USR|___A|__NX|   0|   0|   0)
+#define PAGE_READONLY_EXEC   __pg(__PP|   0|_USR|___A|   0|   0|   0|   0)
+
+#define __PAGE_KERNEL		 (__PP|__RW|   0|___A|__NX|___D|   0|___G)
+#define __PAGE_KERNEL_EXEC	 (__PP|__RW|   0|___A|   0|___D|   0|___G)
+#define _KERNPG_TABLE_NOENC	 (__PP|__RW|   0|___A|   0|___D|   0|   0)
+#define _KERNPG_TABLE		 (__PP|__RW|   0|___A|   0|___D|   0|   0| _ENC)
+#define _PAGE_TABLE_NOENC	 (__PP|__RW|_USR|___A|   0|___D|   0|   0)
+#define _PAGE_TABLE		 (__PP|__RW|_USR|___A|   0|___D|   0|   0| _ENC)
+#define __PAGE_KERNEL_RO	 (__PP|   0|   0|___A|__NX|___D|   0|___G)
+#define __PAGE_KERNEL_ROX	 (__PP|   0|   0|___A|   0|___D|   0|___G)
+#define __PAGE_KERNEL_NOCACHE	 (__PP|__RW|   0|___A|__NX|___D|   0|___G| __NC)
+#define __PAGE_KERNEL_VVAR	 (__PP|   0|_USR|___A|__NX|___D|   0|___G)
+#define __PAGE_KERNEL_LARGE	 (__PP|__RW|   0|___A|__NX|___D|_PSE|___G)
+#define __PAGE_KERNEL_LARGE_EXEC (__PP|__RW|   0|___A|   0|___D|_PSE|___G)
+#define __PAGE_KERNEL_WP	 (__PP|__RW|   0|___A|__NX|___D|   0|___G| __WP)
+
+
+#define __PAGE_KERNEL_IO		__PAGE_KERNEL
+#define __PAGE_KERNEL_IO_NOCACHE	__PAGE_KERNEL_NOCACHE
+
+
+#ifndef __ASSEMBLY__
+
+#define __PAGE_KERNEL_ENC	(__PAGE_KERNEL    | _ENC)
+#define __PAGE_KERNEL_ENC_WP	(__PAGE_KERNEL_WP | _ENC)
+#define __PAGE_KERNEL_NOENC	(__PAGE_KERNEL    |    0)
+#define __PAGE_KERNEL_NOENC_WP	(__PAGE_KERNEL_WP |    0)
+
+#define __pgprot_mask(x)	__pgprot((x) &amp; __default_kernel_pte_mask)
+
+#define PAGE_KERNEL		__pgprot_mask(__PAGE_KERNEL            | _ENC)
+#define PAGE_KERNEL_NOENC	__pgprot_mask(__PAGE_KERNEL            |    0)
+#define PAGE_KERNEL_RO		__pgprot_mask(__PAGE_KERNEL_RO         | _ENC)
+#define PAGE_KERNEL_EXEC	__pgprot_mask(__PAGE_KERNEL_EXEC       | _ENC)
+#define PAGE_KERNEL_EXEC_NOENC	__pgprot_mask(__PAGE_KERNEL_EXEC       |    0)
+#define PAGE_KERNEL_ROX		__pgprot_mask(__PAGE_KERNEL_ROX        | _ENC)
+#define PAGE_KERNEL_NOCACHE	__pgprot_mask(__PAGE_KERNEL_NOCACHE    | _ENC)
+#define PAGE_KERNEL_LARGE	__pgprot_mask(__PAGE_KERNEL_LARGE      | _ENC)
+#define PAGE_KERNEL_LARGE_EXEC	__pgprot_mask(__PAGE_KERNEL_LARGE_EXEC | _ENC)
+#define PAGE_KERNEL_VVAR	__pgprot_mask(__PAGE_KERNEL_VVAR       | _ENC)
+
+#define PAGE_KERNEL_IO		__pgprot_mask(__PAGE_KERNEL_IO)
+#define PAGE_KERNEL_IO_NOCACHE	__pgprot_mask(__PAGE_KERNEL_IO_NOCACHE)
+
+#endif	/* __ASSEMBLY__ */
+
+/*
+ * early identity mapping  pte attrib macros.
+ */
+#ifdef CONFIG_X86_64
+#define __PAGE_KERNEL_IDENT_LARGE_EXEC	__PAGE_KERNEL_LARGE_EXEC
+#else
+#define PTE_IDENT_ATTR	 0x003		/* PRESENT+RW */
+#define PDE_IDENT_ATTR	 0x063		/* PRESENT+RW+DIRTY+ACCESSED */
+#define PGD_IDENT_ATTR	 0x001		/* PRESENT (no other attributes) */
+#endif
+
+#ifdef CONFIG_X86_32
+# include &lt;asm/pgtable_32_types.h&gt;
+#else
+# include &lt;asm/pgtable_64_types.h&gt;
+#endif
+
+#ifndef __ASSEMBLY__
+
+#include &lt;linux/types.h&gt;
+
+/* Extracts the PFN from a (pte|pmd|pud|pgd)val_t of a 4KB page */
+#define PTE_PFN_MASK		((pteval_t)PHYSICAL_PAGE_MASK)
+
+/*
+ *  Extracts the flags from a (pte|pmd|pud|pgd)val_t
+ *  This includes the protection key value.
+ */
+#define PTE_FLAGS_MASK		(~PTE_PFN_MASK)
+
+typedef struct pgprot { pgprotval_t pgprot; } pgprot_t;
+
+typedef struct { pgdval_t pgd; } pgd_t;
+
+static inline pgprot_t pgprot_nx(pgprot_t prot)
+{
+	return __pgprot(pgprot_val(prot) | _PAGE_NX);
+}
+#define pgprot_nx pgprot_nx
+
+#ifdef CONFIG_X86_PAE
+
+/*
+ * PHYSICAL_PAGE_MASK might be non-constant when SME is compiled in, so we can&#x27;t
+ * use it here.
+ */
+
+#define PGD_PAE_PAGE_MASK	((signed long)PAGE_MASK)
+#define PGD_PAE_PHYS_MASK	(((1ULL &lt;&lt; __PHYSICAL_MASK_SHIFT)-1) &amp; PGD_PAE_PAGE_MASK)
+
+/*
+ * PAE allows Base Address, P, PWT, PCD and AVL bits to be set in PGD entries.
+ * All other bits are Reserved MBZ
+ */
+#define PGD_ALLOWED_BITS	(PGD_PAE_PHYS_MASK | _PAGE_PRESENT | \
+				 _PAGE_PWT | _PAGE_PCD | \
+				 _PAGE_SOFTW1 | _PAGE_SOFTW2 | _PAGE_SOFTW3)
+
+#else
+/* No need to mask any bits for !PAE */
+#define PGD_ALLOWED_BITS	(~0ULL)
+#endif
+
+static inline pgd_t native_make_pgd(pgdval_t val)
+{
+	return (pgd_t) { val &amp; PGD_ALLOWED_BITS };
+}
+
+static inline pgdval_t native_pgd_val(pgd_t pgd)
+{
+	return pgd.pgd &amp; PGD_ALLOWED_BITS;
+}
+
+static inline pgdval_t pgd_flags(pgd_t pgd)
+{
+	return native_pgd_val(pgd) &amp; PTE_FLAGS_MASK;
+}
+
+#if CONFIG_PGTABLE_LEVELS &gt; 4
+typedef struct { p4dval_t p4d; } p4d_t;
+
+static inline p4d_t native_make_p4d(pudval_t val)
+{
+	return (p4d_t) { val };
+}
+
+static inline p4dval_t native_p4d_val(p4d_t p4d)
+{
+	return p4d.p4d;
+}
+#else
+#include &lt;asm-generic/pgtable-nop4d.h&gt;
+
+static inline p4d_t native_make_p4d(pudval_t val)
+{
+	return (p4d_t) { .pgd = native_make_pgd((pgdval_t)val) };
+}
+
+static inline p4dval_t native_p4d_val(p4d_t p4d)
+{
+	return native_pgd_val(p4d.pgd);
+}
+#endif
+
+#if CONFIG_PGTABLE_LEVELS &gt; 3
+typedef struct { pudval_t pud; } pud_t;
+
+static inline pud_t native_make_pud(pmdval_t val)
+{
+	return (pud_t) { val };
+}
+
+static inline pudval_t native_pud_val(pud_t pud)
+{
+	return pud.pud;
+}
+#else
+#include &lt;asm-generic/pgtable-nopud.h&gt;
+
+static inline pud_t native_make_pud(pudval_t val)
+{
+	return (pud_t) { .p4d.pgd = native_make_pgd(val) };
+}
+
+static inline pudval_t native_pud_val(pud_t pud)
+{
+	return native_pgd_val(pud.p4d.pgd);
+}
+#endif
+
+#if CONFIG_PGTABLE_LEVELS &gt; 2
+typedef struct { pmdval_t pmd; } pmd_t;
+
+static inline pmd_t native_make_pmd(pmdval_t val)
+{
+	return (pmd_t) { val };
+}
+
+static inline pmdval_t native_pmd_val(pmd_t pmd)
+{
+	return pmd.pmd;
+}
+#else
+#include &lt;asm-generic/pgtable-nopmd.h&gt;
+
+static inline pmd_t native_make_pmd(pmdval_t val)
+{
+	return (pmd_t) { .pud.p4d.pgd = native_make_pgd(val) };
+}
+
+static inline pmdval_t native_pmd_val(pmd_t pmd)
+{
+	return native_pgd_val(pmd.pud.p4d.pgd);
+}
+#endif
+
+static inline p4dval_t p4d_pfn_mask(p4d_t p4d)
+{
+	/* No 512 GiB huge pages yet */
+<blue>	return PTE_PFN_MASK;</blue>
+}
+
+static inline p4dval_t p4d_flags_mask(p4d_t p4d)
+{
+<blue>	return ~p4d_pfn_mask(p4d);</blue>
+}
+
+static inline p4dval_t p4d_flags(p4d_t p4d)
+{
+<blue>	return native_p4d_val(p4d) & p4d_flags_mask(p4d);</blue>
+}
+
+static inline pudval_t pud_pfn_mask(pud_t pud)
+{
+<blue>	if (native_pud_val(pud) & _PAGE_PSE)</blue>
+<yellow>		return PHYSICAL_PUD_PAGE_MASK;</yellow>
+	else
+<blue>		return PTE_PFN_MASK;</blue>
+}
+
+static inline pudval_t pud_flags_mask(pud_t pud)
+{
+<blue>	return ~pud_pfn_mask(pud);</blue>
+}
+
+static inline pudval_t pud_flags(pud_t pud)
+{
+<blue>	return native_pud_val(pud) & pud_flags_mask(pud);</blue>
+}
+
+static inline pmdval_t pmd_pfn_mask(pmd_t pmd)
+{
+<blue>	if (native_pmd_val(pmd) & _PAGE_PSE)</blue>
+<blue>		return PHYSICAL_PMD_PAGE_MASK;</blue>
+	else
+<blue>		return PTE_PFN_MASK;</blue>
+}
+
+static inline pmdval_t pmd_flags_mask(pmd_t pmd)
+{
+<blue>	return ~pmd_pfn_mask(pmd);</blue>
+}
+
+static inline pmdval_t pmd_flags(pmd_t pmd)
+{
+<blue>	return native_pmd_val(pmd) & pmd_flags_mask(pmd);</blue>
+}
+
+static inline pte_t native_make_pte(pteval_t val)
+{
+	return (pte_t) { .pte = val };
+}
+
+static inline pteval_t native_pte_val(pte_t pte)
+{
+<blue>	return pte.pte;</blue>
+}
+
+static inline pteval_t pte_flags(pte_t pte)
+{
+<blue>	return native_pte_val(pte) & PTE_FLAGS_MASK;</blue>
+}
+
+#define __pte2cm_idx(cb)				\
+	((((cb) &gt;&gt; (_PAGE_BIT_PAT - 2)) &amp; 4) |		\
+	 (((cb) &gt;&gt; (_PAGE_BIT_PCD - 1)) &amp; 2) |		\
+	 (((cb) &gt;&gt; _PAGE_BIT_PWT) &amp; 1))
+#define __cm_idx2pte(i)					\
+	((((i) &amp; 4) &lt;&lt; (_PAGE_BIT_PAT - 2)) |		\
+	 (((i) &amp; 2) &lt;&lt; (_PAGE_BIT_PCD - 1)) |		\
+	 (((i) &amp; 1) &lt;&lt; _PAGE_BIT_PWT))
+
+unsigned long cachemode2protval(enum page_cache_mode pcm);
+
+static inline pgprotval_t protval_4k_2_large(pgprotval_t val)
+{
+	return (val &amp; ~(_PAGE_PAT | _PAGE_PAT_LARGE)) |
+		((val &amp; _PAGE_PAT) &lt;&lt; (_PAGE_BIT_PAT_LARGE - _PAGE_BIT_PAT));
+}
+static inline pgprot_t pgprot_4k_2_large(pgprot_t pgprot)
+{
+	return __pgprot(protval_4k_2_large(pgprot_val(pgprot)));
+}
+static inline pgprotval_t protval_large_2_4k(pgprotval_t val)
+{
+	return (val &amp; ~(_PAGE_PAT | _PAGE_PAT_LARGE)) |
+		((val &amp; _PAGE_PAT_LARGE) &gt;&gt;
+		 (_PAGE_BIT_PAT_LARGE - _PAGE_BIT_PAT));
+}
+static inline pgprot_t pgprot_large_2_4k(pgprot_t pgprot)
+{
+	return __pgprot(protval_large_2_4k(pgprot_val(pgprot)));
+}
+
+
+typedef struct page *pgtable_t;
+
+extern pteval_t __supported_pte_mask;
+extern pteval_t __default_kernel_pte_mask;
+extern void set_nx(void);
+extern int nx_enabled;
+
+#define pgprot_writecombine	pgprot_writecombine
+extern pgprot_t pgprot_writecombine(pgprot_t prot);
+
+#define pgprot_writethrough	pgprot_writethrough
+extern pgprot_t pgprot_writethrough(pgprot_t prot);
+
+/* Indicate that x86 has its own track and untrack pfn vma functions */
+#define __HAVE_PFNMAP_TRACKING
+
+#define __HAVE_PHYS_MEM_ACCESS_PROT
+struct file;
+pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
+                              unsigned long size, pgprot_t vma_prot);
+
+/* Install a pte for a particular vaddr in kernel space. */
+void set_pte_vaddr(unsigned long vaddr, pte_t pte);
+
+#ifdef CONFIG_X86_32
+extern void native_pagetable_init(void);
+#else
+#define native_pagetable_init        paging_init
+#endif
+
+struct seq_file;
+extern void arch_report_meminfo(struct seq_file *m);
+
+enum pg_level {
+	PG_LEVEL_NONE,
+	PG_LEVEL_4K,
+	PG_LEVEL_2M,
+	PG_LEVEL_1G,
+	PG_LEVEL_512G,
+	PG_LEVEL_NUM
+};
+
+#ifdef CONFIG_PROC_FS
+extern void update_page_count(int level, unsigned long pages);
+#else
+static inline void update_page_count(int level, unsigned long pages) { }
+#endif
+
+/*
+ * Helper function that returns the kernel pagetable entry controlling
+ * the virtual address &#x27;address&#x27;. NULL means no pagetable entry present.
+ * NOTE: the return type is pte_t but if the pmd is PSE then we return it
+ * as a pte too.
+ */
+extern pte_t *lookup_address(unsigned long address, unsigned int *level);
+extern pte_t *lookup_address_in_pgd(pgd_t *pgd, unsigned long address,
+				    unsigned int *level);
+extern pmd_t *lookup_pmd_address(unsigned long address);
+extern phys_addr_t slow_virt_to_phys(void *__address);
+extern int __init kernel_map_pages_in_pgd(pgd_t *pgd, u64 pfn,
+					  unsigned long address,
+					  unsigned numpages,
+					  unsigned long page_flags);
+extern int __init kernel_unmap_pages_in_pgd(pgd_t *pgd, unsigned long address,
+					    unsigned long numpages);
+#endif	/* !__ASSEMBLY__ */
+
+#endif /* _ASM_X86_PGTABLE_DEFS_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

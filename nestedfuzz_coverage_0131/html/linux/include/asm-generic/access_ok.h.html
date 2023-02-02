@@ -1,0 +1,138 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __ASM_GENERIC_ACCESS_OK_H__
+#define __ASM_GENERIC_ACCESS_OK_H__
+
+/*
+ * Checking whether a pointer is valid for user space access.
+ * These definitions work on most architectures, but overrides can
+ * be used where necessary.
+ */
+
+/*
+ * architectures with compat tasks have a variable TASK_SIZE and should
+ * override this to a constant.
+ */
+#ifndef TASK_SIZE_MAX
+#define TASK_SIZE_MAX			TASK_SIZE
+#endif
+
+#ifndef __access_ok
+/*
+ * &#x27;size&#x27; is a compile-time constant for most callers, so optimize for
+ * this case to turn the check into a single comparison against a constant
+ * limit and catch all possible overflows.
+ * On architectures with separate user address space (m68k, s390, parisc,
+ * sparc64) or those without an MMU, this should always return true.
+ *
+ * This version was originally contributed by Jonas Bonn for the
+ * OpenRISC architecture, and was found to be the most efficient
+ * for constant &#x27;size&#x27; and &#x27;limit&#x27; values.
+ */
+static inline int __access_ok(const void __user *ptr, unsigned long size)
+{
+<blue>	unsigned long limit = TASK_SIZE_MAX;</blue>
+	unsigned long addr = (unsigned long)ptr;
+
+	if (IS_ENABLED(CONFIG_ALTERNATE_USER_ADDRESS_SPACE) ||
+	    !IS_ENABLED(CONFIG_MMU))
+		return true;
+
+<blue>	return (size <= limit) && (addr <= (limit - size));</blue>
+}
+#endif
+
+#ifndef access_ok
+#define access_ok(addr, size) likely(__access_ok(addr, size))
+#endif
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

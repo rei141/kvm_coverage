@@ -1,0 +1,336 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_POLL_H
+#define _LINUX_POLL_H
+
+
+#include &lt;linux/compiler.h&gt;
+#include &lt;linux/ktime.h&gt;
+#include &lt;linux/wait.h&gt;
+#include &lt;linux/string.h&gt;
+#include &lt;linux/fs.h&gt;
+#include &lt;linux/uaccess.h&gt;
+#include &lt;uapi/linux/poll.h&gt;
+#include &lt;uapi/linux/eventpoll.h&gt;
+
+/* ~832 bytes of stack space used max in sys_select/sys_poll before allocating
+   additional memory. */
+#ifdef __clang__
+#define MAX_STACK_ALLOC 768
+#else
+#define MAX_STACK_ALLOC 832
+#endif
+#define FRONTEND_STACK_ALLOC	256
+#define SELECT_STACK_ALLOC	FRONTEND_STACK_ALLOC
+#define POLL_STACK_ALLOC	FRONTEND_STACK_ALLOC
+#define WQUEUES_STACK_ALLOC	(MAX_STACK_ALLOC - FRONTEND_STACK_ALLOC)
+#define N_INLINE_POLL_ENTRIES	(WQUEUES_STACK_ALLOC / sizeof(struct poll_table_entry))
+
+#define DEFAULT_POLLMASK (EPOLLIN | EPOLLOUT | EPOLLRDNORM | EPOLLWRNORM)
+
+struct poll_table_struct;
+
+/* 
+ * structures and helpers for f_op-&gt;poll implementations
+ */
+typedef void (*poll_queue_proc)(struct file *, wait_queue_head_t *, struct poll_table_struct *);
+
+/*
+ * Do not touch the structure directly, use the access functions
+ * poll_does_not_wait() and poll_requested_events() instead.
+ */
+typedef struct poll_table_struct {
+	poll_queue_proc _qproc;
+	__poll_t _key;
+} poll_table;
+
+static inline void poll_wait(struct file * filp, wait_queue_head_t * wait_address, poll_table *p)
+{
+	if (p &amp;&amp; p-&gt;_qproc &amp;&amp; wait_address)
+		p-&gt;_qproc(filp, wait_address, p);
+}
+
+/*
+ * Return true if it is guaranteed that poll will not wait. This is the case
+ * if the poll() of another file descriptor in the set got an event, so there
+ * is no need for waiting.
+ */
+static inline bool poll_does_not_wait(const poll_table *p)
+{
+	return p == NULL || p-&gt;_qproc == NULL;
+}
+
+/*
+ * Return the set of events that the application wants to poll for.
+ * This is useful for drivers that need to know whether a DMA transfer has
+ * to be started implicitly on poll(). You typically only want to do that
+ * if the application is actually polling for POLLIN and/or POLLOUT.
+ */
+static inline __poll_t poll_requested_events(const poll_table *p)
+{
+	return p ? p-&gt;_key : ~(__poll_t)0;
+}
+
+static inline void init_poll_funcptr(poll_table *pt, poll_queue_proc qproc)
+{
+	pt-&gt;_qproc = qproc;
+	pt-&gt;_key   = ~(__poll_t)0; /* all events enabled */
+}
+
+static inline bool file_can_poll(struct file *file)
+{
+	return file-&gt;f_op-&gt;poll;
+}
+
+static inline __poll_t vfs_poll(struct file *file, struct poll_table_struct *pt)
+{
+	if (unlikely(!file-&gt;f_op-&gt;poll))
+		return DEFAULT_POLLMASK;
+<yellow>	return file->f_op->poll(file, pt);</yellow>
+}
+
+struct poll_table_entry {
+	struct file *filp;
+	__poll_t key;
+	wait_queue_entry_t wait;
+	wait_queue_head_t *wait_address;
+};
+
+/*
+ * Structures and helpers for select/poll syscall
+ */
+struct poll_wqueues {
+	poll_table pt;
+	struct poll_table_page *table;
+	struct task_struct *polling_task;
+	int triggered;
+	int error;
+	int inline_index;
+	struct poll_table_entry inline_entries[N_INLINE_POLL_ENTRIES];
+};
+
+extern void poll_initwait(struct poll_wqueues *pwq);
+extern void poll_freewait(struct poll_wqueues *pwq);
+extern u64 select_estimate_accuracy(struct timespec64 *tv);
+
+#define MAX_INT64_SECONDS (((s64)(~((u64)0)&gt;&gt;1)/HZ)-1)
+
+extern int core_sys_select(int n, fd_set __user *inp, fd_set __user *outp,
+			   fd_set __user *exp, struct timespec64 *end_time);
+
+extern int poll_select_set_timeout(struct timespec64 *to, time64_t sec,
+				   long nsec);
+
+#define __MAP(v, from, to) \
+	(from &lt; to ? (v &amp; from) * (to/from) : (v &amp; from) / (from/to))
+
+static inline __u16 mangle_poll(__poll_t val)
+{
+	__u16 v = (__force __u16)val;
+#define M(X) __MAP(v, (__force __u16)EPOLL##X, POLL##X)
+	return M(IN) | M(OUT) | M(PRI) | M(ERR) | M(NVAL) |
+		M(RDNORM) | M(RDBAND) | M(WRNORM) | M(WRBAND) |
+		M(HUP) | M(RDHUP) | M(MSG);
+#undef M
+}
+
+static inline __poll_t demangle_poll(u16 val)
+{
+#define M(X) (__force __poll_t)__MAP(val, POLL##X, (__force __u16)EPOLL##X)
+	return M(IN) | M(OUT) | M(PRI) | M(ERR) | M(NVAL) |
+		M(RDNORM) | M(RDBAND) | M(WRNORM) | M(WRBAND) |
+		M(HUP) | M(RDHUP) | M(MSG);
+#undef M
+}
+#undef __MAP
+
+
+#endif /* _LINUX_POLL_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

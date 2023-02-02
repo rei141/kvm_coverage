@@ -1,0 +1,1034 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+274.
+275.
+276.
+277.
+278.
+279.
+280.
+281.
+282.
+283.
+284.
+285.
+286.
+287.
+288.
+289.
+290.
+291.
+292.
+293.
+294.
+295.
+296.
+297.
+298.
+299.
+300.
+301.
+302.
+303.
+304.
+305.
+306.
+307.
+308.
+309.
+310.
+311.
+312.
+313.
+314.
+315.
+316.
+317.
+318.
+319.
+320.
+321.
+322.
+323.
+324.
+325.
+326.
+327.
+328.
+329.
+330.
+331.
+332.
+333.
+334.
+335.
+336.
+337.
+338.
+339.
+340.
+341.
+342.
+343.
+344.
+345.
+346.
+347.
+348.
+349.
+350.
+351.
+352.
+353.
+354.
+355.
+356.
+357.
+358.
+359.
+360.
+361.
+362.
+363.
+364.
+365.
+366.
+367.
+368.
+369.
+370.
+371.
+372.
+373.
+374.
+375.
+376.
+377.
+378.
+379.
+380.
+381.
+382.
+383.
+384.
+385.
+386.
+387.
+388.
+389.
+390.
+391.
+392.
+393.
+394.
+395.
+396.
+397.
+398.
+399.
+400.
+401.
+402.
+403.
+404.
+405.
+406.
+407.
+408.
+409.
+410.
+411.
+412.
+413.
+414.
+415.
+416.
+417.
+418.
+419.
+420.
+421.
+422.
+423.
+424.
+425.
+426.
+427.
+428.
+429.
+430.
+431.
+432.
+433.
+434.
+435.
+436.
+437.
+438.
+439.
+440.
+441.
+442.
+443.
+444.
+445.
+446.
+447.
+448.
+449.
+450.
+451.
+452.
+453.
+454.
+455.
+456.
+457.
+458.
+459.
+460.
+461.
+462.
+463.
+464.
+465.
+466.
+467.
+468.
+469.
+470.
+471.
+472.
+473.
+474.
+475.
+476.
+477.
+478.
+479.
+480.
+481.
+482.
+483.
+484.
+485.
+486.
+487.
+488.
+489.
+490.
+491.
+492.
+493.
+494.
+495.
+496.
+497.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0
+/*  Copyright(c) 2021 Intel Corporation. */
+
+#include &lt;asm/sgx.h&gt;
+
+#include &quot;cpuid.h&quot;
+#include &quot;kvm_cache_regs.h&quot;
+#include &quot;nested.h&quot;
+#include &quot;sgx.h&quot;
+#include &quot;vmx.h&quot;
+#include &quot;x86.h&quot;
+
+bool __read_mostly enable_sgx = 1;
+module_param_named(sgx, enable_sgx, bool, 0444);
+
+/* Initial value of guest&#x27;s virtual SGX_LEPUBKEYHASHn MSRs */
+static u64 sgx_pubkey_hash[4] __ro_after_init;
+
+/*
+ * ENCLS&#x27;s memory operands use a fixed segment (DS) and a fixed
+ * address size based on the mode.  Related prefixes are ignored.
+ */
+static int sgx_get_encls_gva(struct kvm_vcpu *vcpu, unsigned long offset,
+			     int size, int alignment, gva_t *gva)
+<yellow>{</yellow>
+	struct kvm_segment s;
+	bool fault;
+
+	/* Skip vmcs.GUEST_DS retrieval for 64-bit mode to avoid VMREADs. */
+<yellow>	*gva = offset;</yellow>
+	if (!is_long_mode(vcpu)) {
+<yellow>		vmx_get_segment(vcpu, &s, VCPU_SREG_DS);</yellow>
+		*gva += s.base;
+	}
+
+<yellow>	if (!IS_ALIGNED(*gva, alignment)) {</yellow>
+		fault = true;
+<yellow>	} else if (likely(is_long_mode(vcpu))) {</yellow>
+<yellow>		fault = is_noncanonical_address(*gva, vcpu);</yellow>
+	} else {
+<yellow>		*gva &= 0xffffffff;</yellow>
+		fault = (s.unusable) ||
+<yellow>			(s.type != 2 && s.type != 3) ||</yellow>
+<yellow>			(*gva > s.limit) ||</yellow>
+<yellow>			((s.base != 0 || s.limit != 0xffffffff) &&</yellow>
+<yellow>			(((u64)*gva + size - 1) > s.limit + 1));</yellow>
+	}
+	if (fault)
+<yellow>		kvm_inject_gp(vcpu, 0);</yellow>
+	return fault ? -EINVAL : 0;
+}
+
+static void sgx_handle_emulation_failure(struct kvm_vcpu *vcpu, u64 addr,
+					 unsigned int size)
+{
+<yellow>	uint64_t data[2] = { addr, size };</yellow>
+
+<yellow>	__kvm_prepare_emulation_failure_exit(vcpu, data, ARRAY_SIZE(data));</yellow>
+}
+
+static int sgx_read_hva(struct kvm_vcpu *vcpu, unsigned long hva, void *data,
+			unsigned int size)
+{
+	if (__copy_from_user(data, (void __user *)hva, size)) {
+<yellow>		sgx_handle_emulation_failure(vcpu, hva, size);</yellow>
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
+static int sgx_gva_to_gpa(struct kvm_vcpu *vcpu, gva_t gva, bool write,
+			  gpa_t *gpa)
+{
+	struct x86_exception ex;
+
+	if (write)
+		*gpa = kvm_mmu_gva_to_gpa_write(vcpu, gva, &amp;ex);
+	else
+<yellow>		*gpa = kvm_mmu_gva_to_gpa_read(vcpu, gva, &ex);</yellow>
+
+	if (*gpa == INVALID_GPA) {
+<yellow>		kvm_inject_emulated_page_fault(vcpu, &ex);</yellow>
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
+<yellow>static int sgx_gpa_to_hva(struct kvm_vcpu *vcpu, gpa_t gpa, unsigned long *hva)</yellow>
+{
+<yellow>	*hva = kvm_vcpu_gfn_to_hva(vcpu, PFN_DOWN(gpa));</yellow>
+	if (kvm_is_error_hva(*hva)) {
+<yellow>		sgx_handle_emulation_failure(vcpu, gpa, 1);</yellow>
+		return -EFAULT;
+	}
+
+<yellow>	*hva |= gpa & ~PAGE_MASK;</yellow>
+
+	return 0;
+}
+
+static int sgx_inject_fault(struct kvm_vcpu *vcpu, gva_t gva, int trapnr)
+<yellow>{</yellow>
+	struct x86_exception ex;
+
+	/*
+	 * A non-EPCM #PF indicates a bad userspace HVA.  This *should* check
+	 * for PFEC.SGX and not assume any #PF on SGX2 originated in the EPC,
+	 * but the error code isn&#x27;t (yet) plumbed through the ENCLS helpers.
+	 */
+<yellow>	if (trapnr == PF_VECTOR && !boot_cpu_has(X86_FEATURE_SGX2)) {</yellow>
+<yellow>		kvm_prepare_emulation_failure_exit(vcpu);</yellow>
+		return 0;
+	}
+
+	/*
+	 * If the guest thinks it&#x27;s running on SGX2 hardware, inject an SGX
+	 * #PF if the fault matches an EPCM fault signature (#GP on SGX1,
+	 * #PF on SGX2).  The assumption is that EPCM faults are much more
+	 * likely than a bad userspace address.
+	 */
+<yellow>	if ((trapnr == PF_VECTOR || !boot_cpu_has(X86_FEATURE_SGX2)) &&</yellow>
+<yellow>	    guest_cpuid_has(vcpu, X86_FEATURE_SGX2)) {</yellow>
+<yellow>		memset(&ex, 0, sizeof(ex));</yellow>
+		ex.vector = PF_VECTOR;
+		ex.error_code = PFERR_PRESENT_MASK | PFERR_WRITE_MASK |
+				PFERR_SGX_MASK;
+		ex.address = gva;
+		ex.error_code_valid = true;
+		ex.nested_page_fault = false;
+		kvm_inject_emulated_page_fault(vcpu, &amp;ex);
+	} else {
+<yellow>		kvm_inject_gp(vcpu, 0);</yellow>
+	}
+	return 1;
+}
+
+static int __handle_encls_ecreate(struct kvm_vcpu *vcpu,
+				  struct sgx_pageinfo *pageinfo,
+				  unsigned long secs_hva,
+				  gva_t secs_gva)
+{
+	struct sgx_secs *contents = (struct sgx_secs *)pageinfo-&gt;contents;
+	struct kvm_cpuid_entry2 *sgx_12_0, *sgx_12_1;
+	u64 attributes, xfrm, size;
+	u32 miscselect;
+	u8 max_size_log2;
+	int trapnr, ret;
+
+	sgx_12_0 = kvm_find_cpuid_entry_index(vcpu, 0x12, 0);
+	sgx_12_1 = kvm_find_cpuid_entry_index(vcpu, 0x12, 1);
+<yellow>	if (!sgx_12_0 || !sgx_12_1) {</yellow>
+<yellow>		kvm_prepare_emulation_failure_exit(vcpu);</yellow>
+		return 0;
+	}
+
+<yellow>	miscselect = contents->miscselect;</yellow>
+	attributes = contents-&gt;attributes;
+	xfrm = contents-&gt;xfrm;
+	size = contents-&gt;size;
+
+	/* Enforce restriction of access to the PROVISIONKEY. */
+<yellow>	if (!vcpu->kvm->arch.sgx_provisioning_allowed &&</yellow>
+<yellow>	    (attributes & SGX_ATTR_PROVISIONKEY)) {</yellow>
+<yellow>		if (sgx_12_1->eax & SGX_ATTR_PROVISIONKEY)</yellow>
+<yellow>			pr_warn_once("KVM: SGX PROVISIONKEY advertised but not allowed\n");</yellow>
+<yellow>		kvm_inject_gp(vcpu, 0);</yellow>
+		return 1;
+	}
+
+	/* Enforce CPUID restrictions on MISCSELECT, ATTRIBUTES and XFRM. */
+<yellow>	if ((u32)miscselect & ~sgx_12_0->ebx ||</yellow>
+<yellow>	    (u32)attributes & ~sgx_12_1->eax ||</yellow>
+<yellow>	    (u32)(attributes >> 32) & ~sgx_12_1->ebx ||</yellow>
+<yellow>	    (u32)xfrm & ~sgx_12_1->ecx ||</yellow>
+<yellow>	    (u32)(xfrm >> 32) & ~sgx_12_1->edx) {</yellow>
+		kvm_inject_gp(vcpu, 0);
+		return 1;
+	}
+
+	/* Enforce CPUID restriction on max enclave size. */
+<yellow>	max_size_log2 = (attributes & SGX_ATTR_MODE64BIT) ? sgx_12_0->edx >> 8 :</yellow>
+							    sgx_12_0-&gt;edx;
+<yellow>	if (size >= BIT_ULL(max_size_log2))</yellow>
+<yellow>		kvm_inject_gp(vcpu, 0);</yellow>
+
+	/*
+	 * sgx_virt_ecreate() returns:
+	 *  1) 0:	ECREATE was successful
+	 *  2) -EFAULT:	ECREATE was run but faulted, and trapnr was set to the
+	 *		exception number.
+	 *  3) -EINVAL:	access_ok() on @secs_hva failed. This should never
+	 *		happen as KVM checks host addresses at memslot creation.
+	 *		sgx_virt_ecreate() has already warned in this case.
+	 */
+	ret = sgx_virt_ecreate(pageinfo, (void __user *)secs_hva, &amp;trapnr);
+	if (!ret)
+<yellow>		return kvm_skip_emulated_instruction(vcpu);</yellow>
+<yellow>	if (ret == -EFAULT)</yellow>
+<yellow>		return sgx_inject_fault(vcpu, secs_gva, trapnr);</yellow>
+
+	return ret;
+}
+
+static int handle_encls_ecreate(struct kvm_vcpu *vcpu)
+<yellow>{</yellow>
+	gva_t pageinfo_gva, secs_gva;
+	gva_t metadata_gva, contents_gva;
+	gpa_t metadata_gpa, contents_gpa, secs_gpa;
+	unsigned long metadata_hva, contents_hva, secs_hva;
+	struct sgx_pageinfo pageinfo;
+	struct sgx_secs *contents;
+	struct x86_exception ex;
+	int r;
+
+<yellow>	if (sgx_get_encls_gva(vcpu, kvm_rbx_read(vcpu), 32, 32, &pageinfo_gva) ||</yellow>
+<yellow>	    sgx_get_encls_gva(vcpu, kvm_rcx_read(vcpu), 4096, 4096, &secs_gva))</yellow>
+		return 1;
+
+	/*
+	 * Copy the PAGEINFO to local memory, its pointers need to be
+	 * translated, i.e. we need to do a deep copy/translate.
+	 */
+<yellow>	r = kvm_read_guest_virt(vcpu, pageinfo_gva, &pageinfo,</yellow>
+				sizeof(pageinfo), &amp;ex);
+	if (r == X86EMUL_PROPAGATE_FAULT) {
+<yellow>		kvm_inject_emulated_page_fault(vcpu, &ex);</yellow>
+		return 1;
+<yellow>	} else if (r != X86EMUL_CONTINUE) {</yellow>
+<yellow>		sgx_handle_emulation_failure(vcpu, pageinfo_gva,</yellow>
+					     sizeof(pageinfo));
+		return 0;
+	}
+
+<yellow>	if (sgx_get_encls_gva(vcpu, pageinfo.metadata, 64, 64, &metadata_gva) ||</yellow>
+<yellow>	    sgx_get_encls_gva(vcpu, pageinfo.contents, 4096, 4096,</yellow>
+			      &amp;contents_gva))
+		return 1;
+
+	/*
+	 * Translate the SECINFO, SOURCE and SECS pointers from GVA to GPA.
+	 * Resume the guest on failure to inject a #PF.
+	 */
+<yellow>	if (sgx_gva_to_gpa(vcpu, metadata_gva, false, &metadata_gpa) ||</yellow>
+<yellow>	    sgx_gva_to_gpa(vcpu, contents_gva, false, &contents_gpa) ||</yellow>
+<yellow>	    sgx_gva_to_gpa(vcpu, secs_gva, true, &secs_gpa))</yellow>
+		return 1;
+
+	/*
+	 * ...and then to HVA.  The order of accesses isn&#x27;t architectural, i.e.
+	 * KVM doesn&#x27;t have to fully process one address at a time.  Exit to
+	 * userspace if a GPA is invalid.
+	 */
+<yellow>	if (sgx_gpa_to_hva(vcpu, metadata_gpa, &metadata_hva) ||</yellow>
+<yellow>	    sgx_gpa_to_hva(vcpu, contents_gpa, &contents_hva) ||</yellow>
+<yellow>	    sgx_gpa_to_hva(vcpu, secs_gpa, &secs_hva))</yellow>
+		return 0;
+
+	/*
+	 * Copy contents into kernel memory to prevent TOCTOU attack. E.g. the
+	 * guest could do ECREATE w/ SECS.SGX_ATTR_PROVISIONKEY=0, and
+	 * simultaneously set SGX_ATTR_PROVISIONKEY to bypass the check to
+	 * enforce restriction of access to the PROVISIONKEY.
+	 */
+<yellow>	contents = (struct sgx_secs *)__get_free_page(GFP_KERNEL_ACCOUNT);</yellow>
+	if (!contents)
+		return -ENOMEM;
+
+	/* Exit to userspace if copying from a host userspace address fails. */
+<yellow>	if (sgx_read_hva(vcpu, contents_hva, (void *)contents, PAGE_SIZE)) {</yellow>
+		free_page((unsigned long)contents);
+		return 0;
+	}
+
+	pageinfo.metadata = metadata_hva;
+	pageinfo.contents = (u64)contents;
+
+<yellow>	r = __handle_encls_ecreate(vcpu, &pageinfo, secs_hva, secs_gva);</yellow>
+
+<yellow>	free_page((unsigned long)contents);</yellow>
+
+	return r;
+}
+
+static int handle_encls_einit(struct kvm_vcpu *vcpu)
+{
+	unsigned long sig_hva, secs_hva, token_hva, rflags;
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+	gva_t sig_gva, secs_gva, token_gva;
+	gpa_t sig_gpa, secs_gpa, token_gpa;
+	int ret, trapnr;
+
+<yellow>	if (sgx_get_encls_gva(vcpu, kvm_rbx_read(vcpu), 1808, 4096, &sig_gva) ||</yellow>
+<yellow>	    sgx_get_encls_gva(vcpu, kvm_rcx_read(vcpu), 4096, 4096, &secs_gva) ||</yellow>
+<yellow>	    sgx_get_encls_gva(vcpu, kvm_rdx_read(vcpu), 304, 512, &token_gva))</yellow>
+		return 1;
+
+	/*
+	 * Translate the SIGSTRUCT, SECS and TOKEN pointers from GVA to GPA.
+	 * Resume the guest on failure to inject a #PF.
+	 */
+<yellow>	if (sgx_gva_to_gpa(vcpu, sig_gva, false, &sig_gpa) ||</yellow>
+<yellow>	    sgx_gva_to_gpa(vcpu, secs_gva, true, &secs_gpa) ||</yellow>
+<yellow>	    sgx_gva_to_gpa(vcpu, token_gva, false, &token_gpa))</yellow>
+		return 1;
+
+	/*
+	 * ...and then to HVA.  The order of accesses isn&#x27;t architectural, i.e.
+	 * KVM doesn&#x27;t have to fully process one address at a time.  Exit to
+	 * userspace if a GPA is invalid.  Note, all structures are aligned and
+	 * cannot split pages.
+	 */
+<yellow>	if (sgx_gpa_to_hva(vcpu, sig_gpa, &sig_hva) ||</yellow>
+<yellow>	    sgx_gpa_to_hva(vcpu, secs_gpa, &secs_hva) ||</yellow>
+<yellow>	    sgx_gpa_to_hva(vcpu, token_gpa, &token_hva))</yellow>
+		return 0;
+
+	ret = sgx_virt_einit((void __user *)sig_hva, (void __user *)token_hva,
+			     (void __user *)secs_hva,
+			     vmx-&gt;msr_ia32_sgxlepubkeyhash, &amp;trapnr);
+
+	if (ret == -EFAULT)
+<yellow>		return sgx_inject_fault(vcpu, secs_gva, trapnr);</yellow>
+
+	/*
+	 * sgx_virt_einit() returns -EINVAL when access_ok() fails on @sig_hva,
+	 * @token_hva or @secs_hva. This should never happen as KVM checks host
+	 * addresses at memslot creation. sgx_virt_einit() has already warned
+	 * in this case, so just return.
+	 */
+<yellow>	if (ret < 0)</yellow>
+		return ret;
+
+<yellow>	rflags = vmx_get_rflags(vcpu) & ~(X86_EFLAGS_CF | X86_EFLAGS_PF |</yellow>
+					  X86_EFLAGS_AF | X86_EFLAGS_SF |
+					  X86_EFLAGS_OF);
+	if (ret)
+		rflags |= X86_EFLAGS_ZF;
+	else
+<yellow>		rflags &= ~X86_EFLAGS_ZF;</yellow>
+<yellow>	vmx_set_rflags(vcpu, rflags);</yellow>
+
+	kvm_rax_write(vcpu, ret);
+	return kvm_skip_emulated_instruction(vcpu);
+}
+
+static inline bool encls_leaf_enabled_in_guest(struct kvm_vcpu *vcpu, u32 leaf)
+{
+<yellow>	if (!enable_sgx || !guest_cpuid_has(vcpu, X86_FEATURE_SGX))</yellow>
+		return false;
+
+<yellow>	if (leaf >= ECREATE && leaf <= ETRACK)</yellow>
+<yellow>		return guest_cpuid_has(vcpu, X86_FEATURE_SGX1);</yellow>
+
+<yellow>	if (leaf >= EAUG && leaf <= EMODT)</yellow>
+<yellow>		return guest_cpuid_has(vcpu, X86_FEATURE_SGX2);</yellow>
+
+	return false;
+}
+
+static inline bool sgx_enabled_in_guest_bios(struct kvm_vcpu *vcpu)
+{
+	const u64 bits = FEAT_CTL_SGX_ENABLED | FEAT_CTL_LOCKED;
+
+<yellow>	return (to_vmx(vcpu)->msr_ia32_feature_control & bits) == bits;</yellow>
+}
+
+int handle_encls(struct kvm_vcpu *vcpu)
+<yellow>{</yellow>
+<yellow>	u32 leaf = (u32)kvm_rax_read(vcpu);</yellow>
+
+<yellow>	if (!encls_leaf_enabled_in_guest(vcpu, leaf)) {</yellow>
+<yellow>		kvm_queue_exception(vcpu, UD_VECTOR);</yellow>
+<yellow>	} else if (!sgx_enabled_in_guest_bios(vcpu)) {</yellow>
+<yellow>		kvm_inject_gp(vcpu, 0);</yellow>
+	} else {
+<yellow>		if (leaf == ECREATE)</yellow>
+<yellow>			return handle_encls_ecreate(vcpu);</yellow>
+<yellow>		if (leaf == EINIT)</yellow>
+<yellow>			return handle_encls_einit(vcpu);</yellow>
+<yellow>		WARN(1, "KVM: unexpected exit on ENCLS[%u]", leaf);</yellow>
+		vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_UNKNOWN;
+		vcpu-&gt;run-&gt;hw.hardware_exit_reason = EXIT_REASON_ENCLS;
+		return 0;
+	}
+	return 1;
+}
+
+void setup_default_sgx_lepubkeyhash(void)
+{
+	/*
+	 * Use Intel&#x27;s default value for Skylake hardware if Launch Control is
+	 * not supported, i.e. Intel&#x27;s hash is hardcoded into silicon, or if
+	 * Launch Control is supported and enabled, i.e. mimic the reset value
+	 * and let the guest write the MSRs at will.  If Launch Control is
+	 * supported but disabled, then use the current MSR values as the hash
+	 * MSRs exist but are read-only (locked and not writable).
+	 */
+<yellow>	if (!enable_sgx || boot_cpu_has(X86_FEATURE_SGX_LC) ||</yellow>
+<yellow>	    rdmsrl_safe(MSR_IA32_SGXLEPUBKEYHASH0, &sgx_pubkey_hash[0])) {</yellow>
+<yellow>		sgx_pubkey_hash[0] = 0xa6053e051270b7acULL;</yellow>
+		sgx_pubkey_hash[1] = 0x6cfbe8ba8b3b413dULL;
+		sgx_pubkey_hash[2] = 0xc4916d99f2b3735dULL;
+<yellow>		sgx_pubkey_hash[3] = 0xd4f8c05909f9bb3bULL;</yellow>
+	} else {
+		/* MSR_IA32_SGXLEPUBKEYHASH0 is read above */
+<yellow>		rdmsrl(MSR_IA32_SGXLEPUBKEYHASH1, sgx_pubkey_hash[1]);</yellow>
+		rdmsrl(MSR_IA32_SGXLEPUBKEYHASH2, sgx_pubkey_hash[2]);
+		rdmsrl(MSR_IA32_SGXLEPUBKEYHASH3, sgx_pubkey_hash[3]);
+	}
+}
+
+void vcpu_setup_sgx_lepubkeyhash(struct kvm_vcpu *vcpu)
+{
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+
+<blue>	memcpy(vmx->msr_ia32_sgxlepubkeyhash, sgx_pubkey_hash,</blue>
+	       sizeof(sgx_pubkey_hash));
+}
+
+/*
+ * ECREATE must be intercepted to enforce MISCSELECT, ATTRIBUTES and XFRM
+ * restrictions if the guest&#x27;s allowed-1 settings diverge from hardware.
+ */
+static bool sgx_intercept_encls_ecreate(struct kvm_vcpu *vcpu)
+{
+	struct kvm_cpuid_entry2 *guest_cpuid;
+	u32 eax, ebx, ecx, edx;
+
+<yellow>	if (!vcpu->kvm->arch.sgx_provisioning_allowed)</yellow>
+		return true;
+
+<yellow>	guest_cpuid = kvm_find_cpuid_entry_index(vcpu, 0x12, 0);</yellow>
+	if (!guest_cpuid)
+		return true;
+
+<yellow>	cpuid_count(0x12, 0, &eax, &ebx, &ecx, &edx);</yellow>
+<yellow>	if (guest_cpuid->ebx != ebx || guest_cpuid->edx != edx)</yellow>
+		return true;
+
+<yellow>	guest_cpuid = kvm_find_cpuid_entry_index(vcpu, 0x12, 1);</yellow>
+	if (!guest_cpuid)
+		return true;
+
+<yellow>	cpuid_count(0x12, 1, &eax, &ebx, &ecx, &edx);</yellow>
+<yellow>	if (guest_cpuid->eax != eax || guest_cpuid->ebx != ebx ||</yellow>
+<yellow>	    guest_cpuid->ecx != ecx || guest_cpuid->edx != edx)</yellow>
+		return true;
+
+	return false;
+}
+
+void vmx_write_encls_bitmap(struct kvm_vcpu *vcpu, struct vmcs12 *vmcs12)
+<blue>{</blue>
+	/*
+	 * There is no software enable bit for SGX that is virtualized by
+	 * hardware, e.g. there&#x27;s no CR4.SGXE, so when SGX is disabled in the
+	 * guest (either by the host or by the guest&#x27;s BIOS) but enabled in the
+	 * host, trap all ENCLS leafs and inject #UD/#GP as needed to emulate
+	 * the expected system behavior for ENCLS.
+	 */
+	u64 bitmap = -1ull;
+
+	/* Nothing to do if hardware doesn&#x27;t support SGX */
+<blue>	if (!cpu_has_vmx_encls_vmexit())</blue>
+		return;
+
+<yellow>	if (guest_cpuid_has(vcpu, X86_FEATURE_SGX) &&</yellow>
+<yellow>	    sgx_enabled_in_guest_bios(vcpu)) {</yellow>
+<yellow>		if (guest_cpuid_has(vcpu, X86_FEATURE_SGX1)) {</yellow>
+<yellow>			bitmap &= ~GENMASK_ULL(ETRACK, ECREATE);</yellow>
+<yellow>			if (sgx_intercept_encls_ecreate(vcpu))</yellow>
+<yellow>				bitmap |= (1 << ECREATE);</yellow>
+		}
+
+<yellow>		if (guest_cpuid_has(vcpu, X86_FEATURE_SGX2))</yellow>
+<yellow>			bitmap &= ~GENMASK_ULL(EMODT, EAUG);</yellow>
+
+		/*
+		 * Trap and execute EINIT if launch control is enabled in the
+		 * host using the guest&#x27;s values for launch control MSRs, even
+		 * if the guest&#x27;s values are fixed to hardware default values.
+		 * The MSRs are not loaded/saved on VM-Enter/VM-Exit as writing
+		 * the MSRs is extraordinarily expensive.
+		 */
+<yellow>		if (boot_cpu_has(X86_FEATURE_SGX_LC))</yellow>
+<yellow>			bitmap |= (1 << EINIT);</yellow>
+
+<yellow>		if (!vmcs12 && is_guest_mode(vcpu))</yellow>
+<yellow>			vmcs12 = get_vmcs12(vcpu);</yellow>
+<yellow>		if (vmcs12 && nested_cpu_has_encls_exit(vmcs12))</yellow>
+<yellow>			bitmap |= vmcs12->encls_exiting_bitmap;</yellow>
+	}
+<yellow>	vmcs_write64(ENCLS_EXITING_BITMAP, bitmap);</yellow>
+}
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

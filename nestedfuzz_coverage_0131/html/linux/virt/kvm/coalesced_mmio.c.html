@@ -1,0 +1,460 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0
+/*
+ * KVM coalesced MMIO
+ *
+ * Copyright (c) 2008 Bull S.A.S.
+ * Copyright 2009 Red Hat, Inc. and/or its affiliates.
+ *
+ *  Author: Laurent Vivier &lt;Laurent.Vivier@bull.net&gt;
+ *
+ */
+
+#include &lt;kvm/iodev.h&gt;
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/slab.h&gt;
+#include &lt;linux/kvm.h&gt;
+
+#include &quot;coalesced_mmio.h&quot;
+
+static inline struct kvm_coalesced_mmio_dev *to_mmio(struct kvm_io_device *dev)
+{
+	return container_of(dev, struct kvm_coalesced_mmio_dev, dev);
+}
+
+static int coalesced_mmio_in_range(struct kvm_coalesced_mmio_dev *dev,
+				   gpa_t addr, int len)
+{
+	/* is it in a batchable area ?
+	 * (addr,len) is fully included in
+	 * (zone-&gt;addr, zone-&gt;size)
+	 */
+<blue>	if (len < 0)</blue>
+		return 0;
+<blue>	if (addr + len < addr)</blue>
+		return 0;
+<blue>	if (addr < dev->zone.addr)</blue>
+		return 0;
+<blue>	if (addr + len > dev->zone.addr + dev->zone.size)</blue>
+		return 0;
+	return 1;
+}
+
+static int coalesced_mmio_has_room(struct kvm_coalesced_mmio_dev *dev, u32 last)
+{
+	struct kvm_coalesced_mmio_ring *ring;
+	unsigned avail;
+
+	/* Are we able to batch it ? */
+
+	/* last is the first free entry
+	 * check if we don&#x27;t meet the first used entry
+	 * there is always one unused entry in the buffer
+	 */
+	ring = dev-&gt;kvm-&gt;coalesced_mmio_ring;
+	avail = (ring-&gt;first - last - 1) % KVM_COALESCED_MMIO_MAX;
+	if (avail == 0) {
+		/* full */
+		return 0;
+	}
+
+	return 1;
+}
+
+static int coalesced_mmio_write(struct kvm_vcpu *vcpu,
+				struct kvm_io_device *this, gpa_t addr,
+				int len, const void *val)
+{
+	struct kvm_coalesced_mmio_dev *dev = to_mmio(this);
+<blue>	struct kvm_coalesced_mmio_ring *ring = dev->kvm->coalesced_mmio_ring;</blue>
+	__u32 insert;
+
+<blue>	if (!coalesced_mmio_in_range(dev, addr, len))</blue>
+		return -EOPNOTSUPP;
+
+	spin_lock(&amp;dev-&gt;kvm-&gt;ring_lock);
+
+	insert = READ_ONCE(ring-&gt;last);
+<blue>	if (!coalesced_mmio_has_room(dev, insert) ||</blue>
+	    insert &gt;= KVM_COALESCED_MMIO_MAX) {
+<yellow>		spin_unlock(&dev->kvm->ring_lock);</yellow>
+		return -EOPNOTSUPP;
+	}
+
+	/* copy data in first free entry of the ring */
+
+<blue>	ring->coalesced_mmio[insert].phys_addr = addr;</blue>
+	ring-&gt;coalesced_mmio[insert].len = len;
+<blue>	memcpy(ring->coalesced_mmio[insert].data, val, len);</blue>
+	ring-&gt;coalesced_mmio[insert].pio = dev-&gt;zone.pio;
+	smp_wmb();
+	ring-&gt;last = (insert + 1) % KVM_COALESCED_MMIO_MAX;
+	spin_unlock(&amp;dev-&gt;kvm-&gt;ring_lock);
+	return 0;
+<blue>}</blue>
+
+static void coalesced_mmio_destructor(struct kvm_io_device *this)
+{
+	struct kvm_coalesced_mmio_dev *dev = to_mmio(this);
+
+<blue>	list_del(&dev->list);</blue>
+
+	kfree(dev);
+}
+
+static const struct kvm_io_device_ops coalesced_mmio_ops = {
+	.write      = coalesced_mmio_write,
+	.destructor = coalesced_mmio_destructor,
+};
+
+int kvm_coalesced_mmio_init(struct kvm *kvm)
+{
+	struct page *page;
+
+<blue>	page = alloc_page(GFP_KERNEL_ACCOUNT | __GFP_ZERO);</blue>
+	if (!page)
+		return -ENOMEM;
+
+<blue>	kvm->coalesced_mmio_ring = page_address(page);</blue>
+
+	/*
+	 * We&#x27;re using this spinlock to sync access to the coalesced ring.
+	 * The list doesn&#x27;t need its own lock since device registration and
+	 * unregistration should only happen when kvm-&gt;slots_lock is held.
+	 */
+	spin_lock_init(&amp;kvm-&gt;ring_lock);
+	INIT_LIST_HEAD(&amp;kvm-&gt;coalesced_zones);
+
+	return 0;
+<blue>}</blue>
+
+void kvm_coalesced_mmio_free(struct kvm *kvm)
+{
+<yellow>	if (kvm->coalesced_mmio_ring)</yellow>
+<yellow>		free_page((unsigned long)kvm->coalesced_mmio_ring);</yellow>
+<yellow>}</yellow>
+
+int kvm_vm_ioctl_register_coalesced_mmio(struct kvm *kvm,
+					 struct kvm_coalesced_mmio_zone *zone)
+{
+	int ret;
+	struct kvm_coalesced_mmio_dev *dev;
+
+<blue>	if (zone->pio != 1 && zone->pio != 0)</blue>
+		return -EINVAL;
+
+<blue>	dev = kzalloc(sizeof(struct kvm_coalesced_mmio_dev),</blue>
+		      GFP_KERNEL_ACCOUNT);
+	if (!dev)
+		return -ENOMEM;
+
+<blue>	kvm_iodevice_init(&dev->dev, &coalesced_mmio_ops);</blue>
+	dev-&gt;kvm = kvm;
+	dev-&gt;zone = *zone;
+
+	mutex_lock(&amp;kvm-&gt;slots_lock);
+	ret = kvm_io_bus_register_dev(kvm,
+				zone-&gt;pio ? KVM_PIO_BUS : KVM_MMIO_BUS,
+				zone-&gt;addr, zone-&gt;size, &amp;dev-&gt;dev);
+	if (ret &lt; 0)
+		goto out_free_dev;
+<blue>	list_add_tail(&dev->list, &kvm->coalesced_zones);</blue>
+	mutex_unlock(&amp;kvm-&gt;slots_lock);
+
+	return 0;
+
+out_free_dev:
+<yellow>	mutex_unlock(&kvm->slots_lock);</yellow>
+	kfree(dev);
+
+	return ret;
+<blue>}</blue>
+
+int kvm_vm_ioctl_unregister_coalesced_mmio(struct kvm *kvm,
+					   struct kvm_coalesced_mmio_zone *zone)
+{
+	struct kvm_coalesced_mmio_dev *dev, *tmp;
+	int r;
+
+<blue>	if (zone->pio != 1 && zone->pio != 0)</blue>
+		return -EINVAL;
+
+<blue>	mutex_lock(&kvm->slots_lock);</blue>
+
+<blue>	list_for_each_entry_safe(dev, tmp, &kvm->coalesced_zones, list) {</blue>
+<blue>		if (zone->pio == dev->zone.pio &&</blue>
+<blue>		    coalesced_mmio_in_range(dev, zone->addr, zone->size)) {</blue>
+<blue>			r = kvm_io_bus_unregister_dev(kvm,</blue>
+				zone-&gt;pio ? KVM_PIO_BUS : KVM_MMIO_BUS, &amp;dev-&gt;dev);
+
+			/*
+			 * On failure, unregister destroys all devices on the
+			 * bus _except_ the target device, i.e. coalesced_zones
+			 * has been modified.  No need to restart the walk as
+			 * there aren&#x27;t any zones left.
+			 */
+			if (r)
+				break;
+<blue>			kvm_iodevice_destructor(&dev->dev);</blue>
+		}
+	}
+
+<blue>	mutex_unlock(&kvm->slots_lock);</blue>
+
+	/*
+	 * Ignore the result of kvm_io_bus_unregister_dev(), from userspace&#x27;s
+	 * perspective, the coalesced MMIO is most definitely unregistered.
+	 */
+	return 0;
+<blue>}</blue>
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

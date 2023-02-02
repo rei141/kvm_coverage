@@ -1,0 +1,366 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_SEQ_BUF_H
+#define _LINUX_SEQ_BUF_H
+
+#include &lt;linux/fs.h&gt;
+
+/*
+ * Trace sequences are used to allow a function to call several other functions
+ * to create a string of data to use.
+ */
+
+/**
+ * seq_buf - seq buffer structure
+ * @buffer:	pointer to the buffer
+ * @size:	size of the buffer
+ * @len:	the amount of data inside the buffer
+ * @readpos:	The next position to read in the buffer.
+ */
+struct seq_buf {
+	char			*buffer;
+	size_t			size;
+	size_t			len;
+	loff_t			readpos;
+};
+
+static inline void seq_buf_clear(struct seq_buf *s)
+{
+	s-&gt;len = 0;
+	s-&gt;readpos = 0;
+}
+
+static inline void
+seq_buf_init(struct seq_buf *s, char *buf, unsigned int size)
+{
+	s-&gt;buffer = buf;
+	s-&gt;size = size;
+	seq_buf_clear(s);
+}
+
+/*
+ * seq_buf have a buffer that might overflow. When this happens
+ * the len and size are set to be equal.
+ */
+static inline bool
+seq_buf_has_overflowed(struct seq_buf *s)
+{
+	return s-&gt;len &gt; s-&gt;size;
+}
+
+static inline void
+seq_buf_set_overflow(struct seq_buf *s)
+{
+	s-&gt;len = s-&gt;size + 1;
+}
+
+/*
+ * How much buffer is left on the seq_buf?
+ */
+static inline unsigned int
+seq_buf_buffer_left(struct seq_buf *s)
+{
+	if (seq_buf_has_overflowed(s))
+		return 0;
+
+	return s-&gt;size - s-&gt;len;
+}
+
+/* How much buffer was written? */
+static inline unsigned int seq_buf_used(struct seq_buf *s)
+{
+<yellow>	return min(s->len, s->size);</yellow>
+}
+
+/**
+ * seq_buf_terminate - Make sure buffer is nul terminated
+ * @s: the seq_buf descriptor to terminate.
+ *
+ * This makes sure that the buffer in @s is nul terminated and
+ * safe to read as a string.
+ *
+ * Note, if this is called when the buffer has overflowed, then
+ * the last byte of the buffer is zeroed, and the len will still
+ * point passed it.
+ *
+ * After this function is called, s-&gt;buffer is safe to use
+ * in string operations.
+ */
+static inline void seq_buf_terminate(struct seq_buf *s)
+{
+	if (WARN_ON(s-&gt;size == 0))
+		return;
+
+	if (seq_buf_buffer_left(s))
+		s-&gt;buffer[s-&gt;len] = 0;
+	else
+		s-&gt;buffer[s-&gt;size - 1] = 0;
+}
+
+/**
+ * seq_buf_get_buf - get buffer to write arbitrary data to
+ * @s: the seq_buf handle
+ * @bufp: the beginning of the buffer is stored here
+ *
+ * Return the number of bytes available in the buffer, or zero if
+ * there&#x27;s no space.
+ */
+static inline size_t seq_buf_get_buf(struct seq_buf *s, char **bufp)
+{
+	WARN_ON(s-&gt;len &gt; s-&gt;size + 1);
+
+	if (s-&gt;len &lt; s-&gt;size) {
+		*bufp = s-&gt;buffer + s-&gt;len;
+		return s-&gt;size - s-&gt;len;
+	}
+
+	*bufp = NULL;
+	return 0;
+}
+
+/**
+ * seq_buf_commit - commit data to the buffer
+ * @s: the seq_buf handle
+ * @num: the number of bytes to commit
+ *
+ * Commit @num bytes of data written to a buffer previously acquired
+ * by seq_buf_get.  To signal an error condition, or that the data
+ * didn&#x27;t fit in the available space, pass a negative @num value.
+ */
+static inline void seq_buf_commit(struct seq_buf *s, int num)
+{
+	if (num &lt; 0) {
+		seq_buf_set_overflow(s);
+	} else {
+		/* num must be negative on overflow */
+		BUG_ON(s-&gt;len + num &gt; s-&gt;size);
+		s-&gt;len += num;
+	}
+}
+
+extern __printf(2, 3)
+int seq_buf_printf(struct seq_buf *s, const char *fmt, ...);
+extern __printf(2, 0)
+int seq_buf_vprintf(struct seq_buf *s, const char *fmt, va_list args);
+extern int seq_buf_print_seq(struct seq_file *m, struct seq_buf *s);
+extern int seq_buf_to_user(struct seq_buf *s, char __user *ubuf,
+			   int cnt);
+extern int seq_buf_puts(struct seq_buf *s, const char *str);
+extern int seq_buf_putc(struct seq_buf *s, unsigned char c);
+extern int seq_buf_putmem(struct seq_buf *s, const void *mem, unsigned int len);
+extern int seq_buf_putmem_hex(struct seq_buf *s, const void *mem,
+			      unsigned int len);
+extern int seq_buf_path(struct seq_buf *s, const struct path *path, const char *esc);
+extern int seq_buf_hex_dump(struct seq_buf *s, const char *prefix_str,
+			    int prefix_type, int rowsize, int groupsize,
+			    const void *buf, size_t len, bool ascii);
+
+#ifdef CONFIG_BINARY_PRINTF
+extern int
+seq_buf_bprintf(struct seq_buf *s, const char *fmt, const u32 *binary);
+#endif
+
+#endif /* _LINUX_SEQ_BUF_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

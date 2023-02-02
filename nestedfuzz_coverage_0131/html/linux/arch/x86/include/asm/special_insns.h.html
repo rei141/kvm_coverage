@@ -1,0 +1,660 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+274.
+275.
+276.
+277.
+278.
+279.
+280.
+281.
+282.
+283.
+284.
+285.
+286.
+287.
+288.
+289.
+290.
+291.
+292.
+293.
+294.
+295.
+296.
+297.
+298.
+299.
+300.
+301.
+302.
+303.
+304.
+305.
+306.
+307.
+308.
+309.
+310.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_SPECIAL_INSNS_H
+#define _ASM_X86_SPECIAL_INSNS_H
+
+
+#ifdef __KERNEL__
+
+#include &lt;asm/nops.h&gt;
+#include &lt;asm/processor-flags.h&gt;
+#include &lt;linux/irqflags.h&gt;
+#include &lt;linux/jump_label.h&gt;
+
+/*
+ * The compiler should not reorder volatile asm statements with respect to each
+ * other: they should execute in program order. However GCC 4.9.x and 5.x have
+ * a bug (which was fixed in 8.1, 7.3 and 6.5) where they might reorder
+ * volatile asm. The write functions are not affected since they have memory
+ * clobbers preventing reordering. To prevent reads from being reordered with
+ * respect to writes, use a dummy memory operand.
+ */
+
+#define __FORCE_ORDER &quot;m&quot;(*(unsigned int *)0x1000UL)
+
+void native_write_cr0(unsigned long val);
+
+static inline unsigned long native_read_cr0(void)
+{
+	unsigned long val;
+	asm volatile(&quot;mov %%cr0,%0\n\t&quot; : &quot;=r&quot; (val) : __FORCE_ORDER);
+	return val;
+}
+
+static __always_inline unsigned long native_read_cr2(void)
+{
+	unsigned long val;
+	asm volatile(&quot;mov %%cr2,%0\n\t&quot; : &quot;=r&quot; (val) : __FORCE_ORDER);
+	return val;
+}
+
+static __always_inline void native_write_cr2(unsigned long val)
+{
+	asm volatile(&quot;mov %0,%%cr2&quot;: : &quot;r&quot; (val) : &quot;memory&quot;);
+}
+
+static inline unsigned long __native_read_cr3(void)
+{
+	unsigned long val;
+	asm volatile(&quot;mov %%cr3,%0\n\t&quot; : &quot;=r&quot; (val) : __FORCE_ORDER);
+	return val;
+}
+
+static inline void native_write_cr3(unsigned long val)
+{
+	asm volatile(&quot;mov %0,%%cr3&quot;: : &quot;r&quot; (val) : &quot;memory&quot;);
+}
+
+static inline unsigned long native_read_cr4(void)
+{
+	unsigned long val;
+#ifdef CONFIG_X86_32
+	/*
+	 * This could fault if CR4 does not exist.  Non-existent CR4
+	 * is functionally equivalent to CR4 == 0.  Keep it simple and pretend
+	 * that CR4 == 0 on CPUs that don&#x27;t have CR4.
+	 */
+	asm volatile(&quot;1: mov %%cr4, %0\n&quot;
+		     &quot;2:\n&quot;
+		     _ASM_EXTABLE(1b, 2b)
+		     : &quot;=r&quot; (val) : &quot;0&quot; (0), __FORCE_ORDER);
+#else
+	/* CR4 always exists on x86_64. */
+	asm volatile(&quot;mov %%cr4,%0\n\t&quot; : &quot;=r&quot; (val) : __FORCE_ORDER);
+#endif
+	return val;
+}
+
+void native_write_cr4(unsigned long val);
+
+#ifdef CONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS
+static inline u32 rdpkru(void)
+{
+	u32 ecx = 0;
+	u32 edx, pkru;
+
+	/*
+	 * &quot;rdpkru&quot; instruction.  Places PKRU contents in to EAX,
+	 * clears EDX and requires that ecx=0.
+	 */
+<blue>	asm volatile(".byte 0x0f,0x01,0xee\n\t"</blue>
+		     : &quot;=a&quot; (pkru), &quot;=d&quot; (edx)
+		     : &quot;c&quot; (ecx));
+	return pkru;
+}
+
+static inline void wrpkru(u32 pkru)
+{
+	u32 ecx = 0, edx = 0;
+
+	/*
+	 * &quot;wrpkru&quot; instruction.  Loads contents in EAX to PKRU,
+	 * requires that ecx = edx = 0.
+	 */
+<blue>	asm volatile(".byte 0x0f,0x01,0xef\n\t"</blue>
+		     : : &quot;a&quot; (pkru), &quot;c&quot;(ecx), &quot;d&quot;(edx));
+}
+
+#else
+static inline u32 rdpkru(void)
+{
+	return 0;
+}
+
+static inline void wrpkru(u32 pkru)
+{
+}
+#endif
+
+static inline void native_wbinvd(void)
+{
+	asm volatile(&quot;wbinvd&quot;: : :&quot;memory&quot;);
+}
+
+extern asmlinkage void asm_load_gs_index(unsigned int selector);
+
+static inline void native_load_gs_index(unsigned int selector)
+{
+	unsigned long flags;
+
+	local_irq_save(flags);
+	asm_load_gs_index(selector);
+	local_irq_restore(flags);
+}
+
+static inline unsigned long __read_cr4(void)
+{
+	return native_read_cr4();
+}
+
+#ifdef CONFIG_PARAVIRT_XXL
+#include &lt;asm/paravirt.h&gt;
+#else
+
+static inline unsigned long read_cr0(void)
+{
+	return native_read_cr0();
+}
+
+static inline void write_cr0(unsigned long x)
+{
+	native_write_cr0(x);
+}
+
+static __always_inline unsigned long read_cr2(void)
+{
+	return native_read_cr2();
+}
+
+static __always_inline void write_cr2(unsigned long x)
+{
+	native_write_cr2(x);
+}
+
+/*
+ * Careful!  CR3 contains more than just an address.  You probably want
+ * read_cr3_pa() instead.
+ */
+static inline unsigned long __read_cr3(void)
+{
+	return __native_read_cr3();
+}
+
+static inline void write_cr3(unsigned long x)
+{
+	native_write_cr3(x);
+}
+
+static inline void __write_cr4(unsigned long x)
+{
+	native_write_cr4(x);
+}
+
+static inline void wbinvd(void)
+{
+	native_wbinvd();
+}
+
+
+static inline void load_gs_index(unsigned int selector)
+{
+#ifdef CONFIG_X86_64
+	native_load_gs_index(selector);
+#else
+	loadsegment(gs, selector);
+#endif
+}
+
+#endif /* CONFIG_PARAVIRT_XXL */
+
+static inline void clflush(volatile void *__p)
+{
+	asm volatile(&quot;clflush %0&quot; : &quot;+m&quot; (*(volatile char __force *)__p));
+}
+
+static inline void clflushopt(volatile void *__p)
+{
+	alternative_io(&quot;.byte 0x3e; clflush %P0&quot;,
+		       &quot;.byte 0x66; clflush %P0&quot;,
+		       X86_FEATURE_CLFLUSHOPT,
+		       &quot;+m&quot; (*(volatile char __force *)__p));
+}
+
+static inline void clwb(volatile void *__p)
+{
+	volatile struct { char x[64]; } *p = __p;
+
+	asm volatile(ALTERNATIVE_2(
+		&quot;.byte 0x3e; clflush (%[pax])&quot;,
+		&quot;.byte 0x66; clflush (%[pax])&quot;, /* clflushopt (%%rax) */
+		X86_FEATURE_CLFLUSHOPT,
+		&quot;.byte 0x66, 0x0f, 0xae, 0x30&quot;,  /* clwb (%%rax) */
+		X86_FEATURE_CLWB)
+		: [p] &quot;+m&quot; (*p)
+		: [pax] &quot;a&quot; (p));
+}
+
+#define nop() asm volatile (&quot;nop&quot;)
+
+static inline void serialize(void)
+{
+	/* Instruction opcode for SERIALIZE; supported in binutils &gt;= 2.35. */
+	asm volatile(&quot;.byte 0xf, 0x1, 0xe8&quot; ::: &quot;memory&quot;);
+}
+
+/* The dst parameter must be 64-bytes aligned */
+static inline void movdir64b(void __iomem *dst, const void *src)
+{
+	const struct { char _[64]; } *__src = src;
+	struct { char _[64]; } __iomem *__dst = dst;
+
+	/*
+	 * MOVDIR64B %(rdx), rax.
+	 *
+	 * Both __src and __dst must be memory constraints in order to tell the
+	 * compiler that no other memory accesses should be reordered around
+	 * this one.
+	 *
+	 * Also, both must be supplied as lvalues because this tells
+	 * the compiler what the object is (its size) the instruction accesses.
+	 * I.e., not the pointers but what they point to, thus the deref&#x27;ing &#x27;*&#x27;.
+	 */
+	asm volatile(&quot;.byte 0x66, 0x0f, 0x38, 0xf8, 0x02&quot;
+		     : &quot;+m&quot; (*__dst)
+		     :  &quot;m&quot; (*__src), &quot;a&quot; (__dst), &quot;d&quot; (__src));
+}
+
+/**
+ * enqcmds - Enqueue a command in supervisor (CPL0) mode
+ * @dst: destination, in MMIO space (must be 512-bit aligned)
+ * @src: 512 bits memory operand
+ *
+ * The ENQCMDS instruction allows software to write a 512-bit command to
+ * a 512-bit-aligned special MMIO region that supports the instruction.
+ * A return status is loaded into the ZF flag in the RFLAGS register.
+ * ZF = 0 equates to success, and ZF = 1 indicates retry or error.
+ *
+ * This function issues the ENQCMDS instruction to submit data from
+ * kernel space to MMIO space, in a unit of 512 bits. Order of data access
+ * is not guaranteed, nor is a memory barrier performed afterwards. It
+ * returns 0 on success and -EAGAIN on failure.
+ *
+ * Warning: Do not use this helper unless your driver has checked that the
+ * ENQCMDS instruction is supported on the platform and the device accepts
+ * ENQCMDS.
+ */
+static inline int enqcmds(void __iomem *dst, const void *src)
+{
+	const struct { char _[64]; } *__src = src;
+	struct { char _[64]; } __iomem *__dst = dst;
+	bool zf;
+
+	/*
+	 * ENQCMDS %(rdx), rax
+	 *
+	 * See movdir64b()&#x27;s comment on operand specification.
+	 */
+	asm volatile(&quot;.byte 0xf3, 0x0f, 0x38, 0xf8, 0x02, 0x66, 0x90&quot;
+		     CC_SET(z)
+		     : CC_OUT(z) (zf), &quot;+m&quot; (*__dst)
+		     : &quot;m&quot; (*__src), &quot;a&quot; (__dst), &quot;d&quot; (__src));
+
+	/* Submission failure is indicated via EFLAGS.ZF=1 */
+	if (zf)
+		return -EAGAIN;
+
+	return 0;
+}
+
+static inline void tile_release(void)
+{
+	/*
+	 * Instruction opcode for TILERELEASE; supported in binutils
+	 * version &gt;= 2.36.
+	 */
+	asm volatile(&quot;.byte 0xc4, 0xe2, 0x78, 0x49, 0xc0&quot;);
+}
+
+#endif /* __KERNEL__ */
+
+#endif /* _ASM_X86_SPECIAL_INSNS_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

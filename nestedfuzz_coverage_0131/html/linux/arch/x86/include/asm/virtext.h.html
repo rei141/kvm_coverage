@@ -1,0 +1,322 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+/* CPU virtualization extensions handling
+ *
+ * This should carry the code for handling CPU virtualization extensions
+ * that needs to live in the kernel core.
+ *
+ * Author: Eduardo Habkost &lt;ehabkost@redhat.com&gt;
+ *
+ * Copyright (C) 2008, Red Hat Inc.
+ *
+ * Contains code from KVM, Copyright (C) 2006 Qumranet, Inc.
+ */
+#ifndef _ASM_X86_VIRTEX_H
+#define _ASM_X86_VIRTEX_H
+
+#include &lt;asm/processor.h&gt;
+
+#include &lt;asm/vmx.h&gt;
+#include &lt;asm/svm.h&gt;
+#include &lt;asm/tlbflush.h&gt;
+
+/*
+ * VMX functions:
+ */
+
+static inline int cpu_has_vmx(void)
+{
+	unsigned long ecx = cpuid_ecx(1);
+	return test_bit(5, &amp;ecx); /* CPUID.1:ECX.VMX[bit 5] -&gt; VT */
+}
+
+
+/**
+ * cpu_vmxoff() - Disable VMX on the current CPU
+ *
+ * Disable VMX and clear CR4.VMXE (even if VMXOFF faults)
+ *
+ * Note, VMXOFF causes a #UD if the CPU is !post-VMXON, but it&#x27;s impossible to
+ * atomically track post-VMXON state, e.g. this may be called in NMI context.
+ * Eat all faults as all other faults on VMXOFF faults are mode related, i.e.
+ * faults are guaranteed to be due to the !post-VMXON check unless the CPU is
+ * magically in RM, VM86, compat mode, or at CPL&gt;0.
+ */
+static inline int cpu_vmxoff(void)
+{
+<yellow>	asm_volatile_goto("1: vmxoff\n\t"</yellow>
+			  _ASM_EXTABLE(1b, %l[fault])
+			  ::: &quot;cc&quot;, &quot;memory&quot; : fault);
+
+<yellow>	cr4_clear_bits(X86_CR4_VMXE);</yellow>
+	return 0;
+
+fault:
+<yellow>	cr4_clear_bits(X86_CR4_VMXE);</yellow>
+	return -EIO;
+}
+
+static inline int cpu_vmx_enabled(void)
+{
+	return __read_cr4() &amp; X86_CR4_VMXE;
+}
+
+/** Disable VMX if it is enabled on the current CPU
+ *
+ * You shouldn&#x27;t call this if cpu_has_vmx() returns 0.
+ */
+static inline void __cpu_emergency_vmxoff(void)
+{
+	if (cpu_vmx_enabled())
+		cpu_vmxoff();
+}
+
+/** Disable VMX if it is supported and enabled on the current CPU
+ */
+static inline void cpu_emergency_vmxoff(void)
+{
+	if (cpu_has_vmx())
+		__cpu_emergency_vmxoff();
+}
+
+
+
+
+/*
+ * SVM functions:
+ */
+
+/** Check if the CPU has SVM support
+ *
+ * You can use the &#x27;msg&#x27; arg to get a message describing the problem,
+ * if the function returns zero. Simply pass NULL if you are not interested
+ * on the messages; gcc should take care of not generating code for
+ * the messages on this case.
+ */
+static inline int cpu_has_svm(const char **msg)
+{
+	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &amp;&amp;
+	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON) {
+		if (msg)
+			*msg = &quot;not amd or hygon&quot;;
+		return 0;
+	}
+
+	if (boot_cpu_data.extended_cpuid_level &lt; SVM_CPUID_FUNC) {
+		if (msg)
+			*msg = &quot;can&#x27;t execute cpuid_8000000a&quot;;
+		return 0;
+	}
+
+	if (!boot_cpu_has(X86_FEATURE_SVM)) {
+		if (msg)
+			*msg = &quot;svm not available&quot;;
+		return 0;
+	}
+	return 1;
+}
+
+
+/** Disable SVM on the current CPU
+ *
+ * You should call this only if cpu_has_svm() returned true.
+ */
+static inline void cpu_svm_disable(void)
+{
+	uint64_t efer;
+
+	wrmsrl(MSR_VM_HSAVE_PA, 0);
+	rdmsrl(MSR_EFER, efer);
+	wrmsrl(MSR_EFER, efer &amp; ~EFER_SVME);
+}
+
+/** Makes sure SVM is disabled, if it is supported on the CPU
+ */
+static inline void cpu_emergency_svm_disable(void)
+{
+	if (cpu_has_svm(NULL))
+		cpu_svm_disable();
+}
+
+#endif /* _ASM_X86_VIRTEX_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

@@ -1,0 +1,1000 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+274.
+275.
+276.
+277.
+278.
+279.
+280.
+281.
+282.
+283.
+284.
+285.
+286.
+287.
+288.
+289.
+290.
+291.
+292.
+293.
+294.
+295.
+296.
+297.
+298.
+299.
+300.
+301.
+302.
+303.
+304.
+305.
+306.
+307.
+308.
+309.
+310.
+311.
+312.
+313.
+314.
+315.
+316.
+317.
+318.
+319.
+320.
+321.
+322.
+323.
+324.
+325.
+326.
+327.
+328.
+329.
+330.
+331.
+332.
+333.
+334.
+335.
+336.
+337.
+338.
+339.
+340.
+341.
+342.
+343.
+344.
+345.
+346.
+347.
+348.
+349.
+350.
+351.
+352.
+353.
+354.
+355.
+356.
+357.
+358.
+359.
+360.
+361.
+362.
+363.
+364.
+365.
+366.
+367.
+368.
+369.
+370.
+371.
+372.
+373.
+374.
+375.
+376.
+377.
+378.
+379.
+380.
+381.
+382.
+383.
+384.
+385.
+386.
+387.
+388.
+389.
+390.
+391.
+392.
+393.
+394.
+395.
+396.
+397.
+398.
+399.
+400.
+401.
+402.
+403.
+404.
+405.
+406.
+407.
+408.
+409.
+410.
+411.
+412.
+413.
+414.
+415.
+416.
+417.
+418.
+419.
+420.
+421.
+422.
+423.
+424.
+425.
+426.
+427.
+428.
+429.
+430.
+431.
+432.
+433.
+434.
+435.
+436.
+437.
+438.
+439.
+440.
+441.
+442.
+443.
+444.
+445.
+446.
+447.
+448.
+449.
+450.
+451.
+452.
+453.
+454.
+455.
+456.
+457.
+458.
+459.
+460.
+461.
+462.
+463.
+464.
+465.
+466.
+467.
+468.
+469.
+470.
+471.
+472.
+473.
+474.
+475.
+476.
+477.
+478.
+479.
+480.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_SCHED_MM_H
+#define _LINUX_SCHED_MM_H
+
+#include &lt;linux/kernel.h&gt;
+#include &lt;linux/atomic.h&gt;
+#include &lt;linux/sched.h&gt;
+#include &lt;linux/mm_types.h&gt;
+#include &lt;linux/gfp.h&gt;
+#include &lt;linux/sync_core.h&gt;
+#include &lt;linux/ioasid.h&gt;
+
+/*
+ * Routines for handling mm_structs
+ */
+extern struct mm_struct *mm_alloc(void);
+
+/**
+ * mmgrab() - Pin a &amp;struct mm_struct.
+ * @mm: The &amp;struct mm_struct to pin.
+ *
+ * Make sure that @mm will not get freed even after the owning task
+ * exits. This doesn&#x27;t guarantee that the associated address space
+ * will still exist later on and mmget_not_zero() has to be used before
+ * accessing it.
+ *
+ * This is a preferred way to pin @mm for a longer/unbounded amount
+ * of time.
+ *
+ * Use mmdrop() to release the reference acquired by mmgrab().
+ *
+ * See also &lt;Documentation/mm/active_mm.rst&gt; for an in-depth explanation
+ * of &amp;mm_struct.mm_count vs &amp;mm_struct.mm_users.
+ */
+static inline void mmgrab(struct mm_struct *mm)
+{
+	atomic_inc(&amp;mm-&gt;mm_count);
+}
+
+extern void __mmdrop(struct mm_struct *mm);
+
+static inline void mmdrop(struct mm_struct *mm)
+{
+	/*
+	 * The implicit full barrier implied by atomic_dec_and_test() is
+	 * required by the membarrier system call before returning to
+	 * user-space, after storing to rq-&gt;curr.
+	 */
+	if (unlikely(atomic_dec_and_test(&amp;mm-&gt;mm_count)))
+<yellow>		__mmdrop(mm);</yellow>
+}
+
+#ifdef CONFIG_PREEMPT_RT
+/*
+ * RCU callback for delayed mm drop. Not strictly RCU, but call_rcu() is
+ * by far the least expensive way to do that.
+ */
+static inline void __mmdrop_delayed(struct rcu_head *rhp)
+{
+	struct mm_struct *mm = container_of(rhp, struct mm_struct, delayed_drop);
+
+	__mmdrop(mm);
+}
+
+/*
+ * Invoked from finish_task_switch(). Delegates the heavy lifting on RT
+ * kernels via RCU.
+ */
+static inline void mmdrop_sched(struct mm_struct *mm)
+{
+	/* Provides a full memory barrier. See mmdrop() */
+	if (atomic_dec_and_test(&amp;mm-&gt;mm_count))
+		call_rcu(&amp;mm-&gt;delayed_drop, __mmdrop_delayed);
+}
+#else
+static inline void mmdrop_sched(struct mm_struct *mm)
+{
+	mmdrop(mm);
+}
+#endif
+
+/**
+ * mmget() - Pin the address space associated with a &amp;struct mm_struct.
+ * @mm: The address space to pin.
+ *
+ * Make sure that the address space of the given &amp;struct mm_struct doesn&#x27;t
+ * go away. This does not protect against parts of the address space being
+ * modified or freed, however.
+ *
+ * Never use this function to pin this address space for an
+ * unbounded/indefinite amount of time.
+ *
+ * Use mmput() to release the reference acquired by mmget().
+ *
+ * See also &lt;Documentation/mm/active_mm.rst&gt; for an in-depth explanation
+ * of &amp;mm_struct.mm_count vs &amp;mm_struct.mm_users.
+ */
+static inline void mmget(struct mm_struct *mm)
+{
+	atomic_inc(&amp;mm-&gt;mm_users);
+}
+
+static inline bool mmget_not_zero(struct mm_struct *mm)
+{
+	return atomic_inc_not_zero(&amp;mm-&gt;mm_users);
+}
+
+/* mmput gets rid of the mappings and all user-space */
+extern void mmput(struct mm_struct *);
+#ifdef CONFIG_MMU
+/* same as above but performs the slow path from the async context. Can
+ * be called from the atomic context as well
+ */
+void mmput_async(struct mm_struct *);
+#endif
+
+/* Grab a reference to a task&#x27;s mm, if it is not already going away */
+extern struct mm_struct *get_task_mm(struct task_struct *task);
+/*
+ * Grab a reference to a task&#x27;s mm, if it is not already going away
+ * and ptrace_may_access with the mode parameter passed to it
+ * succeeds.
+ */
+extern struct mm_struct *mm_access(struct task_struct *task, unsigned int mode);
+/* Remove the current tasks stale references to the old mm_struct on exit() */
+extern void exit_mm_release(struct task_struct *, struct mm_struct *);
+/* Remove the current tasks stale references to the old mm_struct on exec() */
+extern void exec_mm_release(struct task_struct *, struct mm_struct *);
+
+#ifdef CONFIG_MEMCG
+extern void mm_update_next_owner(struct mm_struct *mm);
+#else
+static inline void mm_update_next_owner(struct mm_struct *mm)
+{
+}
+#endif /* CONFIG_MEMCG */
+
+#ifdef CONFIG_MMU
+#ifndef arch_get_mmap_end
+#define arch_get_mmap_end(addr, len, flags)	(TASK_SIZE)
+#endif
+
+#ifndef arch_get_mmap_base
+#define arch_get_mmap_base(addr, base) (base)
+#endif
+
+extern void arch_pick_mmap_layout(struct mm_struct *mm,
+				  struct rlimit *rlim_stack);
+extern unsigned long
+arch_get_unmapped_area(struct file *, unsigned long, unsigned long,
+		       unsigned long, unsigned long);
+extern unsigned long
+arch_get_unmapped_area_topdown(struct file *filp, unsigned long addr,
+			  unsigned long len, unsigned long pgoff,
+			  unsigned long flags);
+
+unsigned long
+generic_get_unmapped_area(struct file *filp, unsigned long addr,
+			  unsigned long len, unsigned long pgoff,
+			  unsigned long flags);
+unsigned long
+generic_get_unmapped_area_topdown(struct file *filp, unsigned long addr,
+				  unsigned long len, unsigned long pgoff,
+				  unsigned long flags);
+#else
+static inline void arch_pick_mmap_layout(struct mm_struct *mm,
+					 struct rlimit *rlim_stack) {}
+#endif
+
+static inline bool in_vfork(struct task_struct *tsk)
+{
+	bool ret;
+
+	/*
+	 * need RCU to access -&gt;real_parent if CLONE_VM was used along with
+	 * CLONE_PARENT.
+	 *
+	 * We check real_parent-&gt;mm == tsk-&gt;mm because CLONE_VFORK does not
+	 * imply CLONE_VM
+	 *
+	 * CLONE_VFORK can be used with CLONE_PARENT/CLONE_THREAD and thus
+	 * -&gt;real_parent is not necessarily the task doing vfork(), so in
+	 * theory we can&#x27;t rely on task_lock() if we want to dereference it.
+	 *
+	 * And in this case we can&#x27;t trust the real_parent-&gt;mm == tsk-&gt;mm
+	 * check, it can be false negative. But we do not care, if init or
+	 * another oom-unkillable task does this it should blame itself.
+	 */
+	rcu_read_lock();
+	ret = tsk-&gt;vfork_done &amp;&amp;
+			rcu_dereference(tsk-&gt;real_parent)-&gt;mm == tsk-&gt;mm;
+	rcu_read_unlock();
+
+	return ret;
+}
+
+/*
+ * Applies per-task gfp context to the given allocation flags.
+ * PF_MEMALLOC_NOIO implies GFP_NOIO
+ * PF_MEMALLOC_NOFS implies GFP_NOFS
+ * PF_MEMALLOC_PIN  implies !GFP_MOVABLE
+ */
+static inline gfp_t current_gfp_context(gfp_t flags)
+{
+	unsigned int pflags = READ_ONCE(current-&gt;flags);
+
+	if (unlikely(pflags &amp; (PF_MEMALLOC_NOIO | PF_MEMALLOC_NOFS | PF_MEMALLOC_PIN))) {
+		/*
+		 * NOIO implies both NOIO and NOFS and it is a weaker context
+		 * so always make sure it makes precedence
+		 */
+		if (pflags &amp; PF_MEMALLOC_NOIO)
+			flags &amp;= ~(__GFP_IO | __GFP_FS);
+		else if (pflags &amp; PF_MEMALLOC_NOFS)
+			flags &amp;= ~__GFP_FS;
+
+		if (pflags &amp; PF_MEMALLOC_PIN)
+			flags &amp;= ~__GFP_MOVABLE;
+	}
+	return flags;
+}
+
+#ifdef CONFIG_LOCKDEP
+extern void __fs_reclaim_acquire(unsigned long ip);
+extern void __fs_reclaim_release(unsigned long ip);
+extern void fs_reclaim_acquire(gfp_t gfp_mask);
+extern void fs_reclaim_release(gfp_t gfp_mask);
+#else
+static inline void __fs_reclaim_acquire(unsigned long ip) { }
+static inline void __fs_reclaim_release(unsigned long ip) { }
+static inline void fs_reclaim_acquire(gfp_t gfp_mask) { }
+static inline void fs_reclaim_release(gfp_t gfp_mask) { }
+#endif
+
+/* Any memory-allocation retry loop should use
+ * memalloc_retry_wait(), and pass the flags for the most
+ * constrained allocation attempt that might have failed.
+ * This provides useful documentation of where loops are,
+ * and a central place to fine tune the waiting as the MM
+ * implementation changes.
+ */
+static inline void memalloc_retry_wait(gfp_t gfp_flags)
+{
+	/* We use io_schedule_timeout because waiting for memory
+	 * typically included waiting for dirty pages to be
+	 * written out, which requires IO.
+	 */
+	__set_current_state(TASK_UNINTERRUPTIBLE);
+	gfp_flags = current_gfp_context(gfp_flags);
+	if (gfpflags_allow_blocking(gfp_flags) &amp;&amp;
+	    !(gfp_flags &amp; __GFP_NORETRY))
+		/* Probably waited already, no need for much more */
+		io_schedule_timeout(1);
+	else
+		/* Probably didn&#x27;t wait, and has now released a lock,
+		 * so now is a good time to wait
+		 */
+		io_schedule_timeout(HZ/50);
+}
+
+/**
+ * might_alloc - Mark possible allocation sites
+ * @gfp_mask: gfp_t flags that would be used to allocate
+ *
+ * Similar to might_sleep() and other annotations, this can be used in functions
+ * that might allocate, but often don&#x27;t. Compiles to nothing without
+ * CONFIG_LOCKDEP. Includes a conditional might_sleep() if @gfp allows blocking.
+ */
+static inline void might_alloc(gfp_t gfp_mask)
+{
+	fs_reclaim_acquire(gfp_mask);
+	fs_reclaim_release(gfp_mask);
+
+	might_sleep_if(gfpflags_allow_blocking(gfp_mask));
+}
+
+/**
+ * memalloc_noio_save - Marks implicit GFP_NOIO allocation scope.
+ *
+ * This functions marks the beginning of the GFP_NOIO allocation scope.
+ * All further allocations will implicitly drop __GFP_IO flag and so
+ * they are safe for the IO critical section from the allocation recursion
+ * point of view. Use memalloc_noio_restore to end the scope with flags
+ * returned by this function.
+ *
+ * This function is safe to be used from any context.
+ */
+static inline unsigned int memalloc_noio_save(void)
+{
+	unsigned int flags = current-&gt;flags &amp; PF_MEMALLOC_NOIO;
+	current-&gt;flags |= PF_MEMALLOC_NOIO;
+	return flags;
+}
+
+/**
+ * memalloc_noio_restore - Ends the implicit GFP_NOIO scope.
+ * @flags: Flags to restore.
+ *
+ * Ends the implicit GFP_NOIO scope started by memalloc_noio_save function.
+ * Always make sure that the given flags is the return value from the
+ * pairing memalloc_noio_save call.
+ */
+static inline void memalloc_noio_restore(unsigned int flags)
+{
+	current-&gt;flags = (current-&gt;flags &amp; ~PF_MEMALLOC_NOIO) | flags;
+}
+
+/**
+ * memalloc_nofs_save - Marks implicit GFP_NOFS allocation scope.
+ *
+ * This functions marks the beginning of the GFP_NOFS allocation scope.
+ * All further allocations will implicitly drop __GFP_FS flag and so
+ * they are safe for the FS critical section from the allocation recursion
+ * point of view. Use memalloc_nofs_restore to end the scope with flags
+ * returned by this function.
+ *
+ * This function is safe to be used from any context.
+ */
+static inline unsigned int memalloc_nofs_save(void)
+{
+	unsigned int flags = current-&gt;flags &amp; PF_MEMALLOC_NOFS;
+	current-&gt;flags |= PF_MEMALLOC_NOFS;
+	return flags;
+}
+
+/**
+ * memalloc_nofs_restore - Ends the implicit GFP_NOFS scope.
+ * @flags: Flags to restore.
+ *
+ * Ends the implicit GFP_NOFS scope started by memalloc_nofs_save function.
+ * Always make sure that the given flags is the return value from the
+ * pairing memalloc_nofs_save call.
+ */
+static inline void memalloc_nofs_restore(unsigned int flags)
+{
+	current-&gt;flags = (current-&gt;flags &amp; ~PF_MEMALLOC_NOFS) | flags;
+}
+
+static inline unsigned int memalloc_noreclaim_save(void)
+{
+	unsigned int flags = current-&gt;flags &amp; PF_MEMALLOC;
+	current-&gt;flags |= PF_MEMALLOC;
+	return flags;
+}
+
+static inline void memalloc_noreclaim_restore(unsigned int flags)
+{
+	current-&gt;flags = (current-&gt;flags &amp; ~PF_MEMALLOC) | flags;
+}
+
+static inline unsigned int memalloc_pin_save(void)
+{
+	unsigned int flags = current-&gt;flags &amp; PF_MEMALLOC_PIN;
+
+	current-&gt;flags |= PF_MEMALLOC_PIN;
+	return flags;
+}
+
+static inline void memalloc_pin_restore(unsigned int flags)
+{
+	current-&gt;flags = (current-&gt;flags &amp; ~PF_MEMALLOC_PIN) | flags;
+}
+
+#ifdef CONFIG_MEMCG
+DECLARE_PER_CPU(struct mem_cgroup *, int_active_memcg);
+/**
+ * set_active_memcg - Starts the remote memcg charging scope.
+ * @memcg: memcg to charge.
+ *
+ * This function marks the beginning of the remote memcg charging scope. All the
+ * __GFP_ACCOUNT allocations till the end of the scope will be charged to the
+ * given memcg.
+ *
+ * NOTE: This function can nest. Users must save the return value and
+ * reset the previous value after their own charging scope is over.
+ */
+static inline struct mem_cgroup *
+set_active_memcg(struct mem_cgroup *memcg)
+{
+	struct mem_cgroup *old;
+
+	if (!in_task()) {
+		old = this_cpu_read(int_active_memcg);
+		this_cpu_write(int_active_memcg, memcg);
+	} else {
+		old = current-&gt;active_memcg;
+		current-&gt;active_memcg = memcg;
+	}
+
+	return old;
+}
+#else
+static inline struct mem_cgroup *
+set_active_memcg(struct mem_cgroup *memcg)
+{
+	return NULL;
+}
+#endif
+
+#ifdef CONFIG_MEMBARRIER
+enum {
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_READY		= (1U &lt;&lt; 0),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED			= (1U &lt;&lt; 1),
+	MEMBARRIER_STATE_GLOBAL_EXPEDITED_READY			= (1U &lt;&lt; 2),
+	MEMBARRIER_STATE_GLOBAL_EXPEDITED			= (1U &lt;&lt; 3),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE_READY	= (1U &lt;&lt; 4),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE		= (1U &lt;&lt; 5),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_RSEQ_READY		= (1U &lt;&lt; 6),
+	MEMBARRIER_STATE_PRIVATE_EXPEDITED_RSEQ			= (1U &lt;&lt; 7),
+};
+
+enum {
+	MEMBARRIER_FLAG_SYNC_CORE	= (1U &lt;&lt; 0),
+	MEMBARRIER_FLAG_RSEQ		= (1U &lt;&lt; 1),
+};
+
+#ifdef CONFIG_ARCH_HAS_MEMBARRIER_CALLBACKS
+#include &lt;asm/membarrier.h&gt;
+#endif
+
+static inline void membarrier_mm_sync_core_before_usermode(struct mm_struct *mm)
+{
+	if (current-&gt;mm != mm)
+		return;
+	if (likely(!(atomic_read(&amp;mm-&gt;membarrier_state) &amp;
+		     MEMBARRIER_STATE_PRIVATE_EXPEDITED_SYNC_CORE)))
+		return;
+	sync_core_before_usermode();
+}
+
+extern void membarrier_exec_mmap(struct mm_struct *mm);
+
+extern void membarrier_update_current_mm(struct mm_struct *next_mm);
+
+#else
+#ifdef CONFIG_ARCH_HAS_MEMBARRIER_CALLBACKS
+static inline void membarrier_arch_switch_mm(struct mm_struct *prev,
+					     struct mm_struct *next,
+					     struct task_struct *tsk)
+{
+}
+#endif
+static inline void membarrier_exec_mmap(struct mm_struct *mm)
+{
+}
+static inline void membarrier_mm_sync_core_before_usermode(struct mm_struct *mm)
+{
+}
+static inline void membarrier_update_current_mm(struct mm_struct *next_mm)
+{
+}
+#endif
+
+#ifdef CONFIG_IOMMU_SVA
+static inline void mm_pasid_init(struct mm_struct *mm)
+{
+	mm-&gt;pasid = INVALID_IOASID;
+}
+
+/* Associate a PASID with an mm_struct: */
+static inline void mm_pasid_set(struct mm_struct *mm, u32 pasid)
+{
+	mm-&gt;pasid = pasid;
+}
+
+static inline void mm_pasid_drop(struct mm_struct *mm)
+{
+	if (pasid_valid(mm-&gt;pasid)) {
+		ioasid_free(mm-&gt;pasid);
+		mm-&gt;pasid = INVALID_IOASID;
+	}
+}
+#else
+static inline void mm_pasid_init(struct mm_struct *mm) {}
+static inline void mm_pasid_set(struct mm_struct *mm, u32 pasid) {}
+static inline void mm_pasid_drop(struct mm_struct *mm) {}
+#endif
+
+#endif /* _LINUX_SCHED_MM_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

@@ -1,0 +1,472 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0+ */
+/*
+ * Sleepable Read-Copy Update mechanism for mutual exclusion
+ *
+ * Copyright (C) IBM Corporation, 2006
+ * Copyright (C) Fujitsu, 2012
+ *
+ * Author: Paul McKenney &lt;paulmck@linux.ibm.com&gt;
+ *	   Lai Jiangshan &lt;laijs@cn.fujitsu.com&gt;
+ *
+ * For detailed explanation of Read-Copy Update mechanism see -
+ *		Documentation/RCU/ *.txt
+ *
+ */
+
+#ifndef _LINUX_SRCU_H
+#define _LINUX_SRCU_H
+
+#include &lt;linux/mutex.h&gt;
+#include &lt;linux/rcupdate.h&gt;
+#include &lt;linux/workqueue.h&gt;
+#include &lt;linux/rcu_segcblist.h&gt;
+
+struct srcu_struct;
+
+#ifdef CONFIG_DEBUG_LOCK_ALLOC
+
+int __init_srcu_struct(struct srcu_struct *ssp, const char *name,
+		       struct lock_class_key *key);
+
+#define init_srcu_struct(ssp) \
+({ \
+	static struct lock_class_key __srcu_key; \
+	\
+	__init_srcu_struct((ssp), #ssp, &amp;__srcu_key); \
+})
+
+#define __SRCU_DEP_MAP_INIT(srcu_name)	.dep_map = { .name = #srcu_name },
+#else /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+
+int init_srcu_struct(struct srcu_struct *ssp);
+
+#define __SRCU_DEP_MAP_INIT(srcu_name)
+#endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+
+#ifdef CONFIG_TINY_SRCU
+#include &lt;linux/srcutiny.h&gt;
+#elif defined(CONFIG_TREE_SRCU)
+#include &lt;linux/srcutree.h&gt;
+#elif defined(CONFIG_SRCU)
+#error &quot;Unknown SRCU implementation specified to kernel configuration&quot;
+#else
+/* Dummy definition for things like notifiers.  Actual use gets link error. */
+struct srcu_struct { };
+#endif
+
+void call_srcu(struct srcu_struct *ssp, struct rcu_head *head,
+		void (*func)(struct rcu_head *head));
+void cleanup_srcu_struct(struct srcu_struct *ssp);
+int __srcu_read_lock(struct srcu_struct *ssp) __acquires(ssp);
+void __srcu_read_unlock(struct srcu_struct *ssp, int idx) __releases(ssp);
+void synchronize_srcu(struct srcu_struct *ssp);
+unsigned long get_state_synchronize_srcu(struct srcu_struct *ssp);
+unsigned long start_poll_synchronize_srcu(struct srcu_struct *ssp);
+bool poll_state_synchronize_srcu(struct srcu_struct *ssp, unsigned long cookie);
+
+#ifdef CONFIG_SRCU
+void srcu_init(void);
+#else /* #ifdef CONFIG_SRCU */
+static inline void srcu_init(void) { }
+#endif /* #else #ifdef CONFIG_SRCU */
+
+#ifdef CONFIG_DEBUG_LOCK_ALLOC
+
+/**
+ * srcu_read_lock_held - might we be in SRCU read-side critical section?
+ * @ssp: The srcu_struct structure to check
+ *
+ * If CONFIG_DEBUG_LOCK_ALLOC is selected, returns nonzero iff in an SRCU
+ * read-side critical section.  In absence of CONFIG_DEBUG_LOCK_ALLOC,
+ * this assumes we are in an SRCU read-side critical section unless it can
+ * prove otherwise.
+ *
+ * Checks debug_lockdep_rcu_enabled() to prevent false positives during boot
+ * and while lockdep is disabled.
+ *
+ * Note that SRCU is based on its own statemachine and it doesn&#x27;t
+ * relies on normal RCU, it can be called from the CPU which
+ * is in the idle loop from an RCU point of view or offline.
+ */
+static inline int srcu_read_lock_held(const struct srcu_struct *ssp)
+{
+	if (!debug_lockdep_rcu_enabled())
+		return 1;
+	return lock_is_held(&amp;ssp-&gt;dep_map);
+}
+
+#else /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+
+static inline int srcu_read_lock_held(const struct srcu_struct *ssp)
+{
+	return 1;
+}
+
+#endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+
+/**
+ * srcu_dereference_check - fetch SRCU-protected pointer for later dereferencing
+ * @p: the pointer to fetch and protect for later dereferencing
+ * @ssp: pointer to the srcu_struct, which is used to check that we
+ *	really are in an SRCU read-side critical section.
+ * @c: condition to check for update-side use
+ *
+ * If PROVE_RCU is enabled, invoking this outside of an RCU read-side
+ * critical section will result in an RCU-lockdep splat, unless @c evaluates
+ * to 1.  The @c argument will normally be a logical expression containing
+ * lockdep_is_held() calls.
+ */
+#define srcu_dereference_check(p, ssp, c) \
+	__rcu_dereference_check((p), __UNIQUE_ID(rcu), \
+				(c) || srcu_read_lock_held(ssp), __rcu)
+
+/**
+ * srcu_dereference - fetch SRCU-protected pointer for later dereferencing
+ * @p: the pointer to fetch and protect for later dereferencing
+ * @ssp: pointer to the srcu_struct, which is used to check that we
+ *	really are in an SRCU read-side critical section.
+ *
+ * Makes rcu_dereference_check() do the dirty work.  If PROVE_RCU
+ * is enabled, invoking this outside of an RCU read-side critical
+ * section will result in an RCU-lockdep splat.
+ */
+#define srcu_dereference(p, ssp) srcu_dereference_check((p), (ssp), 0)
+
+/**
+ * srcu_dereference_notrace - no tracing and no lockdep calls from here
+ * @p: the pointer to fetch and protect for later dereferencing
+ * @ssp: pointer to the srcu_struct, which is used to check that we
+ *	really are in an SRCU read-side critical section.
+ */
+#define srcu_dereference_notrace(p, ssp) srcu_dereference_check((p), (ssp), 1)
+
+/**
+ * srcu_read_lock - register a new reader for an SRCU-protected structure.
+ * @ssp: srcu_struct in which to register the new reader.
+ *
+ * Enter an SRCU read-side critical section.  Note that SRCU read-side
+ * critical sections may be nested.  However, it is illegal to
+ * call anything that waits on an SRCU grace period for the same
+ * srcu_struct, whether directly or indirectly.  Please note that
+ * one way to indirectly wait on an SRCU grace period is to acquire
+ * a mutex that is held elsewhere while calling synchronize_srcu() or
+ * synchronize_srcu_expedited().
+ *
+ * Note that srcu_read_lock() and the matching srcu_read_unlock() must
+ * occur in the same context, for example, it is illegal to invoke
+ * srcu_read_unlock() in an irq handler if the matching srcu_read_lock()
+ * was invoked in process context.
+ */
+static inline int srcu_read_lock(struct srcu_struct *ssp) __acquires(ssp)
+{
+	int retval;
+
+<blue>	retval = __srcu_read_lock(ssp);</blue>
+	rcu_lock_acquire(&amp;(ssp)-&gt;dep_map);
+	return retval;
+}
+
+/* Used by tracing, cannot be traced and cannot invoke lockdep. */
+static inline notrace int
+srcu_read_lock_notrace(struct srcu_struct *ssp) __acquires(ssp)
+{
+	int retval;
+
+	retval = __srcu_read_lock(ssp);
+	return retval;
+}
+
+/**
+ * srcu_read_unlock - unregister a old reader from an SRCU-protected structure.
+ * @ssp: srcu_struct in which to unregister the old reader.
+ * @idx: return value from corresponding srcu_read_lock().
+ *
+ * Exit an SRCU read-side critical section.
+ */
+static inline void srcu_read_unlock(struct srcu_struct *ssp, int idx)
+	__releases(ssp)
+{
+<blue>	WARN_ON_ONCE(idx & ~0x1);</blue>
+	rcu_lock_release(&amp;(ssp)-&gt;dep_map);
+<blue>	__srcu_read_unlock(ssp, idx);</blue>
+}
+
+/* Used by tracing, cannot be traced and cannot call lockdep. */
+static inline notrace void
+srcu_read_unlock_notrace(struct srcu_struct *ssp, int idx) __releases(ssp)
+{
+	__srcu_read_unlock(ssp, idx);
+}
+
+/**
+ * smp_mb__after_srcu_read_unlock - ensure full ordering after srcu_read_unlock
+ *
+ * Converts the preceding srcu_read_unlock into a two-way memory barrier.
+ *
+ * Call this after srcu_read_unlock, to guarantee that all memory operations
+ * that occur after smp_mb__after_srcu_read_unlock will appear to happen after
+ * the preceding srcu_read_unlock.
+ */
+static inline void smp_mb__after_srcu_read_unlock(void)
+{
+	/* __srcu_read_unlock has smp_mb() internally so nothing to do here. */
+}
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

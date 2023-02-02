@@ -1,0 +1,254 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_PVCLOCK_H
+#define _ASM_X86_PVCLOCK_H
+
+#include &lt;asm/clocksource.h&gt;
+#include &lt;asm/pvclock-abi.h&gt;
+
+/* some helper functions for xen and kvm pv clock sources */
+u64 pvclock_clocksource_read(struct pvclock_vcpu_time_info *src);
+u8 pvclock_read_flags(struct pvclock_vcpu_time_info *src);
+void pvclock_set_flags(u8 flags);
+unsigned long pvclock_tsc_khz(struct pvclock_vcpu_time_info *src);
+void pvclock_read_wallclock(struct pvclock_wall_clock *wall,
+			    struct pvclock_vcpu_time_info *vcpu,
+			    struct timespec64 *ts);
+void pvclock_resume(void);
+
+void pvclock_touch_watchdogs(void);
+
+static __always_inline
+unsigned pvclock_read_begin(const struct pvclock_vcpu_time_info *src)
+{
+	unsigned version = src-&gt;version &amp; ~1;
+	/* Make sure that the version is read before the data. */
+	virt_rmb();
+	return version;
+}
+
+static __always_inline
+bool pvclock_read_retry(const struct pvclock_vcpu_time_info *src,
+			unsigned version)
+{
+	/* Make sure that the version is re-read after the data. */
+	virt_rmb();
+	return unlikely(version != src-&gt;version);
+}
+
+/*
+ * Scale a 64-bit delta by scaling and multiplying by a 32-bit fraction,
+ * yielding a 64-bit result.
+ */
+static inline u64 pvclock_scale_delta(u64 delta, u32 mul_frac, int shift)
+{
+	u64 product;
+#ifdef __i386__
+	u32 tmp1, tmp2;
+#else
+	ulong tmp;
+#endif
+
+<yellow>	if (shift < 0)</yellow>
+<blue>		delta >>= -shift;</blue>
+	else
+<blue>		delta <<= shift;</blue>
+
+#ifdef __i386__
+	__asm__ (
+		&quot;mul  %5       ; &quot;
+		&quot;mov  %4,%%eax ; &quot;
+		&quot;mov  %%edx,%4 ; &quot;
+		&quot;mul  %5       ; &quot;
+		&quot;xor  %5,%5    ; &quot;
+		&quot;add  %4,%%eax ; &quot;
+		&quot;adc  %5,%%edx ; &quot;
+		: &quot;=A&quot; (product), &quot;=r&quot; (tmp1), &quot;=r&quot; (tmp2)
+		: &quot;a&quot; ((u32)delta), &quot;1&quot; ((u32)(delta &gt;&gt; 32)), &quot;2&quot; (mul_frac) );
+#elif defined(__x86_64__)
+<blue>	__asm__ (</blue>
+		&quot;mulq %[mul_frac] ; shrd $32, %[hi], %[lo]&quot;
+		: [lo]&quot;=a&quot;(product),
+		  [hi]&quot;=d&quot;(tmp)
+		: &quot;0&quot;(delta),
+<yellow>		  [mul_frac]"rm"((u64)mul_frac));</yellow>
+#else
+#error implement me!
+#endif
+
+	return product;
+}
+
+static __always_inline
+u64 __pvclock_read_cycles(const struct pvclock_vcpu_time_info *src, u64 tsc)
+{
+	u64 delta = tsc - src-&gt;tsc_timestamp;
+<blue>	u64 offset = pvclock_scale_delta(delta, src->tsc_to_system_mul,</blue>
+					     src-&gt;tsc_shift);
+<blue>	return src->system_time + offset;</blue>
+}
+
+struct pvclock_vsyscall_time_info {
+	struct pvclock_vcpu_time_info pvti;
+} __attribute__((__aligned__(SMP_CACHE_BYTES)));
+
+#define PVTI_SIZE sizeof(struct pvclock_vsyscall_time_info)
+
+#ifdef CONFIG_PARAVIRT_CLOCK
+void pvclock_set_pvti_cpu0_va(struct pvclock_vsyscall_time_info *pvti);
+struct pvclock_vsyscall_time_info *pvclock_get_pvti_cpu0_va(void);
+#else
+static inline struct pvclock_vsyscall_time_info *pvclock_get_pvti_cpu0_va(void)
+{
+	return NULL;
+}
+#endif
+
+#endif /* _ASM_X86_PVCLOCK_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

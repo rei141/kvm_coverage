@@ -1,0 +1,898 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+274.
+275.
+276.
+277.
+278.
+279.
+280.
+281.
+282.
+283.
+284.
+285.
+286.
+287.
+288.
+289.
+290.
+291.
+292.
+293.
+294.
+295.
+296.
+297.
+298.
+299.
+300.
+301.
+302.
+303.
+304.
+305.
+306.
+307.
+308.
+309.
+310.
+311.
+312.
+313.
+314.
+315.
+316.
+317.
+318.
+319.
+320.
+321.
+322.
+323.
+324.
+325.
+326.
+327.
+328.
+329.
+330.
+331.
+332.
+333.
+334.
+335.
+336.
+337.
+338.
+339.
+340.
+341.
+342.
+343.
+344.
+345.
+346.
+347.
+348.
+349.
+350.
+351.
+352.
+353.
+354.
+355.
+356.
+357.
+358.
+359.
+360.
+361.
+362.
+363.
+364.
+365.
+366.
+367.
+368.
+369.
+370.
+371.
+372.
+373.
+374.
+375.
+376.
+377.
+378.
+379.
+380.
+381.
+382.
+383.
+384.
+385.
+386.
+387.
+388.
+389.
+390.
+391.
+392.
+393.
+394.
+395.
+396.
+397.
+398.
+399.
+400.
+401.
+402.
+403.
+404.
+405.
+406.
+407.
+408.
+409.
+410.
+411.
+412.
+413.
+414.
+415.
+416.
+417.
+418.
+419.
+420.
+421.
+422.
+423.
+424.
+425.
+426.
+427.
+428.
+429.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __KVM_X86_VMX_CAPS_H
+#define __KVM_X86_VMX_CAPS_H
+
+#include &lt;asm/vmx.h&gt;
+
+#include &quot;../lapic.h&quot;
+#include &quot;../x86.h&quot;
+#include &quot;../pmu.h&quot;
+#include &quot;../cpuid.h&quot;
+
+extern bool __read_mostly enable_vpid;
+extern bool __read_mostly flexpriority_enabled;
+extern bool __read_mostly enable_ept;
+extern bool __read_mostly enable_unrestricted_guest;
+extern bool __read_mostly enable_ept_ad_bits;
+extern bool __read_mostly enable_pml;
+extern bool __read_mostly enable_ipiv;
+extern int __read_mostly pt_mode;
+
+#define PT_MODE_SYSTEM		0
+#define PT_MODE_HOST_GUEST	1
+
+#define PMU_CAP_FW_WRITES	(1ULL &lt;&lt; 13)
+#define PMU_CAP_LBR_FMT		0x3f
+
+struct nested_vmx_msrs {
+	/*
+	 * We only store the &quot;true&quot; versions of the VMX capability MSRs. We
+	 * generate the &quot;non-true&quot; versions by setting the must-be-1 bits
+	 * according to the SDM.
+	 */
+	u32 procbased_ctls_low;
+	u32 procbased_ctls_high;
+	u32 secondary_ctls_low;
+	u32 secondary_ctls_high;
+	u32 pinbased_ctls_low;
+	u32 pinbased_ctls_high;
+	u32 exit_ctls_low;
+	u32 exit_ctls_high;
+	u32 entry_ctls_low;
+	u32 entry_ctls_high;
+	u32 misc_low;
+	u32 misc_high;
+	u32 ept_caps;
+	u32 vpid_caps;
+	u64 basic;
+	u64 cr0_fixed0;
+	u64 cr0_fixed1;
+	u64 cr4_fixed0;
+	u64 cr4_fixed1;
+	u64 vmcs_enum;
+	u64 vmfunc_controls;
+};
+
+struct vmcs_config {
+	int size;
+	u32 basic_cap;
+	u32 revision_id;
+	u32 pin_based_exec_ctrl;
+	u32 cpu_based_exec_ctrl;
+	u32 cpu_based_2nd_exec_ctrl;
+	u64 cpu_based_3rd_exec_ctrl;
+	u32 vmexit_ctrl;
+	u32 vmentry_ctrl;
+	u64 misc;
+	struct nested_vmx_msrs nested;
+};
+extern struct vmcs_config vmcs_config;
+
+struct vmx_capability {
+	u32 ept;
+	u32 vpid;
+};
+extern struct vmx_capability vmx_capability;
+
+static inline bool cpu_has_vmx_basic_inout(void)
+{
+	return	(((u64)vmcs_config.basic_cap &lt;&lt; 32) &amp; VMX_BASIC_INOUT);
+}
+
+static inline bool cpu_has_virtual_nmis(void)
+{
+	return vmcs_config.pin_based_exec_ctrl &amp; PIN_BASED_VIRTUAL_NMIS &amp;&amp;
+	       vmcs_config.cpu_based_exec_ctrl &amp; CPU_BASED_NMI_WINDOW_EXITING;
+}
+
+static inline bool cpu_has_vmx_preemption_timer(void)
+{
+	return vmcs_config.pin_based_exec_ctrl &amp;
+		PIN_BASED_VMX_PREEMPTION_TIMER;
+}
+
+static inline bool cpu_has_vmx_posted_intr(void)
+{
+<blue>	return vmcs_config.pin_based_exec_ctrl & PIN_BASED_POSTED_INTR;</blue>
+}
+
+static inline bool cpu_has_load_ia32_efer(void)
+{
+<blue>	return vmcs_config.vmentry_ctrl & VM_ENTRY_LOAD_IA32_EFER;</blue>
+}
+
+static inline bool cpu_has_load_perf_global_ctrl(void)
+{
+<blue>	return vmcs_config.vmentry_ctrl & VM_ENTRY_LOAD_IA32_PERF_GLOBAL_CTRL;</blue>
+}
+
+static inline bool cpu_has_vmx_mpx(void)
+{
+	return vmcs_config.vmentry_ctrl &amp; VM_ENTRY_LOAD_BNDCFGS;
+}
+
+static inline bool cpu_has_vmx_tpr_shadow(void)
+{
+<blue>	return vmcs_config.cpu_based_exec_ctrl & CPU_BASED_TPR_SHADOW;</blue>
+}
+
+static inline bool cpu_need_tpr_shadow(struct kvm_vcpu *vcpu)
+{
+<blue>	return cpu_has_vmx_tpr_shadow() && lapic_in_kernel(vcpu);</blue>
+}
+
+static inline bool cpu_has_vmx_msr_bitmap(void)
+{
+<blue>	return vmcs_config.cpu_based_exec_ctrl & CPU_BASED_USE_MSR_BITMAPS;</blue>
+}
+
+static inline bool cpu_has_secondary_exec_ctrls(void)
+{
+<blue>	return vmcs_config.cpu_based_exec_ctrl &</blue>
+		CPU_BASED_ACTIVATE_SECONDARY_CONTROLS;
+}
+
+static inline bool cpu_has_tertiary_exec_ctrls(void)
+{
+<blue>	return vmcs_config.cpu_based_exec_ctrl &</blue>
+		CPU_BASED_ACTIVATE_TERTIARY_CONTROLS;
+}
+
+static inline bool cpu_has_vmx_virtualize_apic_accesses(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_VIRTUALIZE_APIC_ACCESSES;
+}
+
+static inline bool cpu_has_vmx_ept(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_ENABLE_EPT;
+}
+
+static inline bool vmx_umip_emulated(void)
+{
+<yellow>	return vmcs_config.cpu_based_2nd_exec_ctrl &</yellow>
+		SECONDARY_EXEC_DESC;
+}
+
+static inline bool cpu_has_vmx_rdtscp(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_ENABLE_RDTSCP;
+}
+
+static inline bool cpu_has_vmx_virtualize_x2apic_mode(void)
+{
+<yellow>	return vmcs_config.cpu_based_2nd_exec_ctrl &</yellow>
+		SECONDARY_EXEC_VIRTUALIZE_X2APIC_MODE;
+}
+
+static inline bool cpu_has_vmx_vpid(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_ENABLE_VPID;
+}
+
+static inline bool cpu_has_vmx_wbinvd_exit(void)
+{
+<yellow>	return vmcs_config.cpu_based_2nd_exec_ctrl &</yellow>
+		SECONDARY_EXEC_WBINVD_EXITING;
+<yellow>}</yellow>
+
+static inline bool cpu_has_vmx_unrestricted_guest(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_UNRESTRICTED_GUEST;
+}
+
+static inline bool cpu_has_vmx_apic_register_virt(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_APIC_REGISTER_VIRT;
+}
+
+static inline bool cpu_has_vmx_virtual_intr_delivery(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_VIRTUAL_INTR_DELIVERY;
+}
+
+static inline bool cpu_has_vmx_ple(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_PAUSE_LOOP_EXITING;
+}
+
+static inline bool cpu_has_vmx_rdrand(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_RDRAND_EXITING;
+}
+
+static inline bool cpu_has_vmx_invpcid(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_ENABLE_INVPCID;
+}
+
+static inline bool cpu_has_vmx_vmfunc(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_ENABLE_VMFUNC;
+}
+
+static inline bool cpu_has_vmx_shadow_vmcs(void)
+{
+	/* check if the cpu supports writing r/o exit information fields */
+	if (!(vmcs_config.misc &amp; MSR_IA32_VMX_MISC_VMWRITE_SHADOW_RO_FIELDS))
+		return false;
+
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_SHADOW_VMCS;
+}
+
+static inline bool cpu_has_vmx_encls_vmexit(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_ENCLS_EXITING;
+}
+
+static inline bool cpu_has_vmx_rdseed(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_RDSEED_EXITING;
+}
+
+static inline bool cpu_has_vmx_pml(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp; SECONDARY_EXEC_ENABLE_PML;
+}
+
+static inline bool cpu_has_vmx_xsaves(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_XSAVES;
+}
+
+static inline bool cpu_has_vmx_waitpkg(void)
+{
+<blue>	return vmcs_config.cpu_based_2nd_exec_ctrl &</blue>
+		SECONDARY_EXEC_ENABLE_USR_WAIT_PAUSE;
+}
+
+static inline bool cpu_has_vmx_tsc_scaling(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_TSC_SCALING;
+}
+
+static inline bool cpu_has_vmx_bus_lock_detection(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+	    SECONDARY_EXEC_BUS_LOCK_DETECTION;
+}
+
+static inline bool cpu_has_vmx_apicv(void)
+{
+<blue>	return cpu_has_vmx_apic_register_virt() &&</blue>
+		cpu_has_vmx_virtual_intr_delivery() &amp;&amp;
+<blue>		cpu_has_vmx_posted_intr();</blue>
+}
+
+static inline bool cpu_has_vmx_ipiv(void)
+{
+	return vmcs_config.cpu_based_3rd_exec_ctrl &amp; TERTIARY_EXEC_IPI_VIRT;
+}
+
+static inline bool cpu_has_vmx_flexpriority(void)
+{
+	return cpu_has_vmx_tpr_shadow() &amp;&amp;
+		cpu_has_vmx_virtualize_apic_accesses();
+}
+
+static inline bool cpu_has_vmx_ept_execute_only(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_EXECUTE_ONLY_BIT;
+}
+
+static inline bool cpu_has_vmx_ept_4levels(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_PAGE_WALK_4_BIT;
+}
+
+static inline bool cpu_has_vmx_ept_5levels(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_PAGE_WALK_5_BIT;
+}
+
+static inline bool cpu_has_vmx_ept_mt_wb(void)
+{
+	return vmx_capability.ept &amp; VMX_EPTP_WB_BIT;
+}
+
+static inline bool cpu_has_vmx_ept_2m_page(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_2MB_PAGE_BIT;
+}
+
+static inline bool cpu_has_vmx_ept_1g_page(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_1GB_PAGE_BIT;
+}
+
+static inline int ept_caps_to_lpage_level(u32 ept_caps)
+{
+	if (ept_caps &amp; VMX_EPT_1GB_PAGE_BIT)
+		return PG_LEVEL_1G;
+<yellow>	if (ept_caps & VMX_EPT_2MB_PAGE_BIT)</yellow>
+		return PG_LEVEL_2M;
+	return PG_LEVEL_4K;
+}
+
+static inline bool cpu_has_vmx_ept_ad_bits(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_AD_BIT;
+}
+
+static inline bool cpu_has_vmx_invept_context(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_EXTENT_CONTEXT_BIT;
+}
+
+static inline bool cpu_has_vmx_invept_global(void)
+{
+	return vmx_capability.ept &amp; VMX_EPT_EXTENT_GLOBAL_BIT;
+}
+
+static inline bool cpu_has_vmx_invvpid(void)
+{
+	return vmx_capability.vpid &amp; VMX_VPID_INVVPID_BIT;
+}
+
+static inline bool cpu_has_vmx_invvpid_individual_addr(void)
+{
+<blue>	return vmx_capability.vpid & VMX_VPID_EXTENT_INDIVIDUAL_ADDR_BIT;</blue>
+}
+
+static inline bool cpu_has_vmx_invvpid_single(void)
+{
+<blue>	return vmx_capability.vpid & VMX_VPID_EXTENT_SINGLE_CONTEXT_BIT;</blue>
+}
+
+static inline bool cpu_has_vmx_invvpid_global(void)
+{
+<yellow>	return vmx_capability.vpid & VMX_VPID_EXTENT_GLOBAL_CONTEXT_BIT;</yellow>
+}
+
+static inline bool cpu_has_vmx_intel_pt(void)
+{
+	return (vmcs_config.misc &amp; MSR_IA32_VMX_MISC_INTEL_PT) &amp;&amp;
+		(vmcs_config.cpu_based_2nd_exec_ctrl &amp; SECONDARY_EXEC_PT_USE_GPA) &amp;&amp;
+		(vmcs_config.vmentry_ctrl &amp; VM_ENTRY_LOAD_IA32_RTIT_CTL);
+}
+
+/*
+ * Processor Trace can operate in one of three modes:
+ *  a. system-wide: trace both host/guest and output to host buffer
+ *  b. host-only:   only trace host and output to host buffer
+ *  c. host-guest:  trace host and guest simultaneously and output to their
+ *                  respective buffer
+ *
+ * KVM currently only supports (a) and (c).
+ */
+static inline bool vmx_pt_mode_is_system(void)
+{
+<blue>	return pt_mode == PT_MODE_SYSTEM;</blue>
+}
+static inline bool vmx_pt_mode_is_host_guest(void)
+{
+<yellow>	return pt_mode == PT_MODE_HOST_GUEST;</yellow>
+}
+
+static inline bool vmx_pebs_supported(void)
+{
+<blue>	return boot_cpu_has(X86_FEATURE_PEBS) && kvm_pmu_cap.pebs_ept;</blue>
+}
+
+<blue>static inline u64 vmx_get_perf_capabilities(void)</blue>
+{
+	u64 perf_cap = PMU_CAP_FW_WRITES;
+	struct x86_pmu_lbr lbr;
+	u64 host_perf_cap = 0;
+
+<blue>	if (!enable_pmu)</blue>
+		return 0;
+
+<blue>	if (boot_cpu_has(X86_FEATURE_PDCM))</blue>
+<blue>		rdmsrl(MSR_IA32_PERF_CAPABILITIES, host_perf_cap);</blue>
+
+<blue>	if (x86_perf_get_lbr(&lbr) >= 0 && lbr.nr)</blue>
+<blue>		perf_cap |= host_perf_cap & PMU_CAP_LBR_FMT;</blue>
+
+<blue>	if (vmx_pebs_supported()) {</blue>
+<yellow>		perf_cap |= host_perf_cap & PERF_CAP_PEBS_MASK;</yellow>
+<yellow>		if ((perf_cap & PERF_CAP_PEBS_FORMAT) < 4)</yellow>
+<yellow>			perf_cap &= ~PERF_CAP_PEBS_BASELINE;</yellow>
+	}
+
+	return perf_cap;
+}
+
+static inline bool cpu_has_notify_vmexit(void)
+{
+	return vmcs_config.cpu_based_2nd_exec_ctrl &amp;
+		SECONDARY_EXEC_NOTIFY_VM_EXITING;
+}
+
+#endif /* __KVM_X86_VMX_CAPS_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

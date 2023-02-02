@@ -1,0 +1,224 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_PROFILE_H
+#define _LINUX_PROFILE_H
+
+#include &lt;linux/kernel.h&gt;
+#include &lt;linux/init.h&gt;
+#include &lt;linux/cpumask.h&gt;
+#include &lt;linux/cache.h&gt;
+
+#include &lt;asm/errno.h&gt;
+
+#define CPU_PROFILING	1
+#define SCHED_PROFILING	2
+#define SLEEP_PROFILING	3
+#define KVM_PROFILING	4
+
+struct proc_dir_entry;
+struct notifier_block;
+
+#if defined(CONFIG_PROFILING) &amp;&amp; defined(CONFIG_PROC_FS)
+void create_prof_cpu_mask(void);
+int create_proc_profile(void);
+#else
+static inline void create_prof_cpu_mask(void)
+{
+}
+
+static inline int create_proc_profile(void)
+{
+	return 0;
+}
+#endif
+
+#ifdef CONFIG_PROFILING
+
+extern int prof_on __read_mostly;
+
+/* init basic kernel profiler */
+int profile_init(void);
+int profile_setup(char *str);
+void profile_tick(int type);
+int setup_profiling_timer(unsigned int multiplier);
+
+/*
+ * Add multiple profiler hits to a given address:
+ */
+void profile_hits(int type, void *ip, unsigned int nr_hits);
+
+/*
+ * Single profiler hit:
+ */
+static inline void profile_hit(int type, void *ip)
+{
+	/*
+	 * Speedup for the common (no profiling enabled) case:
+	 */
+	if (unlikely(prof_on == type))
+<yellow>		profile_hits(type, ip, 1);</yellow>
+}
+
+struct task_struct;
+struct mm_struct;
+
+#else
+
+#define prof_on 0
+
+static inline int profile_init(void)
+{
+	return 0;
+}
+
+static inline void profile_tick(int type)
+{
+	return;
+}
+
+static inline void profile_hits(int type, void *ip, unsigned int nr_hits)
+{
+	return;
+}
+
+static inline void profile_hit(int type, void *ip)
+{
+	return;
+}
+
+
+#endif /* CONFIG_PROFILING */
+
+#endif /* _LINUX_PROFILE_H */
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

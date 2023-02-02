@@ -1,0 +1,180 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_JUMP_LABEL_H
+#define _ASM_X86_JUMP_LABEL_H
+
+#define HAVE_JUMP_LABEL_BATCH
+
+#include &lt;asm/asm.h&gt;
+#include &lt;asm/nops.h&gt;
+
+#ifndef __ASSEMBLY__
+
+#include &lt;linux/stringify.h&gt;
+#include &lt;linux/types.h&gt;
+
+#define JUMP_TABLE_ENTRY				\
+	&quot;.pushsection __jump_table,  \&quot;aw\&quot; \n\t&quot;	\
+	_ASM_ALIGN &quot;\n\t&quot;				\
+	&quot;.long 1b - . \n\t&quot;				\
+	&quot;.long %l[l_yes] - . \n\t&quot;			\
+	_ASM_PTR &quot;%c0 + %c1 - .\n\t&quot;			\
+	&quot;.popsection \n\t&quot;
+
+#ifdef CONFIG_HAVE_JUMP_LABEL_HACK
+
+static __always_inline bool arch_static_branch(struct static_key *key, bool branch)
+{
+<blue>	asm_volatile_goto("1:"</blue>
+		&quot;jmp %l[l_yes] # objtool NOPs this \n\t&quot;
+		JUMP_TABLE_ENTRY
+		: :  &quot;i&quot; (key), &quot;i&quot; (2 | branch) : : l_yes);
+
+	return false;
+l_yes:
+	return true;
+}
+
+#else /* !CONFIG_HAVE_JUMP_LABEL_HACK */
+
+static __always_inline bool arch_static_branch(struct static_key * const key, const bool branch)
+{
+	asm_volatile_goto(&quot;1:&quot;
+		&quot;.byte &quot; __stringify(BYTES_NOP5) &quot;\n\t&quot;
+		JUMP_TABLE_ENTRY
+		: :  &quot;i&quot; (key), &quot;i&quot; (branch) : : l_yes);
+
+	return false;
+l_yes:
+	return true;
+}
+
+#endif /* CONFIG_HAVE_JUMP_LABEL_HACK */
+
+static __always_inline bool arch_static_branch_jump(struct static_key * const key, const bool branch)
+{
+<yellow>	asm_volatile_goto("1:"</yellow>
+		&quot;jmp %l[l_yes]\n\t&quot;
+		JUMP_TABLE_ENTRY
+		: :  &quot;i&quot; (key), &quot;i&quot; (branch) : : l_yes);
+
+	return false;
+l_yes:
+	return true;
+}
+
+extern int arch_jump_entry_size(struct jump_entry *entry);
+
+#endif	/* __ASSEMBLY__ */
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>

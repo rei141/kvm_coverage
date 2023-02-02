@@ -1,0 +1,4900 @@
+<doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+</style>
+
+</head>
+<body>
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line>1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+16.
+17.
+18.
+19.
+20.
+21.
+22.
+23.
+24.
+25.
+26.
+27.
+28.
+29.
+30.
+31.
+32.
+33.
+34.
+35.
+36.
+37.
+38.
+39.
+40.
+41.
+42.
+43.
+44.
+45.
+46.
+47.
+48.
+49.
+50.
+51.
+52.
+53.
+54.
+55.
+56.
+57.
+58.
+59.
+60.
+61.
+62.
+63.
+64.
+65.
+66.
+67.
+68.
+69.
+70.
+71.
+72.
+73.
+74.
+75.
+76.
+77.
+78.
+79.
+80.
+81.
+82.
+83.
+84.
+85.
+86.
+87.
+88.
+89.
+90.
+91.
+92.
+93.
+94.
+95.
+96.
+97.
+98.
+99.
+100.
+101.
+102.
+103.
+104.
+105.
+106.
+107.
+108.
+109.
+110.
+111.
+112.
+113.
+114.
+115.
+116.
+117.
+118.
+119.
+120.
+121.
+122.
+123.
+124.
+125.
+126.
+127.
+128.
+129.
+130.
+131.
+132.
+133.
+134.
+135.
+136.
+137.
+138.
+139.
+140.
+141.
+142.
+143.
+144.
+145.
+146.
+147.
+148.
+149.
+150.
+151.
+152.
+153.
+154.
+155.
+156.
+157.
+158.
+159.
+160.
+161.
+162.
+163.
+164.
+165.
+166.
+167.
+168.
+169.
+170.
+171.
+172.
+173.
+174.
+175.
+176.
+177.
+178.
+179.
+180.
+181.
+182.
+183.
+184.
+185.
+186.
+187.
+188.
+189.
+190.
+191.
+192.
+193.
+194.
+195.
+196.
+197.
+198.
+199.
+200.
+201.
+202.
+203.
+204.
+205.
+206.
+207.
+208.
+209.
+210.
+211.
+212.
+213.
+214.
+215.
+216.
+217.
+218.
+219.
+220.
+221.
+222.
+223.
+224.
+225.
+226.
+227.
+228.
+229.
+230.
+231.
+232.
+233.
+234.
+235.
+236.
+237.
+238.
+239.
+240.
+241.
+242.
+243.
+244.
+245.
+246.
+247.
+248.
+249.
+250.
+251.
+252.
+253.
+254.
+255.
+256.
+257.
+258.
+259.
+260.
+261.
+262.
+263.
+264.
+265.
+266.
+267.
+268.
+269.
+270.
+271.
+272.
+273.
+274.
+275.
+276.
+277.
+278.
+279.
+280.
+281.
+282.
+283.
+284.
+285.
+286.
+287.
+288.
+289.
+290.
+291.
+292.
+293.
+294.
+295.
+296.
+297.
+298.
+299.
+300.
+301.
+302.
+303.
+304.
+305.
+306.
+307.
+308.
+309.
+310.
+311.
+312.
+313.
+314.
+315.
+316.
+317.
+318.
+319.
+320.
+321.
+322.
+323.
+324.
+325.
+326.
+327.
+328.
+329.
+330.
+331.
+332.
+333.
+334.
+335.
+336.
+337.
+338.
+339.
+340.
+341.
+342.
+343.
+344.
+345.
+346.
+347.
+348.
+349.
+350.
+351.
+352.
+353.
+354.
+355.
+356.
+357.
+358.
+359.
+360.
+361.
+362.
+363.
+364.
+365.
+366.
+367.
+368.
+369.
+370.
+371.
+372.
+373.
+374.
+375.
+376.
+377.
+378.
+379.
+380.
+381.
+382.
+383.
+384.
+385.
+386.
+387.
+388.
+389.
+390.
+391.
+392.
+393.
+394.
+395.
+396.
+397.
+398.
+399.
+400.
+401.
+402.
+403.
+404.
+405.
+406.
+407.
+408.
+409.
+410.
+411.
+412.
+413.
+414.
+415.
+416.
+417.
+418.
+419.
+420.
+421.
+422.
+423.
+424.
+425.
+426.
+427.
+428.
+429.
+430.
+431.
+432.
+433.
+434.
+435.
+436.
+437.
+438.
+439.
+440.
+441.
+442.
+443.
+444.
+445.
+446.
+447.
+448.
+449.
+450.
+451.
+452.
+453.
+454.
+455.
+456.
+457.
+458.
+459.
+460.
+461.
+462.
+463.
+464.
+465.
+466.
+467.
+468.
+469.
+470.
+471.
+472.
+473.
+474.
+475.
+476.
+477.
+478.
+479.
+480.
+481.
+482.
+483.
+484.
+485.
+486.
+487.
+488.
+489.
+490.
+491.
+492.
+493.
+494.
+495.
+496.
+497.
+498.
+499.
+500.
+501.
+502.
+503.
+504.
+505.
+506.
+507.
+508.
+509.
+510.
+511.
+512.
+513.
+514.
+515.
+516.
+517.
+518.
+519.
+520.
+521.
+522.
+523.
+524.
+525.
+526.
+527.
+528.
+529.
+530.
+531.
+532.
+533.
+534.
+535.
+536.
+537.
+538.
+539.
+540.
+541.
+542.
+543.
+544.
+545.
+546.
+547.
+548.
+549.
+550.
+551.
+552.
+553.
+554.
+555.
+556.
+557.
+558.
+559.
+560.
+561.
+562.
+563.
+564.
+565.
+566.
+567.
+568.
+569.
+570.
+571.
+572.
+573.
+574.
+575.
+576.
+577.
+578.
+579.
+580.
+581.
+582.
+583.
+584.
+585.
+586.
+587.
+588.
+589.
+590.
+591.
+592.
+593.
+594.
+595.
+596.
+597.
+598.
+599.
+600.
+601.
+602.
+603.
+604.
+605.
+606.
+607.
+608.
+609.
+610.
+611.
+612.
+613.
+614.
+615.
+616.
+617.
+618.
+619.
+620.
+621.
+622.
+623.
+624.
+625.
+626.
+627.
+628.
+629.
+630.
+631.
+632.
+633.
+634.
+635.
+636.
+637.
+638.
+639.
+640.
+641.
+642.
+643.
+644.
+645.
+646.
+647.
+648.
+649.
+650.
+651.
+652.
+653.
+654.
+655.
+656.
+657.
+658.
+659.
+660.
+661.
+662.
+663.
+664.
+665.
+666.
+667.
+668.
+669.
+670.
+671.
+672.
+673.
+674.
+675.
+676.
+677.
+678.
+679.
+680.
+681.
+682.
+683.
+684.
+685.
+686.
+687.
+688.
+689.
+690.
+691.
+692.
+693.
+694.
+695.
+696.
+697.
+698.
+699.
+700.
+701.
+702.
+703.
+704.
+705.
+706.
+707.
+708.
+709.
+710.
+711.
+712.
+713.
+714.
+715.
+716.
+717.
+718.
+719.
+720.
+721.
+722.
+723.
+724.
+725.
+726.
+727.
+728.
+729.
+730.
+731.
+732.
+733.
+734.
+735.
+736.
+737.
+738.
+739.
+740.
+741.
+742.
+743.
+744.
+745.
+746.
+747.
+748.
+749.
+750.
+751.
+752.
+753.
+754.
+755.
+756.
+757.
+758.
+759.
+760.
+761.
+762.
+763.
+764.
+765.
+766.
+767.
+768.
+769.
+770.
+771.
+772.
+773.
+774.
+775.
+776.
+777.
+778.
+779.
+780.
+781.
+782.
+783.
+784.
+785.
+786.
+787.
+788.
+789.
+790.
+791.
+792.
+793.
+794.
+795.
+796.
+797.
+798.
+799.
+800.
+801.
+802.
+803.
+804.
+805.
+806.
+807.
+808.
+809.
+810.
+811.
+812.
+813.
+814.
+815.
+816.
+817.
+818.
+819.
+820.
+821.
+822.
+823.
+824.
+825.
+826.
+827.
+828.
+829.
+830.
+831.
+832.
+833.
+834.
+835.
+836.
+837.
+838.
+839.
+840.
+841.
+842.
+843.
+844.
+845.
+846.
+847.
+848.
+849.
+850.
+851.
+852.
+853.
+854.
+855.
+856.
+857.
+858.
+859.
+860.
+861.
+862.
+863.
+864.
+865.
+866.
+867.
+868.
+869.
+870.
+871.
+872.
+873.
+874.
+875.
+876.
+877.
+878.
+879.
+880.
+881.
+882.
+883.
+884.
+885.
+886.
+887.
+888.
+889.
+890.
+891.
+892.
+893.
+894.
+895.
+896.
+897.
+898.
+899.
+900.
+901.
+902.
+903.
+904.
+905.
+906.
+907.
+908.
+909.
+910.
+911.
+912.
+913.
+914.
+915.
+916.
+917.
+918.
+919.
+920.
+921.
+922.
+923.
+924.
+925.
+926.
+927.
+928.
+929.
+930.
+931.
+932.
+933.
+934.
+935.
+936.
+937.
+938.
+939.
+940.
+941.
+942.
+943.
+944.
+945.
+946.
+947.
+948.
+949.
+950.
+951.
+952.
+953.
+954.
+955.
+956.
+957.
+958.
+959.
+960.
+961.
+962.
+963.
+964.
+965.
+966.
+967.
+968.
+969.
+970.
+971.
+972.
+973.
+974.
+975.
+976.
+977.
+978.
+979.
+980.
+981.
+982.
+983.
+984.
+985.
+986.
+987.
+988.
+989.
+990.
+991.
+992.
+993.
+994.
+995.
+996.
+997.
+998.
+999.
+1000.
+1001.
+1002.
+1003.
+1004.
+1005.
+1006.
+1007.
+1008.
+1009.
+1010.
+1011.
+1012.
+1013.
+1014.
+1015.
+1016.
+1017.
+1018.
+1019.
+1020.
+1021.
+1022.
+1023.
+1024.
+1025.
+1026.
+1027.
+1028.
+1029.
+1030.
+1031.
+1032.
+1033.
+1034.
+1035.
+1036.
+1037.
+1038.
+1039.
+1040.
+1041.
+1042.
+1043.
+1044.
+1045.
+1046.
+1047.
+1048.
+1049.
+1050.
+1051.
+1052.
+1053.
+1054.
+1055.
+1056.
+1057.
+1058.
+1059.
+1060.
+1061.
+1062.
+1063.
+1064.
+1065.
+1066.
+1067.
+1068.
+1069.
+1070.
+1071.
+1072.
+1073.
+1074.
+1075.
+1076.
+1077.
+1078.
+1079.
+1080.
+1081.
+1082.
+1083.
+1084.
+1085.
+1086.
+1087.
+1088.
+1089.
+1090.
+1091.
+1092.
+1093.
+1094.
+1095.
+1096.
+1097.
+1098.
+1099.
+1100.
+1101.
+1102.
+1103.
+1104.
+1105.
+1106.
+1107.
+1108.
+1109.
+1110.
+1111.
+1112.
+1113.
+1114.
+1115.
+1116.
+1117.
+1118.
+1119.
+1120.
+1121.
+1122.
+1123.
+1124.
+1125.
+1126.
+1127.
+1128.
+1129.
+1130.
+1131.
+1132.
+1133.
+1134.
+1135.
+1136.
+1137.
+1138.
+1139.
+1140.
+1141.
+1142.
+1143.
+1144.
+1145.
+1146.
+1147.
+1148.
+1149.
+1150.
+1151.
+1152.
+1153.
+1154.
+1155.
+1156.
+1157.
+1158.
+1159.
+1160.
+1161.
+1162.
+1163.
+1164.
+1165.
+1166.
+1167.
+1168.
+1169.
+1170.
+1171.
+1172.
+1173.
+1174.
+1175.
+1176.
+1177.
+1178.
+1179.
+1180.
+1181.
+1182.
+1183.
+1184.
+1185.
+1186.
+1187.
+1188.
+1189.
+1190.
+1191.
+1192.
+1193.
+1194.
+1195.
+1196.
+1197.
+1198.
+1199.
+1200.
+1201.
+1202.
+1203.
+1204.
+1205.
+1206.
+1207.
+1208.
+1209.
+1210.
+1211.
+1212.
+1213.
+1214.
+1215.
+1216.
+1217.
+1218.
+1219.
+1220.
+1221.
+1222.
+1223.
+1224.
+1225.
+1226.
+1227.
+1228.
+1229.
+1230.
+1231.
+1232.
+1233.
+1234.
+1235.
+1236.
+1237.
+1238.
+1239.
+1240.
+1241.
+1242.
+1243.
+1244.
+1245.
+1246.
+1247.
+1248.
+1249.
+1250.
+1251.
+1252.
+1253.
+1254.
+1255.
+1256.
+1257.
+1258.
+1259.
+1260.
+1261.
+1262.
+1263.
+1264.
+1265.
+1266.
+1267.
+1268.
+1269.
+1270.
+1271.
+1272.
+1273.
+1274.
+1275.
+1276.
+1277.
+1278.
+1279.
+1280.
+1281.
+1282.
+1283.
+1284.
+1285.
+1286.
+1287.
+1288.
+1289.
+1290.
+1291.
+1292.
+1293.
+1294.
+1295.
+1296.
+1297.
+1298.
+1299.
+1300.
+1301.
+1302.
+1303.
+1304.
+1305.
+1306.
+1307.
+1308.
+1309.
+1310.
+1311.
+1312.
+1313.
+1314.
+1315.
+1316.
+1317.
+1318.
+1319.
+1320.
+1321.
+1322.
+1323.
+1324.
+1325.
+1326.
+1327.
+1328.
+1329.
+1330.
+1331.
+1332.
+1333.
+1334.
+1335.
+1336.
+1337.
+1338.
+1339.
+1340.
+1341.
+1342.
+1343.
+1344.
+1345.
+1346.
+1347.
+1348.
+1349.
+1350.
+1351.
+1352.
+1353.
+1354.
+1355.
+1356.
+1357.
+1358.
+1359.
+1360.
+1361.
+1362.
+1363.
+1364.
+1365.
+1366.
+1367.
+1368.
+1369.
+1370.
+1371.
+1372.
+1373.
+1374.
+1375.
+1376.
+1377.
+1378.
+1379.
+1380.
+1381.
+1382.
+1383.
+1384.
+1385.
+1386.
+1387.
+1388.
+1389.
+1390.
+1391.
+1392.
+1393.
+1394.
+1395.
+1396.
+1397.
+1398.
+1399.
+1400.
+1401.
+1402.
+1403.
+1404.
+1405.
+1406.
+1407.
+1408.
+1409.
+1410.
+1411.
+1412.
+1413.
+1414.
+1415.
+1416.
+1417.
+1418.
+1419.
+1420.
+1421.
+1422.
+1423.
+1424.
+1425.
+1426.
+1427.
+1428.
+1429.
+1430.
+1431.
+1432.
+1433.
+1434.
+1435.
+1436.
+1437.
+1438.
+1439.
+1440.
+1441.
+1442.
+1443.
+1444.
+1445.
+1446.
+1447.
+1448.
+1449.
+1450.
+1451.
+1452.
+1453.
+1454.
+1455.
+1456.
+1457.
+1458.
+1459.
+1460.
+1461.
+1462.
+1463.
+1464.
+1465.
+1466.
+1467.
+1468.
+1469.
+1470.
+1471.
+1472.
+1473.
+1474.
+1475.
+1476.
+1477.
+1478.
+1479.
+1480.
+1481.
+1482.
+1483.
+1484.
+1485.
+1486.
+1487.
+1488.
+1489.
+1490.
+1491.
+1492.
+1493.
+1494.
+1495.
+1496.
+1497.
+1498.
+1499.
+1500.
+1501.
+1502.
+1503.
+1504.
+1505.
+1506.
+1507.
+1508.
+1509.
+1510.
+1511.
+1512.
+1513.
+1514.
+1515.
+1516.
+1517.
+1518.
+1519.
+1520.
+1521.
+1522.
+1523.
+1524.
+1525.
+1526.
+1527.
+1528.
+1529.
+1530.
+1531.
+1532.
+1533.
+1534.
+1535.
+1536.
+1537.
+1538.
+1539.
+1540.
+1541.
+1542.
+1543.
+1544.
+1545.
+1546.
+1547.
+1548.
+1549.
+1550.
+1551.
+1552.
+1553.
+1554.
+1555.
+1556.
+1557.
+1558.
+1559.
+1560.
+1561.
+1562.
+1563.
+1564.
+1565.
+1566.
+1567.
+1568.
+1569.
+1570.
+1571.
+1572.
+1573.
+1574.
+1575.
+1576.
+1577.
+1578.
+1579.
+1580.
+1581.
+1582.
+1583.
+1584.
+1585.
+1586.
+1587.
+1588.
+1589.
+1590.
+1591.
+1592.
+1593.
+1594.
+1595.
+1596.
+1597.
+1598.
+1599.
+1600.
+1601.
+1602.
+1603.
+1604.
+1605.
+1606.
+1607.
+1608.
+1609.
+1610.
+1611.
+1612.
+1613.
+1614.
+1615.
+1616.
+1617.
+1618.
+1619.
+1620.
+1621.
+1622.
+1623.
+1624.
+1625.
+1626.
+1627.
+1628.
+1629.
+1630.
+1631.
+1632.
+1633.
+1634.
+1635.
+1636.
+1637.
+1638.
+1639.
+1640.
+1641.
+1642.
+1643.
+1644.
+1645.
+1646.
+1647.
+1648.
+1649.
+1650.
+1651.
+1652.
+1653.
+1654.
+1655.
+1656.
+1657.
+1658.
+1659.
+1660.
+1661.
+1662.
+1663.
+1664.
+1665.
+1666.
+1667.
+1668.
+1669.
+1670.
+1671.
+1672.
+1673.
+1674.
+1675.
+1676.
+1677.
+1678.
+1679.
+1680.
+1681.
+1682.
+1683.
+1684.
+1685.
+1686.
+1687.
+1688.
+1689.
+1690.
+1691.
+1692.
+1693.
+1694.
+1695.
+1696.
+1697.
+1698.
+1699.
+1700.
+1701.
+1702.
+1703.
+1704.
+1705.
+1706.
+1707.
+1708.
+1709.
+1710.
+1711.
+1712.
+1713.
+1714.
+1715.
+1716.
+1717.
+1718.
+1719.
+1720.
+1721.
+1722.
+1723.
+1724.
+1725.
+1726.
+1727.
+1728.
+1729.
+1730.
+1731.
+1732.
+1733.
+1734.
+1735.
+1736.
+1737.
+1738.
+1739.
+1740.
+1741.
+1742.
+1743.
+1744.
+1745.
+1746.
+1747.
+1748.
+1749.
+1750.
+1751.
+1752.
+1753.
+1754.
+1755.
+1756.
+1757.
+1758.
+1759.
+1760.
+1761.
+1762.
+1763.
+1764.
+1765.
+1766.
+1767.
+1768.
+1769.
+1770.
+1771.
+1772.
+1773.
+1774.
+1775.
+1776.
+1777.
+1778.
+1779.
+1780.
+1781.
+1782.
+1783.
+1784.
+1785.
+1786.
+1787.
+1788.
+1789.
+1790.
+1791.
+1792.
+1793.
+1794.
+1795.
+1796.
+1797.
+1798.
+1799.
+1800.
+1801.
+1802.
+1803.
+1804.
+1805.
+1806.
+1807.
+1808.
+1809.
+1810.
+1811.
+1812.
+1813.
+1814.
+1815.
+1816.
+1817.
+1818.
+1819.
+1820.
+1821.
+1822.
+1823.
+1824.
+1825.
+1826.
+1827.
+1828.
+1829.
+1830.
+1831.
+1832.
+1833.
+1834.
+1835.
+1836.
+1837.
+1838.
+1839.
+1840.
+1841.
+1842.
+1843.
+1844.
+1845.
+1846.
+1847.
+1848.
+1849.
+1850.
+1851.
+1852.
+1853.
+1854.
+1855.
+1856.
+1857.
+1858.
+1859.
+1860.
+1861.
+1862.
+1863.
+1864.
+1865.
+1866.
+1867.
+1868.
+1869.
+1870.
+1871.
+1872.
+1873.
+1874.
+1875.
+1876.
+1877.
+1878.
+1879.
+1880.
+1881.
+1882.
+1883.
+1884.
+1885.
+1886.
+1887.
+1888.
+1889.
+1890.
+1891.
+1892.
+1893.
+1894.
+1895.
+1896.
+1897.
+1898.
+1899.
+1900.
+1901.
+1902.
+1903.
+1904.
+1905.
+1906.
+1907.
+1908.
+1909.
+1910.
+1911.
+1912.
+1913.
+1914.
+1915.
+1916.
+1917.
+1918.
+1919.
+1920.
+1921.
+1922.
+1923.
+1924.
+1925.
+1926.
+1927.
+1928.
+1929.
+1930.
+1931.
+1932.
+1933.
+1934.
+1935.
+1936.
+1937.
+1938.
+1939.
+1940.
+1941.
+1942.
+1943.
+1944.
+1945.
+1946.
+1947.
+1948.
+1949.
+1950.
+1951.
+1952.
+1953.
+1954.
+1955.
+1956.
+1957.
+1958.
+1959.
+1960.
+1961.
+1962.
+1963.
+1964.
+1965.
+1966.
+1967.
+1968.
+1969.
+1970.
+1971.
+1972.
+1973.
+1974.
+1975.
+1976.
+1977.
+1978.
+1979.
+1980.
+1981.
+1982.
+1983.
+1984.
+1985.
+1986.
+1987.
+1988.
+1989.
+1990.
+1991.
+1992.
+1993.
+1994.
+1995.
+1996.
+1997.
+1998.
+1999.
+2000.
+2001.
+2002.
+2003.
+2004.
+2005.
+2006.
+2007.
+2008.
+2009.
+2010.
+2011.
+2012.
+2013.
+2014.
+2015.
+2016.
+2017.
+2018.
+2019.
+2020.
+2021.
+2022.
+2023.
+2024.
+2025.
+2026.
+2027.
+2028.
+2029.
+2030.
+2031.
+2032.
+2033.
+2034.
+2035.
+2036.
+2037.
+2038.
+2039.
+2040.
+2041.
+2042.
+2043.
+2044.
+2045.
+2046.
+2047.
+2048.
+2049.
+2050.
+2051.
+2052.
+2053.
+2054.
+2055.
+2056.
+2057.
+2058.
+2059.
+2060.
+2061.
+2062.
+2063.
+2064.
+2065.
+2066.
+2067.
+2068.
+2069.
+2070.
+2071.
+2072.
+2073.
+2074.
+2075.
+2076.
+2077.
+2078.
+2079.
+2080.
+2081.
+2082.
+2083.
+2084.
+2085.
+2086.
+2087.
+2088.
+2089.
+2090.
+2091.
+2092.
+2093.
+2094.
+2095.
+2096.
+2097.
+2098.
+2099.
+2100.
+2101.
+2102.
+2103.
+2104.
+2105.
+2106.
+2107.
+2108.
+2109.
+2110.
+2111.
+2112.
+2113.
+2114.
+2115.
+2116.
+2117.
+2118.
+2119.
+2120.
+2121.
+2122.
+2123.
+2124.
+2125.
+2126.
+2127.
+2128.
+2129.
+2130.
+2131.
+2132.
+2133.
+2134.
+2135.
+2136.
+2137.
+2138.
+2139.
+2140.
+2141.
+2142.
+2143.
+2144.
+2145.
+2146.
+2147.
+2148.
+2149.
+2150.
+2151.
+2152.
+2153.
+2154.
+2155.
+2156.
+2157.
+2158.
+2159.
+2160.
+2161.
+2162.
+2163.
+2164.
+2165.
+2166.
+2167.
+2168.
+2169.
+2170.
+2171.
+2172.
+2173.
+2174.
+2175.
+2176.
+2177.
+2178.
+2179.
+2180.
+2181.
+2182.
+2183.
+2184.
+2185.
+2186.
+2187.
+2188.
+2189.
+2190.
+2191.
+2192.
+2193.
+2194.
+2195.
+2196.
+2197.
+2198.
+2199.
+2200.
+2201.
+2202.
+2203.
+2204.
+2205.
+2206.
+2207.
+2208.
+2209.
+2210.
+2211.
+2212.
+2213.
+2214.
+2215.
+2216.
+2217.
+2218.
+2219.
+2220.
+2221.
+2222.
+2223.
+2224.
+2225.
+2226.
+2227.
+2228.
+2229.
+2230.
+2231.
+2232.
+2233.
+2234.
+2235.
+2236.
+2237.
+2238.
+2239.
+2240.
+2241.
+2242.
+2243.
+2244.
+2245.
+2246.
+2247.
+2248.
+2249.
+2250.
+2251.
+2252.
+2253.
+2254.
+2255.
+2256.
+2257.
+2258.
+2259.
+2260.
+2261.
+2262.
+2263.
+2264.
+2265.
+2266.
+2267.
+2268.
+2269.
+2270.
+2271.
+2272.
+2273.
+2274.
+2275.
+2276.
+2277.
+2278.
+2279.
+2280.
+2281.
+2282.
+2283.
+2284.
+2285.
+2286.
+2287.
+2288.
+2289.
+2290.
+2291.
+2292.
+2293.
+2294.
+2295.
+2296.
+2297.
+2298.
+2299.
+2300.
+2301.
+2302.
+2303.
+2304.
+2305.
+2306.
+2307.
+2308.
+2309.
+2310.
+2311.
+2312.
+2313.
+2314.
+2315.
+2316.
+2317.
+2318.
+2319.
+2320.
+2321.
+2322.
+2323.
+2324.
+2325.
+2326.
+2327.
+2328.
+2329.
+2330.
+2331.
+2332.
+2333.
+2334.
+2335.
+2336.
+2337.
+2338.
+2339.
+2340.
+2341.
+2342.
+2343.
+2344.
+2345.
+2346.
+2347.
+2348.
+2349.
+2350.
+2351.
+2352.
+2353.
+2354.
+2355.
+2356.
+2357.
+2358.
+2359.
+2360.
+2361.
+2362.
+2363.
+2364.
+2365.
+2366.
+2367.
+2368.
+2369.
+2370.
+2371.
+2372.
+2373.
+2374.
+2375.
+2376.
+2377.
+2378.
+2379.
+2380.
+2381.
+2382.
+2383.
+2384.
+2385.
+2386.
+2387.
+2388.
+2389.
+2390.
+2391.
+2392.
+2393.
+2394.
+2395.
+2396.
+2397.
+2398.
+2399.
+2400.
+2401.
+2402.
+2403.
+2404.
+2405.
+2406.
+2407.
+2408.
+2409.
+2410.
+2411.
+2412.
+2413.
+2414.
+2415.
+2416.
+2417.
+2418.
+2419.
+2420.
+2421.
+2422.
+2423.
+2424.
+2425.
+2426.
+2427.
+2428.
+2429.
+2430.
+</code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_SCHED_H
+#define _LINUX_SCHED_H
+
+/*
+ * Define &#x27;struct task_struct&#x27; and provide the main scheduler
+ * APIs (schedule(), wakeup variants, etc.)
+ */
+
+#include &lt;uapi/linux/sched.h&gt;
+
+#include &lt;asm/current.h&gt;
+
+#include &lt;linux/pid.h&gt;
+#include &lt;linux/sem.h&gt;
+#include &lt;linux/shm.h&gt;
+#include &lt;linux/kmsan_types.h&gt;
+#include &lt;linux/mutex.h&gt;
+#include &lt;linux/plist.h&gt;
+#include &lt;linux/hrtimer.h&gt;
+#include &lt;linux/irqflags.h&gt;
+#include &lt;linux/seccomp.h&gt;
+#include &lt;linux/nodemask.h&gt;
+#include &lt;linux/rcupdate.h&gt;
+#include &lt;linux/refcount.h&gt;
+#include &lt;linux/resource.h&gt;
+#include &lt;linux/latencytop.h&gt;
+#include &lt;linux/sched/prio.h&gt;
+#include &lt;linux/sched/types.h&gt;
+#include &lt;linux/signal_types.h&gt;
+#include &lt;linux/syscall_user_dispatch.h&gt;
+#include &lt;linux/mm_types_task.h&gt;
+#include &lt;linux/task_io_accounting.h&gt;
+#include &lt;linux/posix-timers.h&gt;
+#include &lt;linux/rseq.h&gt;
+#include &lt;linux/seqlock.h&gt;
+#include &lt;linux/kcsan.h&gt;
+#include &lt;linux/rv.h&gt;
+#include &lt;asm/kmap_size.h&gt;
+
+/* task_struct member predeclarations (sorted alphabetically): */
+struct audit_context;
+struct backing_dev_info;
+struct bio_list;
+struct blk_plug;
+struct bpf_local_storage;
+struct bpf_run_ctx;
+struct capture_control;
+struct cfs_rq;
+struct fs_struct;
+struct futex_pi_state;
+struct io_context;
+struct io_uring_task;
+struct mempolicy;
+struct nameidata;
+struct nsproxy;
+struct perf_event_context;
+struct pid_namespace;
+struct pipe_inode_info;
+struct rcu_node;
+struct reclaim_state;
+struct robust_list_head;
+struct root_domain;
+struct rq;
+struct sched_attr;
+struct sched_param;
+struct seq_file;
+struct sighand_struct;
+struct signal_struct;
+struct task_delay_info;
+struct task_group;
+
+/*
+ * Task state bitmask. NOTE! These bits are also
+ * encoded in fs/proc/array.c: get_task_state().
+ *
+ * We have two separate sets of flags: task-&gt;state
+ * is about runnability, while task-&gt;exit_state are
+ * about the task exiting. Confusing, but this way
+ * modifying one set can&#x27;t modify the other one by
+ * mistake.
+ */
+
+/* Used in tsk-&gt;state: */
+#define TASK_RUNNING			0x00000000
+#define TASK_INTERRUPTIBLE		0x00000001
+#define TASK_UNINTERRUPTIBLE		0x00000002
+#define __TASK_STOPPED			0x00000004
+#define __TASK_TRACED			0x00000008
+/* Used in tsk-&gt;exit_state: */
+#define EXIT_DEAD			0x00000010
+#define EXIT_ZOMBIE			0x00000020
+#define EXIT_TRACE			(EXIT_ZOMBIE | EXIT_DEAD)
+/* Used in tsk-&gt;state again: */
+#define TASK_PARKED			0x00000040
+#define TASK_DEAD			0x00000080
+#define TASK_WAKEKILL			0x00000100
+#define TASK_WAKING			0x00000200
+#define TASK_NOLOAD			0x00000400
+#define TASK_NEW			0x00000800
+#define TASK_RTLOCK_WAIT		0x00001000
+#define TASK_FREEZABLE			0x00002000
+#define __TASK_FREEZABLE_UNSAFE	       (0x00004000 * IS_ENABLED(CONFIG_LOCKDEP))
+#define TASK_FROZEN			0x00008000
+#define TASK_STATE_MAX			0x00010000
+
+#define TASK_ANY			(TASK_STATE_MAX-1)
+
+/*
+ * DO NOT ADD ANY NEW USERS !
+ */
+#define TASK_FREEZABLE_UNSAFE		(TASK_FREEZABLE | __TASK_FREEZABLE_UNSAFE)
+
+/* Convenience macros for the sake of set_current_state: */
+#define TASK_KILLABLE			(TASK_WAKEKILL | TASK_UNINTERRUPTIBLE)
+#define TASK_STOPPED			(TASK_WAKEKILL | __TASK_STOPPED)
+#define TASK_TRACED			__TASK_TRACED
+
+#define TASK_IDLE			(TASK_UNINTERRUPTIBLE | TASK_NOLOAD)
+
+/* Convenience macros for the sake of wake_up(): */
+#define TASK_NORMAL			(TASK_INTERRUPTIBLE | TASK_UNINTERRUPTIBLE)
+
+/* get_task_state(): */
+#define TASK_REPORT			(TASK_RUNNING | TASK_INTERRUPTIBLE | \
+					 TASK_UNINTERRUPTIBLE | __TASK_STOPPED | \
+					 __TASK_TRACED | EXIT_DEAD | EXIT_ZOMBIE | \
+					 TASK_PARKED)
+
+#define task_is_running(task)		(READ_ONCE((task)-&gt;__state) == TASK_RUNNING)
+
+#define task_is_traced(task)		((READ_ONCE(task-&gt;jobctl) &amp; JOBCTL_TRACED) != 0)
+#define task_is_stopped(task)		((READ_ONCE(task-&gt;jobctl) &amp; JOBCTL_STOPPED) != 0)
+#define task_is_stopped_or_traced(task)	((READ_ONCE(task-&gt;jobctl) &amp; (JOBCTL_STOPPED | JOBCTL_TRACED)) != 0)
+
+/*
+ * Special states are those that do not use the normal wait-loop pattern. See
+ * the comment with set_special_state().
+ */
+#define is_special_task_state(state)				\
+	((state) &amp; (__TASK_STOPPED | __TASK_TRACED | TASK_PARKED | TASK_DEAD))
+
+#ifdef CONFIG_DEBUG_ATOMIC_SLEEP
+# define debug_normal_state_change(state_value)				\
+	do {								\
+		WARN_ON_ONCE(is_special_task_state(state_value));	\
+		current-&gt;task_state_change = _THIS_IP_;			\
+	} while (0)
+
+# define debug_special_state_change(state_value)			\
+	do {								\
+		WARN_ON_ONCE(!is_special_task_state(state_value));	\
+		current-&gt;task_state_change = _THIS_IP_;			\
+	} while (0)
+
+# define debug_rtlock_wait_set_state()					\
+	do {								 \
+		current-&gt;saved_state_change = current-&gt;task_state_change;\
+		current-&gt;task_state_change = _THIS_IP_;			 \
+	} while (0)
+
+# define debug_rtlock_wait_restore_state()				\
+	do {								 \
+		current-&gt;task_state_change = current-&gt;saved_state_change;\
+	} while (0)
+
+#else
+# define debug_normal_state_change(cond)	do { } while (0)
+# define debug_special_state_change(cond)	do { } while (0)
+# define debug_rtlock_wait_set_state()		do { } while (0)
+# define debug_rtlock_wait_restore_state()	do { } while (0)
+#endif
+
+/*
+ * set_current_state() includes a barrier so that the write of current-&gt;state
+ * is correctly serialised wrt the caller&#x27;s subsequent test of whether to
+ * actually sleep:
+ *
+ *   for (;;) {
+ *	set_current_state(TASK_UNINTERRUPTIBLE);
+ *	if (CONDITION)
+ *	   break;
+ *
+ *	schedule();
+ *   }
+ *   __set_current_state(TASK_RUNNING);
+ *
+ * If the caller does not need such serialisation (because, for instance, the
+ * CONDITION test and condition change and wakeup are under the same lock) then
+ * use __set_current_state().
+ *
+ * The above is typically ordered against the wakeup, which does:
+ *
+ *   CONDITION = 1;
+ *   wake_up_state(p, TASK_UNINTERRUPTIBLE);
+ *
+ * where wake_up_state()/try_to_wake_up() executes a full memory barrier before
+ * accessing p-&gt;state.
+ *
+ * Wakeup will do: if (@state &amp; p-&gt;state) p-&gt;state = TASK_RUNNING, that is,
+ * once it observes the TASK_UNINTERRUPTIBLE store the waking CPU can issue a
+ * TASK_RUNNING store which can collide with __set_current_state(TASK_RUNNING).
+ *
+ * However, with slightly different timing the wakeup TASK_RUNNING store can
+ * also collide with the TASK_UNINTERRUPTIBLE store. Losing that store is not
+ * a problem either because that will result in one extra go around the loop
+ * and our @cond test will save the day.
+ *
+ * Also see the comments of try_to_wake_up().
+ */
+#define __set_current_state(state_value)				\
+	do {								\
+		debug_normal_state_change((state_value));		\
+		WRITE_ONCE(current-&gt;__state, (state_value));		\
+	} while (0)
+
+#define set_current_state(state_value)					\
+	do {								\
+		debug_normal_state_change((state_value));		\
+		smp_store_mb(current-&gt;__state, (state_value));		\
+	} while (0)
+
+/*
+ * set_special_state() should be used for those states when the blocking task
+ * can not use the regular condition based wait-loop. In that case we must
+ * serialize against wakeups such that any possible in-flight TASK_RUNNING
+ * stores will not collide with our state change.
+ */
+#define set_special_state(state_value)					\
+	do {								\
+		unsigned long flags; /* may shadow */			\
+									\
+		raw_spin_lock_irqsave(&amp;current-&gt;pi_lock, flags);	\
+		debug_special_state_change((state_value));		\
+		WRITE_ONCE(current-&gt;__state, (state_value));		\
+		raw_spin_unlock_irqrestore(&amp;current-&gt;pi_lock, flags);	\
+	} while (0)
+
+/*
+ * PREEMPT_RT specific variants for &quot;sleeping&quot; spin/rwlocks
+ *
+ * RT&#x27;s spin/rwlock substitutions are state preserving. The state of the
+ * task when blocking on the lock is saved in task_struct::saved_state and
+ * restored after the lock has been acquired.  These operations are
+ * serialized by task_struct::pi_lock against try_to_wake_up(). Any non RT
+ * lock related wakeups while the task is blocked on the lock are
+ * redirected to operate on task_struct::saved_state to ensure that these
+ * are not dropped. On restore task_struct::saved_state is set to
+ * TASK_RUNNING so any wakeup attempt redirected to saved_state will fail.
+ *
+ * The lock operation looks like this:
+ *
+ *	current_save_and_set_rtlock_wait_state();
+ *	for (;;) {
+ *		if (try_lock())
+ *			break;
+ *		raw_spin_unlock_irq(&amp;lock-&gt;wait_lock);
+ *		schedule_rtlock();
+ *		raw_spin_lock_irq(&amp;lock-&gt;wait_lock);
+ *		set_current_state(TASK_RTLOCK_WAIT);
+ *	}
+ *	current_restore_rtlock_saved_state();
+ */
+#define current_save_and_set_rtlock_wait_state()			\
+	do {								\
+		lockdep_assert_irqs_disabled();				\
+		raw_spin_lock(&amp;current-&gt;pi_lock);			\
+		current-&gt;saved_state = current-&gt;__state;		\
+		debug_rtlock_wait_set_state();				\
+		WRITE_ONCE(current-&gt;__state, TASK_RTLOCK_WAIT);		\
+		raw_spin_unlock(&amp;current-&gt;pi_lock);			\
+	} while (0);
+
+#define current_restore_rtlock_saved_state()				\
+	do {								\
+		lockdep_assert_irqs_disabled();				\
+		raw_spin_lock(&amp;current-&gt;pi_lock);			\
+		debug_rtlock_wait_restore_state();			\
+		WRITE_ONCE(current-&gt;__state, current-&gt;saved_state);	\
+		current-&gt;saved_state = TASK_RUNNING;			\
+		raw_spin_unlock(&amp;current-&gt;pi_lock);			\
+	} while (0);
+
+#define get_current_state()	READ_ONCE(current-&gt;__state)
+
+/*
+ * Define the task command name length as enum, then it can be visible to
+ * BPF programs.
+ */
+enum {
+	TASK_COMM_LEN = 16,
+};
+
+extern void scheduler_tick(void);
+
+#define	MAX_SCHEDULE_TIMEOUT		LONG_MAX
+
+extern long schedule_timeout(long timeout);
+extern long schedule_timeout_interruptible(long timeout);
+extern long schedule_timeout_killable(long timeout);
+extern long schedule_timeout_uninterruptible(long timeout);
+extern long schedule_timeout_idle(long timeout);
+asmlinkage void schedule(void);
+extern void schedule_preempt_disabled(void);
+asmlinkage void preempt_schedule_irq(void);
+#ifdef CONFIG_PREEMPT_RT
+ extern void schedule_rtlock(void);
+#endif
+
+extern int __must_check io_schedule_prepare(void);
+extern void io_schedule_finish(int token);
+extern long io_schedule_timeout(long timeout);
+extern void io_schedule(void);
+
+/**
+ * struct prev_cputime - snapshot of system and user cputime
+ * @utime: time spent in user mode
+ * @stime: time spent in system mode
+ * @lock: protects the above two fields
+ *
+ * Stores previous user/system time values such that we can guarantee
+ * monotonicity.
+ */
+struct prev_cputime {
+#ifndef CONFIG_VIRT_CPU_ACCOUNTING_NATIVE
+	u64				utime;
+	u64				stime;
+	raw_spinlock_t			lock;
+#endif
+};
+
+enum vtime_state {
+	/* Task is sleeping or running in a CPU with VTIME inactive: */
+	VTIME_INACTIVE = 0,
+	/* Task is idle */
+	VTIME_IDLE,
+	/* Task runs in kernelspace in a CPU with VTIME active: */
+	VTIME_SYS,
+	/* Task runs in userspace in a CPU with VTIME active: */
+	VTIME_USER,
+	/* Task runs as guests in a CPU with VTIME active: */
+	VTIME_GUEST,
+};
+
+struct vtime {
+	seqcount_t		seqcount;
+	unsigned long long	starttime;
+	enum vtime_state	state;
+	unsigned int		cpu;
+	u64			utime;
+	u64			stime;
+	u64			gtime;
+};
+
+/*
+ * Utilization clamp constraints.
+ * @UCLAMP_MIN:	Minimum utilization
+ * @UCLAMP_MAX:	Maximum utilization
+ * @UCLAMP_CNT:	Utilization clamp constraints count
+ */
+enum uclamp_id {
+	UCLAMP_MIN = 0,
+	UCLAMP_MAX,
+	UCLAMP_CNT
+};
+
+#ifdef CONFIG_SMP
+extern struct root_domain def_root_domain;
+extern struct mutex sched_domains_mutex;
+#endif
+
+struct sched_info {
+#ifdef CONFIG_SCHED_INFO
+	/* Cumulative counters: */
+
+	/* # of times we have run on this CPU: */
+	unsigned long			pcount;
+
+	/* Time spent waiting on a runqueue: */
+	unsigned long long		run_delay;
+
+	/* Timestamps: */
+
+	/* When did we last run on a CPU? */
+	unsigned long long		last_arrival;
+
+	/* When were we last queued to run? */
+	unsigned long long		last_queued;
+
+#endif /* CONFIG_SCHED_INFO */
+};
+
+/*
+ * Integer metrics need fixed point arithmetic, e.g., sched/fair
+ * has a few: load, load_avg, util_avg, freq, and capacity.
+ *
+ * We define a basic fixed point arithmetic range, and then formalize
+ * all these metrics based on that basic range.
+ */
+# define SCHED_FIXEDPOINT_SHIFT		10
+# define SCHED_FIXEDPOINT_SCALE		(1L &lt;&lt; SCHED_FIXEDPOINT_SHIFT)
+
+/* Increase resolution of cpu_capacity calculations */
+# define SCHED_CAPACITY_SHIFT		SCHED_FIXEDPOINT_SHIFT
+# define SCHED_CAPACITY_SCALE		(1L &lt;&lt; SCHED_CAPACITY_SHIFT)
+
+struct load_weight {
+	unsigned long			weight;
+	u32				inv_weight;
+};
+
+/**
+ * struct util_est - Estimation utilization of FAIR tasks
+ * @enqueued: instantaneous estimated utilization of a task/cpu
+ * @ewma:     the Exponential Weighted Moving Average (EWMA)
+ *            utilization of a task
+ *
+ * Support data structure to track an Exponential Weighted Moving Average
+ * (EWMA) of a FAIR task&#x27;s utilization. New samples are added to the moving
+ * average each time a task completes an activation. Sample&#x27;s weight is chosen
+ * so that the EWMA will be relatively insensitive to transient changes to the
+ * task&#x27;s workload.
+ *
+ * The enqueued attribute has a slightly different meaning for tasks and cpus:
+ * - task:   the task&#x27;s util_avg at last task dequeue time
+ * - cfs_rq: the sum of util_est.enqueued for each RUNNABLE task on that CPU
+ * Thus, the util_est.enqueued of a task represents the contribution on the
+ * estimated utilization of the CPU where that task is currently enqueued.
+ *
+ * Only for tasks we track a moving average of the past instantaneous
+ * estimated utilization. This allows to absorb sporadic drops in utilization
+ * of an otherwise almost periodic task.
+ *
+ * The UTIL_AVG_UNCHANGED flag is used to synchronize util_est with util_avg
+ * updates. When a task is dequeued, its util_est should not be updated if its
+ * util_avg has not been updated in the meantime.
+ * This information is mapped into the MSB bit of util_est.enqueued at dequeue
+ * time. Since max value of util_est.enqueued for a task is 1024 (PELT util_avg
+ * for a task) it is safe to use MSB.
+ */
+struct util_est {
+	unsigned int			enqueued;
+	unsigned int			ewma;
+#define UTIL_EST_WEIGHT_SHIFT		2
+#define UTIL_AVG_UNCHANGED		0x80000000
+} __attribute__((__aligned__(sizeof(u64))));
+
+/*
+ * The load/runnable/util_avg accumulates an infinite geometric series
+ * (see __update_load_avg_cfs_rq() in kernel/sched/pelt.c).
+ *
+ * [load_avg definition]
+ *
+ *   load_avg = runnable% * scale_load_down(load)
+ *
+ * [runnable_avg definition]
+ *
+ *   runnable_avg = runnable% * SCHED_CAPACITY_SCALE
+ *
+ * [util_avg definition]
+ *
+ *   util_avg = running% * SCHED_CAPACITY_SCALE
+ *
+ * where runnable% is the time ratio that a sched_entity is runnable and
+ * running% the time ratio that a sched_entity is running.
+ *
+ * For cfs_rq, they are the aggregated values of all runnable and blocked
+ * sched_entities.
+ *
+ * The load/runnable/util_avg doesn&#x27;t directly factor frequency scaling and CPU
+ * capacity scaling. The scaling is done through the rq_clock_pelt that is used
+ * for computing those signals (see update_rq_clock_pelt())
+ *
+ * N.B., the above ratios (runnable% and running%) themselves are in the
+ * range of [0, 1]. To do fixed point arithmetics, we therefore scale them
+ * to as large a range as necessary. This is for example reflected by
+ * util_avg&#x27;s SCHED_CAPACITY_SCALE.
+ *
+ * [Overflow issue]
+ *
+ * The 64-bit load_sum can have 4353082796 (=2^64/47742/88761) entities
+ * with the highest load (=88761), always runnable on a single cfs_rq,
+ * and should not overflow as the number already hits PID_MAX_LIMIT.
+ *
+ * For all other cases (including 32-bit kernels), struct load_weight&#x27;s
+ * weight will overflow first before we do, because:
+ *
+ *    Max(load_avg) &lt;= Max(load.weight)
+ *
+ * Then it is the load_weight&#x27;s responsibility to consider overflow
+ * issues.
+ */
+struct sched_avg {
+	u64				last_update_time;
+	u64				load_sum;
+	u64				runnable_sum;
+	u32				util_sum;
+	u32				period_contrib;
+	unsigned long			load_avg;
+	unsigned long			runnable_avg;
+	unsigned long			util_avg;
+	struct util_est			util_est;
+} ____cacheline_aligned;
+
+struct sched_statistics {
+#ifdef CONFIG_SCHEDSTATS
+	u64				wait_start;
+	u64				wait_max;
+	u64				wait_count;
+	u64				wait_sum;
+	u64				iowait_count;
+	u64				iowait_sum;
+
+	u64				sleep_start;
+	u64				sleep_max;
+	s64				sum_sleep_runtime;
+
+	u64				block_start;
+	u64				block_max;
+	s64				sum_block_runtime;
+
+	u64				exec_max;
+	u64				slice_max;
+
+	u64				nr_migrations_cold;
+	u64				nr_failed_migrations_affine;
+	u64				nr_failed_migrations_running;
+	u64				nr_failed_migrations_hot;
+	u64				nr_forced_migrations;
+
+	u64				nr_wakeups;
+	u64				nr_wakeups_sync;
+	u64				nr_wakeups_migrate;
+	u64				nr_wakeups_local;
+	u64				nr_wakeups_remote;
+	u64				nr_wakeups_affine;
+	u64				nr_wakeups_affine_attempts;
+	u64				nr_wakeups_passive;
+	u64				nr_wakeups_idle;
+
+#ifdef CONFIG_SCHED_CORE
+	u64				core_forceidle_sum;
+#endif
+#endif /* CONFIG_SCHEDSTATS */
+} ____cacheline_aligned;
+
+struct sched_entity {
+	/* For load-balancing: */
+	struct load_weight		load;
+	struct rb_node			run_node;
+	struct list_head		group_node;
+	unsigned int			on_rq;
+
+	u64				exec_start;
+	u64				sum_exec_runtime;
+	u64				vruntime;
+	u64				prev_sum_exec_runtime;
+
+	u64				nr_migrations;
+
+#ifdef CONFIG_FAIR_GROUP_SCHED
+	int				depth;
+	struct sched_entity		*parent;
+	/* rq on which this entity is (to be) queued: */
+	struct cfs_rq			*cfs_rq;
+	/* rq &quot;owned&quot; by this entity/group: */
+	struct cfs_rq			*my_q;
+	/* cached value of my_q-&gt;h_nr_running */
+	unsigned long			runnable_weight;
+#endif
+
+#ifdef CONFIG_SMP
+	/*
+	 * Per entity load average tracking.
+	 *
+	 * Put into separate cache line so it does not
+	 * collide with read-mostly values above.
+	 */
+	struct sched_avg		avg;
+#endif
+};
+
+struct sched_rt_entity {
+	struct list_head		run_list;
+	unsigned long			timeout;
+	unsigned long			watchdog_stamp;
+	unsigned int			time_slice;
+	unsigned short			on_rq;
+	unsigned short			on_list;
+
+	struct sched_rt_entity		*back;
+#ifdef CONFIG_RT_GROUP_SCHED
+	struct sched_rt_entity		*parent;
+	/* rq on which this entity is (to be) queued: */
+	struct rt_rq			*rt_rq;
+	/* rq &quot;owned&quot; by this entity/group: */
+	struct rt_rq			*my_q;
+#endif
+} __randomize_layout;
+
+struct sched_dl_entity {
+	struct rb_node			rb_node;
+
+	/*
+	 * Original scheduling parameters. Copied here from sched_attr
+	 * during sched_setattr(), they will remain the same until
+	 * the next sched_setattr().
+	 */
+	u64				dl_runtime;	/* Maximum runtime for each instance	*/
+	u64				dl_deadline;	/* Relative deadline of each instance	*/
+	u64				dl_period;	/* Separation of two instances (period) */
+	u64				dl_bw;		/* dl_runtime / dl_period		*/
+	u64				dl_density;	/* dl_runtime / dl_deadline		*/
+
+	/*
+	 * Actual scheduling parameters. Initialized with the values above,
+	 * they are continuously updated during task execution. Note that
+	 * the remaining runtime could be &lt; 0 in case we are in overrun.
+	 */
+	s64				runtime;	/* Remaining runtime for this instance	*/
+	u64				deadline;	/* Absolute deadline for this instance	*/
+	unsigned int			flags;		/* Specifying the scheduler behaviour	*/
+
+	/*
+	 * Some bool flags:
+	 *
+	 * @dl_throttled tells if we exhausted the runtime. If so, the
+	 * task has to wait for a replenishment to be performed at the
+	 * next firing of dl_timer.
+	 *
+	 * @dl_yielded tells if task gave up the CPU before consuming
+	 * all its available runtime during the last job.
+	 *
+	 * @dl_non_contending tells if the task is inactive while still
+	 * contributing to the active utilization. In other words, it
+	 * indicates if the inactive timer has been armed and its handler
+	 * has not been executed yet. This flag is useful to avoid race
+	 * conditions between the inactive timer handler and the wakeup
+	 * code.
+	 *
+	 * @dl_overrun tells if the task asked to be informed about runtime
+	 * overruns.
+	 */
+	unsigned int			dl_throttled      : 1;
+	unsigned int			dl_yielded        : 1;
+	unsigned int			dl_non_contending : 1;
+	unsigned int			dl_overrun	  : 1;
+
+	/*
+	 * Bandwidth enforcement timer. Each -deadline task has its
+	 * own bandwidth to be enforced, thus we need one timer per task.
+	 */
+	struct hrtimer			dl_timer;
+
+	/*
+	 * Inactive timer, responsible for decreasing the active utilization
+	 * at the &quot;0-lag time&quot;. When a -deadline task blocks, it contributes
+	 * to GRUB&#x27;s active utilization until the &quot;0-lag time&quot;, hence a
+	 * timer is needed to decrease the active utilization at the correct
+	 * time.
+	 */
+	struct hrtimer inactive_timer;
+
+#ifdef CONFIG_RT_MUTEXES
+	/*
+	 * Priority Inheritance. When a DEADLINE scheduling entity is boosted
+	 * pi_se points to the donor, otherwise points to the dl_se it belongs
+	 * to (the original one/itself).
+	 */
+	struct sched_dl_entity *pi_se;
+#endif
+};
+
+#ifdef CONFIG_UCLAMP_TASK
+/* Number of utilization clamp buckets (shorter alias) */
+#define UCLAMP_BUCKETS CONFIG_UCLAMP_BUCKETS_COUNT
+
+/*
+ * Utilization clamp for a scheduling entity
+ * @value:		clamp value &quot;assigned&quot; to a se
+ * @bucket_id:		bucket index corresponding to the &quot;assigned&quot; value
+ * @active:		the se is currently refcounted in a rq&#x27;s bucket
+ * @user_defined:	the requested clamp value comes from user-space
+ *
+ * The bucket_id is the index of the clamp bucket matching the clamp value
+ * which is pre-computed and stored to avoid expensive integer divisions from
+ * the fast path.
+ *
+ * The active bit is set whenever a task has got an &quot;effective&quot; value assigned,
+ * which can be different from the clamp value &quot;requested&quot; from user-space.
+ * This allows to know a task is refcounted in the rq&#x27;s bucket corresponding
+ * to the &quot;effective&quot; bucket_id.
+ *
+ * The user_defined bit is set whenever a task has got a task-specific clamp
+ * value requested from userspace, i.e. the system defaults apply to this task
+ * just as a restriction. This allows to relax default clamps when a less
+ * restrictive task-specific value has been requested, thus allowing to
+ * implement a &quot;nice&quot; semantic. For example, a task running with a 20%
+ * default boost can still drop its own boosting to 0%.
+ */
+struct uclamp_se {
+	unsigned int value		: bits_per(SCHED_CAPACITY_SCALE);
+	unsigned int bucket_id		: bits_per(UCLAMP_BUCKETS);
+	unsigned int active		: 1;
+	unsigned int user_defined	: 1;
+};
+#endif /* CONFIG_UCLAMP_TASK */
+
+union rcu_special {
+	struct {
+		u8			blocked;
+		u8			need_qs;
+		u8			exp_hint; /* Hint for performance. */
+		u8			need_mb; /* Readers need smp_mb(). */
+	} b; /* Bits. */
+	u32 s; /* Set of bits. */
+};
+
+enum perf_event_task_context {
+	perf_invalid_context = -1,
+	perf_hw_context = 0,
+	perf_sw_context,
+	perf_nr_task_contexts,
+};
+
+struct wake_q_node {
+	struct wake_q_node *next;
+};
+
+struct kmap_ctrl {
+#ifdef CONFIG_KMAP_LOCAL
+	int				idx;
+	pte_t				pteval[KM_MAX_IDX];
+#endif
+};
+
+struct task_struct {
+#ifdef CONFIG_THREAD_INFO_IN_TASK
+	/*
+	 * For reasons of header soup (see current_thread_info()), this
+	 * must be the first element of task_struct.
+	 */
+	struct thread_info		thread_info;
+#endif
+	unsigned int			__state;
+
+#ifdef CONFIG_PREEMPT_RT
+	/* saved state for &quot;spinlock sleepers&quot; */
+	unsigned int			saved_state;
+#endif
+
+	/*
+	 * This begins the randomizable portion of task_struct. Only
+	 * scheduling-critical items should be added above here.
+	 */
+	randomized_struct_fields_start
+
+	void				*stack;
+	refcount_t			usage;
+	/* Per task flags (PF_*), defined further below: */
+	unsigned int			flags;
+	unsigned int			ptrace;
+
+#ifdef CONFIG_SMP
+	int				on_cpu;
+	struct __call_single_node	wake_entry;
+	unsigned int			wakee_flips;
+	unsigned long			wakee_flip_decay_ts;
+	struct task_struct		*last_wakee;
+
+	/*
+	 * recent_used_cpu is initially set as the last CPU used by a task
+	 * that wakes affine another task. Waker/wakee relationships can
+	 * push tasks around a CPU where each wakeup moves to the next one.
+	 * Tracking a recently used CPU allows a quick search for a recently
+	 * used CPU that may be idle.
+	 */
+	int				recent_used_cpu;
+	int				wake_cpu;
+#endif
+	int				on_rq;
+
+	int				prio;
+	int				static_prio;
+	int				normal_prio;
+	unsigned int			rt_priority;
+
+	struct sched_entity		se;
+	struct sched_rt_entity		rt;
+	struct sched_dl_entity		dl;
+	const struct sched_class	*sched_class;
+
+#ifdef CONFIG_SCHED_CORE
+	struct rb_node			core_node;
+	unsigned long			core_cookie;
+	unsigned int			core_occupation;
+#endif
+
+#ifdef CONFIG_CGROUP_SCHED
+	struct task_group		*sched_task_group;
+#endif
+
+#ifdef CONFIG_UCLAMP_TASK
+	/*
+	 * Clamp values requested for a scheduling entity.
+	 * Must be updated with task_rq_lock() held.
+	 */
+	struct uclamp_se		uclamp_req[UCLAMP_CNT];
+	/*
+	 * Effective clamp values used for a scheduling entity.
+	 * Must be updated with task_rq_lock() held.
+	 */
+	struct uclamp_se		uclamp[UCLAMP_CNT];
+#endif
+
+	struct sched_statistics         stats;
+
+#ifdef CONFIG_PREEMPT_NOTIFIERS
+	/* List of struct preempt_notifier: */
+	struct hlist_head		preempt_notifiers;
+#endif
+
+#ifdef CONFIG_BLK_DEV_IO_TRACE
+	unsigned int			btrace_seq;
+#endif
+
+	unsigned int			policy;
+	int				nr_cpus_allowed;
+	const cpumask_t			*cpus_ptr;
+	cpumask_t			*user_cpus_ptr;
+	cpumask_t			cpus_mask;
+	void				*migration_pending;
+#ifdef CONFIG_SMP
+	unsigned short			migration_disabled;
+#endif
+	unsigned short			migration_flags;
+
+#ifdef CONFIG_PREEMPT_RCU
+	int				rcu_read_lock_nesting;
+	union rcu_special		rcu_read_unlock_special;
+	struct list_head		rcu_node_entry;
+	struct rcu_node			*rcu_blocked_node;
+#endif /* #ifdef CONFIG_PREEMPT_RCU */
+
+#ifdef CONFIG_TASKS_RCU
+	unsigned long			rcu_tasks_nvcsw;
+	u8				rcu_tasks_holdout;
+	u8				rcu_tasks_idx;
+	int				rcu_tasks_idle_cpu;
+	struct list_head		rcu_tasks_holdout_list;
+#endif /* #ifdef CONFIG_TASKS_RCU */
+
+#ifdef CONFIG_TASKS_TRACE_RCU
+	int				trc_reader_nesting;
+	int				trc_ipi_to_cpu;
+	union rcu_special		trc_reader_special;
+	struct list_head		trc_holdout_list;
+	struct list_head		trc_blkd_node;
+	int				trc_blkd_cpu;
+#endif /* #ifdef CONFIG_TASKS_TRACE_RCU */
+
+	struct sched_info		sched_info;
+
+	struct list_head		tasks;
+#ifdef CONFIG_SMP
+	struct plist_node		pushable_tasks;
+	struct rb_node			pushable_dl_tasks;
+#endif
+
+	struct mm_struct		*mm;
+	struct mm_struct		*active_mm;
+
+#ifdef SPLIT_RSS_COUNTING
+	struct task_rss_stat		rss_stat;
+#endif
+	int				exit_state;
+	int				exit_code;
+	int				exit_signal;
+	/* The signal sent when the parent dies: */
+	int				pdeath_signal;
+	/* JOBCTL_*, siglock protected: */
+	unsigned long			jobctl;
+
+	/* Used for emulating ABI behavior of previous Linux versions: */
+	unsigned int			personality;
+
+	/* Scheduler bits, serialized by scheduler locks: */
+	unsigned			sched_reset_on_fork:1;
+	unsigned			sched_contributes_to_load:1;
+	unsigned			sched_migrated:1;
+#ifdef CONFIG_PSI
+	unsigned			sched_psi_wake_requeue:1;
+#endif
+
+	/* Force alignment to the next boundary: */
+	unsigned			:0;
+
+	/* Unserialized, strictly &#x27;current&#x27; */
+
+	/*
+	 * This field must not be in the scheduler word above due to wakelist
+	 * queueing no longer being serialized by p-&gt;on_cpu. However:
+	 *
+	 * p-&gt;XXX = X;			ttwu()
+	 * schedule()			  if (p-&gt;on_rq &amp;&amp; ..) // false
+	 *   smp_mb__after_spinlock();	  if (smp_load_acquire(&amp;p-&gt;on_cpu) &amp;&amp; //true
+	 *   deactivate_task()		      ttwu_queue_wakelist())
+	 *     p-&gt;on_rq = 0;			p-&gt;sched_remote_wakeup = Y;
+	 *
+	 * guarantees all stores of &#x27;current&#x27; are visible before
+	 * -&gt;sched_remote_wakeup gets used, so it can be in this word.
+	 */
+	unsigned			sched_remote_wakeup:1;
+
+	/* Bit to tell LSMs we&#x27;re in execve(): */
+	unsigned			in_execve:1;
+	unsigned			in_iowait:1;
+#ifndef TIF_RESTORE_SIGMASK
+	unsigned			restore_sigmask:1;
+#endif
+#ifdef CONFIG_MEMCG
+	unsigned			in_user_fault:1;
+#endif
+#ifdef CONFIG_LRU_GEN
+	/* whether the LRU algorithm may apply to this access */
+	unsigned			in_lru_fault:1;
+#endif
+#ifdef CONFIG_COMPAT_BRK
+	unsigned			brk_randomized:1;
+#endif
+#ifdef CONFIG_CGROUPS
+	/* disallow userland-initiated cgroup migration */
+	unsigned			no_cgroup_migration:1;
+	/* task is frozen/stopped (used by the cgroup freezer) */
+	unsigned			frozen:1;
+#endif
+#ifdef CONFIG_BLK_CGROUP
+	unsigned			use_memdelay:1;
+#endif
+#ifdef CONFIG_PSI
+	/* Stalled due to lack of memory */
+	unsigned			in_memstall:1;
+#endif
+#ifdef CONFIG_PAGE_OWNER
+	/* Used by page_owner=on to detect recursion in page tracking. */
+	unsigned			in_page_owner:1;
+#endif
+#ifdef CONFIG_EVENTFD
+	/* Recursion prevention for eventfd_signal() */
+	unsigned			in_eventfd:1;
+#endif
+#ifdef CONFIG_IOMMU_SVA
+	unsigned			pasid_activated:1;
+#endif
+#ifdef	CONFIG_CPU_SUP_INTEL
+	unsigned			reported_split_lock:1;
+#endif
+#ifdef CONFIG_TASK_DELAY_ACCT
+	/* delay due to memory thrashing */
+	unsigned                        in_thrashing:1;
+#endif
+
+	unsigned long			atomic_flags; /* Flags requiring atomic access. */
+
+	struct restart_block		restart_block;
+
+	pid_t				pid;
+	pid_t				tgid;
+
+#ifdef CONFIG_STACKPROTECTOR
+	/* Canary value for the -fstack-protector GCC feature: */
+	unsigned long			stack_canary;
+#endif
+	/*
+	 * Pointers to the (original) parent process, youngest child, younger sibling,
+	 * older sibling, respectively.  (p-&gt;father can be replaced with
+	 * p-&gt;real_parent-&gt;pid)
+	 */
+
+	/* Real parent process: */
+	struct task_struct __rcu	*real_parent;
+
+	/* Recipient of SIGCHLD, wait4() reports: */
+	struct task_struct __rcu	*parent;
+
+	/*
+	 * Children/sibling form the list of natural children:
+	 */
+	struct list_head		children;
+	struct list_head		sibling;
+	struct task_struct		*group_leader;
+
+	/*
+	 * &#x27;ptraced&#x27; is the list of tasks this task is using ptrace() on.
+	 *
+	 * This includes both natural children and PTRACE_ATTACH targets.
+	 * &#x27;ptrace_entry&#x27; is this task&#x27;s link on the p-&gt;parent-&gt;ptraced list.
+	 */
+	struct list_head		ptraced;
+	struct list_head		ptrace_entry;
+
+	/* PID/PID hash table linkage. */
+	struct pid			*thread_pid;
+	struct hlist_node		pid_links[PIDTYPE_MAX];
+	struct list_head		thread_group;
+	struct list_head		thread_node;
+
+	struct completion		*vfork_done;
+
+	/* CLONE_CHILD_SETTID: */
+	int __user			*set_child_tid;
+
+	/* CLONE_CHILD_CLEARTID: */
+	int __user			*clear_child_tid;
+
+	/* PF_KTHREAD | PF_IO_WORKER */
+	void				*worker_private;
+
+	u64				utime;
+	u64				stime;
+#ifdef CONFIG_ARCH_HAS_SCALED_CPUTIME
+	u64				utimescaled;
+	u64				stimescaled;
+#endif
+	u64				gtime;
+	struct prev_cputime		prev_cputime;
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN
+	struct vtime			vtime;
+#endif
+
+#ifdef CONFIG_NO_HZ_FULL
+	atomic_t			tick_dep_mask;
+#endif
+	/* Context switch counts: */
+	unsigned long			nvcsw;
+	unsigned long			nivcsw;
+
+	/* Monotonic time in nsecs: */
+	u64				start_time;
+
+	/* Boot based time in nsecs: */
+	u64				start_boottime;
+
+	/* MM fault and swap info: this can arguably be seen as either mm-specific or thread-specific: */
+	unsigned long			min_flt;
+	unsigned long			maj_flt;
+
+	/* Empty if CONFIG_POSIX_CPUTIMERS=n */
+	struct posix_cputimers		posix_cputimers;
+
+#ifdef CONFIG_POSIX_CPU_TIMERS_TASK_WORK
+	struct posix_cputimers_work	posix_cputimers_work;
+#endif
+
+	/* Process credentials: */
+
+	/* Tracer&#x27;s credentials at attach: */
+	const struct cred __rcu		*ptracer_cred;
+
+	/* Objective and real subjective task credentials (COW): */
+	const struct cred __rcu		*real_cred;
+
+	/* Effective (overridable) subjective task credentials (COW): */
+	const struct cred __rcu		*cred;
+
+#ifdef CONFIG_KEYS
+	/* Cached requested key. */
+	struct key			*cached_requested_key;
+#endif
+
+	/*
+	 * executable name, excluding path.
+	 *
+	 * - normally initialized setup_new_exec()
+	 * - access it with [gs]et_task_comm()
+	 * - lock it with task_lock()
+	 */
+	char				comm[TASK_COMM_LEN];
+
+	struct nameidata		*nameidata;
+
+#ifdef CONFIG_SYSVIPC
+	struct sysv_sem			sysvsem;
+	struct sysv_shm			sysvshm;
+#endif
+#ifdef CONFIG_DETECT_HUNG_TASK
+	unsigned long			last_switch_count;
+	unsigned long			last_switch_time;
+#endif
+	/* Filesystem information: */
+	struct fs_struct		*fs;
+
+	/* Open file information: */
+	struct files_struct		*files;
+
+#ifdef CONFIG_IO_URING
+	struct io_uring_task		*io_uring;
+#endif
+
+	/* Namespaces: */
+	struct nsproxy			*nsproxy;
+
+	/* Signal handlers: */
+	struct signal_struct		*signal;
+	struct sighand_struct __rcu		*sighand;
+	sigset_t			blocked;
+	sigset_t			real_blocked;
+	/* Restored if set_restore_sigmask() was used: */
+	sigset_t			saved_sigmask;
+	struct sigpending		pending;
+	unsigned long			sas_ss_sp;
+	size_t				sas_ss_size;
+	unsigned int			sas_ss_flags;
+
+	struct callback_head		*task_works;
+
+#ifdef CONFIG_AUDIT
+#ifdef CONFIG_AUDITSYSCALL
+	struct audit_context		*audit_context;
+#endif
+	kuid_t				loginuid;
+	unsigned int			sessionid;
+#endif
+	struct seccomp			seccomp;
+	struct syscall_user_dispatch	syscall_dispatch;
+
+	/* Thread group tracking: */
+	u64				parent_exec_id;
+	u64				self_exec_id;
+
+	/* Protection against (de-)allocation: mm, files, fs, tty, keyrings, mems_allowed, mempolicy: */
+	spinlock_t			alloc_lock;
+
+	/* Protection of the PI data structures: */
+	raw_spinlock_t			pi_lock;
+
+	struct wake_q_node		wake_q;
+
+#ifdef CONFIG_RT_MUTEXES
+	/* PI waiters blocked on a rt_mutex held by this task: */
+	struct rb_root_cached		pi_waiters;
+	/* Updated under owner&#x27;s pi_lock and rq lock */
+	struct task_struct		*pi_top_task;
+	/* Deadlock detection and priority inheritance handling: */
+	struct rt_mutex_waiter		*pi_blocked_on;
+#endif
+
+#ifdef CONFIG_DEBUG_MUTEXES
+	/* Mutex deadlock detection: */
+	struct mutex_waiter		*blocked_on;
+#endif
+
+#ifdef CONFIG_DEBUG_ATOMIC_SLEEP
+	int				non_block_count;
+#endif
+
+#ifdef CONFIG_TRACE_IRQFLAGS
+	struct irqtrace_events		irqtrace;
+	unsigned int			hardirq_threaded;
+	u64				hardirq_chain_key;
+	int				softirqs_enabled;
+	int				softirq_context;
+	int				irq_config;
+#endif
+#ifdef CONFIG_PREEMPT_RT
+	int				softirq_disable_cnt;
+#endif
+
+#ifdef CONFIG_LOCKDEP
+# define MAX_LOCK_DEPTH			48UL
+	u64				curr_chain_key;
+	int				lockdep_depth;
+	unsigned int			lockdep_recursion;
+	struct held_lock		held_locks[MAX_LOCK_DEPTH];
+#endif
+
+#if defined(CONFIG_UBSAN) &amp;&amp; !defined(CONFIG_UBSAN_TRAP)
+	unsigned int			in_ubsan;
+#endif
+
+	/* Journalling filesystem info: */
+	void				*journal_info;
+
+	/* Stacked block device info: */
+	struct bio_list			*bio_list;
+
+	/* Stack plugging: */
+	struct blk_plug			*plug;
+
+	/* VM state: */
+	struct reclaim_state		*reclaim_state;
+
+	struct backing_dev_info		*backing_dev_info;
+
+	struct io_context		*io_context;
+
+#ifdef CONFIG_COMPACTION
+	struct capture_control		*capture_control;
+#endif
+	/* Ptrace state: */
+	unsigned long			ptrace_message;
+	kernel_siginfo_t		*last_siginfo;
+
+	struct task_io_accounting	ioac;
+#ifdef CONFIG_PSI
+	/* Pressure stall state */
+	unsigned int			psi_flags;
+#endif
+#ifdef CONFIG_TASK_XACCT
+	/* Accumulated RSS usage: */
+	u64				acct_rss_mem1;
+	/* Accumulated virtual memory usage: */
+	u64				acct_vm_mem1;
+	/* stime + utime since last update: */
+	u64				acct_timexpd;
+#endif
+#ifdef CONFIG_CPUSETS
+	/* Protected by -&gt;alloc_lock: */
+	nodemask_t			mems_allowed;
+	/* Sequence number to catch updates: */
+	seqcount_spinlock_t		mems_allowed_seq;
+	int				cpuset_mem_spread_rotor;
+	int				cpuset_slab_spread_rotor;
+#endif
+#ifdef CONFIG_CGROUPS
+	/* Control Group info protected by css_set_lock: */
+	struct css_set __rcu		*cgroups;
+	/* cg_list protected by css_set_lock and tsk-&gt;alloc_lock: */
+	struct list_head		cg_list;
+#endif
+#ifdef CONFIG_X86_CPU_RESCTRL
+	u32				closid;
+	u32				rmid;
+#endif
+#ifdef CONFIG_FUTEX
+	struct robust_list_head __user	*robust_list;
+#ifdef CONFIG_COMPAT
+	struct compat_robust_list_head __user *compat_robust_list;
+#endif
+	struct list_head		pi_state_list;
+	struct futex_pi_state		*pi_state_cache;
+	struct mutex			futex_exit_mutex;
+	unsigned int			futex_state;
+#endif
+#ifdef CONFIG_PERF_EVENTS
+	struct perf_event_context	*perf_event_ctxp[perf_nr_task_contexts];
+	struct mutex			perf_event_mutex;
+	struct list_head		perf_event_list;
+#endif
+#ifdef CONFIG_DEBUG_PREEMPT
+	unsigned long			preempt_disable_ip;
+#endif
+#ifdef CONFIG_NUMA
+	/* Protected by alloc_lock: */
+	struct mempolicy		*mempolicy;
+	short				il_prev;
+	short				pref_node_fork;
+#endif
+#ifdef CONFIG_NUMA_BALANCING
+	int				numa_scan_seq;
+	unsigned int			numa_scan_period;
+	unsigned int			numa_scan_period_max;
+	int				numa_preferred_nid;
+	unsigned long			numa_migrate_retry;
+	/* Migration stamp: */
+	u64				node_stamp;
+	u64				last_task_numa_placement;
+	u64				last_sum_exec_runtime;
+	struct callback_head		numa_work;
+
+	/*
+	 * This pointer is only modified for current in syscall and
+	 * pagefault context (and for tasks being destroyed), so it can be read
+	 * from any of the following contexts:
+	 *  - RCU read-side critical section
+	 *  - current-&gt;numa_group from everywhere
+	 *  - task&#x27;s runqueue locked, task not running
+	 */
+	struct numa_group __rcu		*numa_group;
+
+	/*
+	 * numa_faults is an array split into four regions:
+	 * faults_memory, faults_cpu, faults_memory_buffer, faults_cpu_buffer
+	 * in this precise order.
+	 *
+	 * faults_memory: Exponential decaying average of faults on a per-node
+	 * basis. Scheduling placement decisions are made based on these
+	 * counts. The values remain static for the duration of a PTE scan.
+	 * faults_cpu: Track the nodes the process was running on when a NUMA
+	 * hinting fault was incurred.
+	 * faults_memory_buffer and faults_cpu_buffer: Record faults per node
+	 * during the current scan window. When the scan completes, the counts
+	 * in faults_memory and faults_cpu decay and these values are copied.
+	 */
+	unsigned long			*numa_faults;
+	unsigned long			total_numa_faults;
+
+	/*
+	 * numa_faults_locality tracks if faults recorded during the last
+	 * scan window were remote/local or failed to migrate. The task scan
+	 * period is adapted based on the locality of the faults with different
+	 * weights depending on whether they were shared or private faults
+	 */
+	unsigned long			numa_faults_locality[3];
+
+	unsigned long			numa_pages_migrated;
+#endif /* CONFIG_NUMA_BALANCING */
+
+#ifdef CONFIG_RSEQ
+	struct rseq __user *rseq;
+	u32 rseq_sig;
+	/*
+	 * RmW on rseq_event_mask must be performed atomically
+	 * with respect to preemption.
+	 */
+	unsigned long rseq_event_mask;
+#endif
+
+	struct tlbflush_unmap_batch	tlb_ubc;
+
+	union {
+		refcount_t		rcu_users;
+		struct rcu_head		rcu;
+	};
+
+	/* Cache last used pipe for splice(): */
+	struct pipe_inode_info		*splice_pipe;
+
+	struct page_frag		task_frag;
+
+#ifdef CONFIG_TASK_DELAY_ACCT
+	struct task_delay_info		*delays;
+#endif
+
+#ifdef CONFIG_FAULT_INJECTION
+	int				make_it_fail;
+	unsigned int			fail_nth;
+#endif
+	/*
+	 * When (nr_dirtied &gt;= nr_dirtied_pause), it&#x27;s time to call
+	 * balance_dirty_pages() for a dirty throttling pause:
+	 */
+	int				nr_dirtied;
+	int				nr_dirtied_pause;
+	/* Start of a write-and-pause period: */
+	unsigned long			dirty_paused_when;
+
+#ifdef CONFIG_LATENCYTOP
+	int				latency_record_count;
+	struct latency_record		latency_record[LT_SAVECOUNT];
+#endif
+	/*
+	 * Time slack values; these are used to round up poll() and
+	 * select() etc timeout values. These are in nanoseconds.
+	 */
+	u64				timer_slack_ns;
+	u64				default_timer_slack_ns;
+
+#if defined(CONFIG_KASAN_GENERIC) || defined(CONFIG_KASAN_SW_TAGS)
+	unsigned int			kasan_depth;
+#endif
+
+#ifdef CONFIG_KCSAN
+	struct kcsan_ctx		kcsan_ctx;
+#ifdef CONFIG_TRACE_IRQFLAGS
+	struct irqtrace_events		kcsan_save_irqtrace;
+#endif
+#ifdef CONFIG_KCSAN_WEAK_MEMORY
+	int				kcsan_stack_depth;
+#endif
+#endif
+
+#ifdef CONFIG_KMSAN
+	struct kmsan_ctx		kmsan_ctx;
+#endif
+
+#if IS_ENABLED(CONFIG_KUNIT)
+	struct kunit			*kunit_test;
+#endif
+
+#ifdef CONFIG_FUNCTION_GRAPH_TRACER
+	/* Index of current stored address in ret_stack: */
+	int				curr_ret_stack;
+	int				curr_ret_depth;
+
+	/* Stack of return addresses for return function tracing: */
+	struct ftrace_ret_stack		*ret_stack;
+
+	/* Timestamp for last schedule: */
+	unsigned long long		ftrace_timestamp;
+
+	/*
+	 * Number of functions that haven&#x27;t been traced
+	 * because of depth overrun:
+	 */
+	atomic_t			trace_overrun;
+
+	/* Pause tracing: */
+	atomic_t			tracing_graph_pause;
+#endif
+
+#ifdef CONFIG_TRACING
+	/* Bitmask and counter of trace recursion: */
+	unsigned long			trace_recursion;
+#endif /* CONFIG_TRACING */
+
+#ifdef CONFIG_KCOV
+	/* See kernel/kcov.c for more details. */
+
+	/* Coverage collection mode enabled for this task (0 if disabled): */
+	unsigned int			kcov_mode;
+
+	/* Size of the kcov_area: */
+	unsigned int			kcov_size;
+
+	/* Buffer for coverage collection: */
+	void				*kcov_area;
+
+	/* KCOV descriptor wired with this task or NULL: */
+	struct kcov			*kcov;
+
+	/* KCOV common handle for remote coverage collection: */
+	u64				kcov_handle;
+
+	/* KCOV sequence number: */
+	int				kcov_sequence;
+
+	/* Collect coverage from softirq context: */
+	unsigned int			kcov_softirq;
+#endif
+
+#ifdef CONFIG_MEMCG
+	struct mem_cgroup		*memcg_in_oom;
+	gfp_t				memcg_oom_gfp_mask;
+	int				memcg_oom_order;
+
+	/* Number of pages to reclaim on returning to userland: */
+	unsigned int			memcg_nr_pages_over_high;
+
+	/* Used by memcontrol for targeted memcg charge: */
+	struct mem_cgroup		*active_memcg;
+#endif
+
+#ifdef CONFIG_BLK_CGROUP
+	struct request_queue		*throttle_queue;
+#endif
+
+#ifdef CONFIG_UPROBES
+	struct uprobe_task		*utask;
+#endif
+#if defined(CONFIG_BCACHE) || defined(CONFIG_BCACHE_MODULE)
+	unsigned int			sequential_io;
+	unsigned int			sequential_io_avg;
+#endif
+	struct kmap_ctrl		kmap_ctrl;
+#ifdef CONFIG_DEBUG_ATOMIC_SLEEP
+	unsigned long			task_state_change;
+# ifdef CONFIG_PREEMPT_RT
+	unsigned long			saved_state_change;
+# endif
+#endif
+	int				pagefault_disabled;
+#ifdef CONFIG_MMU
+	struct task_struct		*oom_reaper_list;
+	struct timer_list		oom_reaper_timer;
+#endif
+#ifdef CONFIG_VMAP_STACK
+	struct vm_struct		*stack_vm_area;
+#endif
+#ifdef CONFIG_THREAD_INFO_IN_TASK
+	/* A live task holds one reference: */
+	refcount_t			stack_refcount;
+#endif
+#ifdef CONFIG_LIVEPATCH
+	int patch_state;
+#endif
+#ifdef CONFIG_SECURITY
+	/* Used by LSM modules for access restriction: */
+	void				*security;
+#endif
+#ifdef CONFIG_BPF_SYSCALL
+	/* Used by BPF task local storage */
+	struct bpf_local_storage __rcu	*bpf_storage;
+	/* Used for BPF run context */
+	struct bpf_run_ctx		*bpf_ctx;
+#endif
+
+#ifdef CONFIG_GCC_PLUGIN_STACKLEAK
+	unsigned long			lowest_stack;
+	unsigned long			prev_lowest_stack;
+#endif
+
+#ifdef CONFIG_X86_MCE
+	void __user			*mce_vaddr;
+	__u64				mce_kflags;
+	u64				mce_addr;
+	__u64				mce_ripv : 1,
+					mce_whole_page : 1,
+					__mce_reserved : 62;
+	struct callback_head		mce_kill_me;
+	int				mce_count;
+#endif
+
+#ifdef CONFIG_KRETPROBES
+	struct llist_head               kretprobe_instances;
+#endif
+#ifdef CONFIG_RETHOOK
+	struct llist_head               rethooks;
+#endif
+
+#ifdef CONFIG_ARCH_HAS_PARANOID_L1D_FLUSH
+	/*
+	 * If L1D flush is supported on mm context switch
+	 * then we use this callback head to queue kill work
+	 * to kill tasks that are not running on SMT disabled
+	 * cores
+	 */
+	struct callback_head		l1d_flush_kill;
+#endif
+
+#ifdef CONFIG_RV
+	/*
+	 * Per-task RV monitor. Nowadays fixed in RV_PER_TASK_MONITORS.
+	 * If we find justification for more monitors, we can think
+	 * about adding more or developing a dynamic method. So far,
+	 * none of these are justified.
+	 */
+	union rv_task_monitor		rv[RV_PER_TASK_MONITORS];
+#endif
+
+	/*
+	 * New fields for task_struct should be added above here, so that
+	 * they are included in the randomized portion of task_struct.
+	 */
+	randomized_struct_fields_end
+
+	/* CPU-specific state of this task: */
+	struct thread_struct		thread;
+
+	/*
+	 * WARNING: on x86, &#x27;thread_struct&#x27; contains a variable-sized
+	 * structure.  It *MUST* be at the end of &#x27;task_struct&#x27;.
+	 *
+	 * Do not put anything below here!
+	 */
+};
+
+static inline struct pid *task_pid(struct task_struct *task)
+{
+	return task-&gt;thread_pid;
+}
+
+/*
+ * the helpers to get the task&#x27;s different pids as they are seen
+ * from various namespaces
+ *
+ * task_xid_nr()     : global id, i.e. the id seen from the init namespace;
+ * task_xid_vnr()    : virtual id, i.e. the id seen from the pid namespace of
+ *                     current.
+ * task_xid_nr_ns()  : id seen from the ns specified;
+ *
+ * see also pid_nr() etc in include/linux/pid.h
+ */
+pid_t __task_pid_nr_ns(struct task_struct *task, enum pid_type type, struct pid_namespace *ns);
+
+static inline pid_t task_pid_nr(struct task_struct *tsk)
+{
+<blue>	return tsk->pid;</blue>
+}
+
+static inline pid_t task_pid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_PID, ns);
+}
+
+static inline pid_t task_pid_vnr(struct task_struct *tsk)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_PID, NULL);
+}
+
+
+static inline pid_t task_tgid_nr(struct task_struct *tsk)
+{
+	return tsk-&gt;tgid;
+}
+
+/**
+ * pid_alive - check that a task structure is not stale
+ * @p: Task structure to be checked.
+ *
+ * Test if a process is not yet dead (at most zombie state)
+ * If pid_alive fails, then pointers within the task structure
+ * can be stale and must not be dereferenced.
+ *
+ * Return: 1 if the process is alive. 0 otherwise.
+ */
+static inline int pid_alive(const struct task_struct *p)
+{
+	return p-&gt;thread_pid != NULL;
+}
+
+static inline pid_t task_pgrp_nr_ns(struct task_struct *tsk, struct pid_namespace *ns)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_PGID, ns);
+}
+
+static inline pid_t task_pgrp_vnr(struct task_struct *tsk)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_PGID, NULL);
+}
+
+
+static inline pid_t task_session_nr_ns(struct task_struct *tsk, struct pid_namespace *ns)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_SID, ns);
+}
+
+static inline pid_t task_session_vnr(struct task_struct *tsk)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_SID, NULL);
+}
+
+static inline pid_t task_tgid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_TGID, ns);
+}
+
+static inline pid_t task_tgid_vnr(struct task_struct *tsk)
+{
+	return __task_pid_nr_ns(tsk, PIDTYPE_TGID, NULL);
+}
+
+static inline pid_t task_ppid_nr_ns(const struct task_struct *tsk, struct pid_namespace *ns)
+{
+	pid_t pid = 0;
+
+	rcu_read_lock();
+	if (pid_alive(tsk))
+		pid = task_tgid_nr_ns(rcu_dereference(tsk-&gt;real_parent), ns);
+	rcu_read_unlock();
+
+	return pid;
+}
+
+static inline pid_t task_ppid_nr(const struct task_struct *tsk)
+{
+	return task_ppid_nr_ns(tsk, &amp;init_pid_ns);
+}
+
+/* Obsolete, do not use: */
+static inline pid_t task_pgrp_nr(struct task_struct *tsk)
+{
+	return task_pgrp_nr_ns(tsk, &amp;init_pid_ns);
+}
+
+#define TASK_REPORT_IDLE	(TASK_REPORT + 1)
+#define TASK_REPORT_MAX		(TASK_REPORT_IDLE &lt;&lt; 1)
+
+static inline unsigned int __task_state_index(unsigned int tsk_state,
+					      unsigned int tsk_exit_state)
+{
+	unsigned int state = (tsk_state | tsk_exit_state) &amp; TASK_REPORT;
+
+	BUILD_BUG_ON_NOT_POWER_OF_2(TASK_REPORT_MAX);
+
+	if (tsk_state == TASK_IDLE)
+		state = TASK_REPORT_IDLE;
+
+	/*
+	 * We&#x27;re lying here, but rather than expose a completely new task state
+	 * to userspace, we can make this appear as if the task has gone through
+	 * a regular rt_mutex_lock() call.
+	 */
+	if (tsk_state == TASK_RTLOCK_WAIT)
+		state = TASK_UNINTERRUPTIBLE;
+
+	return fls(state);
+}
+
+static inline unsigned int task_state_index(struct task_struct *tsk)
+{
+	return __task_state_index(READ_ONCE(tsk-&gt;__state), tsk-&gt;exit_state);
+}
+
+static inline char task_index_to_char(unsigned int state)
+{
+	static const char state_char[] = &quot;RSDTtXZPI&quot;;
+
+	BUILD_BUG_ON(1 + ilog2(TASK_REPORT_MAX) != sizeof(state_char) - 1);
+
+	return state_char[state];
+}
+
+static inline char task_state_to_char(struct task_struct *tsk)
+{
+	return task_index_to_char(task_state_index(tsk));
+}
+
+/**
+ * is_global_init - check if a task structure is init. Since init
+ * is free to have sub-threads we need to check tgid.
+ * @tsk: Task structure to be checked.
+ *
+ * Check if a task structure is the first user space task the kernel created.
+ *
+ * Return: 1 if the task structure is init. 0 otherwise.
+ */
+static inline int is_global_init(struct task_struct *tsk)
+{
+	return task_tgid_nr(tsk) == 1;
+}
+
+extern struct pid *cad_pid;
+
+/*
+ * Per process flags
+ */
+#define PF_VCPU			0x00000001	/* I&#x27;m a virtual CPU */
+#define PF_IDLE			0x00000002	/* I am an IDLE thread */
+#define PF_EXITING		0x00000004	/* Getting shut down */
+#define PF_POSTCOREDUMP		0x00000008	/* Coredumps should ignore this task */
+#define PF_IO_WORKER		0x00000010	/* Task is an IO worker */
+#define PF_WQ_WORKER		0x00000020	/* I&#x27;m a workqueue worker */
+#define PF_FORKNOEXEC		0x00000040	/* Forked but didn&#x27;t exec */
+#define PF_MCE_PROCESS		0x00000080      /* Process policy on mce errors */
+#define PF_SUPERPRIV		0x00000100	/* Used super-user privileges */
+#define PF_DUMPCORE		0x00000200	/* Dumped core */
+#define PF_SIGNALED		0x00000400	/* Killed by a signal */
+#define PF_MEMALLOC		0x00000800	/* Allocating memory */
+#define PF_NPROC_EXCEEDED	0x00001000	/* set_user() noticed that RLIMIT_NPROC was exceeded */
+#define PF_USED_MATH		0x00002000	/* If unset the fpu must be initialized before use */
+#define PF__HOLE__00004000	0x00004000
+#define PF_NOFREEZE		0x00008000	/* This thread should not be frozen */
+#define PF__HOLE__00010000	0x00010000
+#define PF_KSWAPD		0x00020000	/* I am kswapd */
+#define PF_MEMALLOC_NOFS	0x00040000	/* All allocation requests will inherit GFP_NOFS */
+#define PF_MEMALLOC_NOIO	0x00080000	/* All allocation requests will inherit GFP_NOIO */
+#define PF_LOCAL_THROTTLE	0x00100000	/* Throttle writes only against the bdi I write to,
+						 * I am cleaning dirty pages from some other bdi. */
+#define PF_KTHREAD		0x00200000	/* I am a kernel thread */
+#define PF_RANDOMIZE		0x00400000	/* Randomize virtual address space */
+#define PF__HOLE__00800000	0x00800000
+#define PF__HOLE__01000000	0x01000000
+#define PF__HOLE__02000000	0x02000000
+#define PF_NO_SETAFFINITY	0x04000000	/* Userland is not allowed to meddle with cpus_mask */
+#define PF_MCE_EARLY		0x08000000      /* Early kill for mce process policy */
+#define PF_MEMALLOC_PIN		0x10000000	/* Allocation context constrained to zones which allow long term pinning. */
+#define PF__HOLE__20000000	0x20000000
+#define PF__HOLE__40000000	0x40000000
+#define PF_SUSPEND_TASK		0x80000000      /* This thread called freeze_processes() and should not be frozen */
+
+/*
+ * Only the _current_ task can read/write to tsk-&gt;flags, but other
+ * tasks can access tsk-&gt;flags in readonly mode for example
+ * with tsk_used_math (like during threaded core dumping).
+ * There is however an exception to this rule during ptrace
+ * or during fork: the ptracer task is allowed to write to the
+ * child-&gt;flags of its traced child (same goes for fork, the parent
+ * can write to the child-&gt;flags), because we&#x27;re guaranteed the
+ * child is not running and in turn not changing child-&gt;flags
+ * at the same time the parent does it.
+ */
+#define clear_stopped_child_used_math(child)	do { (child)-&gt;flags &amp;= ~PF_USED_MATH; } while (0)
+#define set_stopped_child_used_math(child)	do { (child)-&gt;flags |= PF_USED_MATH; } while (0)
+#define clear_used_math()			clear_stopped_child_used_math(current)
+#define set_used_math()				set_stopped_child_used_math(current)
+
+#define conditional_stopped_child_used_math(condition, child) \
+	do { (child)-&gt;flags &amp;= ~PF_USED_MATH, (child)-&gt;flags |= (condition) ? PF_USED_MATH : 0; } while (0)
+
+#define conditional_used_math(condition)	conditional_stopped_child_used_math(condition, current)
+
+#define copy_to_stopped_child_used_math(child) \
+	do { (child)-&gt;flags &amp;= ~PF_USED_MATH, (child)-&gt;flags |= current-&gt;flags &amp; PF_USED_MATH; } while (0)
+
+/* NOTE: this will return 0 or PF_USED_MATH, it will never return 1 */
+#define tsk_used_math(p)			((p)-&gt;flags &amp; PF_USED_MATH)
+#define used_math()				tsk_used_math(current)
+
+static __always_inline bool is_percpu_thread(void)
+{
+#ifdef CONFIG_SMP
+	return (current-&gt;flags &amp; PF_NO_SETAFFINITY) &amp;&amp;
+		(current-&gt;nr_cpus_allowed  == 1);
+#else
+	return true;
+#endif
+}
+
+/* Per-process atomic flags. */
+#define PFA_NO_NEW_PRIVS		0	/* May not gain new privileges. */
+#define PFA_SPREAD_PAGE			1	/* Spread page cache over cpuset */
+#define PFA_SPREAD_SLAB			2	/* Spread some slab caches over cpuset */
+#define PFA_SPEC_SSB_DISABLE		3	/* Speculative Store Bypass disabled */
+#define PFA_SPEC_SSB_FORCE_DISABLE	4	/* Speculative Store Bypass force disabled*/
+#define PFA_SPEC_IB_DISABLE		5	/* Indirect branch speculation restricted */
+#define PFA_SPEC_IB_FORCE_DISABLE	6	/* Indirect branch speculation permanently restricted */
+#define PFA_SPEC_SSB_NOEXEC		7	/* Speculative Store Bypass clear on execve() */
+
+#define TASK_PFA_TEST(name, func)					\
+	static inline bool task_##func(struct task_struct *p)		\
+	{ return test_bit(PFA_##name, &amp;p-&gt;atomic_flags); }
+
+#define TASK_PFA_SET(name, func)					\
+	static inline void task_set_##func(struct task_struct *p)	\
+	{ set_bit(PFA_##name, &amp;p-&gt;atomic_flags); }
+
+#define TASK_PFA_CLEAR(name, func)					\
+	static inline void task_clear_##func(struct task_struct *p)	\
+	{ clear_bit(PFA_##name, &amp;p-&gt;atomic_flags); }
+
+TASK_PFA_TEST(NO_NEW_PRIVS, no_new_privs)
+TASK_PFA_SET(NO_NEW_PRIVS, no_new_privs)
+
+TASK_PFA_TEST(SPREAD_PAGE, spread_page)
+TASK_PFA_SET(SPREAD_PAGE, spread_page)
+TASK_PFA_CLEAR(SPREAD_PAGE, spread_page)
+
+TASK_PFA_TEST(SPREAD_SLAB, spread_slab)
+TASK_PFA_SET(SPREAD_SLAB, spread_slab)
+TASK_PFA_CLEAR(SPREAD_SLAB, spread_slab)
+
+TASK_PFA_TEST(SPEC_SSB_DISABLE, spec_ssb_disable)
+TASK_PFA_SET(SPEC_SSB_DISABLE, spec_ssb_disable)
+TASK_PFA_CLEAR(SPEC_SSB_DISABLE, spec_ssb_disable)
+
+TASK_PFA_TEST(SPEC_SSB_NOEXEC, spec_ssb_noexec)
+TASK_PFA_SET(SPEC_SSB_NOEXEC, spec_ssb_noexec)
+TASK_PFA_CLEAR(SPEC_SSB_NOEXEC, spec_ssb_noexec)
+
+TASK_PFA_TEST(SPEC_SSB_FORCE_DISABLE, spec_ssb_force_disable)
+TASK_PFA_SET(SPEC_SSB_FORCE_DISABLE, spec_ssb_force_disable)
+
+TASK_PFA_TEST(SPEC_IB_DISABLE, spec_ib_disable)
+TASK_PFA_SET(SPEC_IB_DISABLE, spec_ib_disable)
+TASK_PFA_CLEAR(SPEC_IB_DISABLE, spec_ib_disable)
+
+TASK_PFA_TEST(SPEC_IB_FORCE_DISABLE, spec_ib_force_disable)
+TASK_PFA_SET(SPEC_IB_FORCE_DISABLE, spec_ib_force_disable)
+
+static inline void
+current_restore_flags(unsigned long orig_flags, unsigned long flags)
+{
+	current-&gt;flags &amp;= ~flags;
+	current-&gt;flags |= orig_flags &amp; flags;
+}
+
+extern int cpuset_cpumask_can_shrink(const struct cpumask *cur, const struct cpumask *trial);
+extern int task_can_attach(struct task_struct *p, const struct cpumask *cs_effective_cpus);
+#ifdef CONFIG_SMP
+extern void do_set_cpus_allowed(struct task_struct *p, const struct cpumask *new_mask);
+extern int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask);
+extern int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src, int node);
+extern void release_user_cpus_ptr(struct task_struct *p);
+extern int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask);
+extern void force_compatible_cpus_allowed_ptr(struct task_struct *p);
+extern void relax_compatible_cpus_allowed_ptr(struct task_struct *p);
+#else
+static inline void do_set_cpus_allowed(struct task_struct *p, const struct cpumask *new_mask)
+{
+}
+static inline int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+{
+	if (!cpumask_test_cpu(0, new_mask))
+		return -EINVAL;
+	return 0;
+}
+static inline int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src, int node)
+{
+	if (src-&gt;user_cpus_ptr)
+		return -EINVAL;
+	return 0;
+}
+static inline void release_user_cpus_ptr(struct task_struct *p)
+{
+	WARN_ON(p-&gt;user_cpus_ptr);
+}
+
+static inline int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask)
+{
+	return 0;
+}
+#endif
+
+extern int yield_to(struct task_struct *p, bool preempt);
+extern void set_user_nice(struct task_struct *p, long nice);
+extern int task_prio(const struct task_struct *p);
+
+/**
+ * task_nice - return the nice value of a given task.
+ * @p: the task in question.
+ *
+ * Return: The nice value [ -20 ... 0 ... 19 ].
+ */
+static inline int task_nice(const struct task_struct *p)
+{
+	return PRIO_TO_NICE((p)-&gt;static_prio);
+}
+
+extern int can_nice(const struct task_struct *p, const int nice);
+extern int task_curr(const struct task_struct *p);
+extern int idle_cpu(int cpu);
+extern int available_idle_cpu(int cpu);
+extern int sched_setscheduler(struct task_struct *, int, const struct sched_param *);
+extern int sched_setscheduler_nocheck(struct task_struct *, int, const struct sched_param *);
+extern void sched_set_fifo(struct task_struct *p);
+extern void sched_set_fifo_low(struct task_struct *p);
+extern void sched_set_normal(struct task_struct *p, int nice);
+extern int sched_setattr(struct task_struct *, const struct sched_attr *);
+extern int sched_setattr_nocheck(struct task_struct *, const struct sched_attr *);
+extern struct task_struct *idle_task(int cpu);
+
+/**
+ * is_idle_task - is the specified task an idle task?
+ * @p: the task in question.
+ *
+ * Return: 1 if @p is an idle task. 0 otherwise.
+ */
+static __always_inline bool is_idle_task(const struct task_struct *p)
+{
+	return !!(p-&gt;flags &amp; PF_IDLE);
+}
+
+extern struct task_struct *curr_task(int cpu);
+extern void ia64_set_curr_task(int cpu, struct task_struct *p);
+
+void yield(void);
+
+union thread_union {
+#ifndef CONFIG_ARCH_TASK_STRUCT_ON_STACK
+	struct task_struct task;
+#endif
+#ifndef CONFIG_THREAD_INFO_IN_TASK
+	struct thread_info thread_info;
+#endif
+	unsigned long stack[THREAD_SIZE/sizeof(long)];
+};
+
+#ifndef CONFIG_THREAD_INFO_IN_TASK
+extern struct thread_info init_thread_info;
+#endif
+
+extern unsigned long init_stack[THREAD_SIZE / sizeof(unsigned long)];
+
+#ifdef CONFIG_THREAD_INFO_IN_TASK
+# define task_thread_info(task)	(&amp;(task)-&gt;thread_info)
+#elif !defined(__HAVE_THREAD_FUNCTIONS)
+# define task_thread_info(task)	((struct thread_info *)(task)-&gt;stack)
+#endif
+
+/*
+ * find a task by one of its numerical ids
+ *
+ * find_task_by_pid_ns():
+ *      finds a task by its pid in the specified namespace
+ * find_task_by_vpid():
+ *      finds a task by its virtual pid
+ *
+ * see also find_vpid() etc in include/linux/pid.h
+ */
+
+extern struct task_struct *find_task_by_vpid(pid_t nr);
+extern struct task_struct *find_task_by_pid_ns(pid_t nr, struct pid_namespace *ns);
+
+/*
+ * find a task by its virtual pid and get the task struct
+ */
+extern struct task_struct *find_get_task_by_vpid(pid_t nr);
+
+extern int wake_up_state(struct task_struct *tsk, unsigned int state);
+extern int wake_up_process(struct task_struct *tsk);
+extern void wake_up_new_task(struct task_struct *tsk);
+
+#ifdef CONFIG_SMP
+extern void kick_process(struct task_struct *tsk);
+#else
+static inline void kick_process(struct task_struct *tsk) { }
+#endif
+
+extern void __set_task_comm(struct task_struct *tsk, const char *from, bool exec);
+
+static inline void set_task_comm(struct task_struct *tsk, const char *from)
+{
+	__set_task_comm(tsk, from, false);
+}
+
+extern char *__get_task_comm(char *to, size_t len, struct task_struct *tsk);
+#define get_task_comm(buf, tsk) ({			\
+	BUILD_BUG_ON(sizeof(buf) != TASK_COMM_LEN);	\
+	__get_task_comm(buf, sizeof(buf), tsk);		\
+})
+
+#ifdef CONFIG_SMP
+static __always_inline void scheduler_ipi(void)
+{
+	/*
+	 * Fold TIF_NEED_RESCHED into the preempt_count; anybody setting
+	 * TIF_NEED_RESCHED remotely (for the first time) will also send
+	 * this IPI.
+	 */
+	preempt_fold_need_resched();
+}
+extern unsigned long wait_task_inactive(struct task_struct *, unsigned int match_state);
+#else
+static inline void scheduler_ipi(void) { }
+static inline unsigned long wait_task_inactive(struct task_struct *p, unsigned int match_state)
+{
+	return 1;
+}
+#endif
+
+/*
+ * Set thread flags in other task&#x27;s structures.
+ * See asm/thread_info.h for TIF_xxxx flags available:
+ */
+static inline void set_tsk_thread_flag(struct task_struct *tsk, int flag)
+{
+	set_ti_thread_flag(task_thread_info(tsk), flag);
+}
+
+static inline void clear_tsk_thread_flag(struct task_struct *tsk, int flag)
+{
+	clear_ti_thread_flag(task_thread_info(tsk), flag);
+}
+
+static inline void update_tsk_thread_flag(struct task_struct *tsk, int flag,
+					  bool value)
+{
+	update_ti_thread_flag(task_thread_info(tsk), flag, value);
+}
+
+static inline int test_and_set_tsk_thread_flag(struct task_struct *tsk, int flag)
+{
+	return test_and_set_ti_thread_flag(task_thread_info(tsk), flag);
+}
+
+static inline int test_and_clear_tsk_thread_flag(struct task_struct *tsk, int flag)
+{
+	return test_and_clear_ti_thread_flag(task_thread_info(tsk), flag);
+}
+
+static inline int test_tsk_thread_flag(struct task_struct *tsk, int flag)
+{
+<blue>	return test_ti_thread_flag(task_thread_info(tsk), flag);</blue>
+}
+
+static inline void set_tsk_need_resched(struct task_struct *tsk)
+{
+	set_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
+}
+
+static inline void clear_tsk_need_resched(struct task_struct *tsk)
+{
+	clear_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
+}
+
+static inline int test_tsk_need_resched(struct task_struct *tsk)
+{
+	return unlikely(test_tsk_thread_flag(tsk,TIF_NEED_RESCHED));
+}
+
+/*
+ * cond_resched() and cond_resched_lock(): latency reduction via
+ * explicit rescheduling in places that are safe. The return
+ * value indicates whether a reschedule was done in fact.
+ * cond_resched_lock() will drop the spinlock before scheduling,
+ */
+#if !defined(CONFIG_PREEMPTION) || defined(CONFIG_PREEMPT_DYNAMIC)
+extern int __cond_resched(void);
+
+#if defined(CONFIG_PREEMPT_DYNAMIC) &amp;&amp; defined(CONFIG_HAVE_PREEMPT_DYNAMIC_CALL)
+
+DECLARE_STATIC_CALL(cond_resched, __cond_resched);
+
+static __always_inline int _cond_resched(void)
+{
+	return static_call_mod(cond_resched)();
+}
+
+#elif defined(CONFIG_PREEMPT_DYNAMIC) &amp;&amp; defined(CONFIG_HAVE_PREEMPT_DYNAMIC_KEY)
+extern int dynamic_cond_resched(void);
+
+static __always_inline int _cond_resched(void)
+{
+	return dynamic_cond_resched();
+}
+
+#else
+
+static inline int _cond_resched(void)
+{
+	return __cond_resched();
+}
+
+#endif /* CONFIG_PREEMPT_DYNAMIC */
+
+#else
+
+static inline int _cond_resched(void) { return 0; }
+
+#endif /* !defined(CONFIG_PREEMPTION) || defined(CONFIG_PREEMPT_DYNAMIC) */
+
+#define cond_resched() ({			\
+	__might_resched(__FILE__, __LINE__, 0);	\
+	_cond_resched();			\
+})
+
+extern int __cond_resched_lock(spinlock_t *lock);
+extern int __cond_resched_rwlock_read(rwlock_t *lock);
+extern int __cond_resched_rwlock_write(rwlock_t *lock);
+
+#define MIGHT_RESCHED_RCU_SHIFT		8
+#define MIGHT_RESCHED_PREEMPT_MASK	((1U &lt;&lt; MIGHT_RESCHED_RCU_SHIFT) - 1)
+
+#ifndef CONFIG_PREEMPT_RT
+/*
+ * Non RT kernels have an elevated preempt count due to the held lock,
+ * but are not allowed to be inside a RCU read side critical section
+ */
+# define PREEMPT_LOCK_RESCHED_OFFSETS	PREEMPT_LOCK_OFFSET
+#else
+/*
+ * spin/rw_lock() on RT implies rcu_read_lock(). The might_sleep() check in
+ * cond_resched*lock() has to take that into account because it checks for
+ * preempt_count() and rcu_preempt_depth().
+ */
+# define PREEMPT_LOCK_RESCHED_OFFSETS	\
+	(PREEMPT_LOCK_OFFSET + (1U &lt;&lt; MIGHT_RESCHED_RCU_SHIFT))
+#endif
+
+#define cond_resched_lock(lock) ({						\
+	__might_resched(__FILE__, __LINE__, PREEMPT_LOCK_RESCHED_OFFSETS);	\
+	__cond_resched_lock(lock);						\
+})
+
+#define cond_resched_rwlock_read(lock) ({					\
+	__might_resched(__FILE__, __LINE__, PREEMPT_LOCK_RESCHED_OFFSETS);	\
+	__cond_resched_rwlock_read(lock);					\
+})
+
+#define cond_resched_rwlock_write(lock) ({					\
+	__might_resched(__FILE__, __LINE__, PREEMPT_LOCK_RESCHED_OFFSETS);	\
+	__cond_resched_rwlock_write(lock);					\
+})
+
+static inline void cond_resched_rcu(void)
+{
+#if defined(CONFIG_DEBUG_ATOMIC_SLEEP) || !defined(CONFIG_PREEMPT_RCU)
+	rcu_read_unlock();
+	cond_resched();
+	rcu_read_lock();
+#endif
+}
+
+#ifdef CONFIG_PREEMPT_DYNAMIC
+
+extern bool preempt_model_none(void);
+extern bool preempt_model_voluntary(void);
+extern bool preempt_model_full(void);
+
+#else
+
+static inline bool preempt_model_none(void)
+{
+	return IS_ENABLED(CONFIG_PREEMPT_NONE);
+}
+static inline bool preempt_model_voluntary(void)
+{
+	return IS_ENABLED(CONFIG_PREEMPT_VOLUNTARY);
+}
+static inline bool preempt_model_full(void)
+{
+	return IS_ENABLED(CONFIG_PREEMPT);
+}
+
+#endif
+
+static inline bool preempt_model_rt(void)
+{
+	return IS_ENABLED(CONFIG_PREEMPT_RT);
+}
+
+/*
+ * Does the preemption model allow non-cooperative preemption?
+ *
+ * For !CONFIG_PREEMPT_DYNAMIC kernels this is an exact match with
+ * CONFIG_PREEMPTION; for CONFIG_PREEMPT_DYNAMIC this doesn&#x27;t work as the
+ * kernel is *built* with CONFIG_PREEMPTION=y but may run with e.g. the
+ * PREEMPT_NONE model.
+ */
+static inline bool preempt_model_preemptible(void)
+{
+	return preempt_model_full() || preempt_model_rt();
+}
+
+/*
+ * Does a critical section need to be broken due to another
+ * task waiting?: (technically does not depend on CONFIG_PREEMPTION,
+ * but a general need for low latency)
+ */
+static inline int spin_needbreak(spinlock_t *lock)
+{
+#ifdef CONFIG_PREEMPTION
+	return spin_is_contended(lock);
+#else
+	return 0;
+#endif
+}
+
+/*
+ * Check if a rwlock is contended.
+ * Returns non-zero if there is another task waiting on the rwlock.
+ * Returns zero if the lock is not contended or the system / underlying
+ * rwlock implementation does not support contention detection.
+ * Technically does not depend on CONFIG_PREEMPTION, but a general need
+ * for low latency.
+ */
+static inline int rwlock_needbreak(rwlock_t *lock)
+{
+#ifdef CONFIG_PREEMPTION
+<yellow>	return rwlock_is_contended(lock);</yellow>
+#else
+	return 0;
+#endif
+}
+
+static __always_inline bool need_resched(void)
+{
+<blue>	return unlikely(tif_need_resched());</blue>
+}
+
+/*
+ * Wrappers for p-&gt;thread_info-&gt;cpu access. No-op on UP.
+ */
+#ifdef CONFIG_SMP
+
+static inline unsigned int task_cpu(const struct task_struct *p)
+{
+	return READ_ONCE(task_thread_info(p)-&gt;cpu);
+}
+
+extern void set_task_cpu(struct task_struct *p, unsigned int cpu);
+
+#else
+
+static inline unsigned int task_cpu(const struct task_struct *p)
+{
+	return 0;
+}
+
+static inline void set_task_cpu(struct task_struct *p, unsigned int cpu)
+{
+}
+
+#endif /* CONFIG_SMP */
+
+extern bool sched_task_on_rq(struct task_struct *p);
+extern unsigned long get_wchan(struct task_struct *p);
+extern struct task_struct *cpu_curr_snapshot(int cpu);
+
+/*
+ * In order to reduce various lock holder preemption latencies provide an
+ * interface to see if a vCPU is currently running or not.
+ *
+ * This allows us to terminate optimistic spin loops and block, analogous to
+ * the native optimistic spin heuristic of testing if the lock owner task is
+ * running or not.
+ */
+#ifndef vcpu_is_preempted
+static inline bool vcpu_is_preempted(int cpu)
+{
+	return false;
+}
+#endif
+
+extern long sched_setaffinity(pid_t pid, const struct cpumask *new_mask);
+extern long sched_getaffinity(pid_t pid, struct cpumask *mask);
+
+#ifndef TASK_SIZE_OF
+#define TASK_SIZE_OF(tsk)	TASK_SIZE
+#endif
+
+#ifdef CONFIG_SMP
+static inline bool owner_on_cpu(struct task_struct *owner)
+{
+	/*
+	 * As lock holder preemption issue, we both skip spinning if
+	 * task is not on cpu or its cpu is preempted
+	 */
+	return READ_ONCE(owner-&gt;on_cpu) &amp;&amp; !vcpu_is_preempted(task_cpu(owner));
+}
+
+/* Returns effective CPU energy utilization, as seen by the scheduler */
+unsigned long sched_cpu_util(int cpu);
+#endif /* CONFIG_SMP */
+
+#ifdef CONFIG_RSEQ
+
+/*
+ * Map the event mask on the user-space ABI enum rseq_cs_flags
+ * for direct mask checks.
+ */
+enum rseq_event_mask_bits {
+	RSEQ_EVENT_PREEMPT_BIT	= RSEQ_CS_FLAG_NO_RESTART_ON_PREEMPT_BIT,
+	RSEQ_EVENT_SIGNAL_BIT	= RSEQ_CS_FLAG_NO_RESTART_ON_SIGNAL_BIT,
+	RSEQ_EVENT_MIGRATE_BIT	= RSEQ_CS_FLAG_NO_RESTART_ON_MIGRATE_BIT,
+};
+
+enum rseq_event_mask {
+	RSEQ_EVENT_PREEMPT	= (1U &lt;&lt; RSEQ_EVENT_PREEMPT_BIT),
+	RSEQ_EVENT_SIGNAL	= (1U &lt;&lt; RSEQ_EVENT_SIGNAL_BIT),
+	RSEQ_EVENT_MIGRATE	= (1U &lt;&lt; RSEQ_EVENT_MIGRATE_BIT),
+};
+
+static inline void rseq_set_notify_resume(struct task_struct *t)
+{
+	if (t-&gt;rseq)
+		set_tsk_thread_flag(t, TIF_NOTIFY_RESUME);
+}
+
+void __rseq_handle_notify_resume(struct ksignal *sig, struct pt_regs *regs);
+
+static inline void rseq_handle_notify_resume(struct ksignal *ksig,
+					     struct pt_regs *regs)
+{
+	if (current-&gt;rseq)
+		__rseq_handle_notify_resume(ksig, regs);
+}
+
+static inline void rseq_signal_deliver(struct ksignal *ksig,
+				       struct pt_regs *regs)
+{
+	preempt_disable();
+	__set_bit(RSEQ_EVENT_SIGNAL_BIT, &amp;current-&gt;rseq_event_mask);
+	preempt_enable();
+	rseq_handle_notify_resume(ksig, regs);
+}
+
+/* rseq_preempt() requires preemption to be disabled. */
+static inline void rseq_preempt(struct task_struct *t)
+{
+	__set_bit(RSEQ_EVENT_PREEMPT_BIT, &amp;t-&gt;rseq_event_mask);
+	rseq_set_notify_resume(t);
+}
+
+/* rseq_migrate() requires preemption to be disabled. */
+static inline void rseq_migrate(struct task_struct *t)
+{
+	__set_bit(RSEQ_EVENT_MIGRATE_BIT, &amp;t-&gt;rseq_event_mask);
+	rseq_set_notify_resume(t);
+}
+
+/*
+ * If parent process has a registered restartable sequences area, the
+ * child inherits. Unregister rseq for a clone with CLONE_VM set.
+ */
+static inline void rseq_fork(struct task_struct *t, unsigned long clone_flags)
+{
+	if (clone_flags &amp; CLONE_VM) {
+		t-&gt;rseq = NULL;
+		t-&gt;rseq_sig = 0;
+		t-&gt;rseq_event_mask = 0;
+	} else {
+		t-&gt;rseq = current-&gt;rseq;
+		t-&gt;rseq_sig = current-&gt;rseq_sig;
+		t-&gt;rseq_event_mask = current-&gt;rseq_event_mask;
+	}
+}
+
+static inline void rseq_execve(struct task_struct *t)
+{
+	t-&gt;rseq = NULL;
+	t-&gt;rseq_sig = 0;
+	t-&gt;rseq_event_mask = 0;
+}
+
+#else
+
+static inline void rseq_set_notify_resume(struct task_struct *t)
+{
+}
+static inline void rseq_handle_notify_resume(struct ksignal *ksig,
+					     struct pt_regs *regs)
+{
+}
+static inline void rseq_signal_deliver(struct ksignal *ksig,
+				       struct pt_regs *regs)
+{
+}
+static inline void rseq_preempt(struct task_struct *t)
+{
+}
+static inline void rseq_migrate(struct task_struct *t)
+{
+}
+static inline void rseq_fork(struct task_struct *t, unsigned long clone_flags)
+{
+}
+static inline void rseq_execve(struct task_struct *t)
+{
+}
+
+#endif
+
+#ifdef CONFIG_DEBUG_RSEQ
+
+void rseq_syscall(struct pt_regs *regs);
+
+#else
+
+static inline void rseq_syscall(struct pt_regs *regs)
+{
+}
+
+#endif
+
+#ifdef CONFIG_SCHED_CORE
+extern void sched_core_free(struct task_struct *tsk);
+extern void sched_core_fork(struct task_struct *p);
+extern int sched_core_share_pid(unsigned int cmd, pid_t pid, enum pid_type type,
+				unsigned long uaddr);
+#else
+static inline void sched_core_free(struct task_struct *tsk) { }
+static inline void sched_core_fork(struct task_struct *p) { }
+#endif
+
+extern void sched_set_stop_task(int cpu, struct task_struct *stop);
+
+#endif
+
+
+</code></pre></td></tr></table>
+</body>
+</html>
