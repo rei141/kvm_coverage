@@ -1,0 +1,321 @@
+<doctype html>
+<html lang="ja">
+<head><title>overflow.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 250; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 OR MIT */
+#ifndef __LINUX_OVERFLOW_H
+#define __LINUX_OVERFLOW_H
+
+#include &lt;linux/compiler.h&gt;
+#include &lt;linux/limits.h&gt;
+#include &lt;linux/const.h&gt;
+
+/*
+ * We need to compute the minimum and maximum values representable in a given
+ * type. These macros may also be useful elsewhere. It would seem more obvious
+ * to do something like:
+ *
+ * #define type_min(T) (T)(is_signed_type(T) ? (T)1 &lt;&lt; (8*sizeof(T)-1) : 0)
+ * #define type_max(T) (T)(is_signed_type(T) ? ((T)1 &lt;&lt; (8*sizeof(T)-1)) - 1 : ~(T)0)
+ *
+ * Unfortunately, the middle expressions, strictly speaking, have
+ * undefined behaviour, and at least some versions of gcc warn about
+ * the type_max expression (but not if -fsanitize=undefined is in
+ * effect; in that case, the warning is deferred to runtime...).
+ *
+ * The slightly excessive casting in type_min is to make sure the
+ * macros also produce sensible values for the exotic type _Bool. [The
+ * overflow checkers only almost work for _Bool, but that&#x27;s
+ * a-feature-not-a-bug, since people shouldn&#x27;t be doing arithmetic on
+ * _Bools. Besides, the gcc builtins don&#x27;t allow _Bool* as third
+ * argument.]
+ *
+ * Idea stolen from
+ * https://mail-index.netbsd.org/tech-misc/2007/02/05/0000.html -
+ * credit to Christian Biere.
+ */
+#define __type_half_max(type) ((type)1 &lt;&lt; (8*sizeof(type) - 1 - is_signed_type(type)))
+#define type_max(T) ((T)((__type_half_max(T) - 1) + __type_half_max(T)))
+#define type_min(T) ((T)((T)-type_max(T)-(T)1))
+
+/*
+ * Avoids triggering -Wtype-limits compilation warning,
+ * while using unsigned data types to check a &lt; 0.
+ */
+#define is_non_negative(a) ((a) &gt; 0 || (a) == 0)
+#define is_negative(a) (!(is_non_negative(a)))
+
+/*
+ * Allows for effectively applying __must_check to a macro so we can have
+ * both the type-agnostic benefits of the macros while also being able to
+ * enforce that the return value is, in fact, checked.
+ */
+static inline bool __must_check __must_check_overflow(bool overflow)
+{
+	return unlikely(overflow);
+}
+
+/**
+ * check_add_overflow() - Calculate addition with overflow checking
+ * @a: first addend
+ * @b: second addend
+ * @d: pointer to store sum
+ *
+ * Returns 0 on success.
+ *
+ * *@d holds the results of the attempted addition, but is not considered
+ * &quot;safe for use&quot; on a non-zero return value, which indicates that the
+ * sum has overflowed or been truncated.
+ */
+#define check_add_overflow(a, b, d)	\
+	__must_check_overflow(__builtin_add_overflow(a, b, d))
+
+/**
+ * check_sub_overflow() - Calculate subtraction with overflow checking
+ * @a: minuend; value to subtract from
+ * @b: subtrahend; value to subtract from @a
+ * @d: pointer to store difference
+ *
+ * Returns 0 on success.
+ *
+ * *@d holds the results of the attempted subtraction, but is not considered
+ * &quot;safe for use&quot; on a non-zero return value, which indicates that the
+ * difference has underflowed or been truncated.
+ */
+#define check_sub_overflow(a, b, d)	\
+	__must_check_overflow(__builtin_sub_overflow(a, b, d))
+
+/**
+ * check_mul_overflow() - Calculate multiplication with overflow checking
+ * @a: first factor
+ * @b: second factor
+ * @d: pointer to store product
+ *
+ * Returns 0 on success.
+ *
+ * *@d holds the results of the attempted multiplication, but is not
+ * considered &quot;safe for use&quot; on a non-zero return value, which indicates
+ * that the product has overflowed or been truncated.
+ */
+#define check_mul_overflow(a, b, d)	\
+	__must_check_overflow(__builtin_mul_overflow(a, b, d))
+
+/**
+ * check_shl_overflow() - Calculate a left-shifted value and check overflow
+ * @a: Value to be shifted
+ * @s: How many bits left to shift
+ * @d: Pointer to where to store the result
+ *
+ * Computes *@d = (@a &lt;&lt; @s)
+ *
+ * Returns true if &#x27;*@d&#x27; cannot hold the result or when &#x27;@a &lt;&lt; @s&#x27; doesn&#x27;t
+ * make sense. Example conditions:
+ *
+ * - &#x27;@a &lt;&lt; @s&#x27; causes bits to be lost when stored in *@d.
+ * - &#x27;@s&#x27; is garbage (e.g. negative) or so large that the result of
+ *   &#x27;@a &lt;&lt; @s&#x27; is guaranteed to be 0.
+ * - &#x27;@a&#x27; is negative.
+ * - &#x27;@a &lt;&lt; @s&#x27; sets the sign bit, if any, in &#x27;*@d&#x27;.
+ *
+ * &#x27;*@d&#x27; will hold the results of the attempted shift, but is not
+ * considered &quot;safe for use&quot; if true is returned.
+ */
+#define check_shl_overflow(a, s, d) __must_check_overflow(({		\
+	typeof(a) _a = a;						\
+	typeof(s) _s = s;						\
+	typeof(d) _d = d;						\
+	u64 _a_full = _a;						\
+	unsigned int _to_shift =					\
+		is_non_negative(_s) &amp;&amp; _s &lt; 8 * sizeof(*d) ? _s : 0;	\
+	*_d = (_a_full &lt;&lt; _to_shift);					\
+	(_to_shift != _s || is_negative(*_d) || is_negative(_a) ||	\
+	(*_d &gt;&gt; _to_shift) != _a);					\
+}))
+
+/**
+ * size_mul() - Calculate size_t multiplication with saturation at SIZE_MAX
+ * @factor1: first factor
+ * @factor2: second factor
+ *
+ * Returns: calculate @factor1 * @factor2, both promoted to size_t,
+ * with any overflow causing the return value to be SIZE_MAX. The
+ * lvalue must be size_t to avoid implicit type conversion.
+ */
+static inline size_t __must_check size_mul(size_t factor1, size_t factor2)
+{
+	size_t bytes;
+
+<blue>	if (check_mul_overflow(factor1, factor2, &bytes))</blue>
+		return SIZE_MAX;
+
+	return bytes;
+}
+
+/**
+ * size_add() - Calculate size_t addition with saturation at SIZE_MAX
+ * @addend1: first addend
+ * @addend2: second addend
+ *
+ * Returns: calculate @addend1 + @addend2, both promoted to size_t,
+ * with any overflow causing the return value to be SIZE_MAX. The
+ * lvalue must be size_t to avoid implicit type conversion.
+ */
+static inline size_t __must_check size_add(size_t addend1, size_t addend2)
+{
+	size_t bytes;
+
+<blue>	if (check_add_overflow(addend1, addend2, &bytes))</blue>
+		return SIZE_MAX;
+
+	return bytes;
+}
+
+/**
+ * size_sub() - Calculate size_t subtraction with saturation at SIZE_MAX
+ * @minuend: value to subtract from
+ * @subtrahend: value to subtract from @minuend
+ *
+ * Returns: calculate @minuend - @subtrahend, both promoted to size_t,
+ * with any overflow causing the return value to be SIZE_MAX. For
+ * composition with the size_add() and size_mul() helpers, neither
+ * argument may be SIZE_MAX (or the result with be forced to SIZE_MAX).
+ * The lvalue must be size_t to avoid implicit type conversion.
+ */
+static inline size_t __must_check size_sub(size_t minuend, size_t subtrahend)
+{
+	size_t bytes;
+
+	if (minuend == SIZE_MAX || subtrahend == SIZE_MAX ||
+	    check_sub_overflow(minuend, subtrahend, &amp;bytes))
+		return SIZE_MAX;
+
+	return bytes;
+}
+
+/**
+ * array_size() - Calculate size of 2-dimensional array.
+ * @a: dimension one
+ * @b: dimension two
+ *
+ * Calculates size of 2-dimensional array: @a * @b.
+ *
+ * Returns: number of bytes needed to represent the array or SIZE_MAX on
+ * overflow.
+ */
+#define array_size(a, b)	size_mul(a, b)
+
+/**
+ * array3_size() - Calculate size of 3-dimensional array.
+ * @a: dimension one
+ * @b: dimension two
+ * @c: dimension three
+ *
+ * Calculates size of 3-dimensional array: @a * @b * @c.
+ *
+ * Returns: number of bytes needed to represent the array or SIZE_MAX on
+ * overflow.
+ */
+#define array3_size(a, b, c)	size_mul(size_mul(a, b), c)
+
+/**
+ * flex_array_size() - Calculate size of a flexible array member
+ *                     within an enclosing structure.
+ * @p: Pointer to the structure.
+ * @member: Name of the flexible array member.
+ * @count: Number of elements in the array.
+ *
+ * Calculates size of a flexible array of @count number of @member
+ * elements, at the end of structure @p.
+ *
+ * Return: number of bytes needed or SIZE_MAX on overflow.
+ */
+#define flex_array_size(p, member, count)				\
+	__builtin_choose_expr(__is_constexpr(count),			\
+		(count) * sizeof(*(p)-&gt;member) + __must_be_array((p)-&gt;member),	\
+		size_mul(count, sizeof(*(p)-&gt;member) + __must_be_array((p)-&gt;member)))
+
+/**
+ * struct_size() - Calculate size of structure with trailing flexible array.
+ * @p: Pointer to the structure.
+ * @member: Name of the array member.
+ * @count: Number of elements in the array.
+ *
+ * Calculates size of memory needed for structure @p followed by an
+ * array of @count number of @member elements.
+ *
+ * Return: number of bytes needed or SIZE_MAX on overflow.
+ */
+#define struct_size(p, member, count)					\
+	__builtin_choose_expr(__is_constexpr(count),			\
+		sizeof(*(p)) + flex_array_size(p, member, count),	\
+		size_add(sizeof(*(p)), flex_array_size(p, member, count)))
+
+#endif /* __LINUX_OVERFLOW_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+</script></body></html>

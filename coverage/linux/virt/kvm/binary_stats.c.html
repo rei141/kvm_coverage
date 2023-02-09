@@ -1,0 +1,216 @@
+<doctype html>
+<html lang="ja">
+<head><title>binary_stats.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 145; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * KVM binary statistics interface implementation
+ *
+ * Copyright 2021 Google LLC
+ */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/kvm.h&gt;
+#include &lt;linux/errno.h&gt;
+#include &lt;linux/uaccess.h&gt;
+
+/**
+ * kvm_stats_read() - Common function to read from the binary statistics
+ * file descriptor.
+ *
+ * @id: identification string of the stats
+ * @header: stats header for a vm or a vcpu
+ * @desc: start address of an array of stats descriptors for a vm or a vcpu
+ * @stats: start address of stats data block for a vm or a vcpu
+ * @size_stats: the size of stats data block pointed by @stats
+ * @user_buffer: start address of userspace buffer
+ * @size: requested read size from userspace
+ * @offset: the start position from which the content will be read for the
+ *          corresponding vm or vcp file descriptor
+ *
+ * The file content of a vm/vcpu file descriptor is now defined as below:
+ * +-------------+
+ * |   Header    |
+ * +-------------+
+ * |  id string  |
+ * +-------------+
+ * | Descriptors |
+ * +-------------+
+ * | Stats Data  |
+ * +-------------+
+ * Although this function allows userspace to read any amount of data (as long
+ * as in the limit) from any position, the typical usage would follow below
+ * steps:
+ * 1. Read header from offset 0. Get the offset of descriptors and stats data
+ *    and some other necessary information. This is a one-time work for the
+ *    lifecycle of the corresponding vm/vcpu stats fd.
+ * 2. Read id string from its offset. This is a one-time work for the lifecycle
+ *    of the corresponding vm/vcpu stats fd.
+ * 3. Read descriptors from its offset and discover all the stats by parsing
+ *    descriptors. This is a one-time work for the lifecycle of the
+ *    corresponding vm/vcpu stats fd.
+ * 4. Periodically read stats data from its offset using pread.
+ *
+ * Return: the number of bytes that has been successfully read
+ */
+ssize_t kvm_stats_read(char *id, const struct kvm_stats_header *header,
+		       const struct _kvm_stats_desc *desc,
+		       void *stats, size_t size_stats,
+		       char __user *user_buffer, size_t size, loff_t *offset)
+{
+	ssize_t len;
+	ssize_t copylen;
+	ssize_t remain = size;
+	size_t size_desc;
+	size_t size_header;
+	void *src;
+<yellow>	loff_t pos = *offset;</yellow>
+	char __user *dest = user_buffer;
+
+	size_header = sizeof(*header);
+	size_desc = header-&gt;num_desc * sizeof(*desc);
+
+	len = KVM_STATS_NAME_SIZE + size_header + size_desc + size_stats - pos;
+	len = min(len, remain);
+	if (len &lt;= 0)
+		return 0;
+	remain = len;
+
+	/*
+	 * Copy kvm stats header.
+	 * The header is the first block of content userspace usually read out.
+	 * The pos is 0 and the copylen and remain would be the size of header.
+	 * The copy of the header would be skipped if offset is larger than the
+	 * size of header. That usually happens when userspace reads stats
+	 * descriptors and stats data.
+	 */
+<yellow>	copylen = size_header - pos;</yellow>
+	copylen = min(copylen, remain);
+	if (copylen &gt; 0) {
+		src = (void *)header + pos;
+<yellow>		if (copy_to_user(dest, src, copylen))</yellow>
+			return -EFAULT;
+		remain -= copylen;
+		pos += copylen;
+<yellow>		dest += copylen;</yellow>
+	}
+
+	/*
+	 * Copy kvm stats header id string.
+	 * The id string is unique for every vm/vcpu, which is stored in kvm
+	 * and kvm_vcpu structure.
+	 * The id string is part of the stat header from the perspective of
+	 * userspace, it is usually read out together with previous constant
+	 * header part and could be skipped for later descriptors and stats
+	 * data readings.
+	 */
+<yellow>	copylen = header->id_offset + KVM_STATS_NAME_SIZE - pos;</yellow>
+	copylen = min(copylen, remain);
+	if (copylen &gt; 0) {
+<yellow>		src = id + pos - header->id_offset;</yellow>
+<yellow>		if (copy_to_user(dest, src, copylen))</yellow>
+			return -EFAULT;
+		remain -= copylen;
+		pos += copylen;
+<yellow>		dest += copylen;</yellow>
+	}
+
+	/*
+	 * Copy kvm stats descriptors.
+	 * The descriptors copy would be skipped in the typical case that
+	 * userspace periodically read stats data, since the pos would be
+	 * greater than the end address of descriptors
+	 * (header-&gt;header.desc_offset + size_desc) causing copylen &lt;= 0.
+	 */
+<yellow>	copylen = header->desc_offset + size_desc - pos;</yellow>
+	copylen = min(copylen, remain);
+	if (copylen &gt; 0) {
+<yellow>		src = (void *)desc + pos - header->desc_offset;</yellow>
+<yellow>		if (copy_to_user(dest, src, copylen))</yellow>
+			return -EFAULT;
+		remain -= copylen;
+		pos += copylen;
+<yellow>		dest += copylen;</yellow>
+	}
+
+	/* Copy kvm stats values */
+<yellow>	copylen = header->data_offset + size_stats - pos;</yellow>
+	copylen = min(copylen, remain);
+	if (copylen &gt; 0) {
+<yellow>		src = stats + pos - header->data_offset;</yellow>
+<yellow>		if (copy_to_user(dest, src, copylen))</yellow>
+			return -EFAULT;
+<yellow>		pos += copylen;</yellow>
+	}
+
+<yellow>	*offset = pos;</yellow>
+	return len;
+<yellow>}</yellow>
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+</script></body></html>

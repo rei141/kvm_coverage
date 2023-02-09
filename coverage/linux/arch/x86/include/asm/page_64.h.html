@@ -1,0 +1,178 @@
+<doctype html>
+<html lang="ja">
+<head><title>page_64.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 107; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_PAGE_64_H
+#define _ASM_X86_PAGE_64_H
+
+#include &lt;asm/page_64_types.h&gt;
+
+#ifndef __ASSEMBLY__
+#include &lt;asm/cpufeatures.h&gt;
+#include &lt;asm/alternative.h&gt;
+
+#include &lt;linux/kmsan-checks.h&gt;
+
+/* duplicated to the one in bootmem.h */
+extern unsigned long max_pfn;
+extern unsigned long phys_base;
+
+extern unsigned long page_offset_base;
+extern unsigned long vmalloc_base;
+extern unsigned long vmemmap_base;
+
+static __always_inline unsigned long __phys_addr_nodebug(unsigned long x)
+{
+<blue>	unsigned long y = x - __START_KERNEL_map;</blue>
+
+	/* use the carry flag to determine if x was &lt; __START_KERNEL_map */
+<blue>	x = y + ((x > y) ? phys_base : (__START_KERNEL_map - PAGE_OFFSET));</blue>
+
+	return x;
+}
+
+#ifdef CONFIG_DEBUG_VIRTUAL
+extern unsigned long __phys_addr(unsigned long);
+extern unsigned long __phys_addr_symbol(unsigned long);
+#else
+#define __phys_addr(x)		__phys_addr_nodebug(x)
+#define __phys_addr_symbol(x) \
+	((unsigned long)(x) - __START_KERNEL_map + phys_base)
+#endif
+
+#define __phys_reloc_hide(x)	(x)
+
+#ifdef CONFIG_FLATMEM
+#define pfn_valid(pfn)          ((pfn) &lt; max_pfn)
+#endif
+
+void clear_page_orig(void *page);
+void clear_page_rep(void *page);
+void clear_page_erms(void *page);
+
+static inline void clear_page(void *page)
+{
+	/*
+	 * Clean up KMSAN metadata for the page being cleared. The assembly call
+	 * below clobbers @page, so we perform unpoisoning before it.
+	 */
+	kmsan_unpoison_memory(page, PAGE_SIZE);
+	alternative_call_2(clear_page_orig,
+			   clear_page_rep, X86_FEATURE_REP_GOOD,
+			   clear_page_erms, X86_FEATURE_ERMS,
+			   &quot;=D&quot; (page),
+			   &quot;0&quot; (page)
+			   : &quot;cc&quot;, &quot;memory&quot;, &quot;rax&quot;, &quot;rcx&quot;);
+}
+
+void copy_page(void *to, void *from);
+
+#ifdef CONFIG_X86_5LEVEL
+/*
+ * User space process size.  This is the first address outside the user range.
+ * There are a few constraints that determine this:
+ *
+ * On Intel CPUs, if a SYSCALL instruction is at the highest canonical
+ * address, then that syscall will enter the kernel with a
+ * non-canonical return address, and SYSRET will explode dangerously.
+ * We avoid this particular problem by preventing anything
+ * from being mapped at the maximum canonical address.
+ *
+ * On AMD CPUs in the Ryzen family, there&#x27;s a nasty bug in which the
+ * CPUs malfunction if they execute code from the highest canonical page.
+ * They&#x27;ll speculate right off the end of the canonical space, and
+ * bad things happen.  This is worked around in the same way as the
+ * Intel problem.
+ *
+ * With page table isolation enabled, we map the LDT in ... [stay tuned]
+ */
+static __always_inline unsigned long task_size_max(void)
+{
+	unsigned long ret;
+
+<blue>	alternative_io("movq %[small],%0","movq %[large],%0",</blue>
+			X86_FEATURE_LA57,
+			&quot;=r&quot; (ret),
+			[small] &quot;i&quot; ((1ul &lt;&lt; 47)-PAGE_SIZE),
+			[large] &quot;i&quot; ((1ul &lt;&lt; 56)-PAGE_SIZE));
+
+	return ret;
+}
+#endif	/* CONFIG_X86_5LEVEL */
+
+#endif	/* !__ASSEMBLY__ */
+
+#ifdef CONFIG_X86_VSYSCALL_EMULATION
+# define __HAVE_ARCH_GATE_AREA 1
+#endif
+
+#endif /* _ASM_X86_PAGE_64_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+</script></body></html>

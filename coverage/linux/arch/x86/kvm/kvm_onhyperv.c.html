@@ -1,0 +1,180 @@
+<doctype html>
+<html lang="ja">
+<head><title>kvm_onhyperv.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 109; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * KVM L1 hypervisor optimizations on Hyper-V.
+ */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;asm/mshyperv.h&gt;
+
+#include &quot;hyperv.h&quot;
+#include &quot;kvm_onhyperv.h&quot;
+
+static int kvm_fill_hv_flush_list_func(struct hv_guest_mapping_flush_list *flush,
+		void *data)
+{
+	struct kvm_tlb_range *range = data;
+
+<yellow>	return hyperv_fill_flush_guest_mapping_list(flush, range->start_gfn,</yellow>
+			range-&gt;pages);
+}
+
+static inline int hv_remote_flush_root_tdp(hpa_t root_tdp,
+					   struct kvm_tlb_range *range)
+{
+<yellow>	if (range)</yellow>
+<yellow>		return hyperv_flush_guest_mapping_range(root_tdp,</yellow>
+				kvm_fill_hv_flush_list_func, (void *)range);
+	else
+<yellow>		return hyperv_flush_guest_mapping(root_tdp);</yellow>
+}
+
+int hv_remote_flush_tlb_with_range(struct kvm *kvm,
+		struct kvm_tlb_range *range)
+{
+	struct kvm_arch *kvm_arch = &amp;kvm-&gt;arch;
+	struct kvm_vcpu *vcpu;
+	int ret = 0, nr_unique_valid_roots;
+	unsigned long i;
+	hpa_t root;
+
+<yellow>	spin_lock(&kvm_arch->hv_root_tdp_lock);</yellow>
+
+	if (!VALID_PAGE(kvm_arch-&gt;hv_root_tdp)) {
+		nr_unique_valid_roots = 0;
+
+		/*
+		 * Flush all valid roots, and see if all vCPUs have converged
+		 * on a common root, in which case future flushes can skip the
+		 * loop and flush the common root.
+		 */
+<yellow>		kvm_for_each_vcpu(i, vcpu, kvm) {</yellow>
+<yellow>			root = vcpu->arch.hv_root_tdp;</yellow>
+<yellow>			if (!VALID_PAGE(root) || root == kvm_arch->hv_root_tdp)</yellow>
+				continue;
+
+			/*
+			 * Set the tracked root to the first valid root.  Keep
+			 * this root for the entirety of the loop even if more
+			 * roots are encountered as a low effort optimization
+			 * to avoid flushing the same (first) root again.
+			 */
+<yellow>			if (++nr_unique_valid_roots == 1)</yellow>
+<yellow>				kvm_arch->hv_root_tdp = root;</yellow>
+
+<yellow>			if (!ret)</yellow>
+<yellow>				ret = hv_remote_flush_root_tdp(root, range);</yellow>
+
+			/*
+			 * Stop processing roots if a failure occurred and
+			 * multiple valid roots have already been detected.
+			 */
+<yellow>			if (ret && nr_unique_valid_roots > 1)</yellow>
+				break;
+		}
+
+		/*
+		 * The optimized flush of a single root can&#x27;t be used if there
+		 * are multiple valid roots (obviously).
+		 */
+<yellow>		if (nr_unique_valid_roots > 1)</yellow>
+<yellow>			kvm_arch->hv_root_tdp = INVALID_PAGE;</yellow>
+	} else {
+<yellow>		ret = hv_remote_flush_root_tdp(kvm_arch->hv_root_tdp, range);</yellow>
+	}
+
+<yellow>	spin_unlock(&kvm_arch->hv_root_tdp_lock);</yellow>
+	return ret;
+}
+EXPORT_SYMBOL_GPL(hv_remote_flush_tlb_with_range);
+
+int hv_remote_flush_tlb(struct kvm *kvm)
+{
+<yellow>	return hv_remote_flush_tlb_with_range(kvm, NULL);</yellow>
+}
+EXPORT_SYMBOL_GPL(hv_remote_flush_tlb);
+
+void hv_track_root_tdp(struct kvm_vcpu *vcpu, hpa_t root_tdp)
+{
+<yellow>	struct kvm_arch *kvm_arch = &vcpu->kvm->arch;</yellow>
+
+<blue>	if (kvm_x86_ops.tlb_remote_flush == hv_remote_flush_tlb) {</blue>
+		spin_lock(&amp;kvm_arch-&gt;hv_root_tdp_lock);
+		vcpu-&gt;arch.hv_root_tdp = root_tdp;
+		if (root_tdp != kvm_arch-&gt;hv_root_tdp)
+<yellow>			kvm_arch->hv_root_tdp = INVALID_PAGE;</yellow>
+<yellow>		spin_unlock(&kvm_arch->hv_root_tdp_lock);</yellow>
+	}
+<blue>}</blue>
+EXPORT_SYMBOL_GPL(hv_track_root_tdp);
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+</script></body></html>

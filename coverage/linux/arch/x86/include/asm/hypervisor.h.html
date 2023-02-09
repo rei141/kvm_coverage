@@ -1,0 +1,155 @@
+<doctype html>
+<html lang="ja">
+<head><title>hypervisor.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 84; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/*
+ * Copyright (C) 2008, VMware, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
+ * NON INFRINGEMENT.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
+#ifndef _ASM_X86_HYPERVISOR_H
+#define _ASM_X86_HYPERVISOR_H
+
+/* x86 hypervisor types  */
+enum x86_hypervisor_type {
+	X86_HYPER_NATIVE = 0,
+	X86_HYPER_VMWARE,
+	X86_HYPER_MS_HYPERV,
+	X86_HYPER_XEN_PV,
+	X86_HYPER_XEN_HVM,
+	X86_HYPER_KVM,
+	X86_HYPER_JAILHOUSE,
+	X86_HYPER_ACRN,
+};
+
+#ifdef CONFIG_HYPERVISOR_GUEST
+
+#include &lt;asm/kvm_para.h&gt;
+#include &lt;asm/x86_init.h&gt;
+#include &lt;asm/xen/hypervisor.h&gt;
+
+struct hypervisor_x86 {
+	/* Hypervisor name */
+	const char	*name;
+
+	/* Detection routine */
+	uint32_t	(*detect)(void);
+
+	/* Hypervisor type */
+	enum x86_hypervisor_type type;
+
+	/* init time callbacks */
+	struct x86_hyper_init init;
+
+	/* runtime callbacks */
+	struct x86_hyper_runtime runtime;
+
+	/* ignore nopv parameter */
+	bool ignore_nopv;
+};
+
+extern const struct hypervisor_x86 x86_hyper_vmware;
+extern const struct hypervisor_x86 x86_hyper_ms_hyperv;
+extern const struct hypervisor_x86 x86_hyper_xen_pv;
+extern const struct hypervisor_x86 x86_hyper_kvm;
+extern const struct hypervisor_x86 x86_hyper_jailhouse;
+extern const struct hypervisor_x86 x86_hyper_acrn;
+extern struct hypervisor_x86 x86_hyper_xen_hvm;
+
+extern bool nopv;
+extern enum x86_hypervisor_type x86_hyper_type;
+extern void init_hypervisor_platform(void);
+static inline bool hypervisor_is_type(enum x86_hypervisor_type type)
+{
+<yellow>	return x86_hyper_type == type;</yellow>
+}
+#else
+static inline void init_hypervisor_platform(void) { }
+static inline bool hypervisor_is_type(enum x86_hypervisor_type type)
+{
+	return type == X86_HYPER_NATIVE;
+}
+#endif /* CONFIG_HYPERVISOR_GUEST */
+#endif /* _ASM_X86_HYPERVISOR_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
+fileList.innerHTML+=`<li><a href="/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+</script></body></html>
