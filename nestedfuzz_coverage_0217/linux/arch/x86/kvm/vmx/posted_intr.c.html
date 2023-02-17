@@ -1,0 +1,423 @@
+<doctype html>
+<html lang="ja">
+<head><title>posted_intr.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 352; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+#include &lt;linux/kvm_host.h&gt;
+
+#include &lt;asm/irq_remapping.h&gt;
+#include &lt;asm/cpu.h&gt;
+
+#include &quot;lapic.h&quot;
+#include &quot;irq.h&quot;
+#include &quot;posted_intr.h&quot;
+#include &quot;trace.h&quot;
+#include &quot;vmx.h&quot;
+
+/*
+ * Maintain a per-CPU list of vCPUs that need to be awakened by wakeup_handler()
+ * when a WAKEUP_VECTOR interrupted is posted.  vCPUs are added to the list when
+ * the vCPU is scheduled out and is blocking (e.g. in HLT) with IRQs enabled.
+ * The vCPUs posted interrupt descriptor is updated at the same time to set its
+ * notification vector to WAKEUP_VECTOR, so that posted interrupt from devices
+ * wake the target vCPUs.  vCPUs are removed from the list and the notification
+ * vector is reset when the vCPU is scheduled in.
+ */
+static DEFINE_PER_CPU(struct list_head, wakeup_vcpus_on_cpu);
+/*
+ * Protect the per-CPU list with a per-CPU spinlock to handle task migration.
+ * When a blocking vCPU is awakened _and_ migrated to a different pCPU, the
+ * -&gt;sched_in() path will need to take the vCPU off the list of the _previous_
+ * CPU.  IRQs must be disabled when taking this lock, otherwise deadlock will
+ * occur if a wakeup IRQ arrives and attempts to acquire the lock.
+ */
+static DEFINE_PER_CPU(raw_spinlock_t, wakeup_vcpus_on_cpu_lock);
+
+static inline struct pi_desc *vcpu_to_pi_desc(struct kvm_vcpu *vcpu)
+{
+<yellow>	return &(to_vmx(vcpu)->pi_desc);</yellow>
+}
+
+static int pi_try_set_control(struct pi_desc *pi_desc, u64 *pold, u64 new)
+{
+	/*
+	 * PID.ON can be set at any time by a different vCPU or by hardware,
+	 * e.g. a device.  PID.control must be written atomically, and the
+	 * update must be retried with a fresh snapshot an ON change causes
+	 * the cmpxchg to fail.
+	 */
+<yellow>	if (!try_cmpxchg64(&pi_desc->control, pold, new))</yellow>
+		return -EBUSY;
+
+	return 0;
+<yellow>}</yellow>
+
+void vmx_vcpu_pi_load(struct kvm_vcpu *vcpu, int cpu)
+<yellow>{</yellow>
+	struct pi_desc *pi_desc = vcpu_to_pi_desc(vcpu);
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+	struct pi_desc old, new;
+	unsigned long flags;
+	unsigned int dest;
+
+	/*
+	 * To simplify hot-plug and dynamic toggling of APICv, keep PI.NDST and
+	 * PI.SN up-to-date even if there is no assigned device or if APICv is
+	 * deactivated due to a dynamic inhibit bit, e.g. for Hyper-V&#x27;s SyncIC.
+	 */
+<yellow>	if (!enable_apicv || !lapic_in_kernel(vcpu))</yellow>
+		return;
+
+	/*
+	 * If the vCPU wasn&#x27;t on the wakeup list and wasn&#x27;t migrated, then the
+	 * full update can be skipped as neither the vector nor the destination
+	 * needs to be changed.
+	 */
+<yellow>	if (pi_desc->nv != POSTED_INTR_WAKEUP_VECTOR && vcpu->cpu == cpu) {</yellow>
+		/*
+		 * Clear SN if it was set due to being preempted.  Again, do
+		 * this even if there is no assigned device for simplicity.
+		 */
+<yellow>		if (pi_test_and_clear_sn(pi_desc))</yellow>
+			goto after_clear_sn;
+		return;
+	}
+
+<yellow>	local_irq_save(flags);</yellow>
+
+	/*
+	 * If the vCPU was waiting for wakeup, remove the vCPU from the wakeup
+	 * list of the _previous_ pCPU, which will not be the same as the
+	 * current pCPU if the task was migrated.
+	 */
+<yellow>	if (pi_desc->nv == POSTED_INTR_WAKEUP_VECTOR) {</yellow>
+<yellow>		raw_spin_lock(&per_cpu(wakeup_vcpus_on_cpu_lock, vcpu->cpu));</yellow>
+<yellow>		list_del(&vmx->pi_wakeup_list);</yellow>
+		raw_spin_unlock(&amp;per_cpu(wakeup_vcpus_on_cpu_lock, vcpu-&gt;cpu));
+	}
+
+<yellow>	dest = cpu_physical_id(cpu);</yellow>
+	if (!x2apic_mode)
+<yellow>		dest = (dest << 8) & 0xFF00;</yellow>
+
+<yellow>	old.control = READ_ONCE(pi_desc->control);</yellow>
+	do {
+<yellow>		new.control = old.control;</yellow>
+
+		/*
+		 * Clear SN (as above) and refresh the destination APIC ID to
+		 * handle task migration (@cpu != vcpu-&gt;cpu).
+		 */
+		new.ndst = dest;
+<yellow>		new.sn = 0;</yellow>
+
+		/*
+		 * Restore the notification vector; in the blocking case, the
+		 * descriptor was modified on &quot;put&quot; to use the wakeup vector.
+		 */
+		new.nv = POSTED_INTR_VECTOR;
+	} while (pi_try_set_control(pi_desc, &amp;old.control, new.control));
+
+<yellow>	local_irq_restore(flags);</yellow>
+
+after_clear_sn:
+
+	/*
+	 * Clear SN before reading the bitmap.  The VT-d firmware
+	 * writes the bitmap and reads SN atomically (5.2.3 in the
+	 * spec), so it doesn&#x27;t really have a memory barrier that
+	 * pairs with this, but we cannot do that and we need one.
+	 */
+	smp_mb__after_atomic();
+
+<yellow>	if (!pi_is_pir_empty(pi_desc))</yellow>
+<yellow>		pi_set_on(pi_desc);</yellow>
+}
+
+static bool vmx_can_use_vtd_pi(struct kvm *kvm)
+{
+<yellow>	return irqchip_in_kernel(kvm) && enable_apicv &&</yellow>
+<yellow>		kvm_arch_has_assigned_device(kvm) &&</yellow>
+<yellow>		irq_remapping_cap(IRQ_POSTING_CAP);</yellow>
+<yellow>}</yellow>
+
+/*
+ * Put the vCPU on this pCPU&#x27;s list of vCPUs that needs to be awakened and set
+ * WAKEUP as the notification vector in the PI descriptor.
+ */
+static void pi_enable_wakeup_handler(struct kvm_vcpu *vcpu)
+<yellow>{</yellow>
+	struct pi_desc *pi_desc = vcpu_to_pi_desc(vcpu);
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+	struct pi_desc old, new;
+	unsigned long flags;
+
+<yellow>	local_irq_save(flags);</yellow>
+
+<yellow>	raw_spin_lock(&per_cpu(wakeup_vcpus_on_cpu_lock, vcpu->cpu));</yellow>
+<yellow>	list_add_tail(&vmx->pi_wakeup_list,</yellow>
+		      &amp;per_cpu(wakeup_vcpus_on_cpu, vcpu-&gt;cpu));
+<yellow>	raw_spin_unlock(&per_cpu(wakeup_vcpus_on_cpu_lock, vcpu->cpu));</yellow>
+
+<yellow>	WARN(pi_desc->sn, "PI descriptor SN field set before blocking");</yellow>
+
+<yellow>	old.control = READ_ONCE(pi_desc->control);</yellow>
+	do {
+		/* set &#x27;NV&#x27; to &#x27;wakeup vector&#x27; */
+<yellow>		new.control = old.control;</yellow>
+		new.nv = POSTED_INTR_WAKEUP_VECTOR;
+<yellow>	} while (pi_try_set_control(pi_desc, &old.control, new.control));</yellow>
+
+	/*
+	 * Send a wakeup IPI to this CPU if an interrupt may have been posted
+	 * before the notification vector was updated, in which case the IRQ
+	 * will arrive on the non-wakeup vector.  An IPI is needed as calling
+	 * try_to_wake_up() from -&gt;sched_out() isn&#x27;t allowed (IRQs are not
+	 * enabled until it is safe to call try_to_wake_up() on the task being
+	 * scheduled out).
+	 */
+<yellow>	if (pi_test_on(&new))</yellow>
+<yellow>		apic->send_IPI_self(POSTED_INTR_WAKEUP_VECTOR);</yellow>
+
+<yellow>	local_irq_restore(flags);</yellow>
+}
+
+static bool vmx_needs_pi_wakeup(struct kvm_vcpu *vcpu)
+{
+	/*
+	 * The default posted interrupt vector does nothing when
+	 * invoked outside guest mode.   Return whether a blocked vCPU
+	 * can be the target of posted interrupts, as is the case when
+	 * using either IPI virtualization or VT-d PI, so that the
+	 * notification vector is switched to the one that calls
+	 * back to the pi_wakeup_handler() function.
+	 */
+<yellow>	return vmx_can_use_ipiv(vcpu) || vmx_can_use_vtd_pi(vcpu->kvm);</yellow>
+}
+
+void vmx_vcpu_pi_put(struct kvm_vcpu *vcpu)
+{
+	struct pi_desc *pi_desc = vcpu_to_pi_desc(vcpu);
+
+<yellow>	if (!vmx_needs_pi_wakeup(vcpu))</yellow>
+		return;
+
+<yellow>	if (kvm_vcpu_is_blocking(vcpu) && !vmx_interrupt_blocked(vcpu))</yellow>
+<yellow>		pi_enable_wakeup_handler(vcpu);</yellow>
+
+	/*
+	 * Set SN when the vCPU is preempted.  Note, the vCPU can both be seen
+	 * as blocking and preempted, e.g. if it&#x27;s preempted between setting
+	 * its wait state and manually scheduling out.
+	 */
+<yellow>	if (vcpu->preempted)</yellow>
+<yellow>		pi_set_sn(pi_desc);</yellow>
+<yellow>}</yellow>
+
+/*
+ * Handler for POSTED_INTERRUPT_WAKEUP_VECTOR.
+ */
+void pi_wakeup_handler(void)
+{
+<yellow>	int cpu = smp_processor_id();</yellow>
+	struct list_head *wakeup_list = &amp;per_cpu(wakeup_vcpus_on_cpu, cpu);
+	raw_spinlock_t *spinlock = &amp;per_cpu(wakeup_vcpus_on_cpu_lock, cpu);
+	struct vcpu_vmx *vmx;
+
+	raw_spin_lock(spinlock);
+<yellow>	list_for_each_entry(vmx, wakeup_list, pi_wakeup_list) {</yellow>
+
+<yellow>		if (pi_test_on(&vmx->pi_desc))</yellow>
+<yellow>			kvm_vcpu_wake_up(&vmx->vcpu);</yellow>
+	}
+<yellow>	raw_spin_unlock(spinlock);</yellow>
+}
+
+void __init pi_init_cpu(int cpu)
+{
+	INIT_LIST_HEAD(&amp;per_cpu(wakeup_vcpus_on_cpu, cpu));
+	raw_spin_lock_init(&amp;per_cpu(wakeup_vcpus_on_cpu_lock, cpu));
+}
+
+bool pi_has_pending_interrupt(struct kvm_vcpu *vcpu)
+{
+	struct pi_desc *pi_desc = vcpu_to_pi_desc(vcpu);
+
+<yellow>	return pi_test_on(pi_desc) ||</yellow>
+<yellow>		(pi_test_sn(pi_desc) && !pi_is_pir_empty(pi_desc));</yellow>
+<yellow>}</yellow>
+
+
+/*
+ * Bail out of the block loop if the VM has an assigned
+ * device, but the blocking vCPU didn&#x27;t reconfigure the
+ * PI.NV to the wakeup vector, i.e. the assigned device
+ * came along after the initial check in vmx_vcpu_pi_put().
+ */
+void vmx_pi_start_assignment(struct kvm *kvm)
+{
+<yellow>	if (!irq_remapping_cap(IRQ_POSTING_CAP))</yellow>
+		return;
+
+<yellow>	kvm_make_all_cpus_request(kvm, KVM_REQ_UNBLOCK);</yellow>
+<yellow>}</yellow>
+
+/*
+ * vmx_pi_update_irte - set IRTE for Posted-Interrupts
+ *
+ * @kvm: kvm
+ * @host_irq: host irq of the interrupt
+ * @guest_irq: gsi of the interrupt
+ * @set: set or unset PI
+ * returns 0 on success, &lt; 0 on failure
+ */
+int vmx_pi_update_irte(struct kvm *kvm, unsigned int host_irq,
+		       uint32_t guest_irq, bool set)
+<yellow>{</yellow>
+	struct kvm_kernel_irq_routing_entry *e;
+	struct kvm_irq_routing_table *irq_rt;
+	struct kvm_lapic_irq irq;
+	struct kvm_vcpu *vcpu;
+	struct vcpu_data vcpu_info;
+	int idx, ret = 0;
+
+<yellow>	if (!vmx_can_use_vtd_pi(kvm))</yellow>
+		return 0;
+
+<yellow>	idx = srcu_read_lock(&kvm->irq_srcu);</yellow>
+<yellow>	irq_rt = srcu_dereference(kvm->irq_routing, &kvm->irq_srcu);</yellow>
+<yellow>	if (guest_irq >= irq_rt->nr_rt_entries ||</yellow>
+<yellow>	    hlist_empty(&irq_rt->map[guest_irq])) {</yellow>
+<yellow>		pr_warn_once("no route for guest_irq %u/%u (broken user space?)\n",</yellow>
+			     guest_irq, irq_rt-&gt;nr_rt_entries);
+		goto out;
+	}
+
+<yellow>	hlist_for_each_entry(e, &irq_rt->map[guest_irq], link) {</yellow>
+<yellow>		if (e->type != KVM_IRQ_ROUTING_MSI)</yellow>
+			continue;
+		/*
+		 * VT-d PI cannot support posting multicast/broadcast
+		 * interrupts to a vCPU, we still use interrupt remapping
+		 * for these kind of interrupts.
+		 *
+		 * For lowest-priority interrupts, we only support
+		 * those with single CPU as the destination, e.g. user
+		 * configures the interrupts via /proc/irq or uses
+		 * irqbalance to make the interrupts single-CPU.
+		 *
+		 * We will support full lowest-priority interrupt later.
+		 *
+		 * In addition, we can only inject generic interrupts using
+		 * the PI mechanism, refuse to route others through it.
+		 */
+
+<yellow>		kvm_set_msi_irq(kvm, e, &irq);</yellow>
+		if (!kvm_intr_is_single_vcpu(kvm, &amp;irq, &amp;vcpu) ||
+<yellow>		    !kvm_irq_is_postable(&irq)) {</yellow>
+			/*
+			 * Make sure the IRTE is in remapped mode if
+			 * we don&#x27;t handle it in posted mode.
+			 */
+<yellow>			ret = irq_set_vcpu_affinity(host_irq, NULL);</yellow>
+			if (ret &lt; 0) {
+				printk(KERN_INFO
+				   &quot;failed to back to remapped mode, irq: %u\n&quot;,
+				   host_irq);
+				goto out;
+			}
+
+			continue;
+		}
+
+<yellow>		vcpu_info.pi_desc_addr = __pa(vcpu_to_pi_desc(vcpu));</yellow>
+		vcpu_info.vector = irq.vector;
+
+<yellow>		trace_kvm_pi_irte_update(host_irq, vcpu->vcpu_id, e->gsi,</yellow>
+				vcpu_info.vector, vcpu_info.pi_desc_addr, set);
+
+<yellow>		if (set)</yellow>
+<yellow>			ret = irq_set_vcpu_affinity(host_irq, &vcpu_info);</yellow>
+		else
+<yellow>			ret = irq_set_vcpu_affinity(host_irq, NULL);</yellow>
+
+<yellow>		if (ret < 0) {</yellow>
+			printk(KERN_INFO &quot;%s: failed to update PI IRTE\n&quot;,
+					__func__);
+			goto out;
+		}
+	}
+
+	ret = 0;
+out:
+<yellow>	srcu_read_unlock(&kvm->irq_srcu, idx);</yellow>
+	return ret;
+}
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 24.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 72.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 49.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 47.1%</li>`
+</script></body></html>
