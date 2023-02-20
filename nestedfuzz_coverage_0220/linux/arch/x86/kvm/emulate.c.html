@@ -1,0 +1,5925 @@
+<doctype html>
+<html lang="ja">
+<head><title>emulate.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 5854; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/******************************************************************************
+ * emulate.c
+ *
+ * Generic x86 (32-bit and 64-bit) instruction decoder and emulator.
+ *
+ * Copyright (c) 2005 Keir Fraser
+ *
+ * Linux coding style, mod r/m decoder, segment base fixes, real-mode
+ * privileged instructions:
+ *
+ * Copyright (C) 2006 Qumranet
+ * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+ *
+ *   Avi Kivity &lt;avi@qumranet.com&gt;
+ *   Yaniv Kamay &lt;yaniv@qumranet.com&gt;
+ *
+ * From: xen-unstable 10676:af9809f51f81a3c43f276f00c81a52ef558afda4
+ */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &quot;kvm_cache_regs.h&quot;
+#include &quot;kvm_emulate.h&quot;
+#include &lt;linux/stringify.h&gt;
+#include &lt;asm/debugreg.h&gt;
+#include &lt;asm/nospec-branch.h&gt;
+#include &lt;asm/ibt.h&gt;
+
+#include &quot;x86.h&quot;
+#include &quot;tss.h&quot;
+#include &quot;mmu.h&quot;
+#include &quot;pmu.h&quot;
+
+/*
+ * Operand types
+ */
+#define OpNone             0ull
+#define OpImplicit         1ull  /* No generic decode */
+#define OpReg              2ull  /* Register */
+#define OpMem              3ull  /* Memory */
+#define OpAcc              4ull  /* Accumulator: AL/AX/EAX/RAX */
+#define OpDI               5ull  /* ES:DI/EDI/RDI */
+#define OpMem64            6ull  /* Memory, 64-bit */
+#define OpImmUByte         7ull  /* Zero-extended 8-bit immediate */
+#define OpDX               8ull  /* DX register */
+#define OpCL               9ull  /* CL register (for shifts) */
+#define OpImmByte         10ull  /* 8-bit sign extended immediate */
+#define OpOne             11ull  /* Implied 1 */
+#define OpImm             12ull  /* Sign extended up to 32-bit immediate */
+#define OpMem16           13ull  /* Memory operand (16-bit). */
+#define OpMem32           14ull  /* Memory operand (32-bit). */
+#define OpImmU            15ull  /* Immediate operand, zero extended */
+#define OpSI              16ull  /* SI/ESI/RSI */
+#define OpImmFAddr        17ull  /* Immediate far address */
+#define OpMemFAddr        18ull  /* Far address in memory */
+#define OpImmU16          19ull  /* Immediate operand, 16 bits, zero extended */
+#define OpES              20ull  /* ES */
+#define OpCS              21ull  /* CS */
+#define OpSS              22ull  /* SS */
+#define OpDS              23ull  /* DS */
+#define OpFS              24ull  /* FS */
+#define OpGS              25ull  /* GS */
+#define OpMem8            26ull  /* 8-bit zero extended memory operand */
+#define OpImm64           27ull  /* Sign extended 16/32/64-bit immediate */
+#define OpXLat            28ull  /* memory at BX/EBX/RBX + zero-extended AL */
+#define OpAccLo           29ull  /* Low part of extended acc (AX/AX/EAX/RAX) */
+#define OpAccHi           30ull  /* High part of extended acc (-/DX/EDX/RDX) */
+
+#define OpBits             5  /* Width of operand field */
+#define OpMask             ((1ull &lt;&lt; OpBits) - 1)
+
+/*
+ * Opcode effective-address decode tables.
+ * Note that we only emulate instructions that have at least one memory
+ * operand (excluding implicit stack references). We assume that stack
+ * references and instruction fetches will never occur in special memory
+ * areas that require emulation. So, for example, &#x27;mov &lt;imm&gt;,&lt;reg&gt;&#x27; need
+ * not be handled.
+ */
+
+/* Operand sizes: 8-bit operands or specified/overridden size. */
+#define ByteOp      (1&lt;&lt;0)	/* 8-bit operands. */
+/* Destination operand type. */
+#define DstShift    1
+#define ImplicitOps (OpImplicit &lt;&lt; DstShift)
+#define DstReg      (OpReg &lt;&lt; DstShift)
+#define DstMem      (OpMem &lt;&lt; DstShift)
+#define DstAcc      (OpAcc &lt;&lt; DstShift)
+#define DstDI       (OpDI &lt;&lt; DstShift)
+#define DstMem64    (OpMem64 &lt;&lt; DstShift)
+#define DstMem16    (OpMem16 &lt;&lt; DstShift)
+#define DstImmUByte (OpImmUByte &lt;&lt; DstShift)
+#define DstDX       (OpDX &lt;&lt; DstShift)
+#define DstAccLo    (OpAccLo &lt;&lt; DstShift)
+#define DstMask     (OpMask &lt;&lt; DstShift)
+/* Source operand type. */
+#define SrcShift    6
+#define SrcNone     (OpNone &lt;&lt; SrcShift)
+#define SrcReg      (OpReg &lt;&lt; SrcShift)
+#define SrcMem      (OpMem &lt;&lt; SrcShift)
+#define SrcMem16    (OpMem16 &lt;&lt; SrcShift)
+#define SrcMem32    (OpMem32 &lt;&lt; SrcShift)
+#define SrcImm      (OpImm &lt;&lt; SrcShift)
+#define SrcImmByte  (OpImmByte &lt;&lt; SrcShift)
+#define SrcOne      (OpOne &lt;&lt; SrcShift)
+#define SrcImmUByte (OpImmUByte &lt;&lt; SrcShift)
+#define SrcImmU     (OpImmU &lt;&lt; SrcShift)
+#define SrcSI       (OpSI &lt;&lt; SrcShift)
+#define SrcXLat     (OpXLat &lt;&lt; SrcShift)
+#define SrcImmFAddr (OpImmFAddr &lt;&lt; SrcShift)
+#define SrcMemFAddr (OpMemFAddr &lt;&lt; SrcShift)
+#define SrcAcc      (OpAcc &lt;&lt; SrcShift)
+#define SrcImmU16   (OpImmU16 &lt;&lt; SrcShift)
+#define SrcImm64    (OpImm64 &lt;&lt; SrcShift)
+#define SrcDX       (OpDX &lt;&lt; SrcShift)
+#define SrcMem8     (OpMem8 &lt;&lt; SrcShift)
+#define SrcAccHi    (OpAccHi &lt;&lt; SrcShift)
+#define SrcMask     (OpMask &lt;&lt; SrcShift)
+#define BitOp       (1&lt;&lt;11)
+#define MemAbs      (1&lt;&lt;12)      /* Memory operand is absolute displacement */
+#define String      (1&lt;&lt;13)     /* String instruction (rep capable) */
+#define Stack       (1&lt;&lt;14)     /* Stack instruction (push/pop) */
+#define GroupMask   (7&lt;&lt;15)     /* Opcode uses one of the group mechanisms */
+#define Group       (1&lt;&lt;15)     /* Bits 3:5 of modrm byte extend opcode */
+#define GroupDual   (2&lt;&lt;15)     /* Alternate decoding of mod == 3 */
+#define Prefix      (3&lt;&lt;15)     /* Instruction varies with 66/f2/f3 prefix */
+#define RMExt       (4&lt;&lt;15)     /* Opcode extension in ModRM r/m if mod == 3 */
+#define Escape      (5&lt;&lt;15)     /* Escape to coprocessor instruction */
+#define InstrDual   (6&lt;&lt;15)     /* Alternate instruction decoding of mod == 3 */
+#define ModeDual    (7&lt;&lt;15)     /* Different instruction for 32/64 bit */
+#define Sse         (1&lt;&lt;18)     /* SSE Vector instruction */
+/* Generic ModRM decode. */
+#define ModRM       (1&lt;&lt;19)
+/* Destination is only written; never read. */
+#define Mov         (1&lt;&lt;20)
+/* Misc flags */
+#define Prot        (1&lt;&lt;21) /* instruction generates #UD if not in prot-mode */
+#define EmulateOnUD (1&lt;&lt;22) /* Emulate if unsupported by the host */
+#define NoAccess    (1&lt;&lt;23) /* Don&#x27;t access memory (lea/invlpg/verr etc) */
+#define Op3264      (1&lt;&lt;24) /* Operand is 64b in long mode, 32b otherwise */
+#define Undefined   (1&lt;&lt;25) /* No Such Instruction */
+#define Lock        (1&lt;&lt;26) /* lock prefix is allowed for the instruction */
+#define Priv        (1&lt;&lt;27) /* instruction generates #GP if current CPL != 0 */
+#define No64	    (1&lt;&lt;28)
+#define PageTable   (1 &lt;&lt; 29)   /* instruction used to write page table */
+#define NotImpl     (1 &lt;&lt; 30)   /* instruction is not implemented */
+/* Source 2 operand type */
+#define Src2Shift   (31)
+#define Src2None    (OpNone &lt;&lt; Src2Shift)
+#define Src2Mem     (OpMem &lt;&lt; Src2Shift)
+#define Src2CL      (OpCL &lt;&lt; Src2Shift)
+#define Src2ImmByte (OpImmByte &lt;&lt; Src2Shift)
+#define Src2One     (OpOne &lt;&lt; Src2Shift)
+#define Src2Imm     (OpImm &lt;&lt; Src2Shift)
+#define Src2ES      (OpES &lt;&lt; Src2Shift)
+#define Src2CS      (OpCS &lt;&lt; Src2Shift)
+#define Src2SS      (OpSS &lt;&lt; Src2Shift)
+#define Src2DS      (OpDS &lt;&lt; Src2Shift)
+#define Src2FS      (OpFS &lt;&lt; Src2Shift)
+#define Src2GS      (OpGS &lt;&lt; Src2Shift)
+#define Src2Mask    (OpMask &lt;&lt; Src2Shift)
+#define Mmx         ((u64)1 &lt;&lt; 40)  /* MMX Vector instruction */
+#define AlignMask   ((u64)7 &lt;&lt; 41)
+#define Aligned     ((u64)1 &lt;&lt; 41)  /* Explicitly aligned (e.g. MOVDQA) */
+#define Unaligned   ((u64)2 &lt;&lt; 41)  /* Explicitly unaligned (e.g. MOVDQU) */
+#define Avx         ((u64)3 &lt;&lt; 41)  /* Advanced Vector Extensions */
+#define Aligned16   ((u64)4 &lt;&lt; 41)  /* Aligned to 16 byte boundary (e.g. FXSAVE) */
+#define Fastop      ((u64)1 &lt;&lt; 44)  /* Use opcode::u.fastop */
+#define NoWrite     ((u64)1 &lt;&lt; 45)  /* No writeback */
+#define SrcWrite    ((u64)1 &lt;&lt; 46)  /* Write back src operand */
+#define NoMod	    ((u64)1 &lt;&lt; 47)  /* Mod field is ignored */
+#define Intercept   ((u64)1 &lt;&lt; 48)  /* Has valid intercept field */
+#define CheckPerm   ((u64)1 &lt;&lt; 49)  /* Has valid check_perm field */
+#define PrivUD      ((u64)1 &lt;&lt; 51)  /* #UD instead of #GP on CPL &gt; 0 */
+#define NearBranch  ((u64)1 &lt;&lt; 52)  /* Near branches */
+#define No16	    ((u64)1 &lt;&lt; 53)  /* No 16 bit operand */
+#define IncSP       ((u64)1 &lt;&lt; 54)  /* SP is incremented before ModRM calc */
+#define TwoMemOp    ((u64)1 &lt;&lt; 55)  /* Instruction has two memory operand */
+#define IsBranch    ((u64)1 &lt;&lt; 56)  /* Instruction is considered a branch. */
+
+#define DstXacc     (DstAccLo | SrcAccHi | SrcWrite)
+
+#define X2(x...) x, x
+#define X3(x...) X2(x), x
+#define X4(x...) X2(x), X2(x)
+#define X5(x...) X4(x), x
+#define X6(x...) X4(x), X2(x)
+#define X7(x...) X4(x), X3(x)
+#define X8(x...) X4(x), X4(x)
+#define X16(x...) X8(x), X8(x)
+
+struct opcode {
+	u64 flags;
+	u8 intercept;
+	u8 pad[7];
+	union {
+		int (*execute)(struct x86_emulate_ctxt *ctxt);
+		const struct opcode *group;
+		const struct group_dual *gdual;
+		const struct gprefix *gprefix;
+		const struct escape *esc;
+		const struct instr_dual *idual;
+		const struct mode_dual *mdual;
+		void (*fastop)(struct fastop *fake);
+	} u;
+	int (*check_perm)(struct x86_emulate_ctxt *ctxt);
+};
+
+struct group_dual {
+	struct opcode mod012[8];
+	struct opcode mod3[8];
+};
+
+struct gprefix {
+	struct opcode pfx_no;
+	struct opcode pfx_66;
+	struct opcode pfx_f2;
+	struct opcode pfx_f3;
+};
+
+struct escape {
+	struct opcode op[8];
+	struct opcode high[64];
+};
+
+struct instr_dual {
+	struct opcode mod012;
+	struct opcode mod3;
+};
+
+struct mode_dual {
+	struct opcode mode32;
+	struct opcode mode64;
+};
+
+#define EFLG_RESERVED_ZEROS_MASK 0xffc0802a
+
+enum x86_transfer_type {
+	X86_TRANSFER_NONE,
+	X86_TRANSFER_CALL_JMP,
+	X86_TRANSFER_RET,
+	X86_TRANSFER_TASK_SWITCH,
+};
+
+static ulong reg_read(struct x86_emulate_ctxt *ctxt, unsigned nr)
+{
+<blue>	if (KVM_EMULATOR_BUG_ON(nr >= NR_EMULATOR_GPRS, ctxt))</blue>
+		nr &amp;= NR_EMULATOR_GPRS - 1;
+
+<blue>	if (!(ctxt->regs_valid & (1 << nr))) {</blue>
+<blue>		ctxt->regs_valid |= 1 << nr;</blue>
+		ctxt-&gt;_regs[nr] = ctxt-&gt;ops-&gt;read_gpr(ctxt, nr);
+	}
+<blue>	return ctxt->_regs[nr];</blue>
+}
+
+static ulong *reg_write(struct x86_emulate_ctxt *ctxt, unsigned nr)
+{
+<blue>	if (KVM_EMULATOR_BUG_ON(nr >= NR_EMULATOR_GPRS, ctxt))</blue>
+		nr &amp;= NR_EMULATOR_GPRS - 1;
+
+	BUILD_BUG_ON(sizeof(ctxt-&gt;regs_dirty) * BITS_PER_BYTE &lt; NR_EMULATOR_GPRS);
+	BUILD_BUG_ON(sizeof(ctxt-&gt;regs_valid) * BITS_PER_BYTE &lt; NR_EMULATOR_GPRS);
+
+<blue>	ctxt->regs_valid |= 1 << nr;</blue>
+	ctxt-&gt;regs_dirty |= 1 &lt;&lt; nr;
+	return &amp;ctxt-&gt;_regs[nr];
+}
+
+static ulong *reg_rmw(struct x86_emulate_ctxt *ctxt, unsigned nr)
+{
+<blue>	reg_read(ctxt, nr);</blue>
+<blue>	return reg_write(ctxt, nr);</blue>
+}
+
+static void writeback_registers(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	unsigned long dirty = ctxt->regs_dirty;</blue>
+	unsigned reg;
+
+<blue>	for_each_set_bit(reg, &dirty, NR_EMULATOR_GPRS)</blue>
+<blue>		ctxt->ops->write_gpr(ctxt, reg, ctxt->_regs[reg]);</blue>
+<blue>}</blue>
+
+static void invalidate_registers(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	ctxt->regs_dirty = 0;</yellow>
+	ctxt-&gt;regs_valid = 0;
+}
+
+/*
+ * These EFLAGS bits are restored from saved value during emulation, and
+ * any changes are written back to the saved value after emulation.
+ */
+#define EFLAGS_MASK (X86_EFLAGS_OF|X86_EFLAGS_SF|X86_EFLAGS_ZF|X86_EFLAGS_AF|\
+		     X86_EFLAGS_PF|X86_EFLAGS_CF)
+
+#ifdef CONFIG_X86_64
+#define ON64(x) x
+#else
+#define ON64(x)
+#endif
+
+/*
+ * fastop functions have a special calling convention:
+ *
+ * dst:    rax        (in/out)
+ * src:    rdx        (in/out)
+ * src2:   rcx        (in)
+ * flags:  rflags     (in/out)
+ * ex:     rsi        (in:fastop pointer, out:zero if exception)
+ *
+ * Moreover, they are all exactly FASTOP_SIZE bytes long, so functions for
+ * different operand sizes can be reached by calculation, rather than a jump
+ * table (which would be bigger than the code).
+ *
+ * The 16 byte alignment, considering 5 bytes for the RET thunk, 3 for ENDBR
+ * and 1 for the straight line speculation INT3, leaves 7 bytes for the
+ * body of the function.  Currently none is larger than 4.
+ */
+static int fastop(struct x86_emulate_ctxt *ctxt, fastop_t fop);
+
+#define FASTOP_SIZE	16
+
+#define __FOP_FUNC(name) \
+	&quot;.align &quot; __stringify(FASTOP_SIZE) &quot; \n\t&quot; \
+	&quot;.type &quot; name &quot;, @function \n\t&quot; \
+	name &quot;:\n\t&quot; \
+	ASM_ENDBR \
+	IBT_NOSEAL(name)
+
+#define FOP_FUNC(name) \
+	__FOP_FUNC(#name)
+
+#define __FOP_RET(name) \
+	&quot;11: &quot; ASM_RET \
+	&quot;.size &quot; name &quot;, .-&quot; name &quot;\n\t&quot;
+
+#define FOP_RET(name) \
+	__FOP_RET(#name)
+
+#define __FOP_START(op, align) \
+	extern void em_##op(struct fastop *fake); \
+	asm(&quot;.pushsection .text, \&quot;ax\&quot; \n\t&quot; \
+	    &quot;.global em_&quot; #op &quot; \n\t&quot; \
+	    &quot;.align &quot; __stringify(align) &quot; \n\t&quot; \
+	    &quot;em_&quot; #op &quot;:\n\t&quot;
+
+#define FOP_START(op) __FOP_START(op, FASTOP_SIZE)
+
+#define FOP_END \
+	    &quot;.popsection&quot;)
+
+#define __FOPNOP(name) \
+	__FOP_FUNC(name) \
+	__FOP_RET(name)
+
+#define FOPNOP() \
+	__FOPNOP(__stringify(__UNIQUE_ID(nop)))
+
+#define FOP1E(op,  dst) \
+	__FOP_FUNC(#op &quot;_&quot; #dst) \
+	&quot;10: &quot; #op &quot; %&quot; #dst &quot; \n\t&quot; \
+	__FOP_RET(#op &quot;_&quot; #dst)
+
+#define FOP1EEX(op,  dst) \
+	FOP1E(op, dst) _ASM_EXTABLE_TYPE_REG(10b, 11b, EX_TYPE_ZERO_REG, %%esi)
+
+#define FASTOP1(op) \
+	FOP_START(op) \
+	FOP1E(op##b, al) \
+	FOP1E(op##w, ax) \
+	FOP1E(op##l, eax) \
+	ON64(FOP1E(op##q, rax))	\
+	FOP_END
+
+/* 1-operand, using src2 (for MUL/DIV r/m) */
+#define FASTOP1SRC2(op, name) \
+	FOP_START(name) \
+	FOP1E(op, cl) \
+	FOP1E(op, cx) \
+	FOP1E(op, ecx) \
+	ON64(FOP1E(op, rcx)) \
+	FOP_END
+
+/* 1-operand, using src2 (for MUL/DIV r/m), with exceptions */
+#define FASTOP1SRC2EX(op, name) \
+	FOP_START(name) \
+	FOP1EEX(op, cl) \
+	FOP1EEX(op, cx) \
+	FOP1EEX(op, ecx) \
+	ON64(FOP1EEX(op, rcx)) \
+	FOP_END
+
+#define FOP2E(op,  dst, src)	   \
+	__FOP_FUNC(#op &quot;_&quot; #dst &quot;_&quot; #src) \
+	#op &quot; %&quot; #src &quot;, %&quot; #dst &quot; \n\t&quot; \
+	__FOP_RET(#op &quot;_&quot; #dst &quot;_&quot; #src)
+
+#define FASTOP2(op) \
+	FOP_START(op) \
+	FOP2E(op##b, al, dl) \
+	FOP2E(op##w, ax, dx) \
+	FOP2E(op##l, eax, edx) \
+	ON64(FOP2E(op##q, rax, rdx)) \
+	FOP_END
+
+/* 2 operand, word only */
+#define FASTOP2W(op) \
+	FOP_START(op) \
+	FOPNOP() \
+	FOP2E(op##w, ax, dx) \
+	FOP2E(op##l, eax, edx) \
+	ON64(FOP2E(op##q, rax, rdx)) \
+	FOP_END
+
+/* 2 operand, src is CL */
+#define FASTOP2CL(op) \
+	FOP_START(op) \
+	FOP2E(op##b, al, cl) \
+	FOP2E(op##w, ax, cl) \
+	FOP2E(op##l, eax, cl) \
+	ON64(FOP2E(op##q, rax, cl)) \
+	FOP_END
+
+/* 2 operand, src and dest are reversed */
+#define FASTOP2R(op, name) \
+	FOP_START(name) \
+	FOP2E(op##b, dl, al) \
+	FOP2E(op##w, dx, ax) \
+	FOP2E(op##l, edx, eax) \
+	ON64(FOP2E(op##q, rdx, rax)) \
+	FOP_END
+
+#define FOP3E(op,  dst, src, src2) \
+	__FOP_FUNC(#op &quot;_&quot; #dst &quot;_&quot; #src &quot;_&quot; #src2) \
+	#op &quot; %&quot; #src2 &quot;, %&quot; #src &quot;, %&quot; #dst &quot; \n\t&quot;\
+	__FOP_RET(#op &quot;_&quot; #dst &quot;_&quot; #src &quot;_&quot; #src2)
+
+/* 3-operand, word-only, src2=cl */
+#define FASTOP3WCL(op) \
+	FOP_START(op) \
+	FOPNOP() \
+	FOP3E(op##w, ax, dx, cl) \
+	FOP3E(op##l, eax, edx, cl) \
+	ON64(FOP3E(op##q, rax, rdx, cl)) \
+	FOP_END
+
+/* Special case for SETcc - 1 instruction per cc */
+#define FOP_SETCC(op) \
+	FOP_FUNC(op) \
+	#op &quot; %al \n\t&quot; \
+	FOP_RET(op)
+
+FOP_START(setcc)
+FOP_SETCC(seto)
+FOP_SETCC(setno)
+FOP_SETCC(setc)
+FOP_SETCC(setnc)
+FOP_SETCC(setz)
+FOP_SETCC(setnz)
+FOP_SETCC(setbe)
+FOP_SETCC(setnbe)
+FOP_SETCC(sets)
+FOP_SETCC(setns)
+FOP_SETCC(setp)
+FOP_SETCC(setnp)
+FOP_SETCC(setl)
+FOP_SETCC(setnl)
+FOP_SETCC(setle)
+FOP_SETCC(setnle)
+FOP_END;
+
+FOP_START(salc)
+FOP_FUNC(salc)
+&quot;pushf; sbb %al, %al; popf \n\t&quot;
+FOP_RET(salc)
+FOP_END;
+
+/*
+ * XXX: inoutclob user must know where the argument is being expanded.
+ *      Using asm goto would allow us to remove _fault.
+ */
+#define asm_safe(insn, inoutclob...) \
+({ \
+	int _fault = 0; \
+ \
+	asm volatile(&quot;1:&quot; insn &quot;\n&quot; \
+	             &quot;2:\n&quot; \
+		     _ASM_EXTABLE_TYPE_REG(1b, 2b, EX_TYPE_ONE_REG, %[_fault]) \
+	             : [_fault] &quot;+r&quot;(_fault) inoutclob ); \
+ \
+	_fault ? X86EMUL_UNHANDLEABLE : X86EMUL_CONTINUE; \
+})
+
+static int emulator_check_intercept(struct x86_emulate_ctxt *ctxt,
+				    enum x86_intercept intercept,
+				    enum x86_intercept_stage stage)
+{
+	struct x86_instruction_info info = {
+		.intercept  = intercept,
+<blue>		.rep_prefix = ctxt->rep_prefix,</blue>
+		.modrm_mod  = ctxt-&gt;modrm_mod,
+		.modrm_reg  = ctxt-&gt;modrm_reg,
+		.modrm_rm   = ctxt-&gt;modrm_rm,
+		.src_val    = ctxt-&gt;src.val64,
+		.dst_val    = ctxt-&gt;dst.val64,
+		.src_bytes  = ctxt-&gt;src.bytes,
+		.dst_bytes  = ctxt-&gt;dst.bytes,
+		.ad_bytes   = ctxt-&gt;ad_bytes,
+		.next_rip   = ctxt-&gt;eip,
+	};
+
+	return ctxt-&gt;ops-&gt;intercept(ctxt, &amp;info, stage);
+}
+
+static void assign_masked(ulong *dest, ulong src, ulong mask)
+{
+	*dest = (*dest &amp; ~mask) | (src &amp; mask);
+}
+
+static void assign_register(unsigned long *reg, u64 val, int bytes)
+{
+	/* The 4-byte case *is* correct: in 64-bit mode we zero-extend. */
+	switch (bytes) {
+	case 1:
+<blue>		*(u8 *)reg = (u8)val;</blue>
+		break;
+	case 2:
+<yellow>		*(u16 *)reg = (u16)val;</yellow>
+		break;
+	case 4:
+<blue>		*reg = (u32)val;</blue>
+		break;	/* 64b: zero-extend */
+	case 8:
+<blue>		*reg = val;</blue>
+		break;
+	}
+}
+
+static inline unsigned long ad_mask(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return (1UL << (ctxt->ad_bytes << 3)) - 1;</yellow>
+}
+
+static ulong stack_mask(struct x86_emulate_ctxt *ctxt)
+{
+	u16 sel;
+	struct desc_struct ss;
+
+<blue>	if (ctxt->mode == X86EMUL_MODE_PROT64)</blue>
+		return ~0UL;
+<yellow>	ctxt->ops->get_segment(ctxt, &sel, &ss, NULL, VCPU_SREG_SS);</yellow>
+	return ~0U &gt;&gt; ((ss.d ^ 1) * 16);  /* d=0: 0xffff; d=1: 0xffffffff */
+}
+
+static int stack_size(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return (__fls(stack_mask(ctxt)) + 1) >> 3;</yellow>
+}
+
+/* Access/update address held in a register, based on addressing mode. */
+static inline unsigned long
+address_mask(struct x86_emulate_ctxt *ctxt, unsigned long reg)
+{
+<blue>	if (ctxt->ad_bytes == sizeof(unsigned long))</blue>
+		return reg;
+	else
+<yellow>		return reg & ad_mask(ctxt);</yellow>
+}
+
+static inline unsigned long
+register_address(struct x86_emulate_ctxt *ctxt, int reg)
+{
+<blue>	return address_mask(ctxt, reg_read(ctxt, reg));</blue>
+}
+
+static void masked_increment(ulong *reg, ulong mask, int inc)
+{
+	assign_masked(reg, *reg + inc, mask);
+}
+
+static inline void
+register_address_increment(struct x86_emulate_ctxt *ctxt, int reg, int inc)
+{
+<blue>	ulong *preg = reg_rmw(ctxt, reg);</blue>
+
+<blue>	assign_register(preg, *preg + inc, ctxt->ad_bytes);</blue>
+}
+
+static void rsp_increment(struct x86_emulate_ctxt *ctxt, int inc)
+{
+<blue>	masked_increment(reg_rmw(ctxt, VCPU_REGS_RSP), stack_mask(ctxt), inc);</blue>
+}
+
+static u32 desc_limit_scaled(struct desc_struct *desc)
+{
+<yellow>	u32 limit = get_desc_limit(desc);</yellow>
+
+<yellow>	return desc->g ? (limit << 12) | 0xfff : limit;</yellow>
+}
+
+static unsigned long seg_base(struct x86_emulate_ctxt *ctxt, int seg)
+{
+<blue>	if (ctxt->mode == X86EMUL_MODE_PROT64 && seg < VCPU_SREG_FS)</blue>
+		return 0;
+
+<yellow>	return ctxt->ops->get_cached_segment_base(ctxt, seg);</yellow>
+}
+
+static int emulate_exception(struct x86_emulate_ctxt *ctxt, int vec,
+			     u32 error, bool valid)
+{
+	if (KVM_EMULATOR_BUG_ON(vec &gt; 0x1f, ctxt))
+		return X86EMUL_UNHANDLEABLE;
+
+<blue>	ctxt->exception.vector = vec;</blue>
+	ctxt-&gt;exception.error_code = error;
+	ctxt-&gt;exception.error_code_valid = valid;
+	return X86EMUL_PROPAGATE_FAULT;
+}
+
+static int emulate_db(struct x86_emulate_ctxt *ctxt)
+{
+	return emulate_exception(ctxt, DB_VECTOR, 0, false);
+}
+
+static int emulate_gp(struct x86_emulate_ctxt *ctxt, int err)
+{
+<blue>	return emulate_exception(ctxt, GP_VECTOR, err, true);</blue>
+}
+
+static int emulate_ss(struct x86_emulate_ctxt *ctxt, int err)
+{
+<yellow>	return emulate_exception(ctxt, SS_VECTOR, err, true);</yellow>
+}
+
+static int emulate_ud(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	return emulate_exception(ctxt, UD_VECTOR, 0, false);</blue>
+}
+
+static int emulate_ts(struct x86_emulate_ctxt *ctxt, int err)
+{
+<yellow>	return emulate_exception(ctxt, TS_VECTOR, err, true);</yellow>
+}
+
+static int emulate_de(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return emulate_exception(ctxt, DE_VECTOR, 0, false);</yellow>
+}
+
+static int emulate_nm(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return emulate_exception(ctxt, NM_VECTOR, 0, false);</yellow>
+}
+
+static u16 get_segment_selector(struct x86_emulate_ctxt *ctxt, unsigned seg)
+{
+	u16 selector;
+	struct desc_struct desc;
+
+<yellow>	ctxt->ops->get_segment(ctxt, &selector, &desc, NULL, seg);</yellow>
+	return selector;
+}
+
+static void set_segment_selector(struct x86_emulate_ctxt *ctxt, u16 selector,
+				 unsigned seg)
+{
+	u16 dummy;
+	u32 base3;
+	struct desc_struct desc;
+
+<yellow>	ctxt->ops->get_segment(ctxt, &dummy, &desc, &base3, seg);</yellow>
+	ctxt-&gt;ops-&gt;set_segment(ctxt, selector, &amp;desc, base3, seg);
+}
+
+static inline u8 ctxt_virt_addr_bits(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	return (ctxt->ops->get_cr(ctxt, 4) & X86_CR4_LA57) ? 57 : 48;</blue>
+}
+
+static inline bool emul_is_noncanonical_address(u64 la,
+						struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return !__is_canonical_address(la, ctxt_virt_addr_bits(ctxt));</yellow>
+}
+
+/*
+ * x86 defines three classes of vector instructions: explicitly
+ * aligned, explicitly unaligned, and the rest, which change behaviour
+ * depending on whether they&#x27;re AVX encoded or not.
+ *
+ * Also included is CMPXCHG16B which is not a vector instruction, yet it is
+ * subject to the same check.  FXSAVE and FXRSTOR are checked here too as their
+ * 512 bytes of data must be aligned to a 16 byte boundary.
+ */
+static unsigned insn_alignment(struct x86_emulate_ctxt *ctxt, unsigned size)
+{
+	u64 alignment = ctxt-&gt;d &amp; AlignMask;
+
+<blue>	if (likely(size < 16))</blue>
+		return 1;
+
+	switch (alignment) {
+	case Unaligned:
+	case Avx:
+		return 1;
+	case Aligned16:
+		return 16;
+	case Aligned:
+	default:
+		return size;
+	}
+}
+
+static __always_inline int __linearize(struct x86_emulate_ctxt *ctxt,
+				       struct segmented_address addr,
+				       unsigned *max_size, unsigned size,
+				       bool write, bool fetch,
+				       enum x86emul_mode mode, ulong *linear)
+{
+	struct desc_struct desc;
+	bool usable;
+	ulong la;
+	u32 lim;
+	u16 sel;
+	u8  va_bits;
+
+<blue>	la = seg_base(ctxt, addr.seg) + addr.ea;</blue>
+	*max_size = 0;
+	switch (mode) {
+	case X86EMUL_MODE_PROT64:
+<blue>		*linear = la;</blue>
+<blue>		va_bits = ctxt_virt_addr_bits(ctxt);</blue>
+<blue>		if (!__is_canonical_address(la, va_bits))</blue>
+			goto bad;
+
+<blue>		*max_size = min_t(u64, ~0u, (1ull << va_bits) - la);</blue>
+		if (size &gt; *max_size)
+			goto bad;
+		break;
+	default:
+		*linear = la = (u32)la;
+		usable = ctxt-&gt;ops-&gt;get_segment(ctxt, &amp;sel, &amp;desc, NULL,
+						addr.seg);
+		if (!usable)
+			goto bad;
+		/* code segment in protected mode or read-only data segment */
+<yellow>		if ((((ctxt->mode != X86EMUL_MODE_REAL) && (desc.type & 8))</yellow>
+<yellow>					|| !(desc.type & 2)) && write)</yellow>
+			goto bad;
+		/* unreadable code segment */
+<yellow>		if (!fetch && (desc.type & 8) && !(desc.type & 2))</yellow>
+			goto bad;
+<yellow>		lim = desc_limit_scaled(&desc);</yellow>
+<yellow>		if (!(desc.type & 8) && (desc.type & 4)) {</yellow>
+			/* expand-down segment */
+<yellow>			if (addr.ea <= lim)</yellow>
+				goto bad;
+<yellow>			lim = desc.d ? 0xffffffff : 0xffff;</yellow>
+		}
+<yellow>		if (addr.ea > lim)</yellow>
+			goto bad;
+<yellow>		if (lim == 0xffffffff)</yellow>
+			*max_size = ~0u;
+		else {
+<yellow>			*max_size = (u64)lim + 1 - addr.ea;</yellow>
+<yellow>			if (size > *max_size)</yellow>
+				goto bad;
+		}
+		break;
+	}
+<blue>	if (la & (insn_alignment(ctxt, size) - 1))</blue>
+<blue>		return emulate_gp(ctxt, 0);</blue>
+	return X86EMUL_CONTINUE;
+bad:
+<blue>	if (addr.seg == VCPU_SREG_SS)</blue>
+<yellow>		return emulate_ss(ctxt, 0);</yellow>
+	else
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+}
+
+<blue>static int linearize(struct x86_emulate_ctxt *ctxt,</blue>
+		     struct segmented_address addr,
+		     unsigned size, bool write,
+		     ulong *linear)
+{
+	unsigned max_size;
+<blue>	return __linearize(ctxt, addr, &max_size, size, write, false,</blue>
+			   ctxt-&gt;mode, linear);
+<yellow>}</yellow>
+
+static inline int assign_eip(struct x86_emulate_ctxt *ctxt, ulong dst)
+<blue>{</blue>
+	ulong linear;
+	int rc;
+	unsigned max_size;
+	struct segmented_address addr = { .seg = VCPU_SREG_CS,
+					   .ea = dst };
+
+<blue>	if (ctxt->op_bytes != sizeof(unsigned long))</blue>
+<yellow>		addr.ea = dst & ((1UL << (ctxt->op_bytes << 3)) - 1);</yellow>
+<blue>	rc = __linearize(ctxt, addr, &max_size, 1, false, true, ctxt->mode, &linear);</blue>
+	if (rc == X86EMUL_CONTINUE)
+<blue>		ctxt->_eip = addr.ea;</blue>
+	return rc;
+}
+
+static inline int emulator_recalc_and_set_mode(struct x86_emulate_ctxt *ctxt)
+{
+	u64 efer;
+	struct desc_struct cs;
+	u16 selector;
+	u32 base3;
+
+<yellow>	ctxt->ops->get_msr(ctxt, MSR_EFER, &efer);</yellow>
+
+	if (!(ctxt-&gt;ops-&gt;get_cr(ctxt, 0) &amp; X86_CR0_PE)) {
+		/* Real mode. cpu must not have long mode active */
+<yellow>		if (efer & EFER_LMA)</yellow>
+<yellow>			return X86EMUL_UNHANDLEABLE;</yellow>
+<yellow>		ctxt->mode = X86EMUL_MODE_REAL;</yellow>
+		return X86EMUL_CONTINUE;
+	}
+
+<yellow>	if (ctxt->eflags & X86_EFLAGS_VM) {</yellow>
+		/* Protected/VM86 mode. cpu must not have long mode active */
+<yellow>		if (efer & EFER_LMA)</yellow>
+			return X86EMUL_UNHANDLEABLE;
+<yellow>		ctxt->mode = X86EMUL_MODE_VM86;</yellow>
+		return X86EMUL_CONTINUE;
+	}
+
+<yellow>	if (!ctxt->ops->get_segment(ctxt, &selector, &cs, &base3, VCPU_SREG_CS))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	if (efer & EFER_LMA) {</yellow>
+<yellow>		if (cs.l) {</yellow>
+			/* Proper long mode */
+<yellow>			ctxt->mode = X86EMUL_MODE_PROT64;</yellow>
+<yellow>		} else if (cs.d) {</yellow>
+			/* 32 bit compatibility mode*/
+<yellow>			ctxt->mode = X86EMUL_MODE_PROT32;</yellow>
+		} else {
+<yellow>			ctxt->mode = X86EMUL_MODE_PROT16;</yellow>
+		}
+	} else {
+		/* Legacy 32 bit / 16 bit mode */
+<yellow>		ctxt->mode = cs.d ? X86EMUL_MODE_PROT32 : X86EMUL_MODE_PROT16;</yellow>
+	}
+
+	return X86EMUL_CONTINUE;
+}
+
+static inline int assign_eip_near(struct x86_emulate_ctxt *ctxt, ulong dst)
+{
+<blue>	return assign_eip(ctxt, dst);</blue>
+}
+
+static int assign_eip_far(struct x86_emulate_ctxt *ctxt, ulong dst)
+{
+<yellow>	int rc = emulator_recalc_and_set_mode(ctxt);</yellow>
+
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+	return assign_eip(ctxt, dst);
+}
+
+static inline int jmp_rel(struct x86_emulate_ctxt *ctxt, int rel)
+{
+	return assign_eip_near(ctxt, ctxt-&gt;_eip + rel);
+}
+
+static int linear_read_system(struct x86_emulate_ctxt *ctxt, ulong linear,
+			      void *data, unsigned size)
+{
+<yellow>	return ctxt->ops->read_std(ctxt, linear, data, size, &ctxt->exception, true);</yellow>
+}
+
+static int linear_write_system(struct x86_emulate_ctxt *ctxt,
+			       ulong linear, void *data,
+			       unsigned int size)
+{
+<yellow>	return ctxt->ops->write_std(ctxt, linear, data, size, &ctxt->exception, true);</yellow>
+}
+
+<yellow>static int segmented_read_std(struct x86_emulate_ctxt *ctxt,</yellow>
+			      struct segmented_address addr,
+			      void *data,
+			      unsigned size)
+{
+	int rc;
+	ulong linear;
+
+<yellow>	rc = linearize(ctxt, addr, size, false, &linear);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	return ctxt->ops->read_std(ctxt, linear, data, size, &ctxt->exception, false);</yellow>
+}
+
+<yellow>static int segmented_write_std(struct x86_emulate_ctxt *ctxt,</yellow>
+			       struct segmented_address addr,
+			       void *data,
+			       unsigned int size)
+{
+	int rc;
+	ulong linear;
+
+<yellow>	rc = linearize(ctxt, addr, size, true, &linear);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	return ctxt->ops->write_std(ctxt, linear, data, size, &ctxt->exception, false);</yellow>
+}
+
+/*
+ * Prefetch the remaining bytes of the instruction without crossing page
+ * boundary if they are not in fetch_cache yet.
+ */
+static int __do_insn_fetch_bytes(struct x86_emulate_ctxt *ctxt, int op_size)
+<blue>{</blue>
+	int rc;
+	unsigned size, max_size;
+	unsigned long linear;
+<blue>	int cur_size = ctxt->fetch.end - ctxt->fetch.data;</blue>
+	struct segmented_address addr = { .seg = VCPU_SREG_CS,
+					   .ea = ctxt-&gt;eip + cur_size };
+
+	/*
+	 * We do not know exactly how many bytes will be needed, and
+	 * __linearize is expensive, so fetch as much as possible.  We
+	 * just have to avoid going beyond the 15 byte limit, the end
+	 * of the segment, or the end of the page.
+	 *
+	 * __linearize is called with size 0 so that it does not do any
+	 * boundary check itself.  Instead, we use max_size to check
+	 * against op_size.
+	 */
+<blue>	rc = __linearize(ctxt, addr, &max_size, 0, false, true, ctxt->mode,</blue>
+			 &amp;linear);
+	if (unlikely(rc != X86EMUL_CONTINUE))
+		return rc;
+
+<blue>	size = min_t(unsigned, 15UL ^ cur_size, max_size);</blue>
+	size = min_t(unsigned, size, PAGE_SIZE - offset_in_page(linear));
+
+	/*
+	 * One instruction can only straddle two pages,
+	 * and one has been loaded at the beginning of
+	 * x86_decode_insn.  So, if not enough bytes
+	 * still, we must have hit the 15-byte boundary.
+	 */
+	if (unlikely(size &lt; op_size))
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<blue>	rc = ctxt->ops->fetch(ctxt, linear, ctxt->fetch.end,</blue>
+			      size, &amp;ctxt-&gt;exception);
+	if (unlikely(rc != X86EMUL_CONTINUE))
+		return rc;
+<blue>	ctxt->fetch.end += size;</blue>
+	return X86EMUL_CONTINUE;
+}
+
+static __always_inline int do_insn_fetch_bytes(struct x86_emulate_ctxt *ctxt,
+					       unsigned size)
+{
+<blue>	unsigned done_size = ctxt->fetch.end - ctxt->fetch.ptr;</blue>
+
+	if (unlikely(done_size &lt; size))
+<yellow>		return __do_insn_fetch_bytes(ctxt, size - done_size);</yellow>
+	else
+		return X86EMUL_CONTINUE;
+}
+
+/* Fetch next part of the instruction being emulated. */
+#define insn_fetch(_type, _ctxt)					\
+({	_type _x;							\
+									\
+	rc = do_insn_fetch_bytes(_ctxt, sizeof(_type));			\
+	if (rc != X86EMUL_CONTINUE)					\
+		goto done;						\
+	ctxt-&gt;_eip += sizeof(_type);					\
+	memcpy(&amp;_x, ctxt-&gt;fetch.ptr, sizeof(_type));			\
+	ctxt-&gt;fetch.ptr += sizeof(_type);				\
+	_x;								\
+})
+
+#define insn_fetch_arr(_arr, _size, _ctxt)				\
+({									\
+	rc = do_insn_fetch_bytes(_ctxt, _size);				\
+	if (rc != X86EMUL_CONTINUE)					\
+		goto done;						\
+	ctxt-&gt;_eip += (_size);						\
+	memcpy(_arr, ctxt-&gt;fetch.ptr, _size);				\
+	ctxt-&gt;fetch.ptr += (_size);					\
+})
+
+/*
+ * Given the &#x27;reg&#x27; portion of a ModRM byte, and a register block, return a
+ * pointer into the block that addresses the relevant register.
+ * @highbyte_regs specifies whether to decode AH,CH,DH,BH.
+ */
+<blue>static void *decode_register(struct x86_emulate_ctxt *ctxt, u8 modrm_reg,</blue>
+			     int byteop)
+{
+	void *p;
+<blue>	int highbyte_regs = (ctxt->rex_prefix == 0) && byteop;</blue>
+
+<blue>	if (highbyte_regs && modrm_reg >= 4 && modrm_reg < 8)</blue>
+<blue>		p = (unsigned char *)reg_rmw(ctxt, modrm_reg & 3) + 1;</blue>
+	else
+<blue>		p = reg_rmw(ctxt, modrm_reg);</blue>
+	return p;
+<blue>}</blue>
+
+static int read_descriptor(struct x86_emulate_ctxt *ctxt,
+			   struct segmented_address addr,
+			   u16 *size, unsigned long *address, int op_bytes)
+{
+	int rc;
+
+	if (op_bytes == 2)
+		op_bytes = 3;
+	*address = 0;
+<yellow>	rc = segmented_read_std(ctxt, addr, size, 2);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+	addr.ea += 2;
+<yellow>	rc = segmented_read_std(ctxt, addr, address, op_bytes);</yellow>
+	return rc;
+}
+
+FASTOP2(add);
+FASTOP2(or);
+FASTOP2(adc);
+FASTOP2(sbb);
+FASTOP2(and);
+FASTOP2(sub);
+FASTOP2(xor);
+FASTOP2(cmp);
+FASTOP2(test);
+
+FASTOP1SRC2(mul, mul_ex);
+FASTOP1SRC2(imul, imul_ex);
+FASTOP1SRC2EX(div, div_ex);
+FASTOP1SRC2EX(idiv, idiv_ex);
+
+FASTOP3WCL(shld);
+FASTOP3WCL(shrd);
+
+FASTOP2W(imul);
+
+FASTOP1(not);
+FASTOP1(neg);
+FASTOP1(inc);
+FASTOP1(dec);
+
+FASTOP2CL(rol);
+FASTOP2CL(ror);
+FASTOP2CL(rcl);
+FASTOP2CL(rcr);
+FASTOP2CL(shl);
+FASTOP2CL(shr);
+FASTOP2CL(sar);
+
+FASTOP2W(bsf);
+FASTOP2W(bsr);
+FASTOP2W(bt);
+FASTOP2W(bts);
+FASTOP2W(btr);
+FASTOP2W(btc);
+
+FASTOP2(xadd);
+
+FASTOP2R(cmp, cmp_r);
+
+static int em_bsf_c(struct x86_emulate_ctxt *ctxt)
+{
+	/* If src is zero, do not writeback, but update flags */
+<yellow>	if (ctxt->src.val == 0)</yellow>
+<yellow>		ctxt->dst.type = OP_NONE;</yellow>
+<yellow>	return fastop(ctxt, em_bsf);</yellow>
+}
+
+static int em_bsr_c(struct x86_emulate_ctxt *ctxt)
+{
+	/* If src is zero, do not writeback, but update flags */
+<yellow>	if (ctxt->src.val == 0)</yellow>
+<yellow>		ctxt->dst.type = OP_NONE;</yellow>
+<yellow>	return fastop(ctxt, em_bsr);</yellow>
+}
+
+static __always_inline u8 test_cc(unsigned int condition, unsigned long flags)
+{
+	u8 rc;
+<yellow>	void (*fop)(void) = (void *)em_setcc + FASTOP_SIZE * (condition & 0xf);</yellow>
+
+	flags = (flags &amp; EFLAGS_MASK) | X86_EFLAGS_IF;
+	asm(&quot;push %[flags]; popf; &quot; CALL_NOSPEC
+	    : &quot;=a&quot;(rc) : [thunk_target]&quot;r&quot;(fop), [flags]&quot;r&quot;(flags));
+	return rc;
+}
+
+static void fetch_register_operand(struct operand *op)
+{
+<blue>	switch (op->bytes) {</blue>
+	case 1:
+<blue>		op->val = *(u8 *)op->addr.reg;</blue>
+		break;
+	case 2:
+<blue>		op->val = *(u16 *)op->addr.reg;</blue>
+		break;
+	case 4:
+<blue>		op->val = *(u32 *)op->addr.reg;</blue>
+		break;
+	case 8:
+<blue>		op->val = *(u64 *)op->addr.reg;</blue>
+		break;
+	}
+<blue>}</blue>
+
+<yellow>static int em_fninit(struct x86_emulate_ctxt *ctxt)</yellow>
+{
+<yellow>	if (ctxt->ops->get_cr(ctxt, 0) & (X86_CR0_TS | X86_CR0_EM))</yellow>
+<yellow>		return emulate_nm(ctxt);</yellow>
+
+<yellow>	kvm_fpu_get();</yellow>
+<yellow>	asm volatile("fninit");</yellow>
+<yellow>	kvm_fpu_put();</yellow>
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+<yellow>static int em_fnstcw(struct x86_emulate_ctxt *ctxt)</yellow>
+<yellow>{</yellow>
+	u16 fcw;
+
+<yellow>	if (ctxt->ops->get_cr(ctxt, 0) & (X86_CR0_TS | X86_CR0_EM))</yellow>
+<yellow>		return emulate_nm(ctxt);</yellow>
+
+<yellow>	kvm_fpu_get();</yellow>
+<yellow>	asm volatile("fnstcw %0": "+m"(fcw));</yellow>
+<yellow>	kvm_fpu_put();</yellow>
+
+	ctxt-&gt;dst.val = fcw;
+
+	return X86EMUL_CONTINUE;
+}
+
+<yellow>static int em_fnstsw(struct x86_emulate_ctxt *ctxt)</yellow>
+<yellow>{</yellow>
+	u16 fsw;
+
+<yellow>	if (ctxt->ops->get_cr(ctxt, 0) & (X86_CR0_TS | X86_CR0_EM))</yellow>
+<yellow>		return emulate_nm(ctxt);</yellow>
+
+<yellow>	kvm_fpu_get();</yellow>
+<yellow>	asm volatile("fnstsw %0": "+m"(fsw));</yellow>
+<yellow>	kvm_fpu_put();</yellow>
+
+	ctxt-&gt;dst.val = fsw;
+
+	return X86EMUL_CONTINUE;
+}
+
+static void decode_register_operand(struct x86_emulate_ctxt *ctxt,
+				    struct operand *op)
+{
+	unsigned int reg;
+
+<blue>	if (ctxt->d & ModRM)</blue>
+<blue>		reg = ctxt->modrm_reg;</blue>
+	else
+<blue>		reg = (ctxt->b & 7) | ((ctxt->rex_prefix & 1) << 3);</blue>
+
+<blue>	if (ctxt->d & Sse) {</blue>
+<yellow>		op->type = OP_XMM;</yellow>
+		op-&gt;bytes = 16;
+		op-&gt;addr.xmm = reg;
+<yellow>		kvm_read_sse_reg(reg, &op->vec_val);</yellow>
+		return;
+	}
+<blue>	if (ctxt->d & Mmx) {</blue>
+		reg &amp;= 7;
+<yellow>		op->type = OP_MM;</yellow>
+		op-&gt;bytes = 8;
+		op-&gt;addr.mm = reg;
+		return;
+	}
+
+<blue>	op->type = OP_REG;</blue>
+<blue>	op->bytes = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</blue>
+	op-&gt;addr.reg = decode_register(ctxt, reg, ctxt-&gt;d &amp; ByteOp);
+
+	fetch_register_operand(op);
+	op-&gt;orig_val = op-&gt;val;
+}
+
+static void adjust_modrm_seg(struct x86_emulate_ctxt *ctxt, int base_reg)
+{
+<blue>	if (base_reg == VCPU_REGS_RSP || base_reg == VCPU_REGS_RBP)</blue>
+<blue>		ctxt->modrm_seg = VCPU_SREG_SS;</blue>
+}
+
+static int decode_modrm(struct x86_emulate_ctxt *ctxt,
+			struct operand *op)
+{
+	u8 sib;
+	int index_reg, base_reg, scale;
+	int rc = X86EMUL_CONTINUE;
+	ulong modrm_ea = 0;
+
+<blue>	ctxt->modrm_reg = ((ctxt->rex_prefix << 1) & 8); /* REX.R */</blue>
+	index_reg = (ctxt-&gt;rex_prefix &lt;&lt; 2) &amp; 8; /* REX.X */
+	base_reg = (ctxt-&gt;rex_prefix &lt;&lt; 3) &amp; 8; /* REX.B */
+
+	ctxt-&gt;modrm_mod = (ctxt-&gt;modrm &amp; 0xc0) &gt;&gt; 6;
+	ctxt-&gt;modrm_reg |= (ctxt-&gt;modrm &amp; 0x38) &gt;&gt; 3;
+	ctxt-&gt;modrm_rm = base_reg | (ctxt-&gt;modrm &amp; 0x07);
+	ctxt-&gt;modrm_seg = VCPU_SREG_DS;
+
+<blue>	if (ctxt->modrm_mod == 3 || (ctxt->d & NoMod)) {</blue>
+<yellow>		op->type = OP_REG;</yellow>
+<yellow>		op->bytes = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</yellow>
+		op-&gt;addr.reg = decode_register(ctxt, ctxt-&gt;modrm_rm,
+				ctxt-&gt;d &amp; ByteOp);
+		if (ctxt-&gt;d &amp; Sse) {
+<yellow>			op->type = OP_XMM;</yellow>
+			op-&gt;bytes = 16;
+			op-&gt;addr.xmm = ctxt-&gt;modrm_rm;
+<yellow>			kvm_read_sse_reg(ctxt->modrm_rm, &op->vec_val);</yellow>
+			return rc;
+		}
+<yellow>		if (ctxt->d & Mmx) {</yellow>
+<yellow>			op->type = OP_MM;</yellow>
+			op-&gt;bytes = 8;
+			op-&gt;addr.mm = ctxt-&gt;modrm_rm &amp; 7;
+			return rc;
+		}
+<yellow>		fetch_register_operand(op);</yellow>
+		return rc;
+	}
+
+<blue>	op->type = OP_MEM;</blue>
+
+	if (ctxt-&gt;ad_bytes == 2) {
+<yellow>		unsigned bx = reg_read(ctxt, VCPU_REGS_RBX);</yellow>
+		unsigned bp = reg_read(ctxt, VCPU_REGS_RBP);
+		unsigned si = reg_read(ctxt, VCPU_REGS_RSI);
+		unsigned di = reg_read(ctxt, VCPU_REGS_RDI);
+
+		/* 16-bit ModR/M decode. */
+		switch (ctxt-&gt;modrm_mod) {
+		case 0:
+<yellow>			if (ctxt->modrm_rm == 6)</yellow>
+<yellow>				modrm_ea += insn_fetch(u16, ctxt);</yellow>
+			break;
+		case 1:
+<yellow>			modrm_ea += insn_fetch(s8, ctxt);</yellow>
+			break;
+		case 2:
+<yellow>			modrm_ea += insn_fetch(u16, ctxt);</yellow>
+			break;
+		}
+<yellow>		switch (ctxt->modrm_rm) {</yellow>
+		case 0:
+<yellow>			modrm_ea += bx + si;</yellow>
+			break;
+		case 1:
+<yellow>			modrm_ea += bx + di;</yellow>
+			break;
+		case 2:
+<yellow>			modrm_ea += bp + si;</yellow>
+			break;
+		case 3:
+<yellow>			modrm_ea += bp + di;</yellow>
+			break;
+		case 4:
+<yellow>			modrm_ea += si;</yellow>
+			break;
+		case 5:
+<yellow>			modrm_ea += di;</yellow>
+			break;
+		case 6:
+<yellow>			if (ctxt->modrm_mod != 0)</yellow>
+<yellow>				modrm_ea += bp;</yellow>
+			break;
+		case 7:
+<yellow>			modrm_ea += bx;</yellow>
+			break;
+		}
+<yellow>		if (ctxt->modrm_rm == 2 || ctxt->modrm_rm == 3 ||</yellow>
+<yellow>		    (ctxt->modrm_rm == 6 && ctxt->modrm_mod != 0))</yellow>
+<yellow>			ctxt->modrm_seg = VCPU_SREG_SS;</yellow>
+<yellow>		modrm_ea = (u16)modrm_ea;</yellow>
+	} else {
+		/* 32/64-bit ModR/M decode. */
+<blue>		if ((ctxt->modrm_rm & 7) == 4) {</blue>
+<blue>			sib = insn_fetch(u8, ctxt);</blue>
+			index_reg |= (sib &gt;&gt; 3) &amp; 7;
+			base_reg |= sib &amp; 7;
+			scale = sib &gt;&gt; 6;
+
+<blue>			if ((base_reg & 7) == 5 && ctxt->modrm_mod == 0)</blue>
+<yellow>				modrm_ea += insn_fetch(s32, ctxt);</yellow>
+			else {
+				modrm_ea += reg_read(ctxt, base_reg);
+<blue>				adjust_modrm_seg(ctxt, base_reg);</blue>
+				/* Increment ESP on POP [ESP] */
+<blue>				if ((ctxt->d & IncSP) &&</blue>
+				    base_reg == VCPU_REGS_RSP)
+<yellow>					modrm_ea += ctxt->op_bytes;</yellow>
+			}
+<blue>			if (index_reg != 4)</blue>
+<blue>				modrm_ea += reg_read(ctxt, index_reg) << scale;</blue>
+<blue>		} else if ((ctxt->modrm_rm & 7) == 5 && ctxt->modrm_mod == 0) {</blue>
+<blue>			modrm_ea += insn_fetch(s32, ctxt);</blue>
+			if (ctxt-&gt;mode == X86EMUL_MODE_PROT64)
+<blue>				ctxt->rip_relative = 1;</blue>
+		} else {
+			base_reg = ctxt-&gt;modrm_rm;
+<blue>			modrm_ea += reg_read(ctxt, base_reg);</blue>
+<blue>			adjust_modrm_seg(ctxt, base_reg);</blue>
+		}
+<blue>		switch (ctxt->modrm_mod) {</blue>
+		case 1:
+<blue>			modrm_ea += insn_fetch(s8, ctxt);</blue>
+			break;
+		case 2:
+<blue>			modrm_ea += insn_fetch(s32, ctxt);</blue>
+			break;
+		}
+	}
+<blue>	op->addr.mem.ea = modrm_ea;</blue>
+	if (ctxt-&gt;ad_bytes != 8)
+<yellow>		ctxt->memop.addr.mem.ea = (u32)ctxt->memop.addr.mem.ea;</yellow>
+
+done:
+	return rc;
+}
+
+static int decode_abs(struct x86_emulate_ctxt *ctxt,
+		      struct operand *op)
+{
+	int rc = X86EMUL_CONTINUE;
+
+<yellow>	op->type = OP_MEM;</yellow>
+	switch (ctxt-&gt;ad_bytes) {
+	case 2:
+<yellow>		op->addr.mem.ea = insn_fetch(u16, ctxt);</yellow>
+		break;
+	case 4:
+<yellow>		op->addr.mem.ea = insn_fetch(u32, ctxt);</yellow>
+		break;
+	case 8:
+<yellow>		op->addr.mem.ea = insn_fetch(u64, ctxt);</yellow>
+		break;
+	}
+done:
+	return rc;
+}
+
+static void fetch_bit_operand(struct x86_emulate_ctxt *ctxt)
+{
+	long sv = 0, mask;
+
+<yellow>	if (ctxt->dst.type == OP_MEM && ctxt->src.type == OP_REG) {</yellow>
+		mask = ~((long)ctxt-&gt;dst.bytes * 8 - 1);
+
+		if (ctxt-&gt;src.bytes == 2)
+<yellow>			sv = (s16)ctxt->src.val & (s16)mask;</yellow>
+<yellow>		else if (ctxt->src.bytes == 4)</yellow>
+<yellow>			sv = (s32)ctxt->src.val & (s32)mask;</yellow>
+		else
+<yellow>			sv = (s64)ctxt->src.val & (s64)mask;</yellow>
+
+<yellow>		ctxt->dst.addr.mem.ea = address_mask(ctxt,</yellow>
+<yellow>					   ctxt->dst.addr.mem.ea + (sv >> 3));</yellow>
+	}
+
+	/* only subword offset */
+<yellow>	ctxt->src.val &= (ctxt->dst.bytes << 3) - 1;</yellow>
+}
+
+static int read_emulated(struct x86_emulate_ctxt *ctxt,
+			 unsigned long addr, void *dest, unsigned size)
+{
+	int rc;
+	struct read_cache *mc = &amp;ctxt-&gt;mem_read;
+
+<blue>	if (mc->pos < mc->end)</blue>
+		goto read_cached;
+
+<blue>	if (KVM_EMULATOR_BUG_ON((mc->end + size) >= sizeof(mc->data), ctxt))</blue>
+		return X86EMUL_UNHANDLEABLE;
+
+<blue>	rc = ctxt->ops->read_emulated(ctxt, addr, mc->data + mc->end, size,</blue>
+				      &amp;ctxt-&gt;exception);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<blue>	mc->end += size;</blue>
+
+read_cached:
+<blue>	memcpy(dest, mc->data + mc->pos, size);</blue>
+	mc-&gt;pos += size;
+	return X86EMUL_CONTINUE;
+<blue>}</blue>
+
+static int segmented_read(struct x86_emulate_ctxt *ctxt,
+			  struct segmented_address addr,
+			  void *data,
+			  unsigned size)
+{
+	int rc;
+	ulong linear;
+
+<blue>	rc = linearize(ctxt, addr, size, false, &linear);</blue>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<blue>	return read_emulated(ctxt, linear, data, size);</blue>
+}
+
+<blue>static int segmented_write(struct x86_emulate_ctxt *ctxt,</blue>
+			   struct segmented_address addr,
+			   const void *data,
+			   unsigned size)
+{
+	int rc;
+	ulong linear;
+
+<blue>	rc = linearize(ctxt, addr, size, true, &linear);</blue>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<blue>	return ctxt->ops->write_emulated(ctxt, linear, data, size,</blue>
+					 &amp;ctxt-&gt;exception);
+}
+
+static int segmented_cmpxchg(struct x86_emulate_ctxt *ctxt,
+			     struct segmented_address addr,
+			     const void *orig_data, const void *data,
+			     unsigned size)
+{
+	int rc;
+	ulong linear;
+
+<yellow>	rc = linearize(ctxt, addr, size, true, &linear);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	return ctxt->ops->cmpxchg_emulated(ctxt, linear, orig_data, data,</yellow>
+					   size, &amp;ctxt-&gt;exception);
+}
+
+static int pio_in_emulated(struct x86_emulate_ctxt *ctxt,
+			   unsigned int size, unsigned short port,
+			   void *dest)
+{
+	struct read_cache *rc = &amp;ctxt-&gt;io_read;
+
+	if (rc-&gt;pos == rc-&gt;end) { /* refill pio read ahead */
+		unsigned int in_page, n;
+<blue>		unsigned int count = ctxt->rep_prefix ?</blue>
+<blue>			address_mask(ctxt, reg_read(ctxt, VCPU_REGS_RCX)) : 1;</blue>
+<blue>		in_page = (ctxt->eflags & X86_EFLAGS_DF) ?</blue>
+<yellow>			offset_in_page(reg_read(ctxt, VCPU_REGS_RDI)) :</yellow>
+<blue>			PAGE_SIZE - offset_in_page(reg_read(ctxt, VCPU_REGS_RDI));</blue>
+<blue>		n = min3(in_page, (unsigned int)sizeof(rc->data) / size, count);</blue>
+		if (n == 0)
+			n = 1;
+		rc-&gt;pos = rc-&gt;end = 0;
+		if (!ctxt-&gt;ops-&gt;pio_in_emulated(ctxt, size, port, rc-&gt;data, n))
+			return 0;
+<blue>		rc->end = n * size;</blue>
+	}
+
+<blue>	if (ctxt->rep_prefix && (ctxt->d & String) &&</blue>
+<blue>	    !(ctxt->eflags & X86_EFLAGS_DF)) {</blue>
+<blue>		ctxt->dst.data = rc->data + rc->pos;</blue>
+		ctxt-&gt;dst.type = OP_MEM_STR;
+		ctxt-&gt;dst.count = (rc-&gt;end - rc-&gt;pos) / size;
+		rc-&gt;pos = rc-&gt;end;
+	} else {
+<blue>		memcpy(dest, rc->data + rc->pos, size);</blue>
+		rc-&gt;pos += size;
+	}
+	return 1;
+}
+
+static int read_interrupt_descriptor(struct x86_emulate_ctxt *ctxt,
+				     u16 index, struct desc_struct *desc)
+{
+	struct desc_ptr dt;
+	ulong addr;
+
+<yellow>	ctxt->ops->get_idt(ctxt, &dt);</yellow>
+
+	if (dt.size &lt; index * 8 + 7)
+<yellow>		return emulate_gp(ctxt, index << 3 | 0x2);</yellow>
+
+	addr = dt.address + index * 8;
+<yellow>	return linear_read_system(ctxt, addr, desc, sizeof(*desc));</yellow>
+}
+
+static void get_descriptor_table_ptr(struct x86_emulate_ctxt *ctxt,
+				     u16 selector, struct desc_ptr *dt)
+{
+	const struct x86_emulate_ops *ops = ctxt-&gt;ops;
+	u32 base3 = 0;
+
+	if (selector &amp; 1 &lt;&lt; 2) {
+		struct desc_struct desc;
+		u16 sel;
+
+<yellow>		memset(dt, 0, sizeof(*dt));</yellow>
+		if (!ops-&gt;get_segment(ctxt, &amp;sel, &amp;desc, &amp;base3,
+				      VCPU_SREG_LDTR))
+			return;
+
+<yellow>		dt->size = desc_limit_scaled(&desc); /* what if limit > 65535? */</yellow>
+<yellow>		dt->address = get_desc_base(&desc) | ((u64)base3 << 32);</yellow>
+	} else
+<yellow>		ops->get_gdt(ctxt, dt);</yellow>
+}
+
+static int get_descriptor_ptr(struct x86_emulate_ctxt *ctxt,
+			      u16 selector, ulong *desc_addr_p)
+<yellow>{</yellow>
+	struct desc_ptr dt;
+<yellow>	u16 index = selector >> 3;</yellow>
+	ulong addr;
+
+<yellow>	get_descriptor_table_ptr(ctxt, selector, &dt);</yellow>
+
+<yellow>	if (dt.size < index * 8 + 7)</yellow>
+<yellow>		return emulate_gp(ctxt, selector & 0xfffc);</yellow>
+
+<yellow>	addr = dt.address + index * 8;</yellow>
+
+#ifdef CONFIG_X86_64
+	if (addr &gt;&gt; 32 != 0) {
+		u64 efer = 0;
+
+<yellow>		ctxt->ops->get_msr(ctxt, MSR_EFER, &efer);</yellow>
+		if (!(efer &amp; EFER_LMA))
+<yellow>			addr &= (u32)-1;</yellow>
+	}
+#endif
+
+<yellow>	*desc_addr_p = addr;</yellow>
+	return X86EMUL_CONTINUE;
+}
+
+/* allowed just for 8 bytes segments */
+<yellow>static int read_segment_descriptor(struct x86_emulate_ctxt *ctxt,</yellow>
+				   u16 selector, struct desc_struct *desc,
+				   ulong *desc_addr_p)
+{
+	int rc;
+
+<yellow>	rc = get_descriptor_ptr(ctxt, selector, desc_addr_p);</yellow>
+<yellow>	if (rc != X86EMUL_CONTINUE)</yellow>
+		return rc;
+
+<yellow>	return linear_read_system(ctxt, *desc_addr_p, desc, sizeof(*desc));</yellow>
+}
+
+/* allowed just for 8 bytes segments */
+static int write_segment_descriptor(struct x86_emulate_ctxt *ctxt,
+				    u16 selector, struct desc_struct *desc)
+<yellow>{</yellow>
+	int rc;
+	ulong addr;
+
+<yellow>	rc = get_descriptor_ptr(ctxt, selector, &addr);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	return linear_write_system(ctxt, addr, desc, sizeof(*desc));</yellow>
+}
+
+static int __load_segment_descriptor(struct x86_emulate_ctxt *ctxt,
+				     u16 selector, int seg, u8 cpl,
+				     enum x86_transfer_type transfer,
+				     struct desc_struct *desc)
+<yellow>{</yellow>
+	struct desc_struct seg_desc, old_desc;
+	u8 dpl, rpl;
+	unsigned err_vec = GP_VECTOR;
+	u32 err_code = 0;
+<yellow>	bool null_selector = !(selector & ~0x3); /* 0000-0003 are null */</yellow>
+	ulong desc_addr;
+	int ret;
+	u16 dummy;
+	u32 base3 = 0;
+
+<yellow>	memset(&seg_desc, 0, sizeof(seg_desc));</yellow>
+
+	if (ctxt-&gt;mode == X86EMUL_MODE_REAL) {
+		/* set real mode segment descriptor (keep limit etc. for
+		 * unreal mode) */
+<yellow>		ctxt->ops->get_segment(ctxt, &dummy, &seg_desc, NULL, seg);</yellow>
+		set_desc_base(&amp;seg_desc, selector &lt;&lt; 4);
+		goto load;
+<yellow>	} else if (seg <= VCPU_SREG_GS && ctxt->mode == X86EMUL_MODE_VM86) {</yellow>
+		/* VM86 needs a clean new segment descriptor */
+<yellow>		set_desc_base(&seg_desc, selector << 4);</yellow>
+		set_desc_limit(&amp;seg_desc, 0xffff);
+		seg_desc.type = 3;
+		seg_desc.p = 1;
+		seg_desc.s = 1;
+		seg_desc.dpl = 3;
+		goto load;
+	}
+
+<yellow>	rpl = selector & 3;</yellow>
+
+	/* TR should be in GDT only */
+<yellow>	if (seg == VCPU_SREG_TR && (selector & (1 << 2)))</yellow>
+		goto exception;
+
+	/* NULL selector is not valid for TR, CS and (except for long mode) SS */
+<yellow>	if (null_selector) {</yellow>
+<yellow>		if (seg == VCPU_SREG_CS || seg == VCPU_SREG_TR)</yellow>
+			goto exception;
+
+<yellow>		if (seg == VCPU_SREG_SS) {</yellow>
+<yellow>			if (ctxt->mode != X86EMUL_MODE_PROT64 || rpl != cpl)</yellow>
+				goto exception;
+
+			/*
+			 * ctxt-&gt;ops-&gt;set_segment expects the CPL to be in
+			 * SS.DPL, so fake an expand-up 32-bit data segment.
+			 */
+<yellow>			seg_desc.type = 3;</yellow>
+			seg_desc.p = 1;
+			seg_desc.s = 1;
+			seg_desc.dpl = cpl;
+			seg_desc.d = 1;
+			seg_desc.g = 1;
+		}
+
+		/* Skip all following checks */
+		goto load;
+	}
+
+<yellow>	ret = read_segment_descriptor(ctxt, selector, &seg_desc, &desc_addr);</yellow>
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+	err_code = selector &amp; 0xfffc;
+<yellow>	err_vec = (transfer == X86_TRANSFER_TASK_SWITCH) ? TS_VECTOR :</yellow>
+							   GP_VECTOR;
+
+	/* can&#x27;t load system descriptor into segment selector */
+<yellow>	if (seg <= VCPU_SREG_GS && !seg_desc.s) {</yellow>
+<yellow>		if (transfer == X86_TRANSFER_CALL_JMP)</yellow>
+			return X86EMUL_UNHANDLEABLE;
+		goto exception;
+	}
+
+<yellow>	dpl = seg_desc.dpl;</yellow>
+
+	switch (seg) {
+	case VCPU_SREG_SS:
+		/*
+		 * segment is not a writable data segment or segment
+		 * selector&#x27;s RPL != CPL or segment selector&#x27;s RPL != CPL
+		 */
+<yellow>		if (rpl != cpl || (seg_desc.type & 0xa) != 0x2 || dpl != cpl)</yellow>
+			goto exception;
+		break;
+	case VCPU_SREG_CS:
+<yellow>		if (!(seg_desc.type & 8))</yellow>
+			goto exception;
+
+<yellow>		if (transfer == X86_TRANSFER_RET) {</yellow>
+			/* RET can never return to an inner privilege level. */
+<yellow>			if (rpl < cpl)</yellow>
+				goto exception;
+			/* Outer-privilege level return is not implemented */
+<yellow>			if (rpl > cpl)</yellow>
+				return X86EMUL_UNHANDLEABLE;
+		}
+<yellow>		if (transfer == X86_TRANSFER_RET || transfer == X86_TRANSFER_TASK_SWITCH) {</yellow>
+<yellow>			if (seg_desc.type & 4) {</yellow>
+				/* conforming */
+<yellow>				if (dpl > rpl)</yellow>
+					goto exception;
+			} else {
+				/* nonconforming */
+<yellow>				if (dpl != rpl)</yellow>
+					goto exception;
+			}
+		} else { /* X86_TRANSFER_CALL_JMP */
+<yellow>			if (seg_desc.type & 4) {</yellow>
+				/* conforming */
+<yellow>				if (dpl > cpl)</yellow>
+					goto exception;
+			} else {
+				/* nonconforming */
+<yellow>				if (rpl > cpl || dpl != cpl)</yellow>
+					goto exception;
+			}
+		}
+		/* in long-mode d/b must be clear if l is set */
+<yellow>		if (seg_desc.d && seg_desc.l) {</yellow>
+			u64 efer = 0;
+
+<yellow>			ctxt->ops->get_msr(ctxt, MSR_EFER, &efer);</yellow>
+<yellow>			if (efer & EFER_LMA)</yellow>
+				goto exception;
+		}
+
+		/* CS(RPL) &lt;- CPL */
+<yellow>		selector = (selector & 0xfffc) | cpl;</yellow>
+		break;
+	case VCPU_SREG_TR:
+<yellow>		if (seg_desc.s || (seg_desc.type != 1 && seg_desc.type != 9))</yellow>
+			goto exception;
+		break;
+	case VCPU_SREG_LDTR:
+<yellow>		if (seg_desc.s || seg_desc.type != 2)</yellow>
+			goto exception;
+		break;
+	default: /*  DS, ES, FS, or GS */
+		/*
+		 * segment is not a data or readable code segment or
+		 * ((segment is a data or nonconforming code segment)
+		 * and (both RPL and CPL &gt; DPL))
+		 */
+<yellow>		if ((seg_desc.type & 0xa) == 0x8 ||</yellow>
+<yellow>		    (((seg_desc.type & 0xc) != 0xc) &&</yellow>
+<yellow>		     (rpl > dpl && cpl > dpl)))</yellow>
+			goto exception;
+		break;
+	}
+
+<yellow>	if (!seg_desc.p) {</yellow>
+<yellow>		err_vec = (seg == VCPU_SREG_SS) ? SS_VECTOR : NP_VECTOR;</yellow>
+		goto exception;
+	}
+
+<yellow>	if (seg_desc.s) {</yellow>
+		/* mark segment as accessed */
+<yellow>		if (!(seg_desc.type & 1)) {</yellow>
+<yellow>			seg_desc.type |= 1;</yellow>
+<yellow>			ret = write_segment_descriptor(ctxt, selector,</yellow>
+						       &amp;seg_desc);
+			if (ret != X86EMUL_CONTINUE)
+				return ret;
+		}
+<yellow>	} else if (ctxt->mode == X86EMUL_MODE_PROT64) {</yellow>
+<yellow>		ret = linear_read_system(ctxt, desc_addr+8, &base3, sizeof(base3));</yellow>
+		if (ret != X86EMUL_CONTINUE)
+			return ret;
+<yellow>		if (emul_is_noncanonical_address(get_desc_base(&seg_desc) |</yellow>
+						 ((u64)base3 &lt;&lt; 32), ctxt))
+<yellow>			return emulate_gp(ctxt, err_code);</yellow>
+	}
+
+	if (seg == VCPU_SREG_TR) {
+<yellow>		old_desc = seg_desc;</yellow>
+		seg_desc.type |= 2; /* busy */
+<yellow>		ret = ctxt->ops->cmpxchg_emulated(ctxt, desc_addr, &old_desc, &seg_desc,</yellow>
+						  sizeof(seg_desc), &amp;ctxt-&gt;exception);
+		if (ret != X86EMUL_CONTINUE)
+			return ret;
+	}
+load:
+<yellow>	ctxt->ops->set_segment(ctxt, selector, &seg_desc, base3, seg);</yellow>
+	if (desc)
+<yellow>		*desc = seg_desc;</yellow>
+	return X86EMUL_CONTINUE;
+exception:
+<yellow>	return emulate_exception(ctxt, err_vec, err_code, true);</yellow>
+}
+
+static int load_segment_descriptor(struct x86_emulate_ctxt *ctxt,
+				   u16 selector, int seg)
+{
+<yellow>	u8 cpl = ctxt->ops->cpl(ctxt);</yellow>
+
+	/*
+	 * None of MOV, POP and LSS can load a NULL selector in CPL=3, but
+	 * they can load it at CPL&lt;3 (Intel&#x27;s manual says only LSS can,
+	 * but it&#x27;s wrong).
+	 *
+	 * However, the Intel manual says that putting IST=1/DPL=3 in
+	 * an interrupt gate will result in SS=3 (the AMD manual instead
+	 * says it doesn&#x27;t), so allow SS=3 in __load_segment_descriptor
+	 * and only forbid it here.
+	 */
+<yellow>	if (seg == VCPU_SREG_SS && selector == 3 &&</yellow>
+<yellow>	    ctxt->mode == X86EMUL_MODE_PROT64)</yellow>
+<yellow>		return emulate_exception(ctxt, GP_VECTOR, 0, true);</yellow>
+
+<yellow>	return __load_segment_descriptor(ctxt, selector, seg, cpl,</yellow>
+					 X86_TRANSFER_NONE, NULL);
+<yellow>}</yellow>
+
+static void write_register_operand(struct operand *op)
+{
+<blue>	return assign_register(op->addr.reg, op->val, op->bytes);</blue>
+}
+
+static int writeback(struct x86_emulate_ctxt *ctxt, struct operand *op)
+<blue>{</blue>
+<blue>	switch (op->type) {</blue>
+	case OP_REG:
+<blue>		write_register_operand(op);</blue>
+		break;
+	case OP_MEM:
+<blue>		if (ctxt->lock_prefix)</blue>
+<yellow>			return segmented_cmpxchg(ctxt,</yellow>
+						 op-&gt;addr.mem,
+						 &amp;op-&gt;orig_val,
+						 &amp;op-&gt;val,
+						 op-&gt;bytes);
+		else
+<blue>			return segmented_write(ctxt,</blue>
+					       op-&gt;addr.mem,
+					       &amp;op-&gt;val,
+					       op-&gt;bytes);
+		break;
+	case OP_MEM_STR:
+		return segmented_write(ctxt,
+				       op-&gt;addr.mem,
+				       op-&gt;data,
+<blue>				       op->bytes * op->count);</blue>
+		break;
+	case OP_XMM:
+<yellow>		kvm_write_sse_reg(op->addr.xmm, &op->vec_val);</yellow>
+		break;
+	case OP_MM:
+<yellow>		kvm_write_mmx_reg(op->addr.mm, &op->mm_val);</yellow>
+		break;
+	case OP_NONE:
+		/* no writeback */
+		break;
+	default:
+		break;
+	}
+	return X86EMUL_CONTINUE;
+}
+
+static int push(struct x86_emulate_ctxt *ctxt, void *data, int bytes)
+{
+	struct segmented_address addr;
+
+<blue>	rsp_increment(ctxt, -bytes);</blue>
+<yellow>	addr.ea = reg_read(ctxt, VCPU_REGS_RSP) & stack_mask(ctxt);</yellow>
+	addr.seg = VCPU_SREG_SS;
+
+<blue>	return segmented_write(ctxt, addr, data, bytes);</blue>
+}
+
+static int em_push(struct x86_emulate_ctxt *ctxt)
+{
+	/* Disable writeback. */
+<blue>	ctxt->dst.type = OP_NONE;</blue>
+	return push(ctxt, &amp;ctxt-&gt;src.val, ctxt-&gt;op_bytes);
+}
+
+static int emulate_pop(struct x86_emulate_ctxt *ctxt,
+		       void *dest, int len)
+<blue>{</blue>
+	int rc;
+	struct segmented_address addr;
+
+<blue>	addr.ea = reg_read(ctxt, VCPU_REGS_RSP) & stack_mask(ctxt);</blue>
+	addr.seg = VCPU_SREG_SS;
+<blue>	rc = segmented_read(ctxt, addr, dest, len);</blue>
+<yellow>	if (rc != X86EMUL_CONTINUE)</yellow>
+		return rc;
+
+<blue>	rsp_increment(ctxt, len);</blue>
+	return rc;
+}
+
+static int em_pop(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	return emulate_pop(ctxt, &ctxt->dst.val, ctxt->op_bytes);</blue>
+}
+
+static int emulate_popf(struct x86_emulate_ctxt *ctxt,
+			void *dest, int len)
+{
+	int rc;
+	unsigned long val, change_mask;
+<yellow>	int iopl = (ctxt->eflags & X86_EFLAGS_IOPL) >> X86_EFLAGS_IOPL_BIT;</yellow>
+	int cpl = ctxt-&gt;ops-&gt;cpl(ctxt);
+
+	rc = emulate_pop(ctxt, &amp;val, len);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+	change_mask = X86_EFLAGS_CF | X86_EFLAGS_PF | X86_EFLAGS_AF |
+		      X86_EFLAGS_ZF | X86_EFLAGS_SF | X86_EFLAGS_OF |
+		      X86_EFLAGS_TF | X86_EFLAGS_DF | X86_EFLAGS_NT |
+		      X86_EFLAGS_AC | X86_EFLAGS_ID;
+
+	switch(ctxt-&gt;mode) {
+	case X86EMUL_MODE_PROT64:
+	case X86EMUL_MODE_PROT32:
+	case X86EMUL_MODE_PROT16:
+<yellow>		if (cpl == 0)</yellow>
+			change_mask |= X86_EFLAGS_IOPL;
+<yellow>		if (cpl <= iopl)</yellow>
+			change_mask |= X86_EFLAGS_IF;
+		break;
+	case X86EMUL_MODE_VM86:
+<yellow>		if (iopl < 3)</yellow>
+<yellow>			return emulate_gp(ctxt, 0);</yellow>
+		change_mask |= X86_EFLAGS_IF;
+		break;
+	default: /* real mode */
+		change_mask |= (X86_EFLAGS_IOPL | X86_EFLAGS_IF);
+		break;
+	}
+
+	*(unsigned long *)dest =
+<yellow>		(ctxt->eflags & ~change_mask) | (val & change_mask);</yellow>
+
+	return rc;
+}
+
+static int em_popf(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	ctxt->dst.type = OP_REG;</yellow>
+	ctxt-&gt;dst.addr.reg = &amp;ctxt-&gt;eflags;
+	ctxt-&gt;dst.bytes = ctxt-&gt;op_bytes;
+<yellow>	return emulate_popf(ctxt, &ctxt->dst.val, ctxt->op_bytes);</yellow>
+}
+
+static int em_enter(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	int rc;
+<yellow>	unsigned frame_size = ctxt->src.val;</yellow>
+<yellow>	unsigned nesting_level = ctxt->src2.val & 31;</yellow>
+	ulong rbp;
+
+	if (nesting_level)
+		return X86EMUL_UNHANDLEABLE;
+
+	rbp = reg_read(ctxt, VCPU_REGS_RBP);
+<yellow>	rc = push(ctxt, &rbp, stack_size(ctxt));</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	assign_masked(reg_rmw(ctxt, VCPU_REGS_RBP), reg_read(ctxt, VCPU_REGS_RSP),</yellow>
+		      stack_mask(ctxt));
+<yellow>	assign_masked(reg_rmw(ctxt, VCPU_REGS_RSP),</yellow>
+<yellow>		      reg_read(ctxt, VCPU_REGS_RSP) - frame_size,</yellow>
+		      stack_mask(ctxt));
+	return X86EMUL_CONTINUE;
+}
+
+static int em_leave(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	assign_masked(reg_rmw(ctxt, VCPU_REGS_RSP), reg_read(ctxt, VCPU_REGS_RBP),</yellow>
+		      stack_mask(ctxt));
+	return emulate_pop(ctxt, reg_rmw(ctxt, VCPU_REGS_RBP), ctxt-&gt;op_bytes);
+}
+
+static int em_push_sreg(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	int seg = ctxt->src2.val;</yellow>
+
+	ctxt-&gt;src.val = get_segment_selector(ctxt, seg);
+	if (ctxt-&gt;op_bytes == 4) {
+<yellow>		rsp_increment(ctxt, -2);</yellow>
+		ctxt-&gt;op_bytes = 2;
+	}
+
+<yellow>	return em_push(ctxt);</yellow>
+}
+
+static int em_pop_sreg(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	int seg = ctxt->src2.val;</yellow>
+	unsigned long selector;
+	int rc;
+
+	rc = emulate_pop(ctxt, &amp;selector, 2);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	if (seg == VCPU_SREG_SS)</yellow>
+<yellow>		ctxt->interruptibility = KVM_X86_SHADOW_INT_MOV_SS;</yellow>
+<yellow>	if (ctxt->op_bytes > 2)</yellow>
+<yellow>		rsp_increment(ctxt, ctxt->op_bytes - 2);</yellow>
+
+<yellow>	rc = load_segment_descriptor(ctxt, (u16)selector, seg);</yellow>
+	return rc;
+}
+
+static int em_pusha(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	unsigned long old_esp = reg_read(ctxt, VCPU_REGS_RSP);</yellow>
+	int rc = X86EMUL_CONTINUE;
+	int reg = VCPU_REGS_RAX;
+
+<yellow>	while (reg <= VCPU_REGS_RDI) {</yellow>
+		(reg == VCPU_REGS_RSP) ?
+<yellow>		(ctxt->src.val = old_esp) : (ctxt->src.val = reg_read(ctxt, reg));</yellow>
+
+		rc = em_push(ctxt);
+		if (rc != X86EMUL_CONTINUE)
+			return rc;
+
+		++reg;
+	}
+
+	return rc;
+<yellow>}</yellow>
+
+static int em_pushf(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	ctxt->src.val = (unsigned long)ctxt->eflags & ~X86_EFLAGS_VM;</yellow>
+	return em_push(ctxt);
+}
+
+static int em_popa(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	int rc = X86EMUL_CONTINUE;
+	int reg = VCPU_REGS_RDI;
+	u32 val;
+
+	while (reg &gt;= VCPU_REGS_RAX) {
+<yellow>		if (reg == VCPU_REGS_RSP) {</yellow>
+<yellow>			rsp_increment(ctxt, ctxt->op_bytes);</yellow>
+			--reg;
+		}
+
+<yellow>		rc = emulate_pop(ctxt, &val, ctxt->op_bytes);</yellow>
+		if (rc != X86EMUL_CONTINUE)
+			break;
+<yellow>		assign_register(reg_rmw(ctxt, reg), val, ctxt->op_bytes);</yellow>
+<yellow>		--reg;</yellow>
+	}
+	return rc;
+}
+
+static int __emulate_int_real(struct x86_emulate_ctxt *ctxt, int irq)
+<yellow>{</yellow>
+<yellow>	const struct x86_emulate_ops *ops = ctxt->ops;</yellow>
+	int rc;
+	struct desc_ptr dt;
+	gva_t cs_addr;
+	gva_t eip_addr;
+	u16 cs, eip;
+
+	/* TODO: Add limit checks */
+	ctxt-&gt;src.val = ctxt-&gt;eflags;
+	rc = em_push(ctxt);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	ctxt->eflags &= ~(X86_EFLAGS_IF | X86_EFLAGS_TF | X86_EFLAGS_AC);</yellow>
+
+	ctxt-&gt;src.val = get_segment_selector(ctxt, VCPU_SREG_CS);
+	rc = em_push(ctxt);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	ctxt->src.val = ctxt->_eip;</yellow>
+	rc = em_push(ctxt);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	ops->get_idt(ctxt, &dt);</yellow>
+
+	eip_addr = dt.address + (irq &lt;&lt; 2);
+	cs_addr = dt.address + (irq &lt;&lt; 2) + 2;
+
+	rc = linear_read_system(ctxt, cs_addr, &amp;cs, 2);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	rc = linear_read_system(ctxt, eip_addr, &eip, 2);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	rc = load_segment_descriptor(ctxt, cs, VCPU_SREG_CS);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	ctxt->_eip = eip;</yellow>
+
+	return rc;
+}
+
+int emulate_int_real(struct x86_emulate_ctxt *ctxt, int irq)
+{
+	int rc;
+
+<yellow>	invalidate_registers(ctxt);</yellow>
+	rc = __emulate_int_real(ctxt, irq);
+	if (rc == X86EMUL_CONTINUE)
+<yellow>		writeback_registers(ctxt);</yellow>
+	return rc;
+<yellow>}</yellow>
+
+static int emulate_int(struct x86_emulate_ctxt *ctxt, int irq)
+{
+<yellow>	switch(ctxt->mode) {</yellow>
+	case X86EMUL_MODE_REAL:
+<yellow>		return __emulate_int_real(ctxt, irq);</yellow>
+	case X86EMUL_MODE_VM86:
+	case X86EMUL_MODE_PROT16:
+	case X86EMUL_MODE_PROT32:
+	case X86EMUL_MODE_PROT64:
+	default:
+		/* Protected mode interrupts unimplemented yet */
+		return X86EMUL_UNHANDLEABLE;
+	}
+}
+
+static int emulate_iret_real(struct x86_emulate_ctxt *ctxt)
+{
+	int rc = X86EMUL_CONTINUE;
+	unsigned long temp_eip = 0;
+	unsigned long temp_eflags = 0;
+	unsigned long cs = 0;
+	unsigned long mask = X86_EFLAGS_CF | X86_EFLAGS_PF | X86_EFLAGS_AF |
+			     X86_EFLAGS_ZF | X86_EFLAGS_SF | X86_EFLAGS_TF |
+			     X86_EFLAGS_IF | X86_EFLAGS_DF | X86_EFLAGS_OF |
+			     X86_EFLAGS_IOPL | X86_EFLAGS_NT | X86_EFLAGS_RF |
+			     X86_EFLAGS_AC | X86_EFLAGS_ID |
+			     X86_EFLAGS_FIXED;
+	unsigned long vm86_mask = X86_EFLAGS_VM | X86_EFLAGS_VIF |
+				  X86_EFLAGS_VIP;
+
+	/* TODO: Add stack limit check */
+
+<yellow>	rc = emulate_pop(ctxt, &temp_eip, ctxt->op_bytes);</yellow>
+
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	if (temp_eip & ~0xffff)</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	rc = emulate_pop(ctxt, &cs, ctxt->op_bytes);</yellow>
+
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	rc = emulate_pop(ctxt, &temp_eflags, ctxt->op_bytes);</yellow>
+
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	rc = load_segment_descriptor(ctxt, (u16)cs, VCPU_SREG_CS);</yellow>
+
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	ctxt->_eip = temp_eip;</yellow>
+
+	if (ctxt-&gt;op_bytes == 4)
+<yellow>		ctxt->eflags = ((temp_eflags & mask) | (ctxt->eflags & vm86_mask));</yellow>
+<yellow>	else if (ctxt->op_bytes == 2) {</yellow>
+<yellow>		ctxt->eflags &= ~0xffff;</yellow>
+		ctxt-&gt;eflags |= temp_eflags;
+	}
+
+<yellow>	ctxt->eflags &= ~EFLG_RESERVED_ZEROS_MASK; /* Clear reserved zeros */</yellow>
+	ctxt-&gt;eflags |= X86_EFLAGS_FIXED;
+	ctxt-&gt;ops-&gt;set_nmi_mask(ctxt, false);
+
+	return rc;
+}
+
+static int em_iret(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	switch(ctxt->mode) {</yellow>
+	case X86EMUL_MODE_REAL:
+<yellow>		return emulate_iret_real(ctxt);</yellow>
+	case X86EMUL_MODE_VM86:
+	case X86EMUL_MODE_PROT16:
+	case X86EMUL_MODE_PROT32:
+	case X86EMUL_MODE_PROT64:
+	default:
+		/* iret from protected mode unimplemented yet */
+		return X86EMUL_UNHANDLEABLE;
+	}
+}
+
+static int em_jmp_far(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	int rc;
+	unsigned short sel;
+	struct desc_struct new_desc;
+<yellow>	u8 cpl = ctxt->ops->cpl(ctxt);</yellow>
+
+	memcpy(&amp;sel, ctxt-&gt;src.valptr + ctxt-&gt;op_bytes, 2);
+
+	rc = __load_segment_descriptor(ctxt, sel, VCPU_SREG_CS, cpl,
+				       X86_TRANSFER_CALL_JMP,
+				       &amp;new_desc);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	rc = assign_eip_far(ctxt, ctxt->src.val);</yellow>
+	/* Error handling is not implemented. */
+	if (rc != X86EMUL_CONTINUE)
+<yellow>		return X86EMUL_UNHANDLEABLE;</yellow>
+
+	return rc;
+}
+
+static int em_jmp_abs(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return assign_eip_near(ctxt, ctxt->src.val);</yellow>
+}
+
+static int em_call_near_abs(struct x86_emulate_ctxt *ctxt)
+{
+	int rc;
+	long int old_eip;
+
+<yellow>	old_eip = ctxt->_eip;</yellow>
+	rc = assign_eip_near(ctxt, ctxt-&gt;src.val);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	ctxt->src.val = old_eip;</yellow>
+	rc = em_push(ctxt);
+	return rc;
+<yellow>}</yellow>
+
+static int em_cmpxchg8b(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u64 old = ctxt->dst.orig_val64;</yellow>
+
+<yellow>	if (ctxt->dst.bytes == 16)</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+	if (((u32) (old &gt;&gt; 0) != (u32) reg_read(ctxt, VCPU_REGS_RAX)) ||
+<yellow>	    ((u32) (old >> 32) != (u32) reg_read(ctxt, VCPU_REGS_RDX))) {</yellow>
+<yellow>		*reg_write(ctxt, VCPU_REGS_RAX) = (u32) (old >> 0);</yellow>
+		*reg_write(ctxt, VCPU_REGS_RDX) = (u32) (old &gt;&gt; 32);
+		ctxt-&gt;eflags &amp;= ~X86_EFLAGS_ZF;
+	} else {
+<yellow>		ctxt->dst.val64 = ((u64)reg_read(ctxt, VCPU_REGS_RCX) << 32) |</yellow>
+			(u32) reg_read(ctxt, VCPU_REGS_RBX);
+
+		ctxt-&gt;eflags |= X86_EFLAGS_ZF;
+	}
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_ret(struct x86_emulate_ctxt *ctxt)
+<blue>{</blue>
+	int rc;
+	unsigned long eip;
+
+<blue>	rc = emulate_pop(ctxt, &eip, ctxt->op_bytes);</blue>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<blue>	return assign_eip_near(ctxt, eip);</blue>
+}
+
+static int em_ret_far(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	int rc;
+	unsigned long eip, cs;
+<yellow>	int cpl = ctxt->ops->cpl(ctxt);</yellow>
+	struct desc_struct new_desc;
+
+	rc = emulate_pop(ctxt, &amp;eip, ctxt-&gt;op_bytes);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	rc = emulate_pop(ctxt, &cs, ctxt->op_bytes);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	rc = __load_segment_descriptor(ctxt, (u16)cs, VCPU_SREG_CS, cpl,</yellow>
+				       X86_TRANSFER_RET,
+				       &amp;new_desc);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	rc = assign_eip_far(ctxt, eip);</yellow>
+	/* Error handling is not implemented. */
+	if (rc != X86EMUL_CONTINUE)
+<yellow>		return X86EMUL_UNHANDLEABLE;</yellow>
+
+	return rc;
+}
+
+<yellow>static int em_ret_far_imm(struct x86_emulate_ctxt *ctxt)</yellow>
+<yellow>{</yellow>
+        int rc;
+
+<yellow>        rc = em_ret_far(ctxt);</yellow>
+        if (rc != X86EMUL_CONTINUE)
+                return rc;
+<yellow>        rsp_increment(ctxt, ctxt->src.val);</yellow>
+        return X86EMUL_CONTINUE;
+}
+
+static int em_cmpxchg(struct x86_emulate_ctxt *ctxt)
+{
+	/* Save real source value, then compare EAX against destination. */
+<yellow>	ctxt->dst.orig_val = ctxt->dst.val;</yellow>
+	ctxt-&gt;dst.val = reg_read(ctxt, VCPU_REGS_RAX);
+	ctxt-&gt;src.orig_val = ctxt-&gt;src.val;
+	ctxt-&gt;src.val = ctxt-&gt;dst.orig_val;
+	fastop(ctxt, em_cmp);
+
+	if (ctxt-&gt;eflags &amp; X86_EFLAGS_ZF) {
+		/* Success: write back to memory; no update of EAX */
+<yellow>		ctxt->src.type = OP_NONE;</yellow>
+<yellow>		ctxt->dst.val = ctxt->src.orig_val;</yellow>
+	} else {
+		/* Failure: write the value we saw to EAX. */
+<yellow>		ctxt->src.type = OP_REG;</yellow>
+		ctxt-&gt;src.addr.reg = reg_rmw(ctxt, VCPU_REGS_RAX);
+		ctxt-&gt;src.val = ctxt-&gt;dst.orig_val;
+		/* Create write-cycle to dest by writing the same value */
+		ctxt-&gt;dst.val = ctxt-&gt;dst.orig_val;
+	}
+	return X86EMUL_CONTINUE;
+}
+
+static int em_lseg(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	int seg = ctxt->src2.val;</yellow>
+	unsigned short sel;
+	int rc;
+
+	memcpy(&amp;sel, ctxt-&gt;src.valptr + ctxt-&gt;op_bytes, 2);
+
+	rc = load_segment_descriptor(ctxt, sel, seg);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	ctxt->dst.val = ctxt->src.val;</yellow>
+	return rc;
+}
+
+static int emulator_has_longmode(struct x86_emulate_ctxt *ctxt)
+{
+#ifdef CONFIG_X86_64
+<yellow>	return ctxt->ops->guest_has_long_mode(ctxt);</yellow>
+#else
+	return false;
+#endif
+}
+
+static void rsm_set_desc_flags(struct desc_struct *desc, u32 flags)
+{
+	desc-&gt;g    = (flags &gt;&gt; 23) &amp; 1;
+	desc-&gt;d    = (flags &gt;&gt; 22) &amp; 1;
+	desc-&gt;l    = (flags &gt;&gt; 21) &amp; 1;
+	desc-&gt;avl  = (flags &gt;&gt; 20) &amp; 1;
+	desc-&gt;p    = (flags &gt;&gt; 15) &amp; 1;
+	desc-&gt;dpl  = (flags &gt;&gt; 13) &amp; 3;
+	desc-&gt;s    = (flags &gt;&gt; 12) &amp; 1;
+	desc-&gt;type = (flags &gt;&gt;  8) &amp; 15;
+}
+
+static int rsm_load_seg_32(struct x86_emulate_ctxt *ctxt, const char *smstate,
+			   int n)
+{
+	struct desc_struct desc;
+	int offset;
+	u16 selector;
+
+<yellow>	selector = GET_SMSTATE(u32, smstate, 0x7fa8 + n * 4);</yellow>
+
+	if (n &lt; 3)
+<yellow>		offset = 0x7f84 + n * 12;</yellow>
+	else
+<yellow>		offset = 0x7f2c + (n - 3) * 12;</yellow>
+
+<yellow>	set_desc_base(&desc,      GET_SMSTATE(u32, smstate, offset + 8));</yellow>
+	set_desc_limit(&amp;desc,     GET_SMSTATE(u32, smstate, offset + 4));
+	rsm_set_desc_flags(&amp;desc, GET_SMSTATE(u32, smstate, offset));
+	ctxt-&gt;ops-&gt;set_segment(ctxt, selector, &amp;desc, 0, n);
+	return X86EMUL_CONTINUE;
+}
+
+#ifdef CONFIG_X86_64
+static int rsm_load_seg_64(struct x86_emulate_ctxt *ctxt, const char *smstate,
+			   int n)
+{
+	struct desc_struct desc;
+	int offset;
+	u16 selector;
+	u32 base3;
+
+	offset = 0x7e00 + n * 16;
+
+<yellow>	selector =                GET_SMSTATE(u16, smstate, offset);</yellow>
+	rsm_set_desc_flags(&amp;desc, GET_SMSTATE(u16, smstate, offset + 2) &lt;&lt; 8);
+	set_desc_limit(&amp;desc,     GET_SMSTATE(u32, smstate, offset + 4));
+	set_desc_base(&amp;desc,      GET_SMSTATE(u32, smstate, offset + 8));
+	base3 =                   GET_SMSTATE(u32, smstate, offset + 12);
+
+	ctxt-&gt;ops-&gt;set_segment(ctxt, selector, &amp;desc, base3, n);
+	return X86EMUL_CONTINUE;
+}
+#endif
+
+static int rsm_enter_protected_mode(struct x86_emulate_ctxt *ctxt,
+				    u64 cr0, u64 cr3, u64 cr4)
+{
+	int bad;
+	u64 pcid;
+
+	/* In order to later set CR4.PCIDE, CR3[11:0] must be zero.  */
+	pcid = 0;
+<yellow>	if (cr4 & X86_CR4_PCIDE) {</yellow>
+<yellow>		pcid = cr3 & 0xfff;</yellow>
+		cr3 &amp;= ~0xfff;
+	}
+
+<yellow>	bad = ctxt->ops->set_cr(ctxt, 3, cr3);</yellow>
+	if (bad)
+		return X86EMUL_UNHANDLEABLE;
+
+	/*
+	 * First enable PAE, long mode needs it before CR0.PG = 1 is set.
+	 * Then enable protected mode.	However, PCID cannot be enabled
+	 * if EFER.LMA=0, so set it separately.
+	 */
+<yellow>	bad = ctxt->ops->set_cr(ctxt, 4, cr4 & ~X86_CR4_PCIDE);</yellow>
+	if (bad)
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	bad = ctxt->ops->set_cr(ctxt, 0, cr0);</yellow>
+	if (bad)
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	if (cr4 & X86_CR4_PCIDE) {</yellow>
+<yellow>		bad = ctxt->ops->set_cr(ctxt, 4, cr4);</yellow>
+		if (bad)
+			return X86EMUL_UNHANDLEABLE;
+<yellow>		if (pcid) {</yellow>
+<yellow>			bad = ctxt->ops->set_cr(ctxt, 3, cr3 | pcid);</yellow>
+			if (bad)
+				return X86EMUL_UNHANDLEABLE;
+		}
+
+	}
+
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int rsm_load_state_32(struct x86_emulate_ctxt *ctxt,
+			     const char *smstate)
+{
+	struct desc_struct desc;
+	struct desc_ptr dt;
+	u16 selector;
+	u32 val, cr0, cr3, cr4;
+	int i;
+
+<yellow>	cr0 =                      GET_SMSTATE(u32, smstate, 0x7ffc);</yellow>
+	cr3 =                      GET_SMSTATE(u32, smstate, 0x7ff8);
+	ctxt-&gt;eflags =             GET_SMSTATE(u32, smstate, 0x7ff4) | X86_EFLAGS_FIXED;
+	ctxt-&gt;_eip =               GET_SMSTATE(u32, smstate, 0x7ff0);
+
+	for (i = 0; i &lt; 8; i++)
+<yellow>		*reg_write(ctxt, i) = GET_SMSTATE(u32, smstate, 0x7fd0 + i * 4);</yellow>
+
+	val = GET_SMSTATE(u32, smstate, 0x7fcc);
+
+<yellow>	if (ctxt->ops->set_dr(ctxt, 6, val))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+	val = GET_SMSTATE(u32, smstate, 0x7fc8);
+
+<yellow>	if (ctxt->ops->set_dr(ctxt, 7, val))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+	selector =                 GET_SMSTATE(u32, smstate, 0x7fc4);
+<yellow>	set_desc_base(&desc,       GET_SMSTATE(u32, smstate, 0x7f64));</yellow>
+	set_desc_limit(&amp;desc,      GET_SMSTATE(u32, smstate, 0x7f60));
+	rsm_set_desc_flags(&amp;desc,  GET_SMSTATE(u32, smstate, 0x7f5c));
+	ctxt-&gt;ops-&gt;set_segment(ctxt, selector, &amp;desc, 0, VCPU_SREG_TR);
+
+	selector =                 GET_SMSTATE(u32, smstate, 0x7fc0);
+	set_desc_base(&amp;desc,       GET_SMSTATE(u32, smstate, 0x7f80));
+	set_desc_limit(&amp;desc,      GET_SMSTATE(u32, smstate, 0x7f7c));
+	rsm_set_desc_flags(&amp;desc,  GET_SMSTATE(u32, smstate, 0x7f78));
+	ctxt-&gt;ops-&gt;set_segment(ctxt, selector, &amp;desc, 0, VCPU_SREG_LDTR);
+
+	dt.address =               GET_SMSTATE(u32, smstate, 0x7f74);
+	dt.size =                  GET_SMSTATE(u32, smstate, 0x7f70);
+	ctxt-&gt;ops-&gt;set_gdt(ctxt, &amp;dt);
+
+	dt.address =               GET_SMSTATE(u32, smstate, 0x7f58);
+	dt.size =                  GET_SMSTATE(u32, smstate, 0x7f54);
+	ctxt-&gt;ops-&gt;set_idt(ctxt, &amp;dt);
+
+	for (i = 0; i &lt; 6; i++) {
+<yellow>		int r = rsm_load_seg_32(ctxt, smstate, i);</yellow>
+		if (r != X86EMUL_CONTINUE)
+			return r;
+	}
+
+	cr4 = GET_SMSTATE(u32, smstate, 0x7f14);
+
+<yellow>	ctxt->ops->set_smbase(ctxt, GET_SMSTATE(u32, smstate, 0x7ef8));</yellow>
+
+	return rsm_enter_protected_mode(ctxt, cr0, cr3, cr4);
+}
+
+#ifdef CONFIG_X86_64
+static int rsm_load_state_64(struct x86_emulate_ctxt *ctxt,
+			     const char *smstate)
+{
+	struct desc_struct desc;
+	struct desc_ptr dt;
+	u64 val, cr0, cr3, cr4;
+	u32 base3;
+	u16 selector;
+	int i, r;
+
+	for (i = 0; i &lt; 16; i++)
+<yellow>		*reg_write(ctxt, i) = GET_SMSTATE(u64, smstate, 0x7ff8 - i * 8);</yellow>
+
+<yellow>	ctxt->_eip   = GET_SMSTATE(u64, smstate, 0x7f78);</yellow>
+	ctxt-&gt;eflags = GET_SMSTATE(u32, smstate, 0x7f70) | X86_EFLAGS_FIXED;
+
+	val = GET_SMSTATE(u64, smstate, 0x7f68);
+
+	if (ctxt-&gt;ops-&gt;set_dr(ctxt, 6, val))
+		return X86EMUL_UNHANDLEABLE;
+
+	val = GET_SMSTATE(u64, smstate, 0x7f60);
+
+<yellow>	if (ctxt->ops->set_dr(ctxt, 7, val))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	cr0 =                       GET_SMSTATE(u64, smstate, 0x7f58);</yellow>
+	cr3 =                       GET_SMSTATE(u64, smstate, 0x7f50);
+	cr4 =                       GET_SMSTATE(u64, smstate, 0x7f48);
+	ctxt-&gt;ops-&gt;set_smbase(ctxt, GET_SMSTATE(u32, smstate, 0x7f00));
+	val =                       GET_SMSTATE(u64, smstate, 0x7ed0);
+
+	if (ctxt-&gt;ops-&gt;set_msr(ctxt, MSR_EFER, val &amp; ~EFER_LMA))
+		return X86EMUL_UNHANDLEABLE;
+
+	selector =                  GET_SMSTATE(u32, smstate, 0x7e90);
+<yellow>	rsm_set_desc_flags(&desc,   GET_SMSTATE(u32, smstate, 0x7e92) << 8);</yellow>
+	set_desc_limit(&amp;desc,       GET_SMSTATE(u32, smstate, 0x7e94));
+	set_desc_base(&amp;desc,        GET_SMSTATE(u32, smstate, 0x7e98));
+	base3 =                     GET_SMSTATE(u32, smstate, 0x7e9c);
+	ctxt-&gt;ops-&gt;set_segment(ctxt, selector, &amp;desc, base3, VCPU_SREG_TR);
+
+	dt.size =                   GET_SMSTATE(u32, smstate, 0x7e84);
+	dt.address =                GET_SMSTATE(u64, smstate, 0x7e88);
+	ctxt-&gt;ops-&gt;set_idt(ctxt, &amp;dt);
+
+	selector =                  GET_SMSTATE(u32, smstate, 0x7e70);
+	rsm_set_desc_flags(&amp;desc,   GET_SMSTATE(u32, smstate, 0x7e72) &lt;&lt; 8);
+	set_desc_limit(&amp;desc,       GET_SMSTATE(u32, smstate, 0x7e74));
+	set_desc_base(&amp;desc,        GET_SMSTATE(u32, smstate, 0x7e78));
+	base3 =                     GET_SMSTATE(u32, smstate, 0x7e7c);
+	ctxt-&gt;ops-&gt;set_segment(ctxt, selector, &amp;desc, base3, VCPU_SREG_LDTR);
+
+	dt.size =                   GET_SMSTATE(u32, smstate, 0x7e64);
+	dt.address =                GET_SMSTATE(u64, smstate, 0x7e68);
+	ctxt-&gt;ops-&gt;set_gdt(ctxt, &amp;dt);
+
+	r = rsm_enter_protected_mode(ctxt, cr0, cr3, cr4);
+	if (r != X86EMUL_CONTINUE)
+		return r;
+
+<yellow>	for (i = 0; i < 6; i++) {</yellow>
+<yellow>		r = rsm_load_seg_64(ctxt, smstate, i);</yellow>
+		if (r != X86EMUL_CONTINUE)
+			return r;
+	}
+
+	return X86EMUL_CONTINUE;
+}
+#endif
+
+static int em_rsm(struct x86_emulate_ctxt *ctxt)
+<blue>{</blue>
+	unsigned long cr0, cr4, efer;
+	char buf[512];
+	u64 smbase;
+	int ret;
+
+<blue>	if ((ctxt->ops->get_hflags(ctxt) & X86EMUL_SMM_MASK) == 0)</blue>
+<blue>		return emulate_ud(ctxt);</blue>
+
+<yellow>	smbase = ctxt->ops->get_smbase(ctxt);</yellow>
+
+	ret = ctxt-&gt;ops-&gt;read_phys(ctxt, smbase + 0xfe00, buf, sizeof(buf));
+	if (ret != X86EMUL_CONTINUE)
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	if ((ctxt->ops->get_hflags(ctxt) & X86EMUL_SMM_INSIDE_NMI_MASK) == 0)</yellow>
+<yellow>		ctxt->ops->set_nmi_mask(ctxt, false);</yellow>
+
+<yellow>	ctxt->ops->exiting_smm(ctxt);</yellow>
+
+	/*
+	 * Get back to real mode, to prepare a safe state in which to load
+	 * CR0/CR3/CR4/EFER.  It&#x27;s all a bit more complicated if the vCPU
+	 * supports long mode.
+	 */
+	if (emulator_has_longmode(ctxt)) {
+		struct desc_struct cs_desc;
+
+		/* Zero CR4.PCIDE before CR0.PG.  */
+<yellow>		cr4 = ctxt->ops->get_cr(ctxt, 4);</yellow>
+		if (cr4 &amp; X86_CR4_PCIDE)
+<yellow>			ctxt->ops->set_cr(ctxt, 4, cr4 & ~X86_CR4_PCIDE);</yellow>
+
+		/* A 32-bit code segment is required to clear EFER.LMA.  */
+<yellow>		memset(&cs_desc, 0, sizeof(cs_desc));</yellow>
+		cs_desc.type = 0xb;
+		cs_desc.s = cs_desc.g = cs_desc.p = 1;
+		ctxt-&gt;ops-&gt;set_segment(ctxt, 0, &amp;cs_desc, 0, VCPU_SREG_CS);
+	}
+
+	/* For the 64-bit case, this will clear EFER.LMA.  */
+<yellow>	cr0 = ctxt->ops->get_cr(ctxt, 0);</yellow>
+	if (cr0 &amp; X86_CR0_PE)
+<yellow>		ctxt->ops->set_cr(ctxt, 0, cr0 & ~(X86_CR0_PG | X86_CR0_PE));</yellow>
+
+<yellow>	if (emulator_has_longmode(ctxt)) {</yellow>
+		/* Clear CR4.PAE before clearing EFER.LME. */
+<yellow>		cr4 = ctxt->ops->get_cr(ctxt, 4);</yellow>
+		if (cr4 &amp; X86_CR4_PAE)
+<yellow>			ctxt->ops->set_cr(ctxt, 4, cr4 & ~X86_CR4_PAE);</yellow>
+
+		/* And finally go back to 32-bit mode.  */
+		efer = 0;
+<yellow>		ctxt->ops->set_msr(ctxt, MSR_EFER, efer);</yellow>
+	}
+
+	/*
+	 * Give leave_smm() a chance to make ISA-specific changes to the vCPU
+	 * state (e.g. enter guest mode) before loading state from the SMM
+	 * state-save area.
+	 */
+<yellow>	if (ctxt->ops->leave_smm(ctxt, buf))</yellow>
+		goto emulate_shutdown;
+
+#ifdef CONFIG_X86_64
+<yellow>	if (emulator_has_longmode(ctxt))</yellow>
+<yellow>		ret = rsm_load_state_64(ctxt, buf);</yellow>
+	else
+#endif
+<yellow>		ret = rsm_load_state_32(ctxt, buf);</yellow>
+
+	if (ret != X86EMUL_CONTINUE)
+		goto emulate_shutdown;
+
+	/*
+	 * Note, the ctxt-&gt;ops callbacks are responsible for handling side
+	 * effects when writing MSRs and CRs, e.g. MMU context resets, CPUID
+	 * runtime updates, etc...  If that changes, e.g. this flow is moved
+	 * out of the emulator to make it look more like enter_smm(), then
+	 * those side effects need to be explicitly handled for both success
+	 * and shutdown.
+	 */
+<yellow>	return emulator_recalc_and_set_mode(ctxt);</yellow>
+
+emulate_shutdown:
+<yellow>	ctxt->ops->triple_fault(ctxt);</yellow>
+	return X86EMUL_CONTINUE;
+}
+
+static void
+setup_syscalls_segments(struct desc_struct *cs, struct desc_struct *ss)
+{
+	cs-&gt;l = 0;		/* will be adjusted later */
+	set_desc_base(cs, 0);	/* flat segment */
+	cs-&gt;g = 1;		/* 4kb granularity */
+	set_desc_limit(cs, 0xfffff);	/* 4GB limit */
+	cs-&gt;type = 0x0b;	/* Read, Execute, Accessed */
+	cs-&gt;s = 1;
+	cs-&gt;dpl = 0;		/* will be adjusted later */
+	cs-&gt;p = 1;
+	cs-&gt;d = 1;
+	cs-&gt;avl = 0;
+
+	set_desc_base(ss, 0);	/* flat segment */
+	set_desc_limit(ss, 0xfffff);	/* 4GB limit */
+	ss-&gt;g = 1;		/* 4kb granularity */
+	ss-&gt;s = 1;
+	ss-&gt;type = 0x03;	/* Read/Write, Accessed */
+	ss-&gt;d = 1;		/* 32bit stack segment */
+	ss-&gt;dpl = 0;
+	ss-&gt;p = 1;
+	ss-&gt;l = 0;
+	ss-&gt;avl = 0;
+}
+
+static bool vendor_intel(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	u32 eax, ebx, ecx, edx;
+
+	eax = ecx = 0;
+<yellow>	ctxt->ops->get_cpuid(ctxt, &eax, &ebx, &ecx, &edx, true);</yellow>
+<yellow>	return is_guest_vendor_intel(ebx, ecx, edx);</yellow>
+}
+
+static bool em_syscall_is_enabled(struct x86_emulate_ctxt *ctxt)
+{
+	const struct x86_emulate_ops *ops = ctxt-&gt;ops;
+	u32 eax, ebx, ecx, edx;
+
+	/*
+	 * syscall should always be enabled in longmode - so only become
+	 * vendor specific (cpuid) if other modes are active...
+	 */
+<yellow>	if (ctxt->mode == X86EMUL_MODE_PROT64)</yellow>
+		return true;
+
+	eax = 0x00000000;
+	ecx = 0x00000000;
+<yellow>	ops->get_cpuid(ctxt, &eax, &ebx, &ecx, &edx, true);</yellow>
+	/*
+	 * remark: Intel CPUs only support &quot;syscall&quot; in 64bit longmode. Also a
+	 * 64bit guest with a 32bit compat-app running will #UD !! While this
+	 * behaviour can be fixed (by emulating) into AMD response - CPUs of
+	 * AMD can&#x27;t behave like Intel.
+	 */
+	if (is_guest_vendor_intel(ebx, ecx, edx))
+		return false;
+
+<yellow>	if (is_guest_vendor_amd(ebx, ecx, edx) ||</yellow>
+<yellow>	    is_guest_vendor_hygon(ebx, ecx, edx))</yellow>
+		return true;
+
+	/*
+	 * default: (not Intel, not AMD, not Hygon), apply Intel&#x27;s
+	 * stricter rules...
+	 */
+	return false;
+}
+
+static int em_syscall(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	const struct x86_emulate_ops *ops = ctxt->ops;</yellow>
+	struct desc_struct cs, ss;
+	u64 msr_data;
+	u16 cs_sel, ss_sel;
+	u64 efer = 0;
+
+	/* syscall is not available in real mode */
+	if (ctxt-&gt;mode == X86EMUL_MODE_REAL ||
+	    ctxt-&gt;mode == X86EMUL_MODE_VM86)
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	if (!(em_syscall_is_enabled(ctxt)))</yellow>
+		return emulate_ud(ctxt);
+
+<yellow>	ops->get_msr(ctxt, MSR_EFER, &efer);</yellow>
+	if (!(efer &amp; EFER_SCE))
+		return emulate_ud(ctxt);
+
+	setup_syscalls_segments(&amp;cs, &amp;ss);
+<yellow>	ops->get_msr(ctxt, MSR_STAR, &msr_data);</yellow>
+	msr_data &gt;&gt;= 32;
+	cs_sel = (u16)(msr_data &amp; 0xfffc);
+	ss_sel = (u16)(msr_data + 8);
+
+	if (efer &amp; EFER_LMA) {
+		cs.d = 0;
+<yellow>		cs.l = 1;</yellow>
+	}
+<yellow>	ops->set_segment(ctxt, cs_sel, &cs, 0, VCPU_SREG_CS);</yellow>
+	ops-&gt;set_segment(ctxt, ss_sel, &amp;ss, 0, VCPU_SREG_SS);
+
+	*reg_write(ctxt, VCPU_REGS_RCX) = ctxt-&gt;_eip;
+	if (efer &amp; EFER_LMA) {
+#ifdef CONFIG_X86_64
+<yellow>		*reg_write(ctxt, VCPU_REGS_R11) = ctxt->eflags;</yellow>
+
+<yellow>		ops->get_msr(ctxt,</yellow>
+			     ctxt-&gt;mode == X86EMUL_MODE_PROT64 ?
+			     MSR_LSTAR : MSR_CSTAR, &amp;msr_data);
+		ctxt-&gt;_eip = msr_data;
+
+		ops-&gt;get_msr(ctxt, MSR_SYSCALL_MASK, &amp;msr_data);
+		ctxt-&gt;eflags &amp;= ~msr_data;
+<yellow>		ctxt->eflags |= X86_EFLAGS_FIXED;</yellow>
+#endif
+	} else {
+		/* legacy mode */
+<yellow>		ops->get_msr(ctxt, MSR_STAR, &msr_data);</yellow>
+		ctxt-&gt;_eip = (u32)msr_data;
+
+		ctxt-&gt;eflags &amp;= ~(X86_EFLAGS_VM | X86_EFLAGS_IF);
+	}
+
+	ctxt-&gt;tf = (ctxt-&gt;eflags &amp; X86_EFLAGS_TF) != 0;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_sysenter(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	const struct x86_emulate_ops *ops = ctxt->ops;</yellow>
+	struct desc_struct cs, ss;
+	u64 msr_data;
+	u16 cs_sel, ss_sel;
+	u64 efer = 0;
+
+	ops-&gt;get_msr(ctxt, MSR_EFER, &amp;efer);
+	/* inject #GP if in real mode */
+	if (ctxt-&gt;mode == X86EMUL_MODE_REAL)
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	/*
+	 * Not recognized on AMD in compat mode (but is recognized in legacy
+	 * mode).
+	 */
+<yellow>	if ((ctxt->mode != X86EMUL_MODE_PROT64) && (efer & EFER_LMA)</yellow>
+<yellow>	    && !vendor_intel(ctxt))</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+	/* sysenter/sysexit have not been tested in 64bit mode. */
+<yellow>	if (ctxt->mode == X86EMUL_MODE_PROT64)</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	ops->get_msr(ctxt, MSR_IA32_SYSENTER_CS, &msr_data);</yellow>
+	if ((msr_data &amp; 0xfffc) == 0x0)
+		return emulate_gp(ctxt, 0);
+
+	setup_syscalls_segments(&amp;cs, &amp;ss);
+<yellow>	ctxt->eflags &= ~(X86_EFLAGS_VM | X86_EFLAGS_IF);</yellow>
+	cs_sel = (u16)msr_data &amp; ~SEGMENT_RPL_MASK;
+	ss_sel = cs_sel + 8;
+	if (efer &amp; EFER_LMA) {
+		cs.d = 0;
+<yellow>		cs.l = 1;</yellow>
+	}
+
+<yellow>	ops->set_segment(ctxt, cs_sel, &cs, 0, VCPU_SREG_CS);</yellow>
+	ops-&gt;set_segment(ctxt, ss_sel, &amp;ss, 0, VCPU_SREG_SS);
+
+	ops-&gt;get_msr(ctxt, MSR_IA32_SYSENTER_EIP, &amp;msr_data);
+<yellow>	ctxt->_eip = (efer & EFER_LMA) ? msr_data : (u32)msr_data;</yellow>
+
+	ops-&gt;get_msr(ctxt, MSR_IA32_SYSENTER_ESP, &amp;msr_data);
+<yellow>	*reg_write(ctxt, VCPU_REGS_RSP) = (efer & EFER_LMA) ? msr_data :</yellow>
+<yellow>							      (u32)msr_data;</yellow>
+	if (efer &amp; EFER_LMA)
+<yellow>		ctxt->mode = X86EMUL_MODE_PROT64;</yellow>
+
+	return X86EMUL_CONTINUE;
+}
+
+static int em_sysexit(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	const struct x86_emulate_ops *ops = ctxt->ops;</yellow>
+	struct desc_struct cs, ss;
+	u64 msr_data, rcx, rdx;
+	int usermode;
+	u16 cs_sel = 0, ss_sel = 0;
+
+	/* inject #GP if in real mode or Virtual 8086 mode */
+	if (ctxt-&gt;mode == X86EMUL_MODE_REAL ||
+	    ctxt-&gt;mode == X86EMUL_MODE_VM86)
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	setup_syscalls_segments(&amp;cs, &amp;ss);
+
+<yellow>	if ((ctxt->rex_prefix & 0x8) != 0x0)</yellow>
+		usermode = X86EMUL_MODE_PROT64;
+	else
+		usermode = X86EMUL_MODE_PROT32;
+
+<yellow>	rcx = reg_read(ctxt, VCPU_REGS_RCX);</yellow>
+	rdx = reg_read(ctxt, VCPU_REGS_RDX);
+
+	cs.dpl = 3;
+	ss.dpl = 3;
+	ops-&gt;get_msr(ctxt, MSR_IA32_SYSENTER_CS, &amp;msr_data);
+	switch (usermode) {
+	case X86EMUL_MODE_PROT32:
+		cs_sel = (u16)(msr_data + 16);
+		if ((msr_data &amp; 0xfffc) == 0x0)
+			return emulate_gp(ctxt, 0);
+<yellow>		ss_sel = (u16)(msr_data + 24);</yellow>
+		rcx = (u32)rcx;
+		rdx = (u32)rdx;
+		break;
+	case X86EMUL_MODE_PROT64:
+		cs_sel = (u16)(msr_data + 32);
+		if (msr_data == 0x0)
+			return emulate_gp(ctxt, 0);
+<yellow>		ss_sel = cs_sel + 8;</yellow>
+		cs.d = 0;
+<yellow>		cs.l = 1;</yellow>
+<yellow>		if (emul_is_noncanonical_address(rcx, ctxt) ||</yellow>
+<yellow>		    emul_is_noncanonical_address(rdx, ctxt))</yellow>
+			return emulate_gp(ctxt, 0);
+		break;
+	}
+	cs_sel |= SEGMENT_RPL_MASK;
+<yellow>	ss_sel |= SEGMENT_RPL_MASK;</yellow>
+
+	ops-&gt;set_segment(ctxt, cs_sel, &amp;cs, 0, VCPU_SREG_CS);
+	ops-&gt;set_segment(ctxt, ss_sel, &amp;ss, 0, VCPU_SREG_SS);
+
+	ctxt-&gt;_eip = rdx;
+	ctxt-&gt;mode = usermode;
+	*reg_write(ctxt, VCPU_REGS_RSP) = rcx;
+
+	return X86EMUL_CONTINUE;
+}
+
+<blue>static bool emulator_bad_iopl(struct x86_emulate_ctxt *ctxt)</blue>
+{
+	int iopl;
+<blue>	if (ctxt->mode == X86EMUL_MODE_REAL)</blue>
+		return false;
+<blue>	if (ctxt->mode == X86EMUL_MODE_VM86)</blue>
+		return true;
+<blue>	iopl = (ctxt->eflags & X86_EFLAGS_IOPL) >> X86_EFLAGS_IOPL_BIT;</blue>
+	return ctxt-&gt;ops-&gt;cpl(ctxt) &gt; iopl;
+}
+
+#define VMWARE_PORT_VMPORT	(0x5658)
+#define VMWARE_PORT_VMRPC	(0x5659)
+
+static bool emulator_io_port_access_allowed(struct x86_emulate_ctxt *ctxt,
+					    u16 port, u16 len)
+<yellow>{</yellow>
+<yellow>	const struct x86_emulate_ops *ops = ctxt->ops;</yellow>
+	struct desc_struct tr_seg;
+	u32 base3;
+	int r;
+	u16 tr, io_bitmap_ptr, perm, bit_idx = port &amp; 0x7;
+	unsigned mask = (1 &lt;&lt; len) - 1;
+	unsigned long base;
+
+	/*
+	 * VMware allows access to these ports even if denied
+	 * by TSS I/O permission bitmap. Mimic behavior.
+	 */
+<yellow>	if (enable_vmware_backdoor &&</yellow>
+<yellow>	    ((port == VMWARE_PORT_VMPORT) || (port == VMWARE_PORT_VMRPC)))</yellow>
+		return true;
+
+<yellow>	ops->get_segment(ctxt, &tr, &tr_seg, &base3, VCPU_SREG_TR);</yellow>
+	if (!tr_seg.p)
+		return false;
+<yellow>	if (desc_limit_scaled(&tr_seg) < 103)</yellow>
+		return false;
+<yellow>	base = get_desc_base(&tr_seg);</yellow>
+#ifdef CONFIG_X86_64
+	base |= ((u64)base3) &lt;&lt; 32;
+#endif
+	r = ops-&gt;read_std(ctxt, base + 102, &amp;io_bitmap_ptr, 2, NULL, true);
+	if (r != X86EMUL_CONTINUE)
+		return false;
+<yellow>	if (io_bitmap_ptr + port/8 > desc_limit_scaled(&tr_seg))</yellow>
+		return false;
+<yellow>	r = ops->read_std(ctxt, base + io_bitmap_ptr + port/8, &perm, 2, NULL, true);</yellow>
+	if (r != X86EMUL_CONTINUE)
+		return false;
+	if ((perm &gt;&gt; bit_idx) &amp; mask)
+		return false;
+	return true;
+}
+
+<blue>static bool emulator_io_permited(struct x86_emulate_ctxt *ctxt,</blue>
+				 u16 port, u16 len)
+{
+<blue>	if (ctxt->perm_ok)</blue>
+		return true;
+
+<blue>	if (emulator_bad_iopl(ctxt))</blue>
+		if (!emulator_io_port_access_allowed(ctxt, port, len))
+			return false;
+
+<blue>	ctxt->perm_ok = true;</blue>
+
+	return true;
+}
+
+static void string_registers_quirk(struct x86_emulate_ctxt *ctxt)
+{
+	/*
+	 * Intel CPUs mask the counter and pointers in quite strange
+	 * manner when ECX is zero due to REP-string optimizations.
+	 */
+#ifdef CONFIG_X86_64
+<yellow>	if (ctxt->ad_bytes != 4 || !vendor_intel(ctxt))</yellow>
+		return;
+
+<yellow>	*reg_write(ctxt, VCPU_REGS_RCX) = 0;</yellow>
+
+	switch (ctxt-&gt;b) {
+	case 0xa4:	/* movsb */
+	case 0xa5:	/* movsd/w */
+<yellow>		*reg_rmw(ctxt, VCPU_REGS_RSI) &= (u32)-1;</yellow>
+		fallthrough;
+	case 0xaa:	/* stosb */
+	case 0xab:	/* stosd/w */
+<yellow>		*reg_rmw(ctxt, VCPU_REGS_RDI) &= (u32)-1;</yellow>
+	}
+#endif
+}
+
+static void save_state_to_tss16(struct x86_emulate_ctxt *ctxt,
+				struct tss_segment_16 *tss)
+{
+<yellow>	tss->ip = ctxt->_eip;</yellow>
+	tss-&gt;flag = ctxt-&gt;eflags;
+	tss-&gt;ax = reg_read(ctxt, VCPU_REGS_RAX);
+	tss-&gt;cx = reg_read(ctxt, VCPU_REGS_RCX);
+	tss-&gt;dx = reg_read(ctxt, VCPU_REGS_RDX);
+	tss-&gt;bx = reg_read(ctxt, VCPU_REGS_RBX);
+	tss-&gt;sp = reg_read(ctxt, VCPU_REGS_RSP);
+	tss-&gt;bp = reg_read(ctxt, VCPU_REGS_RBP);
+	tss-&gt;si = reg_read(ctxt, VCPU_REGS_RSI);
+	tss-&gt;di = reg_read(ctxt, VCPU_REGS_RDI);
+
+	tss-&gt;es = get_segment_selector(ctxt, VCPU_SREG_ES);
+	tss-&gt;cs = get_segment_selector(ctxt, VCPU_SREG_CS);
+	tss-&gt;ss = get_segment_selector(ctxt, VCPU_SREG_SS);
+	tss-&gt;ds = get_segment_selector(ctxt, VCPU_SREG_DS);
+	tss-&gt;ldt = get_segment_selector(ctxt, VCPU_SREG_LDTR);
+}
+
+static int load_state_from_tss16(struct x86_emulate_ctxt *ctxt,
+				 struct tss_segment_16 *tss)
+{
+	int ret;
+	u8 cpl;
+
+<yellow>	ctxt->_eip = tss->ip;</yellow>
+	ctxt-&gt;eflags = tss-&gt;flag | 2;
+	*reg_write(ctxt, VCPU_REGS_RAX) = tss-&gt;ax;
+	*reg_write(ctxt, VCPU_REGS_RCX) = tss-&gt;cx;
+	*reg_write(ctxt, VCPU_REGS_RDX) = tss-&gt;dx;
+	*reg_write(ctxt, VCPU_REGS_RBX) = tss-&gt;bx;
+	*reg_write(ctxt, VCPU_REGS_RSP) = tss-&gt;sp;
+	*reg_write(ctxt, VCPU_REGS_RBP) = tss-&gt;bp;
+	*reg_write(ctxt, VCPU_REGS_RSI) = tss-&gt;si;
+	*reg_write(ctxt, VCPU_REGS_RDI) = tss-&gt;di;
+
+	/*
+	 * SDM says that segment selectors are loaded before segment
+	 * descriptors
+	 */
+	set_segment_selector(ctxt, tss-&gt;ldt, VCPU_SREG_LDTR);
+	set_segment_selector(ctxt, tss-&gt;es, VCPU_SREG_ES);
+	set_segment_selector(ctxt, tss-&gt;cs, VCPU_SREG_CS);
+	set_segment_selector(ctxt, tss-&gt;ss, VCPU_SREG_SS);
+	set_segment_selector(ctxt, tss-&gt;ds, VCPU_SREG_DS);
+
+	cpl = tss-&gt;cs &amp; 3;
+
+	/*
+	 * Now load segment descriptors. If fault happens at this stage
+	 * it is handled in a context of new task
+	 */
+	ret = __load_segment_descriptor(ctxt, tss-&gt;ldt, VCPU_SREG_LDTR, cpl,
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->es, VCPU_SREG_ES, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->cs, VCPU_SREG_CS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->ss, VCPU_SREG_SS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->ds, VCPU_SREG_DS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+	return X86EMUL_CONTINUE;
+}
+
+static int task_switch_16(struct x86_emulate_ctxt *ctxt, u16 old_tss_sel,
+			  ulong old_tss_base, struct desc_struct *new_desc)
+{
+	struct tss_segment_16 tss_seg;
+	int ret;
+<yellow>	u32 new_tss_base = get_desc_base(new_desc);</yellow>
+
+	ret = linear_read_system(ctxt, old_tss_base, &amp;tss_seg, sizeof(tss_seg));
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+<yellow>	save_state_to_tss16(ctxt, &tss_seg);</yellow>
+
+	ret = linear_write_system(ctxt, old_tss_base, &amp;tss_seg, sizeof(tss_seg));
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+	ret = linear_read_system(ctxt, new_tss_base, &amp;tss_seg, sizeof(tss_seg));
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+<yellow>	if (old_tss_sel != 0xffff) {</yellow>
+<yellow>		tss_seg.prev_task_link = old_tss_sel;</yellow>
+
+		ret = linear_write_system(ctxt, new_tss_base,
+					  &amp;tss_seg.prev_task_link,
+					  sizeof(tss_seg.prev_task_link));
+		if (ret != X86EMUL_CONTINUE)
+			return ret;
+	}
+
+<yellow>	return load_state_from_tss16(ctxt, &tss_seg);</yellow>
+}
+
+static void save_state_to_tss32(struct x86_emulate_ctxt *ctxt,
+				struct tss_segment_32 *tss)
+{
+	/* CR3 and ldt selector are not saved intentionally */
+<yellow>	tss->eip = ctxt->_eip;</yellow>
+	tss-&gt;eflags = ctxt-&gt;eflags;
+	tss-&gt;eax = reg_read(ctxt, VCPU_REGS_RAX);
+	tss-&gt;ecx = reg_read(ctxt, VCPU_REGS_RCX);
+	tss-&gt;edx = reg_read(ctxt, VCPU_REGS_RDX);
+	tss-&gt;ebx = reg_read(ctxt, VCPU_REGS_RBX);
+	tss-&gt;esp = reg_read(ctxt, VCPU_REGS_RSP);
+	tss-&gt;ebp = reg_read(ctxt, VCPU_REGS_RBP);
+	tss-&gt;esi = reg_read(ctxt, VCPU_REGS_RSI);
+	tss-&gt;edi = reg_read(ctxt, VCPU_REGS_RDI);
+
+	tss-&gt;es = get_segment_selector(ctxt, VCPU_SREG_ES);
+	tss-&gt;cs = get_segment_selector(ctxt, VCPU_SREG_CS);
+	tss-&gt;ss = get_segment_selector(ctxt, VCPU_SREG_SS);
+	tss-&gt;ds = get_segment_selector(ctxt, VCPU_SREG_DS);
+	tss-&gt;fs = get_segment_selector(ctxt, VCPU_SREG_FS);
+	tss-&gt;gs = get_segment_selector(ctxt, VCPU_SREG_GS);
+}
+
+static int load_state_from_tss32(struct x86_emulate_ctxt *ctxt,
+				 struct tss_segment_32 *tss)
+{
+	int ret;
+	u8 cpl;
+
+<yellow>	if (ctxt->ops->set_cr(ctxt, 3, tss->cr3))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+<yellow>	ctxt->_eip = tss->eip;</yellow>
+	ctxt-&gt;eflags = tss-&gt;eflags | 2;
+
+	/* General purpose registers */
+	*reg_write(ctxt, VCPU_REGS_RAX) = tss-&gt;eax;
+	*reg_write(ctxt, VCPU_REGS_RCX) = tss-&gt;ecx;
+	*reg_write(ctxt, VCPU_REGS_RDX) = tss-&gt;edx;
+	*reg_write(ctxt, VCPU_REGS_RBX) = tss-&gt;ebx;
+	*reg_write(ctxt, VCPU_REGS_RSP) = tss-&gt;esp;
+	*reg_write(ctxt, VCPU_REGS_RBP) = tss-&gt;ebp;
+	*reg_write(ctxt, VCPU_REGS_RSI) = tss-&gt;esi;
+	*reg_write(ctxt, VCPU_REGS_RDI) = tss-&gt;edi;
+
+	/*
+	 * SDM says that segment selectors are loaded before segment
+	 * descriptors.  This is important because CPL checks will
+	 * use CS.RPL.
+	 */
+	set_segment_selector(ctxt, tss-&gt;ldt_selector, VCPU_SREG_LDTR);
+	set_segment_selector(ctxt, tss-&gt;es, VCPU_SREG_ES);
+	set_segment_selector(ctxt, tss-&gt;cs, VCPU_SREG_CS);
+	set_segment_selector(ctxt, tss-&gt;ss, VCPU_SREG_SS);
+	set_segment_selector(ctxt, tss-&gt;ds, VCPU_SREG_DS);
+	set_segment_selector(ctxt, tss-&gt;fs, VCPU_SREG_FS);
+	set_segment_selector(ctxt, tss-&gt;gs, VCPU_SREG_GS);
+
+	/*
+	 * If we&#x27;re switching between Protected Mode and VM86, we need to make
+	 * sure to update the mode before loading the segment descriptors so
+	 * that the selectors are interpreted correctly.
+	 */
+	if (ctxt-&gt;eflags &amp; X86_EFLAGS_VM) {
+<yellow>		ctxt->mode = X86EMUL_MODE_VM86;</yellow>
+		cpl = 3;
+	} else {
+<yellow>		ctxt->mode = X86EMUL_MODE_PROT32;</yellow>
+		cpl = tss-&gt;cs &amp; 3;
+	}
+
+	/*
+	 * Now load segment descriptors. If fault happens at this stage
+	 * it is handled in a context of new task
+	 */
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->ldt_selector, VCPU_SREG_LDTR,</yellow>
+					cpl, X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->es, VCPU_SREG_ES, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->cs, VCPU_SREG_CS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->ss, VCPU_SREG_SS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->ds, VCPU_SREG_DS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->fs, VCPU_SREG_FS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = __load_segment_descriptor(ctxt, tss->gs, VCPU_SREG_GS, cpl,</yellow>
+					X86_TRANSFER_TASK_SWITCH, NULL);
+
+	return ret;
+}
+
+static int task_switch_32(struct x86_emulate_ctxt *ctxt, u16 old_tss_sel,
+			  ulong old_tss_base, struct desc_struct *new_desc)
+<yellow>{</yellow>
+	struct tss_segment_32 tss_seg;
+	int ret;
+<yellow>	u32 new_tss_base = get_desc_base(new_desc);</yellow>
+	u32 eip_offset = offsetof(struct tss_segment_32, eip);
+	u32 ldt_sel_offset = offsetof(struct tss_segment_32, ldt_selector);
+
+	ret = linear_read_system(ctxt, old_tss_base, &amp;tss_seg, sizeof(tss_seg));
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+<yellow>	save_state_to_tss32(ctxt, &tss_seg);</yellow>
+
+	/* Only GP registers and segment selectors are saved */
+	ret = linear_write_system(ctxt, old_tss_base + eip_offset, &amp;tss_seg.eip,
+				  ldt_sel_offset - eip_offset);
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+	ret = linear_read_system(ctxt, new_tss_base, &amp;tss_seg, sizeof(tss_seg));
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+	if (old_tss_sel != 0xffff) {
+<yellow>		tss_seg.prev_task_link = old_tss_sel;</yellow>
+
+<yellow>		ret = linear_write_system(ctxt, new_tss_base,</yellow>
+					  &amp;tss_seg.prev_task_link,
+					  sizeof(tss_seg.prev_task_link));
+		if (ret != X86EMUL_CONTINUE)
+			return ret;
+	}
+
+<yellow>	return load_state_from_tss32(ctxt, &tss_seg);</yellow>
+}
+
+static int emulator_do_task_switch(struct x86_emulate_ctxt *ctxt,
+				   u16 tss_selector, int idt_index, int reason,
+				   bool has_error_code, u32 error_code)
+{
+	const struct x86_emulate_ops *ops = ctxt-&gt;ops;
+	struct desc_struct curr_tss_desc, next_tss_desc;
+	int ret;
+	u16 old_tss_sel = get_segment_selector(ctxt, VCPU_SREG_TR);
+	ulong old_tss_base =
+		ops-&gt;get_cached_segment_base(ctxt, VCPU_SREG_TR);
+	u32 desc_limit;
+	ulong desc_addr, dr7;
+
+	/* FIXME: old_tss_base == ~0 ? */
+
+<yellow>	ret = read_segment_descriptor(ctxt, tss_selector, &next_tss_desc, &desc_addr);</yellow>
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+<yellow>	ret = read_segment_descriptor(ctxt, old_tss_sel, &curr_tss_desc, &desc_addr);</yellow>
+	if (ret != X86EMUL_CONTINUE)
+		return ret;
+
+	/* FIXME: check that next_tss_desc is tss */
+
+	/*
+	 * Check privileges. The three cases are task switch caused by...
+	 *
+	 * 1. jmp/call/int to task gate: Check against DPL of the task gate
+	 * 2. Exception/IRQ/iret: No check is performed
+	 * 3. jmp/call to TSS/task-gate: No check is performed since the
+	 *    hardware checks it before exiting.
+	 */
+<yellow>	if (reason == TASK_SWITCH_GATE) {</yellow>
+<yellow>		if (idt_index != -1) {</yellow>
+			/* Software interrupts */
+			struct desc_struct task_gate_desc;
+			int dpl;
+
+<yellow>			ret = read_interrupt_descriptor(ctxt, idt_index,</yellow>
+							&amp;task_gate_desc);
+			if (ret != X86EMUL_CONTINUE)
+<yellow>				return ret;</yellow>
+
+<yellow>			dpl = task_gate_desc.dpl;</yellow>
+<yellow>			if ((tss_selector & 3) > dpl || ops->cpl(ctxt) > dpl)</yellow>
+<yellow>				return emulate_gp(ctxt, (idt_index << 3) | 0x2);</yellow>
+		}
+	}
+
+<yellow>	desc_limit = desc_limit_scaled(&next_tss_desc);</yellow>
+<yellow>	if (!next_tss_desc.p ||</yellow>
+<yellow>	    ((desc_limit < 0x67 && (next_tss_desc.type & 8)) ||</yellow>
+	     desc_limit &lt; 0x2b)) {
+<yellow>		return emulate_ts(ctxt, tss_selector & 0xfffc);</yellow>
+	}
+
+<yellow>	if (reason == TASK_SWITCH_IRET || reason == TASK_SWITCH_JMP) {</yellow>
+<yellow>		curr_tss_desc.type &= ~(1 << 1); /* clear busy flag */</yellow>
+		write_segment_descriptor(ctxt, old_tss_sel, &amp;curr_tss_desc);
+	}
+
+	if (reason == TASK_SWITCH_IRET)
+<yellow>		ctxt->eflags = ctxt->eflags & ~X86_EFLAGS_NT;</yellow>
+
+	/* set back link to prev task only if NT bit is set in eflags
+	   note that old_tss_sel is not used after this point */
+<yellow>	if (reason != TASK_SWITCH_CALL && reason != TASK_SWITCH_GATE)</yellow>
+		old_tss_sel = 0xffff;
+
+<yellow>	if (next_tss_desc.type & 8)</yellow>
+<yellow>		ret = task_switch_32(ctxt, old_tss_sel, old_tss_base, &next_tss_desc);</yellow>
+	else
+<yellow>		ret = task_switch_16(ctxt, old_tss_sel,</yellow>
+				     old_tss_base, &amp;next_tss_desc);
+<yellow>	if (ret != X86EMUL_CONTINUE)</yellow>
+		return ret;
+
+<yellow>	if (reason == TASK_SWITCH_CALL || reason == TASK_SWITCH_GATE)</yellow>
+<yellow>		ctxt->eflags = ctxt->eflags | X86_EFLAGS_NT;</yellow>
+
+<yellow>	if (reason != TASK_SWITCH_IRET) {</yellow>
+<yellow>		next_tss_desc.type |= (1 << 1); /* set busy flag */</yellow>
+		write_segment_descriptor(ctxt, tss_selector, &amp;next_tss_desc);
+	}
+
+<yellow>	ops->set_cr(ctxt, 0,  ops->get_cr(ctxt, 0) | X86_CR0_TS);</yellow>
+	ops-&gt;set_segment(ctxt, tss_selector, &amp;next_tss_desc, 0, VCPU_SREG_TR);
+
+	if (has_error_code) {
+<yellow>		ctxt->op_bytes = ctxt->ad_bytes = (next_tss_desc.type & 8) ? 4 : 2;</yellow>
+		ctxt-&gt;lock_prefix = 0;
+		ctxt-&gt;src.val = (unsigned long) error_code;
+		ret = em_push(ctxt);
+	}
+
+<yellow>	ops->get_dr(ctxt, 7, &dr7);</yellow>
+	ops-&gt;set_dr(ctxt, 7, dr7 &amp; ~(DR_LOCAL_ENABLE_MASK | DR_LOCAL_SLOWDOWN));
+
+	return ret;
+}
+
+int emulator_task_switch(struct x86_emulate_ctxt *ctxt,
+			 u16 tss_selector, int idt_index, int reason,
+			 bool has_error_code, u32 error_code)
+<yellow>{</yellow>
+	int rc;
+
+<yellow>	invalidate_registers(ctxt);</yellow>
+	ctxt-&gt;_eip = ctxt-&gt;eip;
+	ctxt-&gt;dst.type = OP_NONE;
+
+<yellow>	rc = emulator_do_task_switch(ctxt, tss_selector, idt_index, reason,</yellow>
+				     has_error_code, error_code);
+
+	if (rc == X86EMUL_CONTINUE) {
+<yellow>		ctxt->eip = ctxt->_eip;</yellow>
+		writeback_registers(ctxt);
+	}
+
+<yellow>	return (rc == X86EMUL_UNHANDLEABLE) ? EMULATION_FAILED : EMULATION_OK;</yellow>
+}
+
+static void string_addr_inc(struct x86_emulate_ctxt *ctxt, int reg,
+		struct operand *op)
+{
+<blue>	int df = (ctxt->eflags & X86_EFLAGS_DF) ? -op->count : op->count;</blue>
+
+<blue>	register_address_increment(ctxt, reg, df * op->bytes);</blue>
+<blue>	op->addr.mem.ea = register_address(ctxt, reg);</blue>
+}
+
+static int em_das(struct x86_emulate_ctxt *ctxt)
+{
+	u8 al, old_al;
+	bool af, cf, old_cf;
+
+<yellow>	cf = ctxt->eflags & X86_EFLAGS_CF;</yellow>
+	al = ctxt-&gt;dst.val;
+
+	old_al = al;
+	old_cf = cf;
+	cf = false;
+<yellow>	af = ctxt->eflags & X86_EFLAGS_AF;</yellow>
+	if ((al &amp; 0x0f) &gt; 9 || af) {
+<yellow>		al -= 6;</yellow>
+		cf = old_cf | (al &gt;= 250);
+		af = true;
+	} else {
+		af = false;
+	}
+<yellow>	if (old_al > 0x99 || old_cf) {</yellow>
+		al -= 0x60;
+		cf = true;
+	}
+
+	ctxt-&gt;dst.val = al;
+	/* Set PF, ZF, SF */
+<yellow>	ctxt->src.type = OP_IMM;</yellow>
+	ctxt-&gt;src.val = 0;
+	ctxt-&gt;src.bytes = 1;
+	fastop(ctxt, em_or);
+	ctxt-&gt;eflags &amp;= ~(X86_EFLAGS_AF | X86_EFLAGS_CF);
+	if (cf)
+<yellow>		ctxt->eflags |= X86_EFLAGS_CF;</yellow>
+<yellow>	if (af)</yellow>
+<yellow>		ctxt->eflags |= X86_EFLAGS_AF;</yellow>
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_aam(struct x86_emulate_ctxt *ctxt)
+{
+	u8 al, ah;
+
+<yellow>	if (ctxt->src.val == 0)</yellow>
+<yellow>		return emulate_de(ctxt);</yellow>
+
+<yellow>	al = ctxt->dst.val & 0xff;</yellow>
+	ah = al / ctxt-&gt;src.val;
+	al %= ctxt-&gt;src.val;
+
+	ctxt-&gt;dst.val = (ctxt-&gt;dst.val &amp; 0xffff0000) | al | (ah &lt;&lt; 8);
+
+	/* Set PF, ZF, SF */
+	ctxt-&gt;src.type = OP_IMM;
+	ctxt-&gt;src.val = 0;
+	ctxt-&gt;src.bytes = 1;
+	fastop(ctxt, em_or);
+
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_aad(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u8 al = ctxt->dst.val & 0xff;</yellow>
+	u8 ah = (ctxt-&gt;dst.val &gt;&gt; 8) &amp; 0xff;
+
+	al = (al + (ah * ctxt-&gt;src.val)) &amp; 0xff;
+
+	ctxt-&gt;dst.val = (ctxt-&gt;dst.val &amp; 0xffff0000) | al;
+
+	/* Set PF, ZF, SF */
+	ctxt-&gt;src.type = OP_IMM;
+	ctxt-&gt;src.val = 0;
+	ctxt-&gt;src.bytes = 1;
+	fastop(ctxt, em_or);
+
+	return X86EMUL_CONTINUE;
+}
+
+<blue>static int em_call(struct x86_emulate_ctxt *ctxt)</blue>
+{
+	int rc;
+<blue>	long rel = ctxt->src.val;</blue>
+
+	ctxt-&gt;src.val = (unsigned long)ctxt-&gt;_eip;
+	rc = jmp_rel(ctxt, rel);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<blue>	return em_push(ctxt);</blue>
+<blue>}</blue>
+
+static int em_call_far(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	u16 sel, old_cs;
+	ulong old_eip;
+	int rc;
+	struct desc_struct old_desc, new_desc;
+<yellow>	const struct x86_emulate_ops *ops = ctxt->ops;</yellow>
+	int cpl = ctxt-&gt;ops-&gt;cpl(ctxt);
+	enum x86emul_mode prev_mode = ctxt-&gt;mode;
+
+	old_eip = ctxt-&gt;_eip;
+	ops-&gt;get_segment(ctxt, &amp;old_cs, &amp;old_desc, NULL, VCPU_SREG_CS);
+
+	memcpy(&amp;sel, ctxt-&gt;src.valptr + ctxt-&gt;op_bytes, 2);
+	rc = __load_segment_descriptor(ctxt, sel, VCPU_SREG_CS, cpl,
+				       X86_TRANSFER_CALL_JMP, &amp;new_desc);
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	rc = assign_eip_far(ctxt, ctxt->src.val);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		goto fail;
+
+<yellow>	ctxt->src.val = old_cs;</yellow>
+	rc = em_push(ctxt);
+	if (rc != X86EMUL_CONTINUE)
+		goto fail;
+
+<yellow>	ctxt->src.val = old_eip;</yellow>
+	rc = em_push(ctxt);
+	/* If we failed, we tainted the memory, but the very least we should
+	   restore cs */
+	if (rc != X86EMUL_CONTINUE) {
+<yellow>		pr_warn_once("faulting far call emulation tainted memory\n");</yellow>
+		goto fail;
+	}
+	return rc;
+fail:
+<yellow>	ops->set_segment(ctxt, old_cs, &old_desc, 0, VCPU_SREG_CS);</yellow>
+	ctxt-&gt;mode = prev_mode;
+	return rc;
+
+}
+
+<yellow>static int em_ret_near_imm(struct x86_emulate_ctxt *ctxt)</yellow>
+<yellow>{</yellow>
+	int rc;
+	unsigned long eip;
+
+<yellow>	rc = emulate_pop(ctxt, &eip, ctxt->op_bytes);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	rc = assign_eip_near(ctxt, eip);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	rsp_increment(ctxt, ctxt->src.val);</yellow>
+	return X86EMUL_CONTINUE;
+}
+
+static int em_xchg(struct x86_emulate_ctxt *ctxt)
+{
+	/* Write back the register source. */
+<yellow>	ctxt->src.val = ctxt->dst.val;</yellow>
+<yellow>	write_register_operand(&ctxt->src);</yellow>
+
+	/* Write back the memory destination with implicit LOCK prefix. */
+<yellow>	ctxt->dst.val = ctxt->src.orig_val;</yellow>
+	ctxt-&gt;lock_prefix = 1;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_imul_3op(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	ctxt->dst.val = ctxt->src2.val;</yellow>
+	return fastop(ctxt, em_imul);
+}
+
+static int em_cwd(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	ctxt->dst.type = OP_REG;</yellow>
+	ctxt-&gt;dst.bytes = ctxt-&gt;src.bytes;
+	ctxt-&gt;dst.addr.reg = reg_rmw(ctxt, VCPU_REGS_RDX);
+<yellow>	ctxt->dst.val = ~((ctxt->src.val >> (ctxt->src.bytes * 8 - 1)) - 1);</yellow>
+
+	return X86EMUL_CONTINUE;
+}
+
+static int em_rdpid(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	u64 tsc_aux = 0;
+
+<yellow>	if (!ctxt->ops->guest_has_rdpid(ctxt))</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	ctxt->ops->get_msr(ctxt, MSR_TSC_AUX, &tsc_aux);</yellow>
+	ctxt-&gt;dst.val = tsc_aux;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_rdtsc(struct x86_emulate_ctxt *ctxt)
+{
+	u64 tsc = 0;
+
+<yellow>	ctxt->ops->get_msr(ctxt, MSR_IA32_TSC, &tsc);</yellow>
+	*reg_write(ctxt, VCPU_REGS_RAX) = (u32)tsc;
+	*reg_write(ctxt, VCPU_REGS_RDX) = tsc &gt;&gt; 32;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_rdpmc(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	u64 pmc;
+
+<yellow>	if (ctxt->ops->read_pmc(ctxt, reg_read(ctxt, VCPU_REGS_RCX), &pmc))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+<yellow>	*reg_write(ctxt, VCPU_REGS_RAX) = (u32)pmc;</yellow>
+	*reg_write(ctxt, VCPU_REGS_RDX) = pmc &gt;&gt; 32;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_mov(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	memcpy(ctxt->dst.valptr, ctxt->src.valptr, sizeof(ctxt->src.valptr));</blue>
+	return X86EMUL_CONTINUE;
+}
+
+static int em_movbe(struct x86_emulate_ctxt *ctxt)
+{
+	u16 tmp;
+
+<yellow>	if (!ctxt->ops->guest_has_movbe(ctxt))</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	switch (ctxt->op_bytes) {</yellow>
+	case 2:
+		/*
+		 * From MOVBE definition: &quot;...When the operand size is 16 bits,
+		 * the upper word of the destination register remains unchanged
+		 * ...&quot;
+		 *
+		 * Both casting -&gt;valptr and -&gt;val to u16 breaks strict aliasing
+		 * rules so we have to do the operation almost per hand.
+		 */
+<yellow>		tmp = (u16)ctxt->src.val;</yellow>
+		ctxt-&gt;dst.val &amp;= ~0xffffUL;
+		ctxt-&gt;dst.val |= (unsigned long)swab16(tmp);
+		break;
+	case 4:
+<yellow>		ctxt->dst.val = swab32((u32)ctxt->src.val);</yellow>
+		break;
+	case 8:
+<yellow>		ctxt->dst.val = swab64(ctxt->src.val);</yellow>
+		break;
+	default:
+<yellow>		BUG();</yellow>
+	}
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+<yellow>static int em_cr_write(struct x86_emulate_ctxt *ctxt)</yellow>
+<yellow>{</yellow>
+<yellow>	int cr_num = ctxt->modrm_reg;</yellow>
+	int r;
+
+	if (ctxt-&gt;ops-&gt;set_cr(ctxt, cr_num, ctxt-&gt;src.val))
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	/* Disable writeback. */
+<yellow>	ctxt->dst.type = OP_NONE;</yellow>
+
+	if (cr_num == 0) {
+		/*
+		 * CR0 write might have updated CR0.PE and/or CR0.PG
+		 * which can affect the cpu&#x27;s execution mode.
+		 */
+<yellow>		r = emulator_recalc_and_set_mode(ctxt);</yellow>
+<yellow>		if (r != X86EMUL_CONTINUE)</yellow>
+			return r;
+	}
+
+	return X86EMUL_CONTINUE;
+}
+
+static int em_dr_write(struct x86_emulate_ctxt *ctxt)
+{
+	unsigned long val;
+
+<yellow>	if (ctxt->mode == X86EMUL_MODE_PROT64)</yellow>
+		val = ctxt-&gt;src.val &amp; ~0ULL;
+	else
+<yellow>		val = ctxt->src.val & ~0U;</yellow>
+
+	/* #UD condition is already handled. */
+<yellow>	if (ctxt->ops->set_dr(ctxt, ctxt->modrm_reg, val) < 0)</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	/* Disable writeback. */
+<yellow>	ctxt->dst.type = OP_NONE;</yellow>
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_wrmsr(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u64 msr_index = reg_read(ctxt, VCPU_REGS_RCX);</yellow>
+	u64 msr_data;
+	int r;
+
+	msr_data = (u32)reg_read(ctxt, VCPU_REGS_RAX)
+		| ((u64)reg_read(ctxt, VCPU_REGS_RDX) &lt;&lt; 32);
+	r = ctxt-&gt;ops-&gt;set_msr_with_filter(ctxt, msr_index, msr_data);
+
+	if (r == X86EMUL_PROPAGATE_FAULT)
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	return r;
+<yellow>}</yellow>
+
+static int em_rdmsr(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	u64 msr_index = reg_read(ctxt, VCPU_REGS_RCX);</yellow>
+	u64 msr_data;
+	int r;
+
+	r = ctxt-&gt;ops-&gt;get_msr_with_filter(ctxt, msr_index, &amp;msr_data);
+
+	if (r == X86EMUL_PROPAGATE_FAULT)
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	if (r == X86EMUL_CONTINUE) {</yellow>
+<yellow>		*reg_write(ctxt, VCPU_REGS_RAX) = (u32)msr_data;</yellow>
+		*reg_write(ctxt, VCPU_REGS_RDX) = msr_data &gt;&gt; 32;
+	}
+	return r;
+}
+
+static int em_store_sreg(struct x86_emulate_ctxt *ctxt, int segment)
+{
+	if (segment &gt; VCPU_SREG_GS &amp;&amp;
+<yellow>	    (ctxt->ops->get_cr(ctxt, 4) & X86_CR4_UMIP) &&</yellow>
+<yellow>	    ctxt->ops->cpl(ctxt) > 0)</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	ctxt->dst.val = get_segment_selector(ctxt, segment);</yellow>
+	if (ctxt-&gt;dst.bytes == 4 &amp;&amp; ctxt-&gt;dst.type == OP_MEM)
+<yellow>		ctxt->dst.bytes = 2;</yellow>
+	return X86EMUL_CONTINUE;
+}
+
+static int em_mov_rm_sreg(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	if (ctxt->modrm_reg > VCPU_SREG_GS)</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	return em_store_sreg(ctxt, ctxt->modrm_reg);</yellow>
+}
+
+static int em_mov_sreg_rm(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u16 sel = ctxt->src.val;</yellow>
+
+<yellow>	if (ctxt->modrm_reg == VCPU_SREG_CS || ctxt->modrm_reg > VCPU_SREG_GS)</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	if (ctxt->modrm_reg == VCPU_SREG_SS)</yellow>
+<yellow>		ctxt->interruptibility = KVM_X86_SHADOW_INT_MOV_SS;</yellow>
+
+	/* Disable writeback. */
+<yellow>	ctxt->dst.type = OP_NONE;</yellow>
+	return load_segment_descriptor(ctxt, sel, ctxt-&gt;modrm_reg);
+<yellow>}</yellow>
+
+static int em_sldt(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	return em_store_sreg(ctxt, VCPU_SREG_LDTR);</yellow>
+}
+
+static int em_lldt(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u16 sel = ctxt->src.val;</yellow>
+
+	/* Disable writeback. */
+	ctxt-&gt;dst.type = OP_NONE;
+	return load_segment_descriptor(ctxt, sel, VCPU_SREG_LDTR);
+}
+
+static int em_str(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	return em_store_sreg(ctxt, VCPU_SREG_TR);</yellow>
+}
+
+static int em_ltr(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u16 sel = ctxt->src.val;</yellow>
+
+	/* Disable writeback. */
+	ctxt-&gt;dst.type = OP_NONE;
+	return load_segment_descriptor(ctxt, sel, VCPU_SREG_TR);
+}
+
+static int em_invlpg(struct x86_emulate_ctxt *ctxt)
+{
+	int rc;
+	ulong linear;
+
+<yellow>	rc = linearize(ctxt, ctxt->src.addr.mem, 1, false, &linear);</yellow>
+	if (rc == X86EMUL_CONTINUE)
+<yellow>		ctxt->ops->invlpg(ctxt, linear);</yellow>
+	/* Disable writeback. */
+<yellow>	ctxt->dst.type = OP_NONE;</yellow>
+	return X86EMUL_CONTINUE;
+}
+
+static int em_clts(struct x86_emulate_ctxt *ctxt)
+{
+	ulong cr0;
+
+<yellow>	cr0 = ctxt->ops->get_cr(ctxt, 0);</yellow>
+	cr0 &amp;= ~X86_CR0_TS;
+	ctxt-&gt;ops-&gt;set_cr(ctxt, 0, cr0);
+	return X86EMUL_CONTINUE;
+}
+
+static int em_hypercall(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	int rc = ctxt->ops->fix_hypercall(ctxt);</yellow>
+
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+	/* Let the processor re-execute the fixed hypercall */
+<yellow>	ctxt->_eip = ctxt->eip;</yellow>
+	/* Disable writeback. */
+	ctxt-&gt;dst.type = OP_NONE;
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int emulate_store_desc_ptr(struct x86_emulate_ctxt *ctxt,
+				  void (*get)(struct x86_emulate_ctxt *ctxt,
+					      struct desc_ptr *ptr))
+<yellow>{</yellow>
+	struct desc_ptr desc_ptr;
+
+<yellow>	if ((ctxt->ops->get_cr(ctxt, 4) & X86_CR4_UMIP) &&</yellow>
+<yellow>	    ctxt->ops->cpl(ctxt) > 0)</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	if (ctxt->mode == X86EMUL_MODE_PROT64)</yellow>
+<yellow>		ctxt->op_bytes = 8;</yellow>
+<yellow>	get(ctxt, &desc_ptr);</yellow>
+	if (ctxt-&gt;op_bytes == 2) {
+		ctxt-&gt;op_bytes = 4;
+<yellow>		desc_ptr.address &= 0x00ffffff;</yellow>
+	}
+	/* Disable writeback. */
+<yellow>	ctxt->dst.type = OP_NONE;</yellow>
+	return segmented_write_std(ctxt, ctxt-&gt;dst.addr.mem,
+<yellow>				   &desc_ptr, 2 + ctxt->op_bytes);</yellow>
+}
+
+static int em_sgdt(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return emulate_store_desc_ptr(ctxt, ctxt->ops->get_gdt);</yellow>
+}
+
+static int em_sidt(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return emulate_store_desc_ptr(ctxt, ctxt->ops->get_idt);</yellow>
+}
+
+static int em_lgdt_lidt(struct x86_emulate_ctxt *ctxt, bool lgdt)
+<yellow>{</yellow>
+	struct desc_ptr desc_ptr;
+	int rc;
+
+<yellow>	if (ctxt->mode == X86EMUL_MODE_PROT64)</yellow>
+<yellow>		ctxt->op_bytes = 8;</yellow>
+<yellow>	rc = read_descriptor(ctxt, ctxt->src.addr.mem,</yellow>
+			     &amp;desc_ptr.size, &amp;desc_ptr.address,
+<yellow>			     ctxt->op_bytes);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+<yellow>	if (ctxt->mode == X86EMUL_MODE_PROT64 &&</yellow>
+<yellow>	    emul_is_noncanonical_address(desc_ptr.address, ctxt))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+<yellow>	if (lgdt)</yellow>
+<yellow>		ctxt->ops->set_gdt(ctxt, &desc_ptr);</yellow>
+	else
+<yellow>		ctxt->ops->set_idt(ctxt, &desc_ptr);</yellow>
+	/* Disable writeback. */
+<yellow>	ctxt->dst.type = OP_NONE;</yellow>
+	return X86EMUL_CONTINUE;
+}
+
+static int em_lgdt(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return em_lgdt_lidt(ctxt, true);</yellow>
+}
+
+static int em_lidt(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	return em_lgdt_lidt(ctxt, false);</yellow>
+}
+
+static int em_smsw(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	if ((ctxt->ops->get_cr(ctxt, 4) & X86_CR4_UMIP) &&</yellow>
+<yellow>	    ctxt->ops->cpl(ctxt) > 0)</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	if (ctxt->dst.type == OP_MEM)</yellow>
+<yellow>		ctxt->dst.bytes = 2;</yellow>
+<yellow>	ctxt->dst.val = ctxt->ops->get_cr(ctxt, 0);</yellow>
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_lmsw(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	ctxt->ops->set_cr(ctxt, 0, (ctxt->ops->get_cr(ctxt, 0) & ~0x0eul)</yellow>
+			  | (ctxt-&gt;src.val &amp; 0x0f));
+	ctxt-&gt;dst.type = OP_NONE;
+	return X86EMUL_CONTINUE;
+}
+
+<yellow>static int em_loop(struct x86_emulate_ctxt *ctxt)</yellow>
+{
+	int rc = X86EMUL_CONTINUE;
+
+<yellow>	register_address_increment(ctxt, VCPU_REGS_RCX, -1);</yellow>
+<yellow>	if ((address_mask(ctxt, reg_read(ctxt, VCPU_REGS_RCX)) != 0) &&</yellow>
+<yellow>	    (ctxt->b == 0xe2 || test_cc(ctxt->b ^ 0x5, ctxt->eflags)))</yellow>
+<yellow>		rc = jmp_rel(ctxt, ctxt->src.val);</yellow>
+
+	return rc;
+<yellow>}</yellow>
+
+<yellow>static int em_jcxz(struct x86_emulate_ctxt *ctxt)</yellow>
+{
+	int rc = X86EMUL_CONTINUE;
+
+<yellow>	if (address_mask(ctxt, reg_read(ctxt, VCPU_REGS_RCX)) == 0)</yellow>
+<yellow>		rc = jmp_rel(ctxt, ctxt->src.val);</yellow>
+
+	return rc;
+<yellow>}</yellow>
+
+static int em_in(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	if (!pio_in_emulated(ctxt, ctxt->dst.bytes, ctxt->src.val,</blue>
+			     &amp;ctxt-&gt;dst.val))
+		return X86EMUL_IO_NEEDED;
+
+<blue>	return X86EMUL_CONTINUE;</blue>
+}
+
+static int em_out(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	ctxt->ops->pio_out_emulated(ctxt, ctxt->src.bytes, ctxt->dst.val,</blue>
+				    &amp;ctxt-&gt;src.val, 1);
+	/* Disable writeback. */
+	ctxt-&gt;dst.type = OP_NONE;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_cli(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	if (emulator_bad_iopl(ctxt))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	ctxt->eflags &= ~X86_EFLAGS_IF;</yellow>
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_sti(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	if (emulator_bad_iopl(ctxt))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	ctxt->interruptibility = KVM_X86_SHADOW_INT_STI;</yellow>
+	ctxt-&gt;eflags |= X86_EFLAGS_IF;
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_cpuid(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	u32 eax, ebx, ecx, edx;
+	u64 msr = 0;
+
+<yellow>	ctxt->ops->get_msr(ctxt, MSR_MISC_FEATURES_ENABLES, &msr);</yellow>
+	if (msr &amp; MSR_MISC_FEATURES_ENABLES_CPUID_FAULT &amp;&amp;
+<yellow>	    ctxt->ops->cpl(ctxt)) {</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+	}
+
+<yellow>	eax = reg_read(ctxt, VCPU_REGS_RAX);</yellow>
+	ecx = reg_read(ctxt, VCPU_REGS_RCX);
+	ctxt-&gt;ops-&gt;get_cpuid(ctxt, &amp;eax, &amp;ebx, &amp;ecx, &amp;edx, false);
+	*reg_write(ctxt, VCPU_REGS_RAX) = eax;
+	*reg_write(ctxt, VCPU_REGS_RBX) = ebx;
+	*reg_write(ctxt, VCPU_REGS_RCX) = ecx;
+	*reg_write(ctxt, VCPU_REGS_RDX) = edx;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_sahf(struct x86_emulate_ctxt *ctxt)
+{
+	u32 flags;
+
+	flags = X86_EFLAGS_CF | X86_EFLAGS_PF | X86_EFLAGS_AF | X86_EFLAGS_ZF |
+		X86_EFLAGS_SF;
+<yellow>	flags &= *reg_rmw(ctxt, VCPU_REGS_RAX) >> 8;</yellow>
+
+	ctxt-&gt;eflags &amp;= ~0xffUL;
+	ctxt-&gt;eflags |= flags | X86_EFLAGS_FIXED;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_lahf(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	*reg_rmw(ctxt, VCPU_REGS_RAX) &= ~0xff00UL;</yellow>
+	*reg_rmw(ctxt, VCPU_REGS_RAX) |= (ctxt-&gt;eflags &amp; 0xff) &lt;&lt; 8;
+	return X86EMUL_CONTINUE;
+}
+
+static int em_bswap(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	switch (ctxt->op_bytes) {</yellow>
+#ifdef CONFIG_X86_64
+	case 8:
+<yellow>		asm("bswap %0" : "+r"(ctxt->dst.val));</yellow>
+		break;
+#endif
+	default:
+<yellow>		asm("bswap %0" : "+r"(*(u32 *)&ctxt->dst.val));</yellow>
+		break;
+	}
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_clflush(struct x86_emulate_ctxt *ctxt)
+{
+	/* emulating clflush regardless of cpuid */
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int em_clflushopt(struct x86_emulate_ctxt *ctxt)
+{
+	/* emulating clflushopt regardless of cpuid */
+	return X86EMUL_CONTINUE;
+}
+
+static int em_movsxd(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	ctxt->dst.val = (s32) ctxt->src.val;</blue>
+	return X86EMUL_CONTINUE;
+}
+
+static int check_fxsr(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	if (!ctxt->ops->guest_has_fxsr(ctxt))</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	if (ctxt->ops->get_cr(ctxt, 0) & (X86_CR0_TS | X86_CR0_EM))</yellow>
+<yellow>		return emulate_nm(ctxt);</yellow>
+
+	/*
+	 * Don&#x27;t emulate a case that should never be hit, instead of working
+	 * around a lack of fxsave64/fxrstor64 on old compilers.
+	 */
+<yellow>	if (ctxt->mode >= X86EMUL_MODE_PROT64)</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+/*
+ * Hardware doesn&#x27;t save and restore XMM 0-7 without CR4.OSFXSR, but does save
+ * and restore MXCSR.
+ */
+static size_t __fxstate_size(int nregs)
+{
+	return offsetof(struct fxregs_state, xmm_space[0]) + nregs * 16;
+}
+
+static inline size_t fxstate_size(struct x86_emulate_ctxt *ctxt)
+{
+	bool cr4_osfxsr;
+<yellow>	if (ctxt->mode == X86EMUL_MODE_PROT64)</yellow>
+		return __fxstate_size(16);
+
+<yellow>	cr4_osfxsr = ctxt->ops->get_cr(ctxt, 4) & X86_CR4_OSFXSR;</yellow>
+	return __fxstate_size(cr4_osfxsr ? 8 : 0);
+}
+
+/*
+ * FXSAVE and FXRSTOR have 4 different formats depending on execution mode,
+ *  1) 16 bit mode
+ *  2) 32 bit mode
+ *     - like (1), but FIP and FDP (foo) are only 16 bit.  At least Intel CPUs
+ *       preserve whole 32 bit values, though, so (1) and (2) are the same wrt.
+ *       save and restore
+ *  3) 64-bit mode with REX.W prefix
+ *     - like (2), but XMM 8-15 are being saved and restored
+ *  4) 64-bit mode without REX.W prefix
+ *     - like (3), but FIP and FDP are 64 bit
+ *
+ * Emulation uses (3) for (1) and (2) and preserves XMM 8-15 to reach the
+ * desired result.  (4) is not emulated.
+ *
+ * Note: Guest and host CPUID.(EAX=07H,ECX=0H):EBX[bit 13] (deprecate FPU CS
+ * and FPU DS) should match.
+ */
+<yellow>static int em_fxsave(struct x86_emulate_ctxt *ctxt)</yellow>
+{
+	struct fxregs_state fx_state;
+	int rc;
+
+<yellow>	rc = check_fxsr(ctxt);</yellow>
+<yellow>	if (rc != X86EMUL_CONTINUE)</yellow>
+		return rc;
+
+<yellow>	kvm_fpu_get();</yellow>
+
+<yellow>	rc = asm_safe("fxsave %[fx]", , [fx] "+m"(fx_state));</yellow>
+
+<yellow>	kvm_fpu_put();</yellow>
+
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	return segmented_write_std(ctxt, ctxt->memop.addr.mem, &fx_state,</yellow>
+<yellow>		                   fxstate_size(ctxt));</yellow>
+<yellow>}</yellow>
+
+/*
+ * FXRSTOR might restore XMM registers not provided by the guest. Fill
+ * in the host registers (via FXSAVE) instead, so they won&#x27;t be modified.
+ * (preemption has to stay disabled until FXRSTOR).
+ *
+ * Use noinline to keep the stack for other functions called by callers small.
+ */
+static noinline int fxregs_fixup(struct fxregs_state *fx_state,
+				 const size_t used_size)
+{
+	struct fxregs_state fx_tmp;
+	int rc;
+
+<yellow>	rc = asm_safe("fxsave %[fx]", , [fx] "+m"(fx_tmp));</yellow>
+	memcpy((void *)fx_state + used_size, (void *)&amp;fx_tmp + used_size,
+	       __fxstate_size(16) - used_size);
+
+	return rc;
+}
+
+<yellow>static int em_fxrstor(struct x86_emulate_ctxt *ctxt)</yellow>
+{
+	struct fxregs_state fx_state;
+	int rc;
+	size_t size;
+
+<yellow>	rc = check_fxsr(ctxt);</yellow>
+<yellow>	if (rc != X86EMUL_CONTINUE)</yellow>
+		return rc;
+
+<yellow>	size = fxstate_size(ctxt);</yellow>
+<yellow>	rc = segmented_read_std(ctxt, ctxt->memop.addr.mem, &fx_state, size);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		return rc;
+
+<yellow>	kvm_fpu_get();</yellow>
+
+<yellow>	if (size < __fxstate_size(16)) {</yellow>
+<yellow>		rc = fxregs_fixup(&fx_state, size);</yellow>
+		if (rc != X86EMUL_CONTINUE)
+			goto out;
+	}
+
+<yellow>	if (fx_state.mxcsr >> 16) {</yellow>
+<yellow>		rc = emulate_gp(ctxt, 0);</yellow>
+		goto out;
+	}
+
+	if (rc == X86EMUL_CONTINUE)
+<yellow>		rc = asm_safe("fxrstor %[fx]", : [fx] "m"(fx_state));</yellow>
+
+out:
+<yellow>	kvm_fpu_put();</yellow>
+
+	return rc;
+<yellow>}</yellow>
+
+<yellow>static int em_xsetbv(struct x86_emulate_ctxt *ctxt)</yellow>
+{
+	u32 eax, ecx, edx;
+
+<yellow>	if (!(ctxt->ops->get_cr(ctxt, 4) & X86_CR4_OSXSAVE))</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	eax = reg_read(ctxt, VCPU_REGS_RAX);</yellow>
+	edx = reg_read(ctxt, VCPU_REGS_RDX);
+	ecx = reg_read(ctxt, VCPU_REGS_RCX);
+
+	if (ctxt-&gt;ops-&gt;set_xcr(ctxt, ecx, ((u64)edx &lt;&lt; 32) | eax))
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static bool valid_cr(int nr)
+{
+	switch (nr) {
+	case 0:
+	case 2 ... 4:
+	case 8:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static int check_cr_access(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	if (!valid_cr(ctxt->modrm_reg))</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int check_dr7_gd(struct x86_emulate_ctxt *ctxt)
+{
+	unsigned long dr7;
+
+<yellow>	ctxt->ops->get_dr(ctxt, 7, &dr7);</yellow>
+
+	return dr7 &amp; DR7_GD;
+}
+
+static int check_dr_read(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	int dr = ctxt->modrm_reg;</yellow>
+	u64 cr4;
+
+	if (dr &gt; 7)
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+<yellow>	cr4 = ctxt->ops->get_cr(ctxt, 4);</yellow>
+<yellow>	if ((cr4 & X86_CR4_DE) && (dr == 4 || dr == 5))</yellow>
+		return emulate_ud(ctxt);
+
+<yellow>	if (check_dr7_gd(ctxt)) {</yellow>
+		ulong dr6;
+
+<yellow>		ctxt->ops->get_dr(ctxt, 6, &dr6);</yellow>
+		dr6 &amp;= ~DR_TRAP_BITS;
+		dr6 |= DR6_BD | DR6_ACTIVE_LOW;
+		ctxt-&gt;ops-&gt;set_dr(ctxt, 6, dr6);
+		return emulate_db(ctxt);
+	}
+
+	return X86EMUL_CONTINUE;
+}
+
+static int check_dr_write(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u64 new_val = ctxt->src.val64;</yellow>
+	int dr = ctxt-&gt;modrm_reg;
+
+<yellow>	if ((dr == 6 || dr == 7) && (new_val & 0xffffffff00000000ULL))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	return check_dr_read(ctxt);</yellow>
+<yellow>}</yellow>
+
+static int check_svme(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+	u64 efer = 0;
+
+<yellow>	ctxt->ops->get_msr(ctxt, MSR_EFER, &efer);</yellow>
+
+<yellow>	if (!(efer & EFER_SVME))</yellow>
+<yellow>		return emulate_ud(ctxt);</yellow>
+
+	return X86EMUL_CONTINUE;
+}
+
+static int check_svme_pa(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	u64 rax = reg_read(ctxt, VCPU_REGS_RAX);</yellow>
+
+	/* Valid physical address? */
+	if (rax &amp; 0xffff000000000000ULL)
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	return check_svme(ctxt);</yellow>
+}
+
+<yellow>static int check_rdtsc(struct x86_emulate_ctxt *ctxt)</yellow>
+{
+<yellow>	u64 cr4 = ctxt->ops->get_cr(ctxt, 4);</yellow>
+
+<yellow>	if (cr4 & X86_CR4_TSD && ctxt->ops->cpl(ctxt))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+<yellow>	return X86EMUL_CONTINUE;</yellow>
+<yellow>}</yellow>
+
+static int check_rdpmc(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	u64 cr4 = ctxt->ops->get_cr(ctxt, 4);</yellow>
+	u64 rcx = reg_read(ctxt, VCPU_REGS_RCX);
+
+	/*
+	 * VMware allows access to these Pseduo-PMCs even when read via RDPMC
+	 * in Ring3 when CR4.PCE=0.
+	 */
+<yellow>	if (enable_vmware_backdoor && is_vmware_backdoor_pmc(rcx))</yellow>
+		return X86EMUL_CONTINUE;
+
+	/*
+	 * If CR4.PCE is set, the SDM requires CPL=0 or CR0.PE=0.  The CR0.PE
+	 * check however is unnecessary because CPL is always 0 outside
+	 * protected mode.
+	 */
+<yellow>	if ((!(cr4 & X86_CR4_PCE) && ctxt->ops->cpl(ctxt)) ||</yellow>
+<yellow>	    ctxt->ops->check_pmc(ctxt, rcx))</yellow>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int check_perm_in(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	ctxt->dst.bytes = min(ctxt->dst.bytes, 4u);</blue>
+<blue>	if (!emulator_io_permited(ctxt, ctxt->src.val, ctxt->dst.bytes))</blue>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	return X86EMUL_CONTINUE;
+<blue>}</blue>
+
+static int check_perm_out(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	ctxt->src.bytes = min(ctxt->src.bytes, 4u);</blue>
+<blue>	if (!emulator_io_permited(ctxt, ctxt->dst.val, ctxt->src.bytes))</blue>
+<yellow>		return emulate_gp(ctxt, 0);</yellow>
+
+	return X86EMUL_CONTINUE;
+<blue>}</blue>
+
+#define D(_y) { .flags = (_y) }
+#define DI(_y, _i) { .flags = (_y)|Intercept, .intercept = x86_intercept_##_i }
+#define DIP(_y, _i, _p) { .flags = (_y)|Intercept|CheckPerm, \
+		      .intercept = x86_intercept_##_i, .check_perm = (_p) }
+#define N    D(NotImpl)
+#define EXT(_f, _e) { .flags = ((_f) | RMExt), .u.group = (_e) }
+#define G(_f, _g) { .flags = ((_f) | Group | ModRM), .u.group = (_g) }
+#define GD(_f, _g) { .flags = ((_f) | GroupDual | ModRM), .u.gdual = (_g) }
+#define ID(_f, _i) { .flags = ((_f) | InstrDual | ModRM), .u.idual = (_i) }
+#define MD(_f, _m) { .flags = ((_f) | ModeDual), .u.mdual = (_m) }
+#define E(_f, _e) { .flags = ((_f) | Escape | ModRM), .u.esc = (_e) }
+#define I(_f, _e) { .flags = (_f), .u.execute = (_e) }
+#define F(_f, _e) { .flags = (_f) | Fastop, .u.fastop = (_e) }
+#define II(_f, _e, _i) \
+	{ .flags = (_f)|Intercept, .u.execute = (_e), .intercept = x86_intercept_##_i }
+#define IIP(_f, _e, _i, _p) \
+	{ .flags = (_f)|Intercept|CheckPerm, .u.execute = (_e), \
+	  .intercept = x86_intercept_##_i, .check_perm = (_p) }
+#define GP(_f, _g) { .flags = ((_f) | Prefix), .u.gprefix = (_g) }
+
+#define D2bv(_f)      D((_f) | ByteOp), D(_f)
+#define D2bvIP(_f, _i, _p) DIP((_f) | ByteOp, _i, _p), DIP(_f, _i, _p)
+#define I2bv(_f, _e)  I((_f) | ByteOp, _e), I(_f, _e)
+#define F2bv(_f, _e)  F((_f) | ByteOp, _e), F(_f, _e)
+#define I2bvIP(_f, _e, _i, _p) \
+	IIP((_f) | ByteOp, _e, _i, _p), IIP(_f, _e, _i, _p)
+
+#define F6ALU(_f, _e) F2bv((_f) | DstMem | SrcReg | ModRM, _e),		\
+		F2bv(((_f) | DstReg | SrcMem | ModRM) &amp; ~Lock, _e),	\
+		F2bv(((_f) &amp; ~Lock) | DstAcc | SrcImm, _e)
+
+static const struct opcode group7_rm0[] = {
+	N,
+	I(SrcNone | Priv | EmulateOnUD,	em_hypercall),
+	N, N, N, N, N, N,
+};
+
+static const struct opcode group7_rm1[] = {
+	DI(SrcNone | Priv, monitor),
+	DI(SrcNone | Priv, mwait),
+	N, N, N, N, N, N,
+};
+
+static const struct opcode group7_rm2[] = {
+	N,
+	II(ImplicitOps | Priv,			em_xsetbv,	xsetbv),
+	N, N, N, N, N, N,
+};
+
+static const struct opcode group7_rm3[] = {
+	DIP(SrcNone | Prot | Priv,		vmrun,		check_svme_pa),
+	II(SrcNone  | Prot | EmulateOnUD,	em_hypercall,	vmmcall),
+	DIP(SrcNone | Prot | Priv,		vmload,		check_svme_pa),
+	DIP(SrcNone | Prot | Priv,		vmsave,		check_svme_pa),
+	DIP(SrcNone | Prot | Priv,		stgi,		check_svme),
+	DIP(SrcNone | Prot | Priv,		clgi,		check_svme),
+	DIP(SrcNone | Prot | Priv,		skinit,		check_svme),
+	DIP(SrcNone | Prot | Priv,		invlpga,	check_svme),
+};
+
+static const struct opcode group7_rm7[] = {
+	N,
+	DIP(SrcNone, rdtscp, check_rdtsc),
+	N, N, N, N, N, N,
+};
+
+static const struct opcode group1[] = {
+	F(Lock, em_add),
+	F(Lock | PageTable, em_or),
+	F(Lock, em_adc),
+	F(Lock, em_sbb),
+	F(Lock | PageTable, em_and),
+	F(Lock, em_sub),
+	F(Lock, em_xor),
+	F(NoWrite, em_cmp),
+};
+
+static const struct opcode group1A[] = {
+	I(DstMem | SrcNone | Mov | Stack | IncSP | TwoMemOp, em_pop), N, N, N, N, N, N, N,
+};
+
+static const struct opcode group2[] = {
+	F(DstMem | ModRM, em_rol),
+	F(DstMem | ModRM, em_ror),
+	F(DstMem | ModRM, em_rcl),
+	F(DstMem | ModRM, em_rcr),
+	F(DstMem | ModRM, em_shl),
+	F(DstMem | ModRM, em_shr),
+	F(DstMem | ModRM, em_shl),
+	F(DstMem | ModRM, em_sar),
+};
+
+static const struct opcode group3[] = {
+	F(DstMem | SrcImm | NoWrite, em_test),
+	F(DstMem | SrcImm | NoWrite, em_test),
+	F(DstMem | SrcNone | Lock, em_not),
+	F(DstMem | SrcNone | Lock, em_neg),
+	F(DstXacc | Src2Mem, em_mul_ex),
+	F(DstXacc | Src2Mem, em_imul_ex),
+	F(DstXacc | Src2Mem, em_div_ex),
+	F(DstXacc | Src2Mem, em_idiv_ex),
+};
+
+static const struct opcode group4[] = {
+	F(ByteOp | DstMem | SrcNone | Lock, em_inc),
+	F(ByteOp | DstMem | SrcNone | Lock, em_dec),
+	N, N, N, N, N, N,
+};
+
+static const struct opcode group5[] = {
+	F(DstMem | SrcNone | Lock,		em_inc),
+	F(DstMem | SrcNone | Lock,		em_dec),
+	I(SrcMem | NearBranch | IsBranch,       em_call_near_abs),
+	I(SrcMemFAddr | ImplicitOps | IsBranch, em_call_far),
+	I(SrcMem | NearBranch | IsBranch,       em_jmp_abs),
+	I(SrcMemFAddr | ImplicitOps | IsBranch, em_jmp_far),
+	I(SrcMem | Stack | TwoMemOp,		em_push), D(Undefined),
+};
+
+static const struct opcode group6[] = {
+	II(Prot | DstMem,	   em_sldt, sldt),
+	II(Prot | DstMem,	   em_str, str),
+	II(Prot | Priv | SrcMem16, em_lldt, lldt),
+	II(Prot | Priv | SrcMem16, em_ltr, ltr),
+	N, N, N, N,
+};
+
+static const struct group_dual group7 = { {
+	II(Mov | DstMem,			em_sgdt, sgdt),
+	II(Mov | DstMem,			em_sidt, sidt),
+	II(SrcMem | Priv,			em_lgdt, lgdt),
+	II(SrcMem | Priv,			em_lidt, lidt),
+	II(SrcNone | DstMem | Mov,		em_smsw, smsw), N,
+	II(SrcMem16 | Mov | Priv,		em_lmsw, lmsw),
+	II(SrcMem | ByteOp | Priv | NoAccess,	em_invlpg, invlpg),
+}, {
+	EXT(0, group7_rm0),
+	EXT(0, group7_rm1),
+	EXT(0, group7_rm2),
+	EXT(0, group7_rm3),
+	II(SrcNone | DstMem | Mov,		em_smsw, smsw), N,
+	II(SrcMem16 | Mov | Priv,		em_lmsw, lmsw),
+	EXT(0, group7_rm7),
+} };
+
+static const struct opcode group8[] = {
+	N, N, N, N,
+	F(DstMem | SrcImmByte | NoWrite,		em_bt),
+	F(DstMem | SrcImmByte | Lock | PageTable,	em_bts),
+	F(DstMem | SrcImmByte | Lock,			em_btr),
+	F(DstMem | SrcImmByte | Lock | PageTable,	em_btc),
+};
+
+/*
+ * The &quot;memory&quot; destination is actually always a register, since we come
+ * from the register case of group9.
+ */
+static const struct gprefix pfx_0f_c7_7 = {
+	N, N, N, II(DstMem | ModRM | Op3264 | EmulateOnUD, em_rdpid, rdpid),
+};
+
+
+static const struct group_dual group9 = { {
+	N, I(DstMem64 | Lock | PageTable, em_cmpxchg8b), N, N, N, N, N, N,
+}, {
+	N, N, N, N, N, N, N,
+	GP(0, &amp;pfx_0f_c7_7),
+} };
+
+static const struct opcode group11[] = {
+	I(DstMem | SrcImm | Mov | PageTable, em_mov),
+	X7(D(Undefined)),
+};
+
+static const struct gprefix pfx_0f_ae_7 = {
+	I(SrcMem | ByteOp, em_clflush), I(SrcMem | ByteOp, em_clflushopt), N, N,
+};
+
+static const struct group_dual group15 = { {
+	I(ModRM | Aligned16, em_fxsave),
+	I(ModRM | Aligned16, em_fxrstor),
+	N, N, N, N, N, GP(0, &amp;pfx_0f_ae_7),
+}, {
+	N, N, N, N, N, N, N, N,
+} };
+
+static const struct gprefix pfx_0f_6f_0f_7f = {
+	I(Mmx, em_mov), I(Sse | Aligned, em_mov), N, I(Sse | Unaligned, em_mov),
+};
+
+static const struct instr_dual instr_dual_0f_2b = {
+	I(0, em_mov), N
+};
+
+static const struct gprefix pfx_0f_2b = {
+	ID(0, &amp;instr_dual_0f_2b), ID(0, &amp;instr_dual_0f_2b), N, N,
+};
+
+static const struct gprefix pfx_0f_10_0f_11 = {
+	I(Unaligned, em_mov), I(Unaligned, em_mov), N, N,
+};
+
+static const struct gprefix pfx_0f_28_0f_29 = {
+	I(Aligned, em_mov), I(Aligned, em_mov), N, N,
+};
+
+static const struct gprefix pfx_0f_e7 = {
+	N, I(Sse, em_mov), N, N,
+};
+
+static const struct escape escape_d9 = { {
+	N, N, N, N, N, N, N, I(DstMem16 | Mov, em_fnstcw),
+}, {
+	/* 0xC0 - 0xC7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xC8 - 0xCF */
+	N, N, N, N, N, N, N, N,
+	/* 0xD0 - 0xC7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xD8 - 0xDF */
+	N, N, N, N, N, N, N, N,
+	/* 0xE0 - 0xE7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xE8 - 0xEF */
+	N, N, N, N, N, N, N, N,
+	/* 0xF0 - 0xF7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xF8 - 0xFF */
+	N, N, N, N, N, N, N, N,
+} };
+
+static const struct escape escape_db = { {
+	N, N, N, N, N, N, N, N,
+}, {
+	/* 0xC0 - 0xC7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xC8 - 0xCF */
+	N, N, N, N, N, N, N, N,
+	/* 0xD0 - 0xC7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xD8 - 0xDF */
+	N, N, N, N, N, N, N, N,
+	/* 0xE0 - 0xE7 */
+	N, N, N, I(ImplicitOps, em_fninit), N, N, N, N,
+	/* 0xE8 - 0xEF */
+	N, N, N, N, N, N, N, N,
+	/* 0xF0 - 0xF7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xF8 - 0xFF */
+	N, N, N, N, N, N, N, N,
+} };
+
+static const struct escape escape_dd = { {
+	N, N, N, N, N, N, N, I(DstMem16 | Mov, em_fnstsw),
+}, {
+	/* 0xC0 - 0xC7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xC8 - 0xCF */
+	N, N, N, N, N, N, N, N,
+	/* 0xD0 - 0xC7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xD8 - 0xDF */
+	N, N, N, N, N, N, N, N,
+	/* 0xE0 - 0xE7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xE8 - 0xEF */
+	N, N, N, N, N, N, N, N,
+	/* 0xF0 - 0xF7 */
+	N, N, N, N, N, N, N, N,
+	/* 0xF8 - 0xFF */
+	N, N, N, N, N, N, N, N,
+} };
+
+static const struct instr_dual instr_dual_0f_c3 = {
+	I(DstMem | SrcReg | ModRM | No16 | Mov, em_mov), N
+};
+
+static const struct mode_dual mode_dual_63 = {
+	N, I(DstReg | SrcMem32 | ModRM | Mov, em_movsxd)
+};
+
+static const struct instr_dual instr_dual_8d = {
+	D(DstReg | SrcMem | ModRM | NoAccess), N
+};
+
+static const struct opcode opcode_table[256] = {
+	/* 0x00 - 0x07 */
+	F6ALU(Lock, em_add),
+	I(ImplicitOps | Stack | No64 | Src2ES, em_push_sreg),
+	I(ImplicitOps | Stack | No64 | Src2ES, em_pop_sreg),
+	/* 0x08 - 0x0F */
+	F6ALU(Lock | PageTable, em_or),
+	I(ImplicitOps | Stack | No64 | Src2CS, em_push_sreg),
+	N,
+	/* 0x10 - 0x17 */
+	F6ALU(Lock, em_adc),
+	I(ImplicitOps | Stack | No64 | Src2SS, em_push_sreg),
+	I(ImplicitOps | Stack | No64 | Src2SS, em_pop_sreg),
+	/* 0x18 - 0x1F */
+	F6ALU(Lock, em_sbb),
+	I(ImplicitOps | Stack | No64 | Src2DS, em_push_sreg),
+	I(ImplicitOps | Stack | No64 | Src2DS, em_pop_sreg),
+	/* 0x20 - 0x27 */
+	F6ALU(Lock | PageTable, em_and), N, N,
+	/* 0x28 - 0x2F */
+	F6ALU(Lock, em_sub), N, I(ByteOp | DstAcc | No64, em_das),
+	/* 0x30 - 0x37 */
+	F6ALU(Lock, em_xor), N, N,
+	/* 0x38 - 0x3F */
+	F6ALU(NoWrite, em_cmp), N, N,
+	/* 0x40 - 0x4F */
+	X8(F(DstReg, em_inc)), X8(F(DstReg, em_dec)),
+	/* 0x50 - 0x57 */
+	X8(I(SrcReg | Stack, em_push)),
+	/* 0x58 - 0x5F */
+	X8(I(DstReg | Stack, em_pop)),
+	/* 0x60 - 0x67 */
+	I(ImplicitOps | Stack | No64, em_pusha),
+	I(ImplicitOps | Stack | No64, em_popa),
+	N, MD(ModRM, &amp;mode_dual_63),
+	N, N, N, N,
+	/* 0x68 - 0x6F */
+	I(SrcImm | Mov | Stack, em_push),
+	I(DstReg | SrcMem | ModRM | Src2Imm, em_imul_3op),
+	I(SrcImmByte | Mov | Stack, em_push),
+	I(DstReg | SrcMem | ModRM | Src2ImmByte, em_imul_3op),
+	I2bvIP(DstDI | SrcDX | Mov | String | Unaligned, em_in, ins, check_perm_in), /* insb, insw/insd */
+	I2bvIP(SrcSI | DstDX | String, em_out, outs, check_perm_out), /* outsb, outsw/outsd */
+	/* 0x70 - 0x7F */
+	X16(D(SrcImmByte | NearBranch | IsBranch)),
+	/* 0x80 - 0x87 */
+	G(ByteOp | DstMem | SrcImm, group1),
+	G(DstMem | SrcImm, group1),
+	G(ByteOp | DstMem | SrcImm | No64, group1),
+	G(DstMem | SrcImmByte, group1),
+	F2bv(DstMem | SrcReg | ModRM | NoWrite, em_test),
+	I2bv(DstMem | SrcReg | ModRM | Lock | PageTable, em_xchg),
+	/* 0x88 - 0x8F */
+	I2bv(DstMem | SrcReg | ModRM | Mov | PageTable, em_mov),
+	I2bv(DstReg | SrcMem | ModRM | Mov, em_mov),
+	I(DstMem | SrcNone | ModRM | Mov | PageTable, em_mov_rm_sreg),
+	ID(0, &amp;instr_dual_8d),
+	I(ImplicitOps | SrcMem16 | ModRM, em_mov_sreg_rm),
+	G(0, group1A),
+	/* 0x90 - 0x97 */
+	DI(SrcAcc | DstReg, pause), X7(D(SrcAcc | DstReg)),
+	/* 0x98 - 0x9F */
+	D(DstAcc | SrcNone), I(ImplicitOps | SrcAcc, em_cwd),
+	I(SrcImmFAddr | No64 | IsBranch, em_call_far), N,
+	II(ImplicitOps | Stack, em_pushf, pushf),
+	II(ImplicitOps | Stack, em_popf, popf),
+	I(ImplicitOps, em_sahf), I(ImplicitOps, em_lahf),
+	/* 0xA0 - 0xA7 */
+	I2bv(DstAcc | SrcMem | Mov | MemAbs, em_mov),
+	I2bv(DstMem | SrcAcc | Mov | MemAbs | PageTable, em_mov),
+	I2bv(SrcSI | DstDI | Mov | String | TwoMemOp, em_mov),
+	F2bv(SrcSI | DstDI | String | NoWrite | TwoMemOp, em_cmp_r),
+	/* 0xA8 - 0xAF */
+	F2bv(DstAcc | SrcImm | NoWrite, em_test),
+	I2bv(SrcAcc | DstDI | Mov | String, em_mov),
+	I2bv(SrcSI | DstAcc | Mov | String, em_mov),
+	F2bv(SrcAcc | DstDI | String | NoWrite, em_cmp_r),
+	/* 0xB0 - 0xB7 */
+	X8(I(ByteOp | DstReg | SrcImm | Mov, em_mov)),
+	/* 0xB8 - 0xBF */
+	X8(I(DstReg | SrcImm64 | Mov, em_mov)),
+	/* 0xC0 - 0xC7 */
+	G(ByteOp | Src2ImmByte, group2), G(Src2ImmByte, group2),
+	I(ImplicitOps | NearBranch | SrcImmU16 | IsBranch, em_ret_near_imm),
+	I(ImplicitOps | NearBranch | IsBranch, em_ret),
+	I(DstReg | SrcMemFAddr | ModRM | No64 | Src2ES, em_lseg),
+	I(DstReg | SrcMemFAddr | ModRM | No64 | Src2DS, em_lseg),
+	G(ByteOp, group11), G(0, group11),
+	/* 0xC8 - 0xCF */
+	I(Stack | SrcImmU16 | Src2ImmByte | IsBranch, em_enter),
+	I(Stack | IsBranch, em_leave),
+	I(ImplicitOps | SrcImmU16 | IsBranch, em_ret_far_imm),
+	I(ImplicitOps | IsBranch, em_ret_far),
+	D(ImplicitOps | IsBranch), DI(SrcImmByte | IsBranch, intn),
+	D(ImplicitOps | No64 | IsBranch),
+	II(ImplicitOps | IsBranch, em_iret, iret),
+	/* 0xD0 - 0xD7 */
+	G(Src2One | ByteOp, group2), G(Src2One, group2),
+	G(Src2CL | ByteOp, group2), G(Src2CL, group2),
+	I(DstAcc | SrcImmUByte | No64, em_aam),
+	I(DstAcc | SrcImmUByte | No64, em_aad),
+	F(DstAcc | ByteOp | No64, em_salc),
+	I(DstAcc | SrcXLat | ByteOp, em_mov),
+	/* 0xD8 - 0xDF */
+	N, E(0, &amp;escape_d9), N, E(0, &amp;escape_db), N, E(0, &amp;escape_dd), N, N,
+	/* 0xE0 - 0xE7 */
+	X3(I(SrcImmByte | NearBranch | IsBranch, em_loop)),
+	I(SrcImmByte | NearBranch | IsBranch, em_jcxz),
+	I2bvIP(SrcImmUByte | DstAcc, em_in,  in,  check_perm_in),
+	I2bvIP(SrcAcc | DstImmUByte, em_out, out, check_perm_out),
+	/* 0xE8 - 0xEF */
+	I(SrcImm | NearBranch | IsBranch, em_call),
+	D(SrcImm | ImplicitOps | NearBranch | IsBranch),
+	I(SrcImmFAddr | No64 | IsBranch, em_jmp_far),
+	D(SrcImmByte | ImplicitOps | NearBranch | IsBranch),
+	I2bvIP(SrcDX | DstAcc, em_in,  in,  check_perm_in),
+	I2bvIP(SrcAcc | DstDX, em_out, out, check_perm_out),
+	/* 0xF0 - 0xF7 */
+	N, DI(ImplicitOps, icebp), N, N,
+	DI(ImplicitOps | Priv, hlt), D(ImplicitOps),
+	G(ByteOp, group3), G(0, group3),
+	/* 0xF8 - 0xFF */
+	D(ImplicitOps), D(ImplicitOps),
+	I(ImplicitOps, em_cli), I(ImplicitOps, em_sti),
+	D(ImplicitOps), D(ImplicitOps), G(0, group4), G(0, group5),
+};
+
+static const struct opcode twobyte_table[256] = {
+	/* 0x00 - 0x0F */
+	G(0, group6), GD(0, &amp;group7), N, N,
+	N, I(ImplicitOps | EmulateOnUD | IsBranch, em_syscall),
+	II(ImplicitOps | Priv, em_clts, clts), N,
+	DI(ImplicitOps | Priv, invd), DI(ImplicitOps | Priv, wbinvd), N, N,
+	N, D(ImplicitOps | ModRM | SrcMem | NoAccess), N, N,
+	/* 0x10 - 0x1F */
+	GP(ModRM | DstReg | SrcMem | Mov | Sse, &amp;pfx_0f_10_0f_11),
+	GP(ModRM | DstMem | SrcReg | Mov | Sse, &amp;pfx_0f_10_0f_11),
+	N, N, N, N, N, N,
+	D(ImplicitOps | ModRM | SrcMem | NoAccess), /* 4 * prefetch + 4 * reserved NOP */
+	D(ImplicitOps | ModRM | SrcMem | NoAccess), N, N,
+	D(ImplicitOps | ModRM | SrcMem | NoAccess), /* 8 * reserved NOP */
+	D(ImplicitOps | ModRM | SrcMem | NoAccess), /* 8 * reserved NOP */
+	D(ImplicitOps | ModRM | SrcMem | NoAccess), /* 8 * reserved NOP */
+	D(ImplicitOps | ModRM | SrcMem | NoAccess), /* NOP + 7 * reserved NOP */
+	/* 0x20 - 0x2F */
+	DIP(ModRM | DstMem | Priv | Op3264 | NoMod, cr_read, check_cr_access),
+	DIP(ModRM | DstMem | Priv | Op3264 | NoMod, dr_read, check_dr_read),
+	IIP(ModRM | SrcMem | Priv | Op3264 | NoMod, em_cr_write, cr_write,
+						check_cr_access),
+	IIP(ModRM | SrcMem | Priv | Op3264 | NoMod, em_dr_write, dr_write,
+						check_dr_write),
+	N, N, N, N,
+	GP(ModRM | DstReg | SrcMem | Mov | Sse, &amp;pfx_0f_28_0f_29),
+	GP(ModRM | DstMem | SrcReg | Mov | Sse, &amp;pfx_0f_28_0f_29),
+	N, GP(ModRM | DstMem | SrcReg | Mov | Sse, &amp;pfx_0f_2b),
+	N, N, N, N,
+	/* 0x30 - 0x3F */
+	II(ImplicitOps | Priv, em_wrmsr, wrmsr),
+	IIP(ImplicitOps, em_rdtsc, rdtsc, check_rdtsc),
+	II(ImplicitOps | Priv, em_rdmsr, rdmsr),
+	IIP(ImplicitOps, em_rdpmc, rdpmc, check_rdpmc),
+	I(ImplicitOps | EmulateOnUD | IsBranch, em_sysenter),
+	I(ImplicitOps | Priv | EmulateOnUD | IsBranch, em_sysexit),
+	N, N,
+	N, N, N, N, N, N, N, N,
+	/* 0x40 - 0x4F */
+	X16(D(DstReg | SrcMem | ModRM)),
+	/* 0x50 - 0x5F */
+	N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N,
+	/* 0x60 - 0x6F */
+	N, N, N, N,
+	N, N, N, N,
+	N, N, N, N,
+	N, N, N, GP(SrcMem | DstReg | ModRM | Mov, &amp;pfx_0f_6f_0f_7f),
+	/* 0x70 - 0x7F */
+	N, N, N, N,
+	N, N, N, N,
+	N, N, N, N,
+	N, N, N, GP(SrcReg | DstMem | ModRM | Mov, &amp;pfx_0f_6f_0f_7f),
+	/* 0x80 - 0x8F */
+	X16(D(SrcImm | NearBranch | IsBranch)),
+	/* 0x90 - 0x9F */
+	X16(D(ByteOp | DstMem | SrcNone | ModRM| Mov)),
+	/* 0xA0 - 0xA7 */
+	I(Stack | Src2FS, em_push_sreg), I(Stack | Src2FS, em_pop_sreg),
+	II(ImplicitOps, em_cpuid, cpuid),
+	F(DstMem | SrcReg | ModRM | BitOp | NoWrite, em_bt),
+	F(DstMem | SrcReg | Src2ImmByte | ModRM, em_shld),
+	F(DstMem | SrcReg | Src2CL | ModRM, em_shld), N, N,
+	/* 0xA8 - 0xAF */
+	I(Stack | Src2GS, em_push_sreg), I(Stack | Src2GS, em_pop_sreg),
+	II(EmulateOnUD | ImplicitOps, em_rsm, rsm),
+	F(DstMem | SrcReg | ModRM | BitOp | Lock | PageTable, em_bts),
+	F(DstMem | SrcReg | Src2ImmByte | ModRM, em_shrd),
+	F(DstMem | SrcReg | Src2CL | ModRM, em_shrd),
+	GD(0, &amp;group15), F(DstReg | SrcMem | ModRM, em_imul),
+	/* 0xB0 - 0xB7 */
+	I2bv(DstMem | SrcReg | ModRM | Lock | PageTable | SrcWrite, em_cmpxchg),
+	I(DstReg | SrcMemFAddr | ModRM | Src2SS, em_lseg),
+	F(DstMem | SrcReg | ModRM | BitOp | Lock, em_btr),
+	I(DstReg | SrcMemFAddr | ModRM | Src2FS, em_lseg),
+	I(DstReg | SrcMemFAddr | ModRM | Src2GS, em_lseg),
+	D(DstReg | SrcMem8 | ModRM | Mov), D(DstReg | SrcMem16 | ModRM | Mov),
+	/* 0xB8 - 0xBF */
+	N, N,
+	G(BitOp, group8),
+	F(DstMem | SrcReg | ModRM | BitOp | Lock | PageTable, em_btc),
+	I(DstReg | SrcMem | ModRM, em_bsf_c),
+	I(DstReg | SrcMem | ModRM, em_bsr_c),
+	D(DstReg | SrcMem8 | ModRM | Mov), D(DstReg | SrcMem16 | ModRM | Mov),
+	/* 0xC0 - 0xC7 */
+	F2bv(DstMem | SrcReg | ModRM | SrcWrite | Lock, em_xadd),
+	N, ID(0, &amp;instr_dual_0f_c3),
+	N, N, N, GD(0, &amp;group9),
+	/* 0xC8 - 0xCF */
+	X8(I(DstReg, em_bswap)),
+	/* 0xD0 - 0xDF */
+	N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N,
+	/* 0xE0 - 0xEF */
+	N, N, N, N, N, N, N, GP(SrcReg | DstMem | ModRM | Mov, &amp;pfx_0f_e7),
+	N, N, N, N, N, N, N, N,
+	/* 0xF0 - 0xFF */
+	N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N
+};
+
+static const struct instr_dual instr_dual_0f_38_f0 = {
+	I(DstReg | SrcMem | Mov, em_movbe), N
+};
+
+static const struct instr_dual instr_dual_0f_38_f1 = {
+	I(DstMem | SrcReg | Mov, em_movbe), N
+};
+
+static const struct gprefix three_byte_0f_38_f0 = {
+	ID(0, &amp;instr_dual_0f_38_f0), N, N, N
+};
+
+static const struct gprefix three_byte_0f_38_f1 = {
+	ID(0, &amp;instr_dual_0f_38_f1), N, N, N
+};
+
+/*
+ * Insns below are selected by the prefix which indexed by the third opcode
+ * byte.
+ */
+static const struct opcode opcode_map_0f_38[256] = {
+	/* 0x00 - 0x7f */
+	X16(N), X16(N), X16(N), X16(N), X16(N), X16(N), X16(N), X16(N),
+	/* 0x80 - 0xef */
+	X16(N), X16(N), X16(N), X16(N), X16(N), X16(N), X16(N),
+	/* 0xf0 - 0xf1 */
+	GP(EmulateOnUD | ModRM, &amp;three_byte_0f_38_f0),
+	GP(EmulateOnUD | ModRM, &amp;three_byte_0f_38_f1),
+	/* 0xf2 - 0xff */
+	N, N, X4(N), X8(N)
+};
+
+#undef D
+#undef N
+#undef G
+#undef GD
+#undef I
+#undef GP
+#undef EXT
+#undef MD
+#undef ID
+
+#undef D2bv
+#undef D2bvIP
+#undef I2bv
+#undef I2bvIP
+#undef I6ALU
+
+static unsigned imm_size(struct x86_emulate_ctxt *ctxt)
+{
+	unsigned size;
+
+<blue>	size = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</blue>
+	if (size == 8)
+		size = 4;
+	return size;
+}
+
+static int decode_imm(struct x86_emulate_ctxt *ctxt, struct operand *op,
+		      unsigned size, bool sign_extension)
+<blue>{</blue>
+	int rc = X86EMUL_CONTINUE;
+
+<blue>	op->type = OP_IMM;</blue>
+	op-&gt;bytes = size;
+	op-&gt;addr.mem.ea = ctxt-&gt;_eip;
+	/* NB. Immediates are sign-extended as necessary. */
+	switch (op-&gt;bytes) {
+	case 1:
+<blue>		op->val = insn_fetch(s8, ctxt);</blue>
+		break;
+	case 2:
+<yellow>		op->val = insn_fetch(s16, ctxt);</yellow>
+		break;
+	case 4:
+<blue>		op->val = insn_fetch(s32, ctxt);</blue>
+		break;
+	case 8:
+<yellow>		op->val = insn_fetch(s64, ctxt);</yellow>
+		break;
+	}
+<blue>	if (!sign_extension) {</blue>
+<yellow>		switch (op->bytes) {</yellow>
+		case 1:
+<yellow>			op->val &= 0xff;</yellow>
+			break;
+		case 2:
+<yellow>			op->val &= 0xffff;</yellow>
+			break;
+		case 4:
+<yellow>			op->val &= 0xffffffff;</yellow>
+			break;
+		}
+	}
+done:
+	return rc;
+}
+
+static int decode_operand(struct x86_emulate_ctxt *ctxt, struct operand *op,
+			  unsigned d)
+{
+	int rc = X86EMUL_CONTINUE;
+
+<blue>	switch (d) {</blue>
+	case OpReg:
+<blue>		decode_register_operand(ctxt, op);</blue>
+		break;
+	case OpImmUByte:
+<yellow>		rc = decode_imm(ctxt, op, 1, false);</yellow>
+		break;
+	case OpMem:
+<blue>		ctxt->memop.bytes = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</blue>
+	mem_common:
+<blue>		*op = ctxt->memop;</blue>
+		ctxt-&gt;memopp = op;
+		if (ctxt-&gt;d &amp; BitOp)
+<yellow>			fetch_bit_operand(ctxt);</yellow>
+<blue>		op->orig_val = op->val;</blue>
+		break;
+	case OpMem64:
+<yellow>		ctxt->memop.bytes = (ctxt->op_bytes == 8) ? 16 : 8;</yellow>
+		goto mem_common;
+	case OpAcc:
+<blue>		op->type = OP_REG;</blue>
+<blue>		op->bytes = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</blue>
+		op-&gt;addr.reg = reg_rmw(ctxt, VCPU_REGS_RAX);
+		fetch_register_operand(op);
+		op-&gt;orig_val = op-&gt;val;
+		break;
+	case OpAccLo:
+<yellow>		op->type = OP_REG;</yellow>
+<yellow>		op->bytes = (ctxt->d & ByteOp) ? 2 : ctxt->op_bytes;</yellow>
+		op-&gt;addr.reg = reg_rmw(ctxt, VCPU_REGS_RAX);
+		fetch_register_operand(op);
+		op-&gt;orig_val = op-&gt;val;
+		break;
+	case OpAccHi:
+<yellow>		if (ctxt->d & ByteOp) {</yellow>
+<yellow>			op->type = OP_NONE;</yellow>
+			break;
+		}
+<yellow>		op->type = OP_REG;</yellow>
+		op-&gt;bytes = ctxt-&gt;op_bytes;
+		op-&gt;addr.reg = reg_rmw(ctxt, VCPU_REGS_RDX);
+		fetch_register_operand(op);
+		op-&gt;orig_val = op-&gt;val;
+		break;
+	case OpDI:
+<blue>		op->type = OP_MEM;</blue>
+<blue>		op->bytes = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</blue>
+<blue>		op->addr.mem.ea =</blue>
+<yellow>			register_address(ctxt, VCPU_REGS_RDI);</yellow>
+		op-&gt;addr.mem.seg = VCPU_SREG_ES;
+		op-&gt;val = 0;
+		op-&gt;count = 1;
+		break;
+	case OpDX:
+<blue>		op->type = OP_REG;</blue>
+		op-&gt;bytes = 2;
+		op-&gt;addr.reg = reg_rmw(ctxt, VCPU_REGS_RDX);
+		fetch_register_operand(op);
+		break;
+	case OpCL:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;bytes = 1;
+		op-&gt;val = reg_read(ctxt, VCPU_REGS_RCX) &amp; 0xff;
+		break;
+	case OpImmByte:
+<blue>		rc = decode_imm(ctxt, op, 1, true);</blue>
+		break;
+	case OpOne:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;bytes = 1;
+		op-&gt;val = 1;
+		break;
+	case OpImm:
+<blue>		rc = decode_imm(ctxt, op, imm_size(ctxt), true);</blue>
+		break;
+	case OpImm64:
+<yellow>		rc = decode_imm(ctxt, op, ctxt->op_bytes, true);</yellow>
+		break;
+	case OpMem8:
+<blue>		ctxt->memop.bytes = 1;</blue>
+		if (ctxt-&gt;memop.type == OP_REG) {
+			ctxt-&gt;memop.addr.reg = decode_register(ctxt,
+<yellow>					ctxt->modrm_rm, true);</yellow>
+			fetch_register_operand(&amp;ctxt-&gt;memop);
+		}
+		goto mem_common;
+	case OpMem16:
+<blue>		ctxt->memop.bytes = 2;</blue>
+		goto mem_common;
+	case OpMem32:
+<blue>		ctxt->memop.bytes = 4;</blue>
+		goto mem_common;
+	case OpImmU16:
+<yellow>		rc = decode_imm(ctxt, op, 2, false);</yellow>
+		break;
+	case OpImmU:
+<yellow>		rc = decode_imm(ctxt, op, imm_size(ctxt), false);</yellow>
+		break;
+	case OpSI:
+<blue>		op->type = OP_MEM;</blue>
+<blue>		op->bytes = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</blue>
+<blue>		op->addr.mem.ea =</blue>
+<yellow>			register_address(ctxt, VCPU_REGS_RSI);</yellow>
+		op-&gt;addr.mem.seg = ctxt-&gt;seg_override;
+		op-&gt;val = 0;
+		op-&gt;count = 1;
+		break;
+	case OpXLat:
+<blue>		op->type = OP_MEM;</blue>
+<blue>		op->bytes = (ctxt->d & ByteOp) ? 1 : ctxt->op_bytes;</blue>
+<blue>		op->addr.mem.ea =</blue>
+<yellow>			address_mask(ctxt,</yellow>
+				reg_read(ctxt, VCPU_REGS_RBX) +
+				(reg_read(ctxt, VCPU_REGS_RAX) &amp; 0xff));
+		op-&gt;addr.mem.seg = ctxt-&gt;seg_override;
+		op-&gt;val = 0;
+		break;
+	case OpImmFAddr:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;addr.mem.ea = ctxt-&gt;_eip;
+		op-&gt;bytes = ctxt-&gt;op_bytes + 2;
+<yellow>		insn_fetch_arr(op->valptr, op->bytes, ctxt);</yellow>
+		break;
+	case OpMemFAddr:
+<yellow>		ctxt->memop.bytes = ctxt->op_bytes + 2;</yellow>
+		goto mem_common;
+	case OpES:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;val = VCPU_SREG_ES;
+		break;
+	case OpCS:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;val = VCPU_SREG_CS;
+		break;
+	case OpSS:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;val = VCPU_SREG_SS;
+		break;
+	case OpDS:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;val = VCPU_SREG_DS;
+		break;
+	case OpFS:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;val = VCPU_SREG_FS;
+		break;
+	case OpGS:
+<yellow>		op->type = OP_IMM;</yellow>
+		op-&gt;val = VCPU_SREG_GS;
+		break;
+	case OpImplicit:
+		/* Special instructions do their own operand decoding. */
+	default:
+<blue>		op->type = OP_NONE; /* Disable writeback. */</blue>
+		break;
+	}
+
+done:
+	return rc;
+<blue>}</blue>
+
+int x86_decode_insn(struct x86_emulate_ctxt *ctxt, void *insn, int insn_len, int emulation_type)
+<blue>{</blue>
+	int rc = X86EMUL_CONTINUE;
+<blue>	int mode = ctxt->mode;</blue>
+	int def_op_bytes, def_ad_bytes, goffset, simd_prefix;
+	bool op_prefix = false;
+	bool has_seg_override = false;
+	struct opcode opcode;
+	u16 dummy;
+	struct desc_struct desc;
+
+	ctxt-&gt;memop.type = OP_NONE;
+	ctxt-&gt;memopp = NULL;
+	ctxt-&gt;_eip = ctxt-&gt;eip;
+	ctxt-&gt;fetch.ptr = ctxt-&gt;fetch.data;
+	ctxt-&gt;fetch.end = ctxt-&gt;fetch.data + insn_len;
+	ctxt-&gt;opcode_len = 1;
+	ctxt-&gt;intercept = x86_intercept_none;
+	if (insn_len &gt; 0)
+<yellow>		memcpy(ctxt->fetch.data, insn, insn_len);</yellow>
+	else {
+<blue>		rc = __do_insn_fetch_bytes(ctxt, 1);</blue>
+		if (rc != X86EMUL_CONTINUE)
+			goto done;
+	}
+
+<blue>	switch (mode) {</blue>
+	case X86EMUL_MODE_REAL:
+	case X86EMUL_MODE_VM86:
+		def_op_bytes = def_ad_bytes = 2;
+<yellow>		ctxt->ops->get_segment(ctxt, &dummy, &desc, NULL, VCPU_SREG_CS);</yellow>
+		if (desc.d)
+			def_op_bytes = def_ad_bytes = 4;
+		break;
+	case X86EMUL_MODE_PROT16:
+		def_op_bytes = def_ad_bytes = 2;
+		break;
+	case X86EMUL_MODE_PROT32:
+		def_op_bytes = def_ad_bytes = 4;
+		break;
+#ifdef CONFIG_X86_64
+	case X86EMUL_MODE_PROT64:
+		def_op_bytes = 4;
+		def_ad_bytes = 8;
+		break;
+#endif
+	default:
+		return EMULATION_FAILED;
+	}
+
+<blue>	ctxt->op_bytes = def_op_bytes;</blue>
+	ctxt-&gt;ad_bytes = def_ad_bytes;
+
+	/* Legacy prefixes. */
+	for (;;) {
+<blue>		switch (ctxt->b = insn_fetch(u8, ctxt)) {</blue>
+		case 0x66:	/* operand-size override */
+			op_prefix = true;
+			/* switch between 2/4 bytes */
+<blue>			ctxt->op_bytes = def_op_bytes ^ 6;</blue>
+			break;
+		case 0x67:	/* address-size override */
+<yellow>			if (mode == X86EMUL_MODE_PROT64)</yellow>
+				/* switch between 4/8 bytes */
+<yellow>				ctxt->ad_bytes = def_ad_bytes ^ 12;</yellow>
+			else
+				/* switch between 2/4 bytes */
+<yellow>				ctxt->ad_bytes = def_ad_bytes ^ 6;</yellow>
+			break;
+		case 0x26:	/* ES override */
+			has_seg_override = true;
+<yellow>			ctxt->seg_override = VCPU_SREG_ES;</yellow>
+			break;
+		case 0x2e:	/* CS override */
+			has_seg_override = true;
+<yellow>			ctxt->seg_override = VCPU_SREG_CS;</yellow>
+			break;
+		case 0x36:	/* SS override */
+			has_seg_override = true;
+<blue>			ctxt->seg_override = VCPU_SREG_SS;</blue>
+			break;
+		case 0x3e:	/* DS override */
+			has_seg_override = true;
+<blue>			ctxt->seg_override = VCPU_SREG_DS;</blue>
+			break;
+		case 0x64:	/* FS override */
+			has_seg_override = true;
+<yellow>			ctxt->seg_override = VCPU_SREG_FS;</yellow>
+			break;
+		case 0x65:	/* GS override */
+			has_seg_override = true;
+<yellow>			ctxt->seg_override = VCPU_SREG_GS;</yellow>
+			break;
+		case 0x40 ... 0x4f: /* REX */
+<blue>			if (mode != X86EMUL_MODE_PROT64)</blue>
+				goto done_prefixes;
+			ctxt-&gt;rex_prefix = ctxt-&gt;b;
+			continue;
+		case 0xf0:	/* LOCK */
+<blue>			ctxt->lock_prefix = 1;</blue>
+			break;
+		case 0xf2:	/* REPNE/REPNZ */
+		case 0xf3:	/* REP/REPE/REPZ */
+<blue>			ctxt->rep_prefix = ctxt->b;</blue>
+			break;
+		default:
+			goto done_prefixes;
+		}
+
+		/* Any legacy prefix after a REX prefix nullifies its effect. */
+
+<blue>		ctxt->rex_prefix = 0;</blue>
+	}
+
+done_prefixes:
+
+	/* REX prefix. */
+<blue>	if (ctxt->rex_prefix & 8)</blue>
+<blue>		ctxt->op_bytes = 8;	/* REX.W */</blue>
+
+	/* Opcode byte(s). */
+<blue>	opcode = opcode_table[ctxt->b];</blue>
+	/* Two-byte opcode? */
+	if (ctxt-&gt;b == 0x0f) {
+<blue>		ctxt->opcode_len = 2;</blue>
+<blue>		ctxt->b = insn_fetch(u8, ctxt);</blue>
+		opcode = twobyte_table[ctxt-&gt;b];
+
+		/* 0F_38 opcode map */
+		if (ctxt-&gt;b == 0x38) {
+<blue>			ctxt->opcode_len = 3;</blue>
+<blue>			ctxt->b = insn_fetch(u8, ctxt);</blue>
+			opcode = opcode_map_0f_38[ctxt-&gt;b];
+		}
+	}
+<blue>	ctxt->d = opcode.flags;</blue>
+
+	if (ctxt-&gt;d &amp; ModRM)
+<blue>		ctxt->modrm = insn_fetch(u8, ctxt);</blue>
+
+	/* vex-prefix instructions are not implemented */
+<blue>	if (ctxt->opcode_len == 1 && (ctxt->b == 0xc5 || ctxt->b == 0xc4) &&</blue>
+<yellow>	    (mode == X86EMUL_MODE_PROT64 || (ctxt->modrm & 0xc0) == 0xc0)) {</yellow>
+<yellow>		ctxt->d = NotImpl;</yellow>
+	}
+
+<blue>	while (ctxt->d & GroupMask) {</blue>
+<blue>		switch (ctxt->d & GroupMask) {</blue>
+		case Group:
+<blue>			goffset = (ctxt->modrm >> 3) & 7;</blue>
+			opcode = opcode.u.group[goffset];
+			break;
+		case GroupDual:
+<blue>			goffset = (ctxt->modrm >> 3) & 7;</blue>
+			if ((ctxt-&gt;modrm &gt;&gt; 6) == 3)
+<blue>				opcode = opcode.u.gdual->mod3[goffset];</blue>
+			else
+<yellow>				opcode = opcode.u.gdual->mod012[goffset];</yellow>
+			break;
+		case RMExt:
+<blue>			goffset = ctxt->modrm & 7;</blue>
+			opcode = opcode.u.group[goffset];
+			break;
+		case Prefix:
+<yellow>			if (ctxt->rep_prefix && op_prefix)</yellow>
+				return EMULATION_FAILED;
+<yellow>			simd_prefix = op_prefix ? 0x66 : ctxt->rep_prefix;</yellow>
+<yellow>			switch (simd_prefix) {</yellow>
+<yellow>			case 0x00: opcode = opcode.u.gprefix->pfx_no; break;</yellow>
+<yellow>			case 0x66: opcode = opcode.u.gprefix->pfx_66; break;</yellow>
+<yellow>			case 0xf2: opcode = opcode.u.gprefix->pfx_f2; break;</yellow>
+<yellow>			case 0xf3: opcode = opcode.u.gprefix->pfx_f3; break;</yellow>
+			}
+			break;
+		case Escape:
+<yellow>			if (ctxt->modrm > 0xbf) {</yellow>
+				size_t size = ARRAY_SIZE(opcode.u.esc-&gt;high);
+<yellow>				u32 index = array_index_nospec(</yellow>
+					ctxt-&gt;modrm - 0xc0, size);
+
+				opcode = opcode.u.esc-&gt;high[index];
+			} else {
+<yellow>				opcode = opcode.u.esc->op[(ctxt->modrm >> 3) & 7];</yellow>
+			}
+			break;
+		case InstrDual:
+<yellow>			if ((ctxt->modrm >> 6) == 3)</yellow>
+<yellow>				opcode = opcode.u.idual->mod3;</yellow>
+			else
+<yellow>				opcode = opcode.u.idual->mod012;</yellow>
+			break;
+		case ModeDual:
+<blue>			if (ctxt->mode == X86EMUL_MODE_PROT64)</blue>
+<blue>				opcode = opcode.u.mdual->mode64;</blue>
+			else
+<yellow>				opcode = opcode.u.mdual->mode32;</yellow>
+			break;
+		default:
+			return EMULATION_FAILED;
+		}
+
+		ctxt-&gt;d &amp;= ~(u64)GroupMask;
+<blue>		ctxt->d |= opcode.flags;</blue>
+	}
+
+<blue>	ctxt->is_branch = opcode.flags & IsBranch;</blue>
+
+	/* Unrecognised? */
+	if (ctxt-&gt;d == 0)
+		return EMULATION_FAILED;
+
+<blue>	ctxt->execute = opcode.u.execute;</blue>
+
+<yellow>	if (unlikely(emulation_type & EMULTYPE_TRAP_UD) &&</yellow>
+<blue>	    likely(!(ctxt->d & EmulateOnUD)))</blue>
+		return EMULATION_FAILED;
+
+<blue>	if (unlikely(ctxt->d &</blue>
+	    (NotImpl|Stack|Op3264|Sse|Mmx|Intercept|CheckPerm|NearBranch|
+	     No16))) {
+		/*
+		 * These are copied unconditionally here, and checked unconditionally
+		 * in x86_emulate_insn.
+		 */
+<blue>		ctxt->check_perm = opcode.check_perm;</blue>
+		ctxt-&gt;intercept = opcode.intercept;
+
+		if (ctxt-&gt;d &amp; NotImpl)
+			return EMULATION_FAILED;
+
+<blue>		if (mode == X86EMUL_MODE_PROT64) {</blue>
+<blue>			if (ctxt->op_bytes == 4 && (ctxt->d & Stack))</blue>
+<blue>				ctxt->op_bytes = 8;</blue>
+<blue>			else if (ctxt->d & NearBranch)</blue>
+				ctxt-&gt;op_bytes = 8;
+		}
+
+<blue>		if (ctxt->d & Op3264) {</blue>
+			if (mode == X86EMUL_MODE_PROT64)
+				ctxt-&gt;op_bytes = 8;
+			else
+<yellow>				ctxt->op_bytes = 4;</yellow>
+		}
+
+<blue>		if ((ctxt->d & No16) && ctxt->op_bytes == 2)</blue>
+<yellow>			ctxt->op_bytes = 4;</yellow>
+
+<blue>		if (ctxt->d & Sse)</blue>
+<yellow>			ctxt->op_bytes = 16;</yellow>
+<blue>		else if (ctxt->d & Mmx)</blue>
+<yellow>			ctxt->op_bytes = 8;</yellow>
+	}
+
+	/* ModRM and SIB bytes. */
+<blue>	if (ctxt->d & ModRM) {</blue>
+<blue>		rc = decode_modrm(ctxt, &ctxt->memop);</blue>
+<blue>		if (!has_seg_override) {</blue>
+			has_seg_override = true;
+<blue>			ctxt->seg_override = ctxt->modrm_seg;</blue>
+		}
+<blue>	} else if (ctxt->d & MemAbs)</blue>
+<yellow>		rc = decode_abs(ctxt, &ctxt->memop);</yellow>
+	if (rc != X86EMUL_CONTINUE)
+		goto done;
+
+<blue>	if (!has_seg_override)</blue>
+<blue>		ctxt->seg_override = VCPU_SREG_DS;</blue>
+
+<blue>	ctxt->memop.addr.mem.seg = ctxt->seg_override;</blue>
+
+	/*
+	 * Decode and fetch the source operand: register, memory
+	 * or immediate.
+	 */
+	rc = decode_operand(ctxt, &amp;ctxt-&gt;src, (ctxt-&gt;d &gt;&gt; SrcShift) &amp; OpMask);
+	if (rc != X86EMUL_CONTINUE)
+		goto done;
+
+	/*
+	 * Decode and fetch the second source operand: register, memory
+	 * or immediate.
+	 */
+<blue>	rc = decode_operand(ctxt, &ctxt->src2, (ctxt->d >> Src2Shift) & OpMask);</blue>
+	if (rc != X86EMUL_CONTINUE)
+		goto done;
+
+	/* Decode and fetch the destination operand: register or memory. */
+<blue>	rc = decode_operand(ctxt, &ctxt->dst, (ctxt->d >> DstShift) & OpMask);</blue>
+
+<blue>	if (ctxt->rip_relative && likely(ctxt->memopp))</blue>
+<blue>		ctxt->memopp->addr.mem.ea = address_mask(ctxt,</blue>
+<blue>					ctxt->memopp->addr.mem.ea + ctxt->_eip);</blue>
+
+done:
+<blue>	if (rc == X86EMUL_PROPAGATE_FAULT)</blue>
+<yellow>		ctxt->have_exception = true;</yellow>
+<blue>	return (rc != X86EMUL_CONTINUE) ? EMULATION_FAILED : EMULATION_OK;</blue>
+}
+
+bool x86_page_table_writing_insn(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	return ctxt->d & PageTable;</blue>
+}
+
+static bool string_insn_completed(struct x86_emulate_ctxt *ctxt)
+{
+	/* The second termination condition only applies for REPE
+	 * and REPNE. Test if the repeat string operation prefix is
+	 * REPE/REPZ or REPNE/REPNZ and if it&#x27;s the case it tests the
+	 * corresponding termination condition according to:
+	 * 	- if REPE/REPZ and ZF = 0 then done
+	 * 	- if REPNE/REPNZ and ZF = 1 then done
+	 */
+<blue>	if (((ctxt->b == 0xa6) || (ctxt->b == 0xa7) ||</blue>
+	     (ctxt-&gt;b == 0xae) || (ctxt-&gt;b == 0xaf))
+<yellow>	    && (((ctxt->rep_prefix == REPE_PREFIX) &&</yellow>
+<yellow>		 ((ctxt->eflags & X86_EFLAGS_ZF) == 0))</yellow>
+<yellow>		|| ((ctxt->rep_prefix == REPNE_PREFIX) &&</yellow>
+<yellow>		    ((ctxt->eflags & X86_EFLAGS_ZF) == X86_EFLAGS_ZF))))</yellow>
+		return true;
+
+	return false;
+}
+
+static int flush_pending_x87_faults(struct x86_emulate_ctxt *ctxt)
+{
+	int rc;
+
+<yellow>	kvm_fpu_get();</yellow>
+<yellow>	rc = asm_safe("fwait");</yellow>
+<yellow>	kvm_fpu_put();</yellow>
+
+	if (unlikely(rc != X86EMUL_CONTINUE))
+<yellow>		return emulate_exception(ctxt, MF_VECTOR, 0, false);</yellow>
+
+	return X86EMUL_CONTINUE;
+}
+
+static void fetch_possible_mmx_operand(struct operand *op)
+{
+<yellow>	if (op->type == OP_MM)</yellow>
+<yellow>		kvm_read_mmx_reg(op->addr.mm, &op->mm_val);</yellow>
+}
+
+static int fastop(struct x86_emulate_ctxt *ctxt, fastop_t fop)
+{
+<blue>	ulong flags = (ctxt->eflags & EFLAGS_MASK) | X86_EFLAGS_IF;</blue>
+
+	if (!(ctxt-&gt;d &amp; ByteOp))
+<blue>		fop += __ffs(ctxt->dst.bytes) * FASTOP_SIZE;</blue>
+
+	asm(&quot;push %[flags]; popf; &quot; CALL_NOSPEC &quot; ; pushf; pop %[flags]\n&quot;
+	    : &quot;+a&quot;(ctxt-&gt;dst.val), &quot;+d&quot;(ctxt-&gt;src.val), [flags]&quot;+D&quot;(flags),
+	      [thunk_target]&quot;+S&quot;(fop), ASM_CALL_CONSTRAINT
+<blue>	    : "c"(ctxt->src2.val));</blue>
+
+	ctxt-&gt;eflags = (ctxt-&gt;eflags &amp; ~EFLAGS_MASK) | (flags &amp; EFLAGS_MASK);
+	if (!fop) /* exception is returned in fop variable */
+<yellow>		return emulate_de(ctxt);</yellow>
+	return X86EMUL_CONTINUE;
+<blue>}</blue>
+
+void init_decode_cache(struct x86_emulate_ctxt *ctxt)
+{
+	/* Clear fields that are set conditionally but read without a guard. */
+<blue>	ctxt->rip_relative = false;</blue>
+	ctxt-&gt;rex_prefix = 0;
+	ctxt-&gt;lock_prefix = 0;
+	ctxt-&gt;rep_prefix = 0;
+	ctxt-&gt;regs_valid = 0;
+	ctxt-&gt;regs_dirty = 0;
+
+	ctxt-&gt;io_read.pos = 0;
+	ctxt-&gt;io_read.end = 0;
+	ctxt-&gt;mem_read.end = 0;
+}
+
+int x86_emulate_insn(struct x86_emulate_ctxt *ctxt)
+<blue>{</blue>
+<blue>	const struct x86_emulate_ops *ops = ctxt->ops;</blue>
+	int rc = X86EMUL_CONTINUE;
+	int saved_dst_type = ctxt-&gt;dst.type;
+	unsigned emul_flags;
+
+	ctxt-&gt;mem_read.pos = 0;
+
+	/* LOCK prefix is allowed only with some instructions */
+<yellow>	if (ctxt->lock_prefix && (!(ctxt->d & Lock) || ctxt->dst.type != OP_MEM)) {</yellow>
+<yellow>		rc = emulate_ud(ctxt);</yellow>
+		goto done;
+	}
+
+<blue>	if ((ctxt->d & SrcMask) == SrcMemFAddr && ctxt->src.type != OP_MEM) {</blue>
+		rc = emulate_ud(ctxt);
+		goto done;
+	}
+
+<blue>	emul_flags = ctxt->ops->get_hflags(ctxt);</blue>
+	if (unlikely(ctxt-&gt;d &amp;
+		     (No64|Undefined|Sse|Mmx|Intercept|CheckPerm|Priv|Prot|String))) {
+<blue>		if ((ctxt->mode == X86EMUL_MODE_PROT64 && (ctxt->d & No64)) ||</blue>
+<blue>				(ctxt->d & Undefined)) {</blue>
+			rc = emulate_ud(ctxt);
+			goto done;
+		}
+
+<blue>		if (((ctxt->d & (Sse|Mmx)) && ((ops->get_cr(ctxt, 0) & X86_CR0_EM)))</blue>
+<blue>		    || ((ctxt->d & Sse) && !(ops->get_cr(ctxt, 4) & X86_CR4_OSFXSR))) {</blue>
+			rc = emulate_ud(ctxt);
+			goto done;
+		}
+
+<yellow>		if ((ctxt->d & (Sse|Mmx)) && (ops->get_cr(ctxt, 0) & X86_CR0_TS)) {</yellow>
+<yellow>			rc = emulate_nm(ctxt);</yellow>
+			goto done;
+		}
+
+<blue>		if (ctxt->d & Mmx) {</blue>
+<yellow>			rc = flush_pending_x87_faults(ctxt);</yellow>
+			if (rc != X86EMUL_CONTINUE)
+				goto done;
+			/*
+			 * Now that we know the fpu is exception safe, we can fetch
+			 * operands from it.
+			 */
+<yellow>			fetch_possible_mmx_operand(&ctxt->src);</yellow>
+<yellow>			fetch_possible_mmx_operand(&ctxt->src2);</yellow>
+<yellow>			if (!(ctxt->d & Mov))</yellow>
+<yellow>				fetch_possible_mmx_operand(&ctxt->dst);</yellow>
+		}
+
+<blue>		if (unlikely(emul_flags & X86EMUL_GUEST_MASK) && ctxt->intercept) {</blue>
+<blue>			rc = emulator_check_intercept(ctxt, ctxt->intercept,</blue>
+						      X86_ICPT_PRE_EXCEPT);
+			if (rc != X86EMUL_CONTINUE)
+				goto done;
+		}
+
+		/* Instruction can only be executed in protected mode */
+<blue>		if ((ctxt->d & Prot) && ctxt->mode < X86EMUL_MODE_PROT16) {</blue>
+			rc = emulate_ud(ctxt);
+			goto done;
+		}
+
+		/* Privileged instruction can be executed only in CPL=0 */
+<blue>		if ((ctxt->d & Priv) && ops->cpl(ctxt)) {</blue>
+<yellow>			if (ctxt->d & PrivUD)</yellow>
+				rc = emulate_ud(ctxt);
+			else
+<yellow>				rc = emulate_gp(ctxt, 0);</yellow>
+			goto done;
+		}
+
+		/* Do instruction specific permission checks */
+<blue>		if (ctxt->d & CheckPerm) {</blue>
+<blue>			rc = ctxt->check_perm(ctxt);</blue>
+			if (rc != X86EMUL_CONTINUE)
+				goto done;
+		}
+
+<blue>		if (unlikely(emul_flags & X86EMUL_GUEST_MASK) && (ctxt->d & Intercept)) {</blue>
+<blue>			rc = emulator_check_intercept(ctxt, ctxt->intercept,</blue>
+						      X86_ICPT_POST_EXCEPT);
+<blue>			if (rc != X86EMUL_CONTINUE)</blue>
+				goto done;
+		}
+
+<blue>		if (ctxt->rep_prefix && (ctxt->d & String)) {</blue>
+			/* All REP prefixes have the same first termination condition */
+<blue>			if (address_mask(ctxt, reg_read(ctxt, VCPU_REGS_RCX)) == 0) {</blue>
+<yellow>				string_registers_quirk(ctxt);</yellow>
+<blue>				ctxt->eip = ctxt->_eip;</blue>
+				ctxt-&gt;eflags &amp;= ~X86_EFLAGS_RF;
+				goto done;
+			}
+		}
+	}
+
+<blue>	if ((ctxt->src.type == OP_MEM) && !(ctxt->d & NoAccess)) {</blue>
+<blue>		rc = segmented_read(ctxt, ctxt->src.addr.mem,</blue>
+				    ctxt-&gt;src.valptr, ctxt-&gt;src.bytes);
+		if (rc != X86EMUL_CONTINUE)
+			goto done;
+<blue>		ctxt->src.orig_val64 = ctxt->src.val64;</blue>
+	}
+
+<blue>	if (ctxt->src2.type == OP_MEM) {</blue>
+<yellow>		rc = segmented_read(ctxt, ctxt->src2.addr.mem,</yellow>
+				    &amp;ctxt-&gt;src2.val, ctxt-&gt;src2.bytes);
+		if (rc != X86EMUL_CONTINUE)
+			goto done;
+	}
+
+<blue>	if ((ctxt->d & DstMask) == ImplicitOps)</blue>
+		goto special_insn;
+
+
+<blue>	if ((ctxt->dst.type == OP_MEM) && !(ctxt->d & Mov)) {</blue>
+		/* optimisation - avoid slow emulated read if Mov */
+<blue>		rc = segmented_read(ctxt, ctxt->dst.addr.mem,</blue>
+				   &amp;ctxt-&gt;dst.val, ctxt-&gt;dst.bytes);
+		if (rc != X86EMUL_CONTINUE) {
+<blue>			if (!(ctxt->d & NoWrite) &&</blue>
+			    rc == X86EMUL_PROPAGATE_FAULT &amp;&amp;
+<yellow>			    ctxt->exception.vector == PF_VECTOR)</yellow>
+<yellow>				ctxt->exception.error_code |= PFERR_WRITE_MASK;</yellow>
+			goto done;
+		}
+	}
+	/* Copy full 64-bit value for CMPXCHG8B.  */
+<blue>	ctxt->dst.orig_val64 = ctxt->dst.val64;</blue>
+
+special_insn:
+
+<blue>	if (unlikely(emul_flags & X86EMUL_GUEST_MASK) && (ctxt->d & Intercept)) {</blue>
+<blue>		rc = emulator_check_intercept(ctxt, ctxt->intercept,</blue>
+					      X86_ICPT_POST_MEMACCESS);
+		if (rc != X86EMUL_CONTINUE)
+			goto done;
+	}
+
+<blue>	if (ctxt->rep_prefix && (ctxt->d & String))</blue>
+<blue>		ctxt->eflags |= X86_EFLAGS_RF;</blue>
+	else
+<blue>		ctxt->eflags &= ~X86_EFLAGS_RF;</blue>
+
+<blue>	if (ctxt->execute) {</blue>
+<blue>		if (ctxt->d & Fastop)</blue>
+<blue>			rc = fastop(ctxt, ctxt->fop);</blue>
+		else
+<blue>			rc = ctxt->execute(ctxt);</blue>
+		if (rc != X86EMUL_CONTINUE)
+			goto done;
+		goto writeback;
+	}
+
+<blue>	if (ctxt->opcode_len == 2)</blue>
+		goto twobyte_insn;
+<yellow>	else if (ctxt->opcode_len == 3)</yellow>
+		goto threebyte_insn;
+
+<yellow>	switch (ctxt->b) {</yellow>
+	case 0x70 ... 0x7f: /* jcc (short) */
+<yellow>		if (test_cc(ctxt->b, ctxt->eflags))</yellow>
+<yellow>			rc = jmp_rel(ctxt, ctxt->src.val);</yellow>
+		break;
+	case 0x8d: /* lea r16/r32, m */
+<yellow>		ctxt->dst.val = ctxt->src.addr.mem.ea;</yellow>
+		break;
+	case 0x90 ... 0x97: /* nop / xchg reg, rax */
+<yellow>		if (ctxt->dst.addr.reg == reg_rmw(ctxt, VCPU_REGS_RAX))</yellow>
+<yellow>			ctxt->dst.type = OP_NONE;</yellow>
+		else
+<yellow>			rc = em_xchg(ctxt);</yellow>
+		break;
+	case 0x98: /* cbw/cwde/cdqe */
+<yellow>		switch (ctxt->op_bytes) {</yellow>
+<yellow>		case 2: ctxt->dst.val = (s8)ctxt->dst.val; break;</yellow>
+<yellow>		case 4: ctxt->dst.val = (s16)ctxt->dst.val; break;</yellow>
+<yellow>		case 8: ctxt->dst.val = (s32)ctxt->dst.val; break;</yellow>
+		}
+		break;
+	case 0xcc:		/* int3 */
+<yellow>		rc = emulate_int(ctxt, 3);</yellow>
+		break;
+	case 0xcd:		/* int n */
+<yellow>		rc = emulate_int(ctxt, ctxt->src.val);</yellow>
+		break;
+	case 0xce:		/* into */
+<yellow>		if (ctxt->eflags & X86_EFLAGS_OF)</yellow>
+<yellow>			rc = emulate_int(ctxt, 4);</yellow>
+		break;
+	case 0xe9: /* jmp rel */
+	case 0xeb: /* jmp rel short */
+<yellow>		rc = jmp_rel(ctxt, ctxt->src.val);</yellow>
+		ctxt-&gt;dst.type = OP_NONE; /* Disable writeback. */
+		break;
+	case 0xf4:              /* hlt */
+<yellow>		ctxt->ops->halt(ctxt);</yellow>
+		break;
+	case 0xf5:	/* cmc */
+		/* complement carry flag from eflags reg */
+<yellow>		ctxt->eflags ^= X86_EFLAGS_CF;</yellow>
+		break;
+	case 0xf8: /* clc */
+<yellow>		ctxt->eflags &= ~X86_EFLAGS_CF;</yellow>
+		break;
+	case 0xf9: /* stc */
+<yellow>		ctxt->eflags |= X86_EFLAGS_CF;</yellow>
+		break;
+	case 0xfc: /* cld */
+<yellow>		ctxt->eflags &= ~X86_EFLAGS_DF;</yellow>
+		break;
+	case 0xfd: /* std */
+<yellow>		ctxt->eflags |= X86_EFLAGS_DF;</yellow>
+		break;
+	default:
+		goto cannot_emulate;
+	}
+
+<blue>	if (rc != X86EMUL_CONTINUE)</blue>
+		goto done;
+
+writeback:
+<blue>	if (ctxt->d & SrcWrite) {</blue>
+<yellow>		BUG_ON(ctxt->src.type == OP_MEM || ctxt->src.type == OP_MEM_STR);</yellow>
+<yellow>		rc = writeback(ctxt, &ctxt->src);</yellow>
+		if (rc != X86EMUL_CONTINUE)
+			goto done;
+	}
+<blue>	if (!(ctxt->d & NoWrite)) {</blue>
+<blue>		rc = writeback(ctxt, &ctxt->dst);</blue>
+		if (rc != X86EMUL_CONTINUE)
+			goto done;
+	}
+
+	/*
+	 * restore dst type in case the decoding will be reused
+	 * (happens for string instruction )
+	 */
+<blue>	ctxt->dst.type = saved_dst_type;</blue>
+
+<blue>	if ((ctxt->d & SrcMask) == SrcSI)</blue>
+<blue>		string_addr_inc(ctxt, VCPU_REGS_RSI, &ctxt->src);</blue>
+
+<blue>	if ((ctxt->d & DstMask) == DstDI)</blue>
+<blue>		string_addr_inc(ctxt, VCPU_REGS_RDI, &ctxt->dst);</blue>
+
+<blue>	if (ctxt->rep_prefix && (ctxt->d & String)) {</blue>
+		unsigned int count;
+		struct read_cache *r = &amp;ctxt-&gt;io_read;
+<blue>		if ((ctxt->d & SrcMask) == SrcSI)</blue>
+<yellow>			count = ctxt->src.count;</yellow>
+		else
+<blue>			count = ctxt->dst.count;</blue>
+<blue>		register_address_increment(ctxt, VCPU_REGS_RCX, -count);</blue>
+
+<blue>		if (!string_insn_completed(ctxt)) {</blue>
+			/*
+			 * Re-enter guest when pio read ahead buffer is empty
+			 * or, if it is not used, after each 1024 iteration.
+			 */
+<blue>			if ((r->end != 0 || reg_read(ctxt, VCPU_REGS_RCX) & 0x3ff) &&</blue>
+<blue>			    (r->end == 0 || r->end != r->pos)) {</blue>
+				/*
+				 * Reset read cache. Usually happens before
+				 * decode, but since instruction is restarted
+				 * we have to do it here.
+				 */
+<yellow>				ctxt->mem_read.end = 0;</yellow>
+				writeback_registers(ctxt);
+				return EMULATION_RESTART;
+			}
+			goto done; /* skip rip writeback */
+		}
+<yellow>		ctxt->eflags &= ~X86_EFLAGS_RF;</yellow>
+	}
+
+<blue>	ctxt->eip = ctxt->_eip;</blue>
+	if (ctxt-&gt;mode != X86EMUL_MODE_PROT64)
+<yellow>		ctxt->eip = (u32)ctxt->_eip;</yellow>
+
+done:
+<blue>	if (rc == X86EMUL_PROPAGATE_FAULT) {</blue>
+<blue>		if (KVM_EMULATOR_BUG_ON(ctxt->exception.vector > 0x1f, ctxt))</blue>
+			return EMULATION_FAILED;
+<blue>		ctxt->have_exception = true;</blue>
+	}
+<blue>	if (rc == X86EMUL_INTERCEPTED)</blue>
+		return EMULATION_INTERCEPTED;
+
+<blue>	if (rc == X86EMUL_CONTINUE)</blue>
+<blue>		writeback_registers(ctxt);</blue>
+
+<blue>	return (rc == X86EMUL_UNHANDLEABLE) ? EMULATION_FAILED : EMULATION_OK;</blue>
+
+twobyte_insn:
+<blue>	switch (ctxt->b) {</blue>
+	case 0x09:		/* wbinvd */
+<yellow>		(ctxt->ops->wbinvd)(ctxt);</yellow>
+		break;
+	case 0x08:		/* invd */
+	case 0x0d:		/* GrpP (prefetch) */
+	case 0x18:		/* Grp16 (prefetch/nop) */
+	case 0x1f:		/* nop */
+		break;
+	case 0x20: /* mov cr, reg */
+<yellow>		ctxt->dst.val = ops->get_cr(ctxt, ctxt->modrm_reg);</yellow>
+		break;
+	case 0x21: /* mov from dr to reg */
+<yellow>		ops->get_dr(ctxt, ctxt->modrm_reg, &ctxt->dst.val);</yellow>
+		break;
+	case 0x40 ... 0x4f:	/* cmov */
+<yellow>		if (test_cc(ctxt->b, ctxt->eflags))</yellow>
+<yellow>			ctxt->dst.val = ctxt->src.val;</yellow>
+<yellow>		else if (ctxt->op_bytes != 4)</yellow>
+			ctxt-&gt;dst.type = OP_NONE; /* no writeback */
+		break;
+	case 0x80 ... 0x8f: /* jnz rel, etc*/
+<yellow>		if (test_cc(ctxt->b, ctxt->eflags))</yellow>
+<yellow>			rc = jmp_rel(ctxt, ctxt->src.val);</yellow>
+		break;
+	case 0x90 ... 0x9f:     /* setcc r/m8 */
+<yellow>		ctxt->dst.val = test_cc(ctxt->b, ctxt->eflags);</yellow>
+		break;
+	case 0xb6 ... 0xb7:	/* movzx */
+<blue>		ctxt->dst.bytes = ctxt->op_bytes;</blue>
+<blue>		ctxt->dst.val = (ctxt->src.bytes == 1) ? (u8) ctxt->src.val</blue>
+<blue>						       : (u16) ctxt->src.val;</blue>
+		break;
+	case 0xbe ... 0xbf:	/* movsx */
+<yellow>		ctxt->dst.bytes = ctxt->op_bytes;</yellow>
+<yellow>		ctxt->dst.val = (ctxt->src.bytes == 1) ? (s8) ctxt->src.val :</yellow>
+							(s16) ctxt-&gt;src.val;
+		break;
+	default:
+		goto cannot_emulate;
+	}
+
+threebyte_insn:
+
+	if (rc != X86EMUL_CONTINUE)
+		goto done;
+
+	goto writeback;
+
+cannot_emulate:
+	return EMULATION_FAILED;
+}
+
+void emulator_invalidate_register_cache(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	invalidate_registers(ctxt);</yellow>
+}
+
+void emulator_writeback_register_cache(struct x86_emulate_ctxt *ctxt)
+{
+<yellow>	writeback_registers(ctxt);</yellow>
+}
+
+bool emulator_can_use_gpa(struct x86_emulate_ctxt *ctxt)
+{
+<blue>	if (ctxt->rep_prefix && (ctxt->d & String))</blue>
+		return false;
+
+<blue>	if (ctxt->d & TwoMemOp)</blue>
+		return false;
+
+	return true;
+<blue>}</blue>
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 45.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 75.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 50.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 47.6%</li>`
+</script></body></html>
