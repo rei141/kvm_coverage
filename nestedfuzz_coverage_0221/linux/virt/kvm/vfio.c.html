@@ -1,0 +1,473 @@
+<doctype html>
+<html lang="ja">
+<head><title>vfio.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 402; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * VFIO-KVM bridge pseudo device
+ *
+ * Copyright (C) 2013 Red Hat, Inc.  All rights reserved.
+ *     Author: Alex Williamson &lt;alex.williamson@redhat.com&gt;
+ */
+
+#include &lt;linux/errno.h&gt;
+#include &lt;linux/file.h&gt;
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/list.h&gt;
+#include &lt;linux/module.h&gt;
+#include &lt;linux/mutex.h&gt;
+#include &lt;linux/slab.h&gt;
+#include &lt;linux/uaccess.h&gt;
+#include &lt;linux/vfio.h&gt;
+#include &quot;vfio.h&quot;
+
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+#include &lt;asm/kvm_ppc.h&gt;
+#endif
+
+struct kvm_vfio_group {
+	struct list_head node;
+	struct file *file;
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+	struct iommu_group *iommu_group;
+#endif
+};
+
+struct kvm_vfio {
+	struct list_head group_list;
+	struct mutex lock;
+	bool noncoherent;
+};
+
+static void kvm_vfio_file_set_kvm(struct file *file, struct kvm *kvm)
+{
+	void (*fn)(struct file *file, struct kvm *kvm);
+
+	fn = symbol_get(vfio_file_set_kvm);
+	if (!fn)
+		return;
+
+	fn(file, kvm);
+
+	symbol_put(vfio_file_set_kvm);
+}
+
+static bool kvm_vfio_file_enforced_coherent(struct file *file)
+{
+	bool (*fn)(struct file *file);
+	bool ret;
+
+	fn = symbol_get(vfio_file_enforced_coherent);
+	if (!fn)
+		return false;
+
+	ret = fn(file);
+
+	symbol_put(vfio_file_enforced_coherent);
+
+	return ret;
+}
+
+static bool kvm_vfio_file_is_group(struct file *file)
+{
+	bool (*fn)(struct file *file);
+	bool ret;
+
+	fn = symbol_get(vfio_file_is_group);
+	if (!fn)
+		return false;
+
+	ret = fn(file);
+
+	symbol_put(vfio_file_is_group);
+
+	return ret;
+}
+
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+static struct iommu_group *kvm_vfio_file_iommu_group(struct file *file)
+{
+	struct iommu_group *(*fn)(struct file *file);
+	struct iommu_group *ret;
+
+	fn = symbol_get(vfio_file_iommu_group);
+	if (!fn)
+		return NULL;
+
+	ret = fn(file);
+
+	symbol_put(vfio_file_iommu_group);
+
+	return ret;
+}
+
+static void kvm_spapr_tce_release_vfio_group(struct kvm *kvm,
+					     struct kvm_vfio_group *kvg)
+{
+	if (WARN_ON_ONCE(!kvg-&gt;iommu_group))
+		return;
+
+	kvm_spapr_tce_release_iommu_group(kvm, kvg-&gt;iommu_group);
+	iommu_group_put(kvg-&gt;iommu_group);
+	kvg-&gt;iommu_group = NULL;
+}
+#endif
+
+/*
+ * Groups can use the same or different IOMMU domains.  If the same then
+ * adding a new group may change the coherency of groups we&#x27;ve previously
+ * been told about.  We don&#x27;t want to care about any of that so we retest
+ * each group and bail as soon as we find one that&#x27;s noncoherent.  This
+ * means we only ever [un]register_noncoherent_dma once for the whole device.
+ */
+static void kvm_vfio_update_coherency(struct kvm_device *dev)
+{
+	struct kvm_vfio *kv = dev-&gt;private;
+	bool noncoherent = false;
+	struct kvm_vfio_group *kvg;
+
+	mutex_lock(&amp;kv-&gt;lock);
+
+	list_for_each_entry(kvg, &amp;kv-&gt;group_list, node) {
+		if (!kvm_vfio_file_enforced_coherent(kvg-&gt;file)) {
+			noncoherent = true;
+			break;
+		}
+	}
+
+	if (noncoherent != kv-&gt;noncoherent) {
+		kv-&gt;noncoherent = noncoherent;
+
+		if (kv-&gt;noncoherent)
+			kvm_arch_register_noncoherent_dma(dev-&gt;kvm);
+		else
+			kvm_arch_unregister_noncoherent_dma(dev-&gt;kvm);
+	}
+
+	mutex_unlock(&amp;kv-&gt;lock);
+}
+
+static int kvm_vfio_group_add(struct kvm_device *dev, unsigned int fd)
+{
+	struct kvm_vfio *kv = dev-&gt;private;
+	struct kvm_vfio_group *kvg;
+	struct file *filp;
+	int ret;
+
+	filp = fget(fd);
+	if (!filp)
+		return -EBADF;
+
+	/* Ensure the FD is a vfio group FD.*/
+	if (!kvm_vfio_file_is_group(filp)) {
+		ret = -EINVAL;
+		goto err_fput;
+	}
+
+	mutex_lock(&amp;kv-&gt;lock);
+
+	list_for_each_entry(kvg, &amp;kv-&gt;group_list, node) {
+		if (kvg-&gt;file == filp) {
+			ret = -EEXIST;
+			goto err_unlock;
+		}
+	}
+
+	kvg = kzalloc(sizeof(*kvg), GFP_KERNEL_ACCOUNT);
+	if (!kvg) {
+		ret = -ENOMEM;
+		goto err_unlock;
+	}
+
+	kvg-&gt;file = filp;
+	list_add_tail(&amp;kvg-&gt;node, &amp;kv-&gt;group_list);
+
+	kvm_arch_start_assignment(dev-&gt;kvm);
+
+	mutex_unlock(&amp;kv-&gt;lock);
+
+	kvm_vfio_file_set_kvm(kvg-&gt;file, dev-&gt;kvm);
+	kvm_vfio_update_coherency(dev);
+
+	return 0;
+err_unlock:
+	mutex_unlock(&amp;kv-&gt;lock);
+err_fput:
+	fput(filp);
+	return ret;
+}
+
+static int kvm_vfio_group_del(struct kvm_device *dev, unsigned int fd)
+{
+	struct kvm_vfio *kv = dev-&gt;private;
+	struct kvm_vfio_group *kvg;
+	struct fd f;
+	int ret;
+
+	f = fdget(fd);
+	if (!f.file)
+		return -EBADF;
+
+	ret = -ENOENT;
+
+	mutex_lock(&amp;kv-&gt;lock);
+
+	list_for_each_entry(kvg, &amp;kv-&gt;group_list, node) {
+		if (kvg-&gt;file != f.file)
+			continue;
+
+		list_del(&amp;kvg-&gt;node);
+		kvm_arch_end_assignment(dev-&gt;kvm);
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+		kvm_spapr_tce_release_vfio_group(dev-&gt;kvm, kvg);
+#endif
+		kvm_vfio_file_set_kvm(kvg-&gt;file, NULL);
+		fput(kvg-&gt;file);
+		kfree(kvg);
+		ret = 0;
+		break;
+	}
+
+	mutex_unlock(&amp;kv-&gt;lock);
+
+	fdput(f);
+
+	kvm_vfio_update_coherency(dev);
+
+	return ret;
+}
+
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+static int kvm_vfio_group_set_spapr_tce(struct kvm_device *dev,
+					void __user *arg)
+{
+	struct kvm_vfio_spapr_tce param;
+	struct kvm_vfio *kv = dev-&gt;private;
+	struct kvm_vfio_group *kvg;
+	struct fd f;
+	int ret;
+
+	if (copy_from_user(&amp;param, arg, sizeof(struct kvm_vfio_spapr_tce)))
+		return -EFAULT;
+
+	f = fdget(param.groupfd);
+	if (!f.file)
+		return -EBADF;
+
+	ret = -ENOENT;
+
+	mutex_lock(&amp;kv-&gt;lock);
+
+	list_for_each_entry(kvg, &amp;kv-&gt;group_list, node) {
+		if (kvg-&gt;file != f.file)
+			continue;
+
+		if (!kvg-&gt;iommu_group) {
+			kvg-&gt;iommu_group = kvm_vfio_file_iommu_group(kvg-&gt;file);
+			if (WARN_ON_ONCE(!kvg-&gt;iommu_group)) {
+				ret = -EIO;
+				goto err_fdput;
+			}
+		}
+
+		ret = kvm_spapr_tce_attach_iommu_group(dev-&gt;kvm, param.tablefd,
+						       kvg-&gt;iommu_group);
+		break;
+	}
+
+err_fdput:
+	mutex_unlock(&amp;kv-&gt;lock);
+	fdput(f);
+	return ret;
+}
+#endif
+
+static int kvm_vfio_set_group(struct kvm_device *dev, long attr,
+			      void __user *arg)
+{
+	int32_t __user *argp = arg;
+	int32_t fd;
+
+	switch (attr) {
+	case KVM_DEV_VFIO_GROUP_ADD:
+		if (get_user(fd, argp))
+			return -EFAULT;
+		return kvm_vfio_group_add(dev, fd);
+
+	case KVM_DEV_VFIO_GROUP_DEL:
+		if (get_user(fd, argp))
+			return -EFAULT;
+		return kvm_vfio_group_del(dev, fd);
+
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+	case KVM_DEV_VFIO_GROUP_SET_SPAPR_TCE:
+		return kvm_vfio_group_set_spapr_tce(dev, arg);
+#endif
+	}
+
+	return -ENXIO;
+}
+
+static int kvm_vfio_set_attr(struct kvm_device *dev,
+			     struct kvm_device_attr *attr)
+{
+	switch (attr-&gt;group) {
+	case KVM_DEV_VFIO_GROUP:
+		return kvm_vfio_set_group(dev, attr-&gt;attr,
+					  u64_to_user_ptr(attr-&gt;addr));
+	}
+
+	return -ENXIO;
+}
+
+static int kvm_vfio_has_attr(struct kvm_device *dev,
+			     struct kvm_device_attr *attr)
+{
+	switch (attr-&gt;group) {
+	case KVM_DEV_VFIO_GROUP:
+		switch (attr-&gt;attr) {
+		case KVM_DEV_VFIO_GROUP_ADD:
+		case KVM_DEV_VFIO_GROUP_DEL:
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+		case KVM_DEV_VFIO_GROUP_SET_SPAPR_TCE:
+#endif
+			return 0;
+		}
+
+		break;
+	}
+
+	return -ENXIO;
+}
+
+static void kvm_vfio_destroy(struct kvm_device *dev)
+{
+	struct kvm_vfio *kv = dev-&gt;private;
+	struct kvm_vfio_group *kvg, *tmp;
+
+	list_for_each_entry_safe(kvg, tmp, &amp;kv-&gt;group_list, node) {
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+		kvm_spapr_tce_release_vfio_group(dev-&gt;kvm, kvg);
+#endif
+		kvm_vfio_file_set_kvm(kvg-&gt;file, NULL);
+		fput(kvg-&gt;file);
+		list_del(&amp;kvg-&gt;node);
+		kfree(kvg);
+		kvm_arch_end_assignment(dev-&gt;kvm);
+	}
+
+	kvm_vfio_update_coherency(dev);
+
+	kfree(kv);
+	kfree(dev); /* alloc by kvm_ioctl_create_device, free by .destroy */
+}
+
+static int kvm_vfio_create(struct kvm_device *dev, u32 type);
+
+static struct kvm_device_ops kvm_vfio_ops = {
+	.name = &quot;kvm-vfio&quot;,
+	.create = kvm_vfio_create,
+	.destroy = kvm_vfio_destroy,
+	.set_attr = kvm_vfio_set_attr,
+	.has_attr = kvm_vfio_has_attr,
+};
+
+static int kvm_vfio_create(struct kvm_device *dev, u32 type)
+{
+	struct kvm_device *tmp;
+	struct kvm_vfio *kv;
+
+	/* Only one VFIO &quot;device&quot; per VM */
+	list_for_each_entry(tmp, &amp;dev-&gt;kvm-&gt;devices, vm_node)
+		if (tmp-&gt;ops == &amp;kvm_vfio_ops)
+			return -EBUSY;
+
+	kv = kzalloc(sizeof(*kv), GFP_KERNEL_ACCOUNT);
+	if (!kv)
+		return -ENOMEM;
+
+	INIT_LIST_HEAD(&amp;kv-&gt;group_list);
+	mutex_init(&amp;kv-&gt;lock);
+
+	dev-&gt;private = kv;
+
+	return 0;
+}
+
+int kvm_vfio_ops_init(void)
+{
+	return kvm_register_device_ops(&amp;kvm_vfio_ops, KVM_DEV_TYPE_VFIO);
+}
+
+void kvm_vfio_ops_exit(void)
+{
+	kvm_unregister_device_ops(KVM_DEV_TYPE_VFIO);
+}
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 55.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 76.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.0%</li>`
+</script></body></html>

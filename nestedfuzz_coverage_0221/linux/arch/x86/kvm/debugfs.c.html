@@ -1,0 +1,266 @@
+<doctype html>
+<html lang="ja">
+<head><title>debugfs.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 195; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Kernel-based Virtual Machine driver for Linux
+ *
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates.
+ */
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/debugfs.h&gt;
+#include &quot;lapic.h&quot;
+#include &quot;mmu.h&quot;
+#include &quot;mmu/mmu_internal.h&quot;
+
+static int vcpu_get_timer_advance_ns(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->arch.apic->lapic_timer.timer_advance_ns;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_timer_advance_ns_fops, vcpu_get_timer_advance_ns, NULL, "%llu\n");</yellow>
+
+static int vcpu_get_guest_mode(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->stat.guest_mode;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_guest_mode_fops, vcpu_get_guest_mode, NULL, "%lld\n");</yellow>
+
+static int vcpu_get_tsc_offset(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->arch.tsc_offset;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_tsc_offset_fops, vcpu_get_tsc_offset, NULL, "%lld\n");</yellow>
+
+static int vcpu_get_tsc_scaling_ratio(void *data, u64 *val)
+{
+	struct kvm_vcpu *vcpu = (struct kvm_vcpu *) data;
+<yellow>	*val = vcpu->arch.tsc_scaling_ratio;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_tsc_scaling_fops, vcpu_get_tsc_scaling_ratio, NULL, "%llu\n");</yellow>
+
+static int vcpu_get_tsc_scaling_frac_bits(void *data, u64 *val)
+{
+<yellow>	*val = kvm_caps.tsc_scaling_ratio_frac_bits;</yellow>
+	return 0;
+}
+
+<yellow>DEFINE_SIMPLE_ATTRIBUTE(vcpu_tsc_scaling_frac_fops, vcpu_get_tsc_scaling_frac_bits, NULL, "%llu\n");</yellow>
+
+void kvm_arch_create_vcpu_debugfs(struct kvm_vcpu *vcpu, struct dentry *debugfs_dentry)
+{
+<blue>	debugfs_create_file("guest_mode", 0444, debugfs_dentry, vcpu,</blue>
+			    &amp;vcpu_guest_mode_fops);
+	debugfs_create_file(&quot;tsc-offset&quot;, 0444, debugfs_dentry, vcpu,
+			    &amp;vcpu_tsc_offset_fops);
+
+<yellow>	if (lapic_in_kernel(vcpu))</yellow>
+<blue>		debugfs_create_file("lapic_timer_advance_ns", 0444,</blue>
+				    debugfs_dentry, vcpu,
+				    &amp;vcpu_timer_advance_ns_fops);
+
+<blue>	if (kvm_caps.has_tsc_control) {</blue>
+<blue>		debugfs_create_file("tsc-scaling-ratio", 0444,</blue>
+				    debugfs_dentry, vcpu,
+				    &amp;vcpu_tsc_scaling_fops);
+		debugfs_create_file(&quot;tsc-scaling-ratio-frac-bits&quot;, 0444,
+				    debugfs_dentry, vcpu,
+				    &amp;vcpu_tsc_scaling_frac_fops);
+	}
+<blue>}</blue>
+
+/*
+ * This covers statistics &lt;1024 (11=log(1024)+1), which should be enough to
+ * cover RMAP_RECYCLE_THRESHOLD.
+ */
+#define  RMAP_LOG_SIZE  11
+
+static const char *kvm_lpage_str[KVM_NR_PAGE_SIZES] = { &quot;4K&quot;, &quot;2M&quot;, &quot;1G&quot; };
+
+static int kvm_mmu_rmaps_stat_show(struct seq_file *m, void *v)
+<yellow>{</yellow>
+	struct kvm_rmap_head *rmap;
+<yellow>	struct kvm *kvm = m->private;</yellow>
+	struct kvm_memory_slot *slot;
+	struct kvm_memslots *slots;
+	unsigned int lpage_size, index;
+	/* Still small enough to be on the stack */
+	unsigned int *log[KVM_NR_PAGE_SIZES], *cur;
+	int i, j, k, l, ret;
+
+<yellow>	if (!kvm_memslots_have_rmaps(kvm))</yellow>
+		return 0;
+
+	ret = -ENOMEM;
+<yellow>	memset(log, 0, sizeof(log));</yellow>
+<yellow>	for (i = 0; i < KVM_NR_PAGE_SIZES; i++) {</yellow>
+<yellow>		log[i] = kcalloc(RMAP_LOG_SIZE, sizeof(unsigned int), GFP_KERNEL);</yellow>
+		if (!log[i])
+			goto out;
+	}
+
+<yellow>	mutex_lock(&kvm->slots_lock);</yellow>
+	write_lock(&amp;kvm-&gt;mmu_lock);
+
+<yellow>	for (i = 0; i < KVM_ADDRESS_SPACE_NUM; i++) {</yellow>
+		int bkt;
+
+<yellow>		slots = __kvm_memslots(kvm, i);</yellow>
+<yellow>		kvm_for_each_memslot(slot, bkt, slots)</yellow>
+<yellow>			for (k = 0; k < KVM_NR_PAGE_SIZES; k++) {</yellow>
+<yellow>				rmap = slot->arch.rmap[k];</yellow>
+				lpage_size = kvm_mmu_slot_lpages(slot, k + 1);
+				cur = log[k];
+				for (l = 0; l &lt; lpage_size; l++) {
+<yellow>					index = ffs(pte_list_count(&rmap[l]));</yellow>
+<yellow>					if (WARN_ON_ONCE(index >= RMAP_LOG_SIZE))</yellow>
+						index = RMAP_LOG_SIZE - 1;
+<yellow>					cur[index]++;</yellow>
+				}
+			}
+	}
+
+	write_unlock(&amp;kvm-&gt;mmu_lock);
+	mutex_unlock(&amp;kvm-&gt;slots_lock);
+
+	/* index=0 counts no rmap; index=1 counts 1 rmap */
+	seq_printf(m, &quot;Rmap_Count:\t0\t1\t&quot;);
+<yellow>	for (i = 2; i < RMAP_LOG_SIZE; i++) {</yellow>
+		j = 1 &lt;&lt; (i - 1);
+<yellow>		k = (1 << i) - 1;</yellow>
+		seq_printf(m, &quot;%d-%d\t&quot;, j, k);
+	}
+<yellow>	seq_printf(m, "\n");</yellow>
+
+	for (i = 0; i &lt; KVM_NR_PAGE_SIZES; i++) {
+<yellow>		seq_printf(m, "Level=%s:\t", kvm_lpage_str[i]);</yellow>
+		cur = log[i];
+		for (j = 0; j &lt; RMAP_LOG_SIZE; j++)
+<yellow>			seq_printf(m, "%d\t", cur[j]);</yellow>
+<yellow>		seq_printf(m, "\n");</yellow>
+	}
+
+	ret = 0;
+out:
+	for (i = 0; i &lt; KVM_NR_PAGE_SIZES; i++)
+<yellow>		kfree(log[i]);</yellow>
+
+	return ret;
+}
+
+static int kvm_mmu_rmaps_stat_open(struct inode *inode, struct file *file)
+{
+<yellow>	struct kvm *kvm = inode->i_private;</yellow>
+	int r;
+
+	if (!kvm_get_kvm_safe(kvm))
+		return -ENOENT;
+
+<yellow>	r = single_open(file, kvm_mmu_rmaps_stat_show, kvm);</yellow>
+	if (r &lt; 0)
+<yellow>		kvm_put_kvm(kvm);</yellow>
+
+	return r;
+<yellow>}</yellow>
+
+static int kvm_mmu_rmaps_stat_release(struct inode *inode, struct file *file)
+{
+<yellow>	struct kvm *kvm = inode->i_private;</yellow>
+
+	kvm_put_kvm(kvm);
+
+	return single_release(inode, file);
+}
+
+static const struct file_operations mmu_rmaps_stat_fops = {
+	.open		= kvm_mmu_rmaps_stat_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= kvm_mmu_rmaps_stat_release,
+};
+
+int kvm_arch_create_vm_debugfs(struct kvm *kvm)
+{
+<blue>	debugfs_create_file("mmu_rmaps_stat", 0644, kvm->debugfs_dentry, kvm,</blue>
+			    &amp;mmu_rmaps_stat_fops);
+	return 0;
+}
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 55.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 76.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.0%</li>`
+</script></body></html>

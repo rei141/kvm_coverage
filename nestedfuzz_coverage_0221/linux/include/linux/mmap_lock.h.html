@@ -1,0 +1,242 @@
+<doctype html>
+<html lang="ja">
+<head><title>mmap_lock.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 171; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">#ifndef _LINUX_MMAP_LOCK_H
+#define _LINUX_MMAP_LOCK_H
+
+#include &lt;linux/lockdep.h&gt;
+#include &lt;linux/mm_types.h&gt;
+#include &lt;linux/mmdebug.h&gt;
+#include &lt;linux/rwsem.h&gt;
+#include &lt;linux/tracepoint-defs.h&gt;
+#include &lt;linux/types.h&gt;
+
+#define MMAP_LOCK_INITIALIZER(name) \
+	.mmap_lock = __RWSEM_INITIALIZER((name).mmap_lock),
+
+DECLARE_TRACEPOINT(mmap_lock_start_locking);
+DECLARE_TRACEPOINT(mmap_lock_acquire_returned);
+DECLARE_TRACEPOINT(mmap_lock_released);
+
+#ifdef CONFIG_TRACING
+
+void __mmap_lock_do_trace_start_locking(struct mm_struct *mm, bool write);
+void __mmap_lock_do_trace_acquire_returned(struct mm_struct *mm, bool write,
+					   bool success);
+void __mmap_lock_do_trace_released(struct mm_struct *mm, bool write);
+
+static inline void __mmap_lock_trace_start_locking(struct mm_struct *mm,
+						   bool write)
+{
+	if (tracepoint_enabled(mmap_lock_start_locking))
+<yellow>		__mmap_lock_do_trace_start_locking(mm, write);</yellow>
+}
+
+static inline void __mmap_lock_trace_acquire_returned(struct mm_struct *mm,
+						      bool write, bool success)
+{
+	if (tracepoint_enabled(mmap_lock_acquire_returned))
+<yellow>		__mmap_lock_do_trace_acquire_returned(mm, write, success);</yellow>
+}
+
+static inline void __mmap_lock_trace_released(struct mm_struct *mm, bool write)
+{
+<yellow>	if (tracepoint_enabled(mmap_lock_released))</yellow>
+<yellow>		__mmap_lock_do_trace_released(mm, write);</yellow>
+}
+
+#else /* !CONFIG_TRACING */
+
+static inline void __mmap_lock_trace_start_locking(struct mm_struct *mm,
+						   bool write)
+{
+}
+
+static inline void __mmap_lock_trace_acquire_returned(struct mm_struct *mm,
+						      bool write, bool success)
+{
+}
+
+static inline void __mmap_lock_trace_released(struct mm_struct *mm, bool write)
+{
+}
+
+#endif /* CONFIG_TRACING */
+
+static inline void mmap_init_lock(struct mm_struct *mm)
+{
+	init_rwsem(&amp;mm-&gt;mmap_lock);
+}
+
+static inline void mmap_write_lock(struct mm_struct *mm)
+{
+	__mmap_lock_trace_start_locking(mm, true);
+	down_write(&amp;mm-&gt;mmap_lock);
+	__mmap_lock_trace_acquire_returned(mm, true, true);
+}
+
+static inline void mmap_write_lock_nested(struct mm_struct *mm, int subclass)
+{
+	__mmap_lock_trace_start_locking(mm, true);
+	down_write_nested(&amp;mm-&gt;mmap_lock, subclass);
+	__mmap_lock_trace_acquire_returned(mm, true, true);
+}
+
+static inline int mmap_write_lock_killable(struct mm_struct *mm)
+{
+	int ret;
+
+	__mmap_lock_trace_start_locking(mm, true);
+	ret = down_write_killable(&amp;mm-&gt;mmap_lock);
+	__mmap_lock_trace_acquire_returned(mm, true, ret == 0);
+	return ret;
+}
+
+static inline bool mmap_write_trylock(struct mm_struct *mm)
+{
+	bool ret;
+
+	__mmap_lock_trace_start_locking(mm, true);
+	ret = down_write_trylock(&amp;mm-&gt;mmap_lock) != 0;
+	__mmap_lock_trace_acquire_returned(mm, true, ret);
+	return ret;
+}
+
+static inline void mmap_write_unlock(struct mm_struct *mm)
+{
+	__mmap_lock_trace_released(mm, true);
+	up_write(&amp;mm-&gt;mmap_lock);
+}
+
+static inline void mmap_write_downgrade(struct mm_struct *mm)
+{
+	__mmap_lock_trace_acquire_returned(mm, false, true);
+	downgrade_write(&amp;mm-&gt;mmap_lock);
+}
+
+static inline void mmap_read_lock(struct mm_struct *mm)
+{
+<yellow>	__mmap_lock_trace_start_locking(mm, false);</yellow>
+<yellow>	down_read(&mm->mmap_lock);</yellow>
+<yellow>	__mmap_lock_trace_acquire_returned(mm, false, true);</yellow>
+}
+
+static inline int mmap_read_lock_killable(struct mm_struct *mm)
+{
+	int ret;
+
+	__mmap_lock_trace_start_locking(mm, false);
+	ret = down_read_killable(&amp;mm-&gt;mmap_lock);
+	__mmap_lock_trace_acquire_returned(mm, false, ret == 0);
+	return ret;
+}
+
+static inline bool mmap_read_trylock(struct mm_struct *mm)
+{
+	bool ret;
+
+	__mmap_lock_trace_start_locking(mm, false);
+	ret = down_read_trylock(&amp;mm-&gt;mmap_lock) != 0;
+	__mmap_lock_trace_acquire_returned(mm, false, ret);
+	return ret;
+}
+
+static inline void mmap_read_unlock(struct mm_struct *mm)
+{
+<yellow>	__mmap_lock_trace_released(mm, false);</yellow>
+<yellow>	up_read(&mm->mmap_lock);</yellow>
+}
+
+static inline void mmap_read_unlock_non_owner(struct mm_struct *mm)
+{
+	__mmap_lock_trace_released(mm, false);
+	up_read_non_owner(&amp;mm-&gt;mmap_lock);
+}
+
+static inline void mmap_assert_locked(struct mm_struct *mm)
+{
+	lockdep_assert_held(&amp;mm-&gt;mmap_lock);
+	VM_BUG_ON_MM(!rwsem_is_locked(&amp;mm-&gt;mmap_lock), mm);
+}
+
+static inline void mmap_assert_write_locked(struct mm_struct *mm)
+{
+	lockdep_assert_held_write(&amp;mm-&gt;mmap_lock);
+	VM_BUG_ON_MM(!rwsem_is_locked(&amp;mm-&gt;mmap_lock), mm);
+}
+
+static inline int mmap_lock_is_contended(struct mm_struct *mm)
+{
+	return rwsem_is_contended(&amp;mm-&gt;mmap_lock);
+}
+
+#endif /* _LINUX_MMAP_LOCK_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 55.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 76.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.0%</li>`
+</script></body></html>
