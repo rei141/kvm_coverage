@@ -1,0 +1,280 @@
+<doctype html>
+<html lang="ja">
+<head><title>kvm_cache_regs.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 209; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef ASM_KVM_CACHE_REGS_H
+#define ASM_KVM_CACHE_REGS_H
+
+#include &lt;linux/kvm_host.h&gt;
+
+#define KVM_POSSIBLE_CR0_GUEST_BITS X86_CR0_TS
+#define KVM_POSSIBLE_CR4_GUEST_BITS				  \
+	(X86_CR4_PVI | X86_CR4_DE | X86_CR4_PCE | X86_CR4_OSFXSR  \
+	 | X86_CR4_OSXMMEXCPT | X86_CR4_PGE | X86_CR4_TSD | X86_CR4_FSGSBASE)
+
+#define X86_CR0_PDPTR_BITS    (X86_CR0_CD | X86_CR0_NW | X86_CR0_PG)
+#define X86_CR4_TLBFLUSH_BITS (X86_CR4_PGE | X86_CR4_PCIDE | X86_CR4_PAE | X86_CR4_SMEP)
+#define X86_CR4_PDPTR_BITS    (X86_CR4_PGE | X86_CR4_PSE | X86_CR4_PAE | X86_CR4_SMEP)
+
+static_assert(!(KVM_POSSIBLE_CR0_GUEST_BITS &amp; X86_CR0_PDPTR_BITS));
+
+#define BUILD_KVM_GPR_ACCESSORS(lname, uname)				      \
+static __always_inline unsigned long kvm_##lname##_read(struct kvm_vcpu *vcpu)\
+{									      \
+	return vcpu-&gt;arch.regs[VCPU_REGS_##uname];			      \
+}									      \
+static __always_inline void kvm_##lname##_write(struct kvm_vcpu *vcpu,	      \
+						unsigned long val)	      \
+{									      \
+	vcpu-&gt;arch.regs[VCPU_REGS_##uname] = val;			      \
+}
+BUILD_KVM_GPR_ACCESSORS(rax, RAX)
+BUILD_KVM_GPR_ACCESSORS(rbx, RBX)
+BUILD_KVM_GPR_ACCESSORS(rcx, RCX)
+BUILD_KVM_GPR_ACCESSORS(rdx, RDX)
+BUILD_KVM_GPR_ACCESSORS(rbp, RBP)
+BUILD_KVM_GPR_ACCESSORS(rsi, RSI)
+BUILD_KVM_GPR_ACCESSORS(rdi, RDI)
+#ifdef CONFIG_X86_64
+BUILD_KVM_GPR_ACCESSORS(r8,  R8)
+BUILD_KVM_GPR_ACCESSORS(r9,  R9)
+BUILD_KVM_GPR_ACCESSORS(r10, R10)
+BUILD_KVM_GPR_ACCESSORS(r11, R11)
+BUILD_KVM_GPR_ACCESSORS(r12, R12)
+BUILD_KVM_GPR_ACCESSORS(r13, R13)
+BUILD_KVM_GPR_ACCESSORS(r14, R14)
+BUILD_KVM_GPR_ACCESSORS(r15, R15)
+#endif
+
+/*
+ * avail  dirty
+ * 0	  0	  register in VMCS/VMCB
+ * 0	  1	  *INVALID*
+ * 1	  0	  register in vcpu-&gt;arch
+ * 1	  1	  register in vcpu-&gt;arch, needs to be stored back
+ */
+static inline bool kvm_register_is_available(struct kvm_vcpu *vcpu,
+					     enum kvm_reg reg)
+{
+<blue>	return test_bit(reg, (unsigned long *)&vcpu->arch.regs_avail);</blue>
+}
+
+static inline bool kvm_register_is_dirty(struct kvm_vcpu *vcpu,
+					 enum kvm_reg reg)
+{
+<blue>	return test_bit(reg, (unsigned long *)&vcpu->arch.regs_dirty);</blue>
+}
+
+static inline void kvm_register_mark_available(struct kvm_vcpu *vcpu,
+					       enum kvm_reg reg)
+{
+<blue>	__set_bit(reg, (unsigned long *)&vcpu->arch.regs_avail);</blue>
+}
+
+static inline void kvm_register_mark_dirty(struct kvm_vcpu *vcpu,
+					   enum kvm_reg reg)
+{
+<blue>	__set_bit(reg, (unsigned long *)&vcpu->arch.regs_avail);</blue>
+	__set_bit(reg, (unsigned long *)&amp;vcpu-&gt;arch.regs_dirty);
+}
+
+/*
+ * The &quot;raw&quot; register helpers are only for cases where the full 64 bits of a
+ * register are read/written irrespective of current vCPU mode.  In other words,
+ * odds are good you shouldn&#x27;t be using the raw variants.
+ */
+static inline unsigned long kvm_register_read_raw(struct kvm_vcpu *vcpu, int reg)
+{
+	if (WARN_ON_ONCE((unsigned int)reg &gt;= NR_VCPU_REGS))
+		return 0;
+
+<blue>	if (!kvm_register_is_available(vcpu, reg))</blue>
+<blue>		static_call(kvm_x86_cache_reg)(vcpu, reg);</blue>
+
+<blue>	return vcpu->arch.regs[reg];</blue>
+}
+
+static inline void kvm_register_write_raw(struct kvm_vcpu *vcpu, int reg,
+					  unsigned long val)
+{
+	if (WARN_ON_ONCE((unsigned int)reg &gt;= NR_VCPU_REGS))
+		return;
+
+<blue>	vcpu->arch.regs[reg] = val;</blue>
+	kvm_register_mark_dirty(vcpu, reg);
+}
+
+static inline unsigned long kvm_rip_read(struct kvm_vcpu *vcpu)
+{
+<blue>	return kvm_register_read_raw(vcpu, VCPU_REGS_RIP);</blue>
+}
+
+static inline void kvm_rip_write(struct kvm_vcpu *vcpu, unsigned long val)
+{
+<blue>	kvm_register_write_raw(vcpu, VCPU_REGS_RIP, val);</blue>
+}
+
+static inline unsigned long kvm_rsp_read(struct kvm_vcpu *vcpu)
+{
+	return kvm_register_read_raw(vcpu, VCPU_REGS_RSP);
+}
+
+static inline void kvm_rsp_write(struct kvm_vcpu *vcpu, unsigned long val)
+{
+	kvm_register_write_raw(vcpu, VCPU_REGS_RSP, val);
+}
+
+static inline u64 kvm_pdptr_read(struct kvm_vcpu *vcpu, int index)
+{
+	might_sleep();  /* on svm */
+
+	if (!kvm_register_is_available(vcpu, VCPU_EXREG_PDPTR))
+		static_call(kvm_x86_cache_reg)(vcpu, VCPU_EXREG_PDPTR);
+
+	return vcpu-&gt;arch.walk_mmu-&gt;pdptrs[index];
+}
+
+static inline void kvm_pdptr_write(struct kvm_vcpu *vcpu, int index, u64 value)
+{
+	vcpu-&gt;arch.walk_mmu-&gt;pdptrs[index] = value;
+}
+
+static inline ulong kvm_read_cr0_bits(struct kvm_vcpu *vcpu, ulong mask)
+{
+	ulong tmask = mask &amp; KVM_POSSIBLE_CR0_GUEST_BITS;
+	if ((tmask &amp; vcpu-&gt;arch.cr0_guest_owned_bits) &amp;&amp;
+<blue>	    !kvm_register_is_available(vcpu, VCPU_EXREG_CR0))</blue>
+<blue>		static_call(kvm_x86_cache_reg)(vcpu, VCPU_EXREG_CR0);</blue>
+<blue>	return vcpu->arch.cr0 & mask;</blue>
+}
+
+static inline ulong kvm_read_cr0(struct kvm_vcpu *vcpu)
+{
+<blue>	return kvm_read_cr0_bits(vcpu, ~0UL);</blue>
+}
+
+static inline ulong kvm_read_cr4_bits(struct kvm_vcpu *vcpu, ulong mask)
+{
+	ulong tmask = mask &amp; KVM_POSSIBLE_CR4_GUEST_BITS;
+<blue>	if ((tmask & vcpu->arch.cr4_guest_owned_bits) &&</blue>
+<blue>	    !kvm_register_is_available(vcpu, VCPU_EXREG_CR4))</blue>
+<blue>		static_call(kvm_x86_cache_reg)(vcpu, VCPU_EXREG_CR4);</blue>
+<blue>	return vcpu->arch.cr4 & mask;</blue>
+}
+
+static inline ulong kvm_read_cr3(struct kvm_vcpu *vcpu)
+{
+<blue>	if (!kvm_register_is_available(vcpu, VCPU_EXREG_CR3))</blue>
+<blue>		static_call(kvm_x86_cache_reg)(vcpu, VCPU_EXREG_CR3);</blue>
+<blue>	return vcpu->arch.cr3;</blue>
+}
+
+static inline ulong kvm_read_cr4(struct kvm_vcpu *vcpu)
+{
+<blue>	return kvm_read_cr4_bits(vcpu, ~0UL);</blue>
+}
+
+static inline u64 kvm_read_edx_eax(struct kvm_vcpu *vcpu)
+{
+	return (kvm_rax_read(vcpu) &amp; -1u)
+		| ((u64)(kvm_rdx_read(vcpu) &amp; -1u) &lt;&lt; 32);
+}
+
+static inline void enter_guest_mode(struct kvm_vcpu *vcpu)
+{
+	vcpu-&gt;arch.hflags |= HF_GUEST_MASK;
+	vcpu-&gt;stat.guest_mode = 1;
+}
+
+static inline void leave_guest_mode(struct kvm_vcpu *vcpu)
+{
+	vcpu-&gt;arch.hflags &amp;= ~HF_GUEST_MASK;
+
+	if (vcpu-&gt;arch.load_eoi_exitmap_pending) {
+		vcpu-&gt;arch.load_eoi_exitmap_pending = false;
+		kvm_make_request(KVM_REQ_LOAD_EOI_EXITMAP, vcpu);
+	}
+
+	vcpu-&gt;stat.guest_mode = 0;
+}
+
+static inline bool is_guest_mode(struct kvm_vcpu *vcpu)
+{
+<blue>	return vcpu->arch.hflags & HF_GUEST_MASK;</blue>
+}
+
+static inline bool is_smm(struct kvm_vcpu *vcpu)
+{
+<blue>	return vcpu->arch.hflags & HF_SMM_MASK;</blue>
+}
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 56.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>

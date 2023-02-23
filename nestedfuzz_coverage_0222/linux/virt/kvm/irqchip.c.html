@@ -1,0 +1,312 @@
+<doctype html>
+<html lang="ja">
+<head><title>irqchip.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 241; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * irqchip.c: Common API for in kernel interrupt controllers
+ * Copyright (c) 2007, Intel Corporation.
+ * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+ * Copyright (c) 2013, Alexander Graf &lt;agraf@suse.de&gt;
+ *
+ * This file is derived from virt/kvm/irq_comm.c.
+ *
+ * Authors:
+ *   Yaozu (Eddie) Dong &lt;Eddie.dong@intel.com&gt;
+ *   Alexander Graf &lt;agraf@suse.de&gt;
+ */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/slab.h&gt;
+#include &lt;linux/srcu.h&gt;
+#include &lt;linux/export.h&gt;
+#include &lt;trace/events/kvm.h&gt;
+#include &quot;irq.h&quot;
+
+int kvm_irq_map_gsi(struct kvm *kvm,
+		    struct kvm_kernel_irq_routing_entry *entries, int gsi)
+{
+	struct kvm_irq_routing_table *irq_rt;
+	struct kvm_kernel_irq_routing_entry *e;
+	int n = 0;
+
+<blue>	irq_rt = srcu_dereference_check(kvm->irq_routing, &kvm->irq_srcu,</blue>
+					lockdep_is_held(&amp;kvm-&gt;irq_lock));
+<blue>	if (irq_rt && gsi < irq_rt->nr_rt_entries) {</blue>
+<blue>		hlist_for_each_entry(e, &irq_rt->map[gsi], link) {</blue>
+<blue>			entries[n] = *e;</blue>
+			++n;
+		}
+	}
+
+	return n;
+<blue>}</blue>
+
+int kvm_irq_map_chip_pin(struct kvm *kvm, unsigned irqchip, unsigned pin)
+{
+	struct kvm_irq_routing_table *irq_rt;
+
+<blue>	irq_rt = srcu_dereference(kvm->irq_routing, &kvm->irq_srcu);</blue>
+<blue>	return irq_rt->chip[irqchip][pin];</blue>
+}
+
+int kvm_send_userspace_msi(struct kvm *kvm, struct kvm_msi *msi)
+{
+	struct kvm_kernel_irq_routing_entry route;
+
+	if (!irqchip_in_kernel(kvm) || (msi-&gt;flags &amp; ~KVM_MSI_VALID_DEVID))
+		return -EINVAL;
+
+	route.msi.address_lo = msi-&gt;address_lo;
+	route.msi.address_hi = msi-&gt;address_hi;
+	route.msi.data = msi-&gt;data;
+	route.msi.flags = msi-&gt;flags;
+	route.msi.devid = msi-&gt;devid;
+
+	return kvm_set_msi(&amp;route, kvm, KVM_USERSPACE_IRQ_SOURCE_ID, 1, false);
+}
+
+/*
+ * Return value:
+ *  &lt; 0   Interrupt was ignored (masked or not delivered for other reasons)
+ *  = 0   Interrupt was coalesced (previous irq is still pending)
+ *  &gt; 0   Number of CPUs interrupt was delivered to
+ */
+int kvm_set_irq(struct kvm *kvm, int irq_source_id, u32 irq, int level,
+		bool line_status)
+<blue>{</blue>
+	struct kvm_kernel_irq_routing_entry irq_set[KVM_NR_IRQCHIPS];
+	int ret = -1, i, idx;
+
+<blue>	trace_kvm_set_irq(irq, level, irq_source_id);</blue>
+
+	/* Not possible to detect if the guest uses the PIC or the
+	 * IOAPIC.  So set the bit in both. The guest will ignore
+	 * writes to the unused one.
+	 */
+<blue>	idx = srcu_read_lock(&kvm->irq_srcu);</blue>
+	i = kvm_irq_map_gsi(kvm, irq_set, irq);
+<blue>	srcu_read_unlock(&kvm->irq_srcu, idx);</blue>
+
+<blue>	while (i--) {</blue>
+		int r;
+<blue>		r = irq_set[i].set(&irq_set[i], kvm, irq_source_id, level,</blue>
+				   line_status);
+		if (r &lt; 0)
+			continue;
+
+<blue>		ret = r + ((ret < 0) ? 0 : ret);</blue>
+	}
+
+	return ret;
+}
+
+static void free_irq_routing_table(struct kvm_irq_routing_table *rt)
+{
+	int i;
+
+	if (!rt)
+		return;
+
+<blue>	for (i = 0; i < rt->nr_rt_entries; ++i) {</blue>
+		struct kvm_kernel_irq_routing_entry *e;
+		struct hlist_node *n;
+
+<blue>		hlist_for_each_entry_safe(e, n, &rt->map[i], link) {</blue>
+<blue>			hlist_del(&e->link);</blue>
+<blue>			kfree(e);</blue>
+		}
+	}
+
+<blue>	kfree(rt);</blue>
+}
+
+void kvm_free_irq_routing(struct kvm *kvm)
+{
+	/* Called only during vm destruction. Nobody can use the pointer
+	   at this stage */
+	struct kvm_irq_routing_table *rt = rcu_access_pointer(kvm-&gt;irq_routing);
+	free_irq_routing_table(rt);
+}
+
+static int setup_routing_entry(struct kvm *kvm,
+			       struct kvm_irq_routing_table *rt,
+			       struct kvm_kernel_irq_routing_entry *e,
+			       const struct kvm_irq_routing_entry *ue)
+{
+	struct kvm_kernel_irq_routing_entry *ei;
+	int r;
+<blue>	u32 gsi = array_index_nospec(ue->gsi, KVM_MAX_IRQ_ROUTES);</blue>
+
+	/*
+	 * Do not allow GSI to be mapped to the same irqchip more than once.
+	 * Allow only one to one mapping between GSI and non-irqchip routing.
+	 */
+<blue>	hlist_for_each_entry(ei, &rt->map[gsi], link)</blue>
+<blue>		if (ei->type != KVM_IRQ_ROUTING_IRQCHIP ||</blue>
+		    ue-&gt;type != KVM_IRQ_ROUTING_IRQCHIP ||
+<blue>		    ue->u.irqchip.irqchip == ei->irqchip.irqchip)</blue>
+			return -EINVAL;
+
+<blue>	e->gsi = gsi;</blue>
+	e-&gt;type = ue-&gt;type;
+	r = kvm_set_routing_entry(kvm, e, ue);
+	if (r)
+		return r;
+<blue>	if (e->type == KVM_IRQ_ROUTING_IRQCHIP)</blue>
+<blue>		rt->chip[e->irqchip.irqchip][e->irqchip.pin] = e->gsi;</blue>
+
+<blue>	hlist_add_head(&e->link, &rt->map[e->gsi]);</blue>
+
+	return 0;
+}
+
+void __attribute__((weak)) kvm_arch_irq_routing_update(struct kvm *kvm)
+{
+}
+
+bool __weak kvm_arch_can_set_irq_routing(struct kvm *kvm)
+{
+	return true;
+}
+
+int kvm_set_irq_routing(struct kvm *kvm,
+			const struct kvm_irq_routing_entry *ue,
+			unsigned nr,
+			unsigned flags)
+{
+	struct kvm_irq_routing_table *new, *old;
+	struct kvm_kernel_irq_routing_entry *e;
+	u32 i, j, nr_rt_entries = 0;
+	int r;
+
+<blue>	for (i = 0; i < nr; ++i) {</blue>
+<blue>		if (ue[i].gsi >= KVM_MAX_IRQ_ROUTES)</blue>
+			return -EINVAL;
+<blue>		nr_rt_entries = max(nr_rt_entries, ue[i].gsi);</blue>
+	}
+
+<blue>	nr_rt_entries += 1;</blue>
+
+<blue>	new = kzalloc(struct_size(new, map, nr_rt_entries), GFP_KERNEL_ACCOUNT);</blue>
+	if (!new)
+		return -ENOMEM;
+
+<blue>	new->nr_rt_entries = nr_rt_entries;</blue>
+<blue>	for (i = 0; i < KVM_NR_IRQCHIPS; i++)</blue>
+		for (j = 0; j &lt; KVM_IRQCHIP_NUM_PINS; j++)
+<blue>			new->chip[i][j] = -1;</blue>
+
+<blue>	for (i = 0; i < nr; ++i) {</blue>
+		r = -ENOMEM;
+<blue>		e = kzalloc(sizeof(*e), GFP_KERNEL_ACCOUNT);</blue>
+		if (!e)
+			goto out;
+
+		r = -EINVAL;
+<blue>		switch (ue->type) {</blue>
+		case KVM_IRQ_ROUTING_MSI:
+			if (ue-&gt;flags &amp; ~KVM_MSI_VALID_DEVID)
+				goto free_entry;
+			break;
+		default:
+<blue>			if (ue->flags)</blue>
+				goto free_entry;
+			break;
+		}
+<blue>		r = setup_routing_entry(kvm, new, e, ue);</blue>
+		if (r)
+			goto free_entry;
+		++ue;
+	}
+
+<blue>	mutex_lock(&kvm->irq_lock);</blue>
+	old = rcu_dereference_protected(kvm-&gt;irq_routing, 1);
+	rcu_assign_pointer(kvm-&gt;irq_routing, new);
+	kvm_irq_routing_update(kvm);
+	kvm_arch_irq_routing_update(kvm);
+	mutex_unlock(&amp;kvm-&gt;irq_lock);
+
+	kvm_arch_post_irq_routing_update(kvm);
+
+	synchronize_srcu_expedited(&amp;kvm-&gt;irq_srcu);
+
+	new = old;
+	r = 0;
+	goto out;
+
+free_entry:
+<blue>	kfree(e);</blue>
+out:
+<blue>	free_irq_routing_table(new);</blue>
+
+	return r;
+<blue>}</blue>
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 56.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>

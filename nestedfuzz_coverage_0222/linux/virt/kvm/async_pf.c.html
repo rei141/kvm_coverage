@@ -1,0 +1,300 @@
+<doctype html>
+<html lang="ja">
+<head><title>async_pf.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 229; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * kvm asynchronous fault support
+ *
+ * Copyright 2010 Red Hat, Inc.
+ *
+ * Author:
+ *      Gleb Natapov &lt;gleb@redhat.com&gt;
+ */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/slab.h&gt;
+#include &lt;linux/module.h&gt;
+#include &lt;linux/mmu_context.h&gt;
+#include &lt;linux/sched/mm.h&gt;
+
+#include &quot;async_pf.h&quot;
+#include &lt;trace/events/kvm.h&gt;
+
+static struct kmem_cache *async_pf_cache;
+
+int kvm_async_pf_init(void)
+{
+	async_pf_cache = KMEM_CACHE(kvm_async_pf, 0);
+
+	if (!async_pf_cache)
+		return -ENOMEM;
+
+	return 0;
+}
+
+void kvm_async_pf_deinit(void)
+{
+	kmem_cache_destroy(async_pf_cache);
+	async_pf_cache = NULL;
+}
+
+void kvm_async_pf_vcpu_init(struct kvm_vcpu *vcpu)
+{
+<blue>	INIT_LIST_HEAD(&vcpu->async_pf.done);</blue>
+	INIT_LIST_HEAD(&amp;vcpu-&gt;async_pf.queue);
+	spin_lock_init(&amp;vcpu-&gt;async_pf.lock);
+}
+
+static void async_pf_execute(struct work_struct *work)
+{
+	struct kvm_async_pf *apf =
+		container_of(work, struct kvm_async_pf, work);
+	struct mm_struct *mm = apf-&gt;mm;
+	struct kvm_vcpu *vcpu = apf-&gt;vcpu;
+	unsigned long addr = apf-&gt;addr;
+	gpa_t cr2_or_gpa = apf-&gt;cr2_or_gpa;
+	int locked = 1;
+	bool first;
+
+	might_sleep();
+
+	/*
+	 * This work is run asynchronously to the task which owns
+	 * mm and might be done in another context, so we must
+	 * access remotely.
+	 */
+	mmap_read_lock(mm);
+	get_user_pages_remote(mm, addr, 1, FOLL_WRITE, NULL, NULL,
+			&amp;locked);
+	if (locked)
+		mmap_read_unlock(mm);
+
+	if (IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC))
+		kvm_arch_async_page_present(vcpu, apf);
+
+	spin_lock(&amp;vcpu-&gt;async_pf.lock);
+	first = list_empty(&amp;vcpu-&gt;async_pf.done);
+	list_add_tail(&amp;apf-&gt;link, &amp;vcpu-&gt;async_pf.done);
+	apf-&gt;vcpu = NULL;
+	spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+
+	if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC) &amp;&amp; first)
+		kvm_arch_async_page_present_queued(vcpu);
+
+	/*
+	 * apf may be freed by kvm_check_async_pf_completion() after
+	 * this point
+	 */
+
+	trace_kvm_async_pf_completed(addr, cr2_or_gpa);
+
+	__kvm_vcpu_wake_up(vcpu);
+
+	mmput(mm);
+	kvm_put_kvm(vcpu-&gt;kvm);
+}
+
+void kvm_clear_async_pf_completion_queue(struct kvm_vcpu *vcpu)
+{
+<blue>	spin_lock(&vcpu->async_pf.lock);</blue>
+
+	/* cancel outstanding work queue item */
+<blue>	while (!list_empty(&vcpu->async_pf.queue)) {</blue>
+		struct kvm_async_pf *work =
+			list_first_entry(&amp;vcpu-&gt;async_pf.queue,
+					 typeof(*work), queue);
+		list_del(&amp;work-&gt;queue);
+
+		/*
+		 * We know it&#x27;s present in vcpu-&gt;async_pf.done, do
+		 * nothing here.
+		 */
+		if (!work-&gt;vcpu)
+			continue;
+
+		spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+#ifdef CONFIG_KVM_ASYNC_PF_SYNC
+		flush_work(&amp;work-&gt;work);
+#else
+		if (cancel_work_sync(&amp;work-&gt;work)) {
+			mmput(work-&gt;mm);
+			kvm_put_kvm(vcpu-&gt;kvm); /* == work-&gt;vcpu-&gt;kvm */
+			kmem_cache_free(async_pf_cache, work);
+		}
+#endif
+		spin_lock(&amp;vcpu-&gt;async_pf.lock);
+	}
+
+<blue>	while (!list_empty(&vcpu->async_pf.done)) {</blue>
+		struct kvm_async_pf *work =
+			list_first_entry(&amp;vcpu-&gt;async_pf.done,
+					 typeof(*work), link);
+		list_del(&amp;work-&gt;link);
+		kmem_cache_free(async_pf_cache, work);
+	}
+<blue>	spin_unlock(&vcpu->async_pf.lock);</blue>
+
+	vcpu-&gt;async_pf.queued = 0;
+}
+
+void kvm_check_async_pf_completion(struct kvm_vcpu *vcpu)
+{
+	struct kvm_async_pf *work;
+
+<blue>	while (!list_empty_careful(&vcpu->async_pf.done) &&</blue>
+	      kvm_arch_can_dequeue_async_page_present(vcpu)) {
+		spin_lock(&amp;vcpu-&gt;async_pf.lock);
+		work = list_first_entry(&amp;vcpu-&gt;async_pf.done, typeof(*work),
+					      link);
+		list_del(&amp;work-&gt;link);
+		spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+
+		kvm_arch_async_page_ready(vcpu, work);
+		if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC))
+			kvm_arch_async_page_present(vcpu, work);
+
+		list_del(&amp;work-&gt;queue);
+		vcpu-&gt;async_pf.queued--;
+		kmem_cache_free(async_pf_cache, work);
+	}
+<blue>}</blue>
+
+/*
+ * Try to schedule a job to handle page fault asynchronously. Returns &#x27;true&#x27; on
+ * success, &#x27;false&#x27; on failure (page fault has to be handled synchronously).
+ */
+bool kvm_setup_async_pf(struct kvm_vcpu *vcpu, gpa_t cr2_or_gpa,
+			unsigned long hva, struct kvm_arch_async_pf *arch)
+{
+	struct kvm_async_pf *work;
+
+	if (vcpu-&gt;async_pf.queued &gt;= ASYNC_PF_PER_VCPU)
+		return false;
+
+	/* Arch specific code should not do async PF in this case */
+	if (unlikely(kvm_is_error_hva(hva)))
+		return false;
+
+	/*
+	 * do alloc nowait since if we are going to sleep anyway we
+	 * may as well sleep faulting in page
+	 */
+	work = kmem_cache_zalloc(async_pf_cache, GFP_NOWAIT | __GFP_NOWARN);
+	if (!work)
+		return false;
+
+	work-&gt;wakeup_all = false;
+	work-&gt;vcpu = vcpu;
+	work-&gt;cr2_or_gpa = cr2_or_gpa;
+	work-&gt;addr = hva;
+	work-&gt;arch = *arch;
+	work-&gt;mm = current-&gt;mm;
+	mmget(work-&gt;mm);
+	kvm_get_kvm(work-&gt;vcpu-&gt;kvm);
+
+	INIT_WORK(&amp;work-&gt;work, async_pf_execute);
+
+	list_add_tail(&amp;work-&gt;queue, &amp;vcpu-&gt;async_pf.queue);
+	vcpu-&gt;async_pf.queued++;
+	work-&gt;notpresent_injected = kvm_arch_async_page_not_present(vcpu, work);
+
+	schedule_work(&amp;work-&gt;work);
+
+	return true;
+}
+
+int kvm_async_pf_wakeup_all(struct kvm_vcpu *vcpu)
+{
+	struct kvm_async_pf *work;
+	bool first;
+
+	if (!list_empty_careful(&amp;vcpu-&gt;async_pf.done))
+		return 0;
+
+	work = kmem_cache_zalloc(async_pf_cache, GFP_ATOMIC);
+	if (!work)
+		return -ENOMEM;
+
+	work-&gt;wakeup_all = true;
+	INIT_LIST_HEAD(&amp;work-&gt;queue); /* for list_del to work */
+
+	spin_lock(&amp;vcpu-&gt;async_pf.lock);
+	first = list_empty(&amp;vcpu-&gt;async_pf.done);
+	list_add_tail(&amp;work-&gt;link, &amp;vcpu-&gt;async_pf.done);
+	spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+
+	if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC) &amp;&amp; first)
+		kvm_arch_async_page_present_queued(vcpu);
+
+	vcpu-&gt;async_pf.queued++;
+	return 0;
+}
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 56.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>

@@ -1,0 +1,173 @@
+<doctype html>
+<html lang="ja">
+<head><title>div64.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 102; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_DIV64_H
+#define _ASM_X86_DIV64_H
+
+#ifdef CONFIG_X86_32
+
+#include &lt;linux/types.h&gt;
+#include &lt;linux/log2.h&gt;
+
+/*
+ * do_div() is NOT a C function. It wants to return
+ * two values (the quotient and the remainder), but
+ * since that doesn&#x27;t work very well in C, what it
+ * does is:
+ *
+ * - modifies the 64-bit dividend _in_place_
+ * - returns the 32-bit remainder
+ *
+ * This ends up being the most efficient &quot;calling
+ * convention&quot; on x86.
+ */
+#define do_div(n, base)						\
+({								\
+	unsigned long __upper, __low, __high, __mod, __base;	\
+	__base = (base);					\
+	if (__builtin_constant_p(__base) &amp;&amp; is_power_of_2(__base)) { \
+		__mod = n &amp; (__base - 1);			\
+		n &gt;&gt;= ilog2(__base);				\
+	} else {						\
+		asm(&quot;&quot; : &quot;=a&quot; (__low), &quot;=d&quot; (__high) : &quot;A&quot; (n));\
+		__upper = __high;				\
+		if (__high) {					\
+			__upper = __high % (__base);		\
+			__high = __high / (__base);		\
+		}						\
+		asm(&quot;divl %2&quot; : &quot;=a&quot; (__low), &quot;=d&quot; (__mod)	\
+			: &quot;rm&quot; (__base), &quot;0&quot; (__low), &quot;1&quot; (__upper));	\
+		asm(&quot;&quot; : &quot;=A&quot; (n) : &quot;a&quot; (__low), &quot;d&quot; (__high));	\
+	}							\
+	__mod;							\
+})
+
+static inline u64 div_u64_rem(u64 dividend, u32 divisor, u32 *remainder)
+{
+	union {
+		u64 v64;
+		u32 v32[2];
+	} d = { dividend };
+	u32 upper;
+
+	upper = d.v32[1];
+	d.v32[1] = 0;
+	if (upper &gt;= divisor) {
+		d.v32[1] = upper / divisor;
+		upper %= divisor;
+	}
+	asm (&quot;divl %2&quot; : &quot;=a&quot; (d.v32[0]), &quot;=d&quot; (*remainder) :
+		&quot;rm&quot; (divisor), &quot;0&quot; (d.v32[0]), &quot;1&quot; (upper));
+	return d.v64;
+}
+#define div_u64_rem	div_u64_rem
+
+static inline u64 mul_u32_u32(u32 a, u32 b)
+{
+	u32 high, low;
+
+	asm (&quot;mull %[b]&quot; : &quot;=a&quot; (low), &quot;=d&quot; (high)
+			 : [a] &quot;a&quot; (a), [b] &quot;rm&quot; (b) );
+
+	return low | ((u64)high) &lt;&lt; 32;
+}
+#define mul_u32_u32 mul_u32_u32
+
+#else
+# include &lt;asm-generic/div64.h&gt;
+
+/*
+ * Will generate an #DE when the result doesn&#x27;t fit u64, could fix with an
+ * __ex_table[] entry when it becomes an issue.
+ */
+static inline u64 mul_u64_u64_div_u64(u64 a, u64 mul, u64 div)
+{
+	u64 q;
+
+<blue>	asm ("mulq %2; divq %3" : "=a" (q)</blue>
+				: &quot;a&quot; (a), &quot;rm&quot; (mul), &quot;rm&quot; (div)
+				: &quot;rdx&quot;);
+
+	return q;
+}
+#define mul_u64_u64_div_u64 mul_u64_u64_div_u64
+
+static inline u64 mul_u64_u32_div(u64 a, u32 mul, u32 div)
+{
+<blue>	return mul_u64_u64_div_u64(a, mul, div);</blue>
+}
+#define mul_u64_u32_div	mul_u64_u32_div
+
+#endif /* CONFIG_X86_32 */
+
+#endif /* _ASM_X86_DIV64_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 56.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>

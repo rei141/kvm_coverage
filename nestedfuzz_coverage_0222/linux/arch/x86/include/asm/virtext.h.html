@@ -1,0 +1,212 @@
+<doctype html>
+<html lang="ja">
+<head><title>virtext.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 141; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+/* CPU virtualization extensions handling
+ *
+ * This should carry the code for handling CPU virtualization extensions
+ * that needs to live in the kernel core.
+ *
+ * Author: Eduardo Habkost &lt;ehabkost@redhat.com&gt;
+ *
+ * Copyright (C) 2008, Red Hat Inc.
+ *
+ * Contains code from KVM, Copyright (C) 2006 Qumranet, Inc.
+ */
+#ifndef _ASM_X86_VIRTEX_H
+#define _ASM_X86_VIRTEX_H
+
+#include &lt;asm/processor.h&gt;
+
+#include &lt;asm/vmx.h&gt;
+#include &lt;asm/svm.h&gt;
+#include &lt;asm/tlbflush.h&gt;
+
+/*
+ * VMX functions:
+ */
+
+static inline int cpu_has_vmx(void)
+{
+	unsigned long ecx = cpuid_ecx(1);
+	return test_bit(5, &amp;ecx); /* CPUID.1:ECX.VMX[bit 5] -&gt; VT */
+}
+
+
+/**
+ * cpu_vmxoff() - Disable VMX on the current CPU
+ *
+ * Disable VMX and clear CR4.VMXE (even if VMXOFF faults)
+ *
+ * Note, VMXOFF causes a #UD if the CPU is !post-VMXON, but it&#x27;s impossible to
+ * atomically track post-VMXON state, e.g. this may be called in NMI context.
+ * Eat all faults as all other faults on VMXOFF faults are mode related, i.e.
+ * faults are guaranteed to be due to the !post-VMXON check unless the CPU is
+ * magically in RM, VM86, compat mode, or at CPL&gt;0.
+ */
+static inline int cpu_vmxoff(void)
+{
+<yellow>	asm_volatile_goto("1: vmxoff\n\t"</yellow>
+			  _ASM_EXTABLE(1b, %l[fault])
+			  ::: &quot;cc&quot;, &quot;memory&quot; : fault);
+
+<yellow>	cr4_clear_bits(X86_CR4_VMXE);</yellow>
+	return 0;
+
+fault:
+<yellow>	cr4_clear_bits(X86_CR4_VMXE);</yellow>
+	return -EIO;
+}
+
+static inline int cpu_vmx_enabled(void)
+{
+	return __read_cr4() &amp; X86_CR4_VMXE;
+}
+
+/** Disable VMX if it is enabled on the current CPU
+ *
+ * You shouldn&#x27;t call this if cpu_has_vmx() returns 0.
+ */
+static inline void __cpu_emergency_vmxoff(void)
+{
+	if (cpu_vmx_enabled())
+		cpu_vmxoff();
+}
+
+/** Disable VMX if it is supported and enabled on the current CPU
+ */
+static inline void cpu_emergency_vmxoff(void)
+{
+	if (cpu_has_vmx())
+		__cpu_emergency_vmxoff();
+}
+
+
+
+
+/*
+ * SVM functions:
+ */
+
+/** Check if the CPU has SVM support
+ *
+ * You can use the &#x27;msg&#x27; arg to get a message describing the problem,
+ * if the function returns zero. Simply pass NULL if you are not interested
+ * on the messages; gcc should take care of not generating code for
+ * the messages on this case.
+ */
+static inline int cpu_has_svm(const char **msg)
+{
+	if (boot_cpu_data.x86_vendor != X86_VENDOR_AMD &amp;&amp;
+	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON) {
+		if (msg)
+			*msg = &quot;not amd or hygon&quot;;
+		return 0;
+	}
+
+	if (boot_cpu_data.extended_cpuid_level &lt; SVM_CPUID_FUNC) {
+		if (msg)
+			*msg = &quot;can&#x27;t execute cpuid_8000000a&quot;;
+		return 0;
+	}
+
+	if (!boot_cpu_has(X86_FEATURE_SVM)) {
+		if (msg)
+			*msg = &quot;svm not available&quot;;
+		return 0;
+	}
+	return 1;
+}
+
+
+/** Disable SVM on the current CPU
+ *
+ * You should call this only if cpu_has_svm() returned true.
+ */
+static inline void cpu_svm_disable(void)
+{
+	uint64_t efer;
+
+	wrmsrl(MSR_VM_HSAVE_PA, 0);
+	rdmsrl(MSR_EFER, efer);
+	wrmsrl(MSR_EFER, efer &amp; ~EFER_SVME);
+}
+
+/** Makes sure SVM is disabled, if it is supported on the CPU
+ */
+static inline void cpu_emergency_svm_disable(void)
+{
+	if (cpu_has_svm(NULL))
+		cpu_svm_disable();
+}
+
+#endif /* _ASM_X86_VIRTEX_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 56.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>

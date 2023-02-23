@@ -1,0 +1,374 @@
+<doctype html>
+<html lang="ja">
+<head><title>page_track.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 303; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Support KVM gust page tracking
+ *
+ * This feature allows us to track page access in guest. Currently, only
+ * write access is tracked.
+ *
+ * Copyright(C) 2015 Intel Corporation.
+ *
+ * Author:
+ *   Xiao Guangrong &lt;guangrong.xiao@linux.intel.com&gt;
+ */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/rculist.h&gt;
+
+#include &lt;asm/kvm_page_track.h&gt;
+
+#include &quot;mmu.h&quot;
+#include &quot;mmu_internal.h&quot;
+
+bool kvm_page_track_write_tracking_enabled(struct kvm *kvm)
+{
+	return IS_ENABLED(CONFIG_KVM_EXTERNAL_WRITE_TRACKING) ||
+	       !tdp_enabled || kvm_shadow_root_allocated(kvm);
+<blue>}</blue>
+
+void kvm_page_track_free_memslot(struct kvm_memory_slot *slot)
+{
+	int i;
+
+	for (i = 0; i &lt; KVM_PAGE_TRACK_MAX; i++) {
+<blue>		kvfree(slot->arch.gfn_track[i]);</blue>
+		slot-&gt;arch.gfn_track[i] = NULL;
+	}
+}
+
+int kvm_page_track_create_memslot(struct kvm *kvm,
+				  struct kvm_memory_slot *slot,
+				  unsigned long npages)
+{
+	int i;
+
+	for (i = 0; i &lt; KVM_PAGE_TRACK_MAX; i++) {
+		if (i == KVM_PAGE_TRACK_WRITE &amp;&amp;
+		    !kvm_page_track_write_tracking_enabled(kvm))
+			continue;
+
+		slot-&gt;arch.gfn_track[i] =
+<blue>			__vcalloc(npages, sizeof(*slot->arch.gfn_track[i]),</blue>
+				  GFP_KERNEL_ACCOUNT);
+		if (!slot-&gt;arch.gfn_track[i])
+			goto track_free;
+	}
+
+	return 0;
+
+track_free:
+<yellow>	kvm_page_track_free_memslot(slot);</yellow>
+	return -ENOMEM;
+<blue>}</blue>
+
+static inline bool page_track_mode_is_valid(enum kvm_page_track_mode mode)
+{
+<blue>	if (mode < 0 || mode >= KVM_PAGE_TRACK_MAX)</blue>
+		return false;
+
+	return true;
+}
+
+int kvm_page_track_write_tracking_alloc(struct kvm_memory_slot *slot)
+{
+	unsigned short *gfn_track;
+
+<blue>	if (slot->arch.gfn_track[KVM_PAGE_TRACK_WRITE])</blue>
+		return 0;
+
+<yellow>	gfn_track = __vcalloc(slot->npages, sizeof(*gfn_track),</yellow>
+			      GFP_KERNEL_ACCOUNT);
+	if (gfn_track == NULL)
+		return -ENOMEM;
+
+<yellow>	slot->arch.gfn_track[KVM_PAGE_TRACK_WRITE] = gfn_track;</yellow>
+	return 0;
+<blue>}</blue>
+
+static void update_gfn_track(struct kvm_memory_slot *slot, gfn_t gfn,
+			     enum kvm_page_track_mode mode, short count)
+{
+	int index, val;
+
+<blue>	index = gfn_to_index(gfn, slot->base_gfn, PG_LEVEL_4K);</blue>
+
+	val = slot-&gt;arch.gfn_track[mode][index];
+
+<yellow>	if (WARN_ON(val + count < 0 || val + count > USHRT_MAX))</yellow>
+		return;
+
+<blue>	slot->arch.gfn_track[mode][index] += count;</blue>
+}
+
+/*
+ * add guest page to the tracking pool so that corresponding access on that
+ * page will be intercepted.
+ *
+ * It should be called under the protection both of mmu-lock and kvm-&gt;srcu
+ * or kvm-&gt;slots_lock.
+ *
+ * @kvm: the guest instance we are interested in.
+ * @slot: the @gfn belongs to.
+ * @gfn: the guest page.
+ * @mode: tracking mode, currently only write track is supported.
+ */
+<blue>void kvm_slot_page_track_add_page(struct kvm *kvm,</blue>
+				  struct kvm_memory_slot *slot, gfn_t gfn,
+				  enum kvm_page_track_mode mode)
+{
+
+<blue>	if (WARN_ON(!page_track_mode_is_valid(mode)))</blue>
+		return;
+
+	if (WARN_ON(mode == KVM_PAGE_TRACK_WRITE &amp;&amp;
+		    !kvm_page_track_write_tracking_enabled(kvm)))
+		return;
+
+<blue>	update_gfn_track(slot, gfn, mode, 1);</blue>
+
+	/*
+	 * new track stops large page mapping for the
+	 * tracked page.
+	 */
+<blue>	kvm_mmu_gfn_disallow_lpage(slot, gfn);</blue>
+
+	if (mode == KVM_PAGE_TRACK_WRITE)
+		if (kvm_mmu_slot_gfn_write_protect(kvm, slot, gfn, PG_LEVEL_4K))
+<blue>			kvm_flush_remote_tlbs(kvm);</blue>
+<blue>}</blue>
+EXPORT_SYMBOL_GPL(kvm_slot_page_track_add_page);
+
+/*
+ * remove the guest page from the tracking pool which stops the interception
+ * of corresponding access on that page. It is the opposed operation of
+ * kvm_slot_page_track_add_page().
+ *
+ * It should be called under the protection both of mmu-lock and kvm-&gt;srcu
+ * or kvm-&gt;slots_lock.
+ *
+ * @kvm: the guest instance we are interested in.
+ * @slot: the @gfn belongs to.
+ * @gfn: the guest page.
+ * @mode: tracking mode, currently only write track is supported.
+ */
+void kvm_slot_page_track_remove_page(struct kvm *kvm,
+				     struct kvm_memory_slot *slot, gfn_t gfn,
+				     enum kvm_page_track_mode mode)
+{
+<blue>	if (WARN_ON(!page_track_mode_is_valid(mode)))</blue>
+		return;
+
+	if (WARN_ON(mode == KVM_PAGE_TRACK_WRITE &amp;&amp;
+		    !kvm_page_track_write_tracking_enabled(kvm)))
+		return;
+
+<blue>	update_gfn_track(slot, gfn, mode, -1);</blue>
+
+	/*
+	 * allow large page mapping for the tracked page
+	 * after the tracker is gone.
+	 */
+<blue>	kvm_mmu_gfn_allow_lpage(slot, gfn);</blue>
+<blue>}</blue>
+EXPORT_SYMBOL_GPL(kvm_slot_page_track_remove_page);
+
+/*
+ * check if the corresponding access on the specified guest page is tracked.
+ */
+bool kvm_slot_page_track_is_active(struct kvm *kvm,
+				   const struct kvm_memory_slot *slot,
+				   gfn_t gfn, enum kvm_page_track_mode mode)
+{
+	int index;
+
+<blue>	if (WARN_ON(!page_track_mode_is_valid(mode)))</blue>
+<yellow>		return false;</yellow>
+
+<blue>	if (!slot)</blue>
+		return false;
+
+	if (mode == KVM_PAGE_TRACK_WRITE &amp;&amp;
+	    !kvm_page_track_write_tracking_enabled(kvm))
+		return false;
+
+<blue>	index = gfn_to_index(gfn, slot->base_gfn, PG_LEVEL_4K);</blue>
+	return !!READ_ONCE(slot-&gt;arch.gfn_track[mode][index]);
+<blue>}</blue>
+
+void kvm_page_track_cleanup(struct kvm *kvm)
+{
+	struct kvm_page_track_notifier_head *head;
+
+	head = &amp;kvm-&gt;arch.track_notifier_head;
+<yellow>	cleanup_srcu_struct(&head->track_srcu);</yellow>
+}
+
+int kvm_page_track_init(struct kvm *kvm)
+{
+	struct kvm_page_track_notifier_head *head;
+
+	head = &amp;kvm-&gt;arch.track_notifier_head;
+<blue>	INIT_HLIST_HEAD(&head->track_notifier_list);</blue>
+	return init_srcu_struct(&amp;head-&gt;track_srcu);
+}
+
+/*
+ * register the notifier so that event interception for the tracked guest
+ * pages can be received.
+ */
+void
+kvm_page_track_register_notifier(struct kvm *kvm,
+				 struct kvm_page_track_notifier_node *n)
+{
+	struct kvm_page_track_notifier_head *head;
+
+	head = &amp;kvm-&gt;arch.track_notifier_head;
+
+<blue>	write_lock(&kvm->mmu_lock);</blue>
+<yellow>	hlist_add_head_rcu(&n->node, &head->track_notifier_list);</yellow>
+<blue>	write_unlock(&kvm->mmu_lock);</blue>
+}
+EXPORT_SYMBOL_GPL(kvm_page_track_register_notifier);
+
+/*
+ * stop receiving the event interception. It is the opposed operation of
+ * kvm_page_track_register_notifier().
+ */
+void
+kvm_page_track_unregister_notifier(struct kvm *kvm,
+				   struct kvm_page_track_notifier_node *n)
+{
+	struct kvm_page_track_notifier_head *head;
+
+	head = &amp;kvm-&gt;arch.track_notifier_head;
+
+<yellow>	write_lock(&kvm->mmu_lock);</yellow>
+<yellow>	hlist_del_rcu(&n->node);</yellow>
+<yellow>	write_unlock(&kvm->mmu_lock);</yellow>
+	synchronize_srcu(&amp;head-&gt;track_srcu);
+}
+EXPORT_SYMBOL_GPL(kvm_page_track_unregister_notifier);
+
+/*
+ * Notify the node that write access is intercepted and write emulation is
+ * finished at this time.
+ *
+ * The node should figure out if the written page is the one that node is
+ * interested in by itself.
+ */
+void kvm_page_track_write(struct kvm_vcpu *vcpu, gpa_t gpa, const u8 *new,
+			  int bytes)
+{
+	struct kvm_page_track_notifier_head *head;
+	struct kvm_page_track_notifier_node *n;
+	int idx;
+
+<blue>	head = &vcpu->kvm->arch.track_notifier_head;</blue>
+
+	if (hlist_empty(&amp;head-&gt;track_notifier_list))
+		return;
+
+<blue>	idx = srcu_read_lock(&head->track_srcu);</blue>
+<blue>	hlist_for_each_entry_srcu(n, &head->track_notifier_list, node,</blue>
+				srcu_read_lock_held(&amp;head-&gt;track_srcu))
+<blue>		if (n->track_write)</blue>
+<blue>			n->track_write(vcpu, gpa, new, bytes, n);</blue>
+<blue>	srcu_read_unlock(&head->track_srcu, idx);</blue>
+<blue>}</blue>
+
+/*
+ * Notify the node that memory slot is being removed or moved so that it can
+ * drop write-protection for the pages in the memory slot.
+ *
+ * The node should figure out it has any write-protected pages in this slot
+ * by itself.
+ */
+void kvm_page_track_flush_slot(struct kvm *kvm, struct kvm_memory_slot *slot)
+{
+	struct kvm_page_track_notifier_head *head;
+	struct kvm_page_track_notifier_node *n;
+	int idx;
+
+	head = &amp;kvm-&gt;arch.track_notifier_head;
+
+<blue>	if (hlist_empty(&head->track_notifier_list))</blue>
+		return;
+
+<blue>	idx = srcu_read_lock(&head->track_srcu);</blue>
+<blue>	hlist_for_each_entry_srcu(n, &head->track_notifier_list, node,</blue>
+				srcu_read_lock_held(&amp;head-&gt;track_srcu))
+<blue>		if (n->track_flush_slot)</blue>
+<blue>			n->track_flush_slot(kvm, slot, n);</blue>
+<blue>	srcu_read_unlock(&head->track_srcu, idx);</blue>
+<blue>}</blue>
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 56.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>
