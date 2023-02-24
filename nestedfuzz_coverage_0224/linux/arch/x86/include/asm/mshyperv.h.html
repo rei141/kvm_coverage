@@ -1,0 +1,326 @@
+<doctype html>
+<html lang="ja">
+<head><title>mshyperv.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 255; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_MSHYPER_H
+#define _ASM_X86_MSHYPER_H
+
+#include &lt;linux/types.h&gt;
+#include &lt;linux/nmi.h&gt;
+#include &lt;linux/msi.h&gt;
+#include &lt;asm/io.h&gt;
+#include &lt;asm/hyperv-tlfs.h&gt;
+#include &lt;asm/nospec-branch.h&gt;
+#include &lt;asm/paravirt.h&gt;
+#include &lt;asm/mshyperv.h&gt;
+
+union hv_ghcb;
+
+DECLARE_STATIC_KEY_FALSE(isolation_type_snp);
+
+typedef int (*hyperv_fill_flush_list_func)(
+		struct hv_guest_mapping_flush_list *flush,
+		void *data);
+
+#define hv_get_raw_timer() rdtsc_ordered()
+
+void hyperv_vector_handler(struct pt_regs *regs);
+
+#if IS_ENABLED(CONFIG_HYPERV)
+extern int hyperv_init_cpuhp;
+
+extern void *hv_hypercall_pg;
+
+extern u64 hv_current_partition_id;
+
+extern union hv_ghcb * __percpu *hv_ghcb_pg;
+
+int hv_call_deposit_pages(int node, u64 partition_id, u32 num_pages);
+int hv_call_add_logical_proc(int node, u32 lp_index, u32 acpi_id);
+int hv_call_create_vp(int node, u64 partition_id, u32 vp_index, u32 flags);
+
+static inline u64 hv_do_hypercall(u64 control, void *input, void *output)
+{
+	u64 input_address = input ? virt_to_phys(input) : 0;
+	u64 output_address = output ? virt_to_phys(output) : 0;
+	u64 hv_status;
+
+#ifdef CONFIG_X86_64
+	if (!hv_hypercall_pg)
+		return U64_MAX;
+
+	__asm__ __volatile__(&quot;mov %4, %%r8\n&quot;
+			     CALL_NOSPEC
+			     : &quot;=a&quot; (hv_status), ASM_CALL_CONSTRAINT,
+			       &quot;+c&quot; (control), &quot;+d&quot; (input_address)
+			     :  &quot;r&quot; (output_address),
+				THUNK_TARGET(hv_hypercall_pg)
+			     : &quot;cc&quot;, &quot;memory&quot;, &quot;r8&quot;, &quot;r9&quot;, &quot;r10&quot;, &quot;r11&quot;);
+#else
+	u32 input_address_hi = upper_32_bits(input_address);
+	u32 input_address_lo = lower_32_bits(input_address);
+	u32 output_address_hi = upper_32_bits(output_address);
+	u32 output_address_lo = lower_32_bits(output_address);
+
+	if (!hv_hypercall_pg)
+		return U64_MAX;
+
+	__asm__ __volatile__(CALL_NOSPEC
+			     : &quot;=A&quot; (hv_status),
+			       &quot;+c&quot; (input_address_lo), ASM_CALL_CONSTRAINT
+			     : &quot;A&quot; (control),
+			       &quot;b&quot; (input_address_hi),
+			       &quot;D&quot;(output_address_hi), &quot;S&quot;(output_address_lo),
+			       THUNK_TARGET(hv_hypercall_pg)
+			     : &quot;cc&quot;, &quot;memory&quot;);
+#endif /* !x86_64 */
+	return hv_status;
+}
+
+/* Fast hypercall with 8 bytes of input and no output */
+static inline u64 hv_do_fast_hypercall8(u16 code, u64 input1)
+{
+	u64 hv_status, control = (u64)code | HV_HYPERCALL_FAST_BIT;
+
+#ifdef CONFIG_X86_64
+	{
+		__asm__ __volatile__(CALL_NOSPEC
+				     : &quot;=a&quot; (hv_status), ASM_CALL_CONSTRAINT,
+				       &quot;+c&quot; (control), &quot;+d&quot; (input1)
+				     : THUNK_TARGET(hv_hypercall_pg)
+				     : &quot;cc&quot;, &quot;r8&quot;, &quot;r9&quot;, &quot;r10&quot;, &quot;r11&quot;);
+	}
+#else
+	{
+		u32 input1_hi = upper_32_bits(input1);
+		u32 input1_lo = lower_32_bits(input1);
+
+		__asm__ __volatile__ (CALL_NOSPEC
+				      : &quot;=A&quot;(hv_status),
+					&quot;+c&quot;(input1_lo),
+					ASM_CALL_CONSTRAINT
+				      :	&quot;A&quot; (control),
+					&quot;b&quot; (input1_hi),
+					THUNK_TARGET(hv_hypercall_pg)
+				      : &quot;cc&quot;, &quot;edi&quot;, &quot;esi&quot;);
+	}
+#endif
+		return hv_status;
+}
+
+/* Fast hypercall with 16 bytes of input */
+static inline u64 hv_do_fast_hypercall16(u16 code, u64 input1, u64 input2)
+{
+	u64 hv_status, control = (u64)code | HV_HYPERCALL_FAST_BIT;
+
+#ifdef CONFIG_X86_64
+	{
+		__asm__ __volatile__(&quot;mov %4, %%r8\n&quot;
+				     CALL_NOSPEC
+				     : &quot;=a&quot; (hv_status), ASM_CALL_CONSTRAINT,
+				       &quot;+c&quot; (control), &quot;+d&quot; (input1)
+				     : &quot;r&quot; (input2),
+				       THUNK_TARGET(hv_hypercall_pg)
+				     : &quot;cc&quot;, &quot;r8&quot;, &quot;r9&quot;, &quot;r10&quot;, &quot;r11&quot;);
+	}
+#else
+	{
+		u32 input1_hi = upper_32_bits(input1);
+		u32 input1_lo = lower_32_bits(input1);
+		u32 input2_hi = upper_32_bits(input2);
+		u32 input2_lo = lower_32_bits(input2);
+
+		__asm__ __volatile__ (CALL_NOSPEC
+				      : &quot;=A&quot;(hv_status),
+					&quot;+c&quot;(input1_lo), ASM_CALL_CONSTRAINT
+				      :	&quot;A&quot; (control), &quot;b&quot; (input1_hi),
+					&quot;D&quot;(input2_hi), &quot;S&quot;(input2_lo),
+					THUNK_TARGET(hv_hypercall_pg)
+				      : &quot;cc&quot;);
+	}
+#endif
+	return hv_status;
+}
+
+extern struct hv_vp_assist_page **hv_vp_assist_page;
+
+static inline struct hv_vp_assist_page *hv_get_vp_assist_page(unsigned int cpu)
+{
+<yellow>	if (!hv_vp_assist_page)</yellow>
+		return NULL;
+
+<yellow>	return hv_vp_assist_page[cpu];</yellow>
+}
+
+void __init hyperv_init(void);
+void hyperv_setup_mmu_ops(void);
+void set_hv_tscchange_cb(void (*cb)(void));
+void clear_hv_tscchange_cb(void);
+void hyperv_stop_tsc_emulation(void);
+int hyperv_flush_guest_mapping(u64 as);
+int hyperv_flush_guest_mapping_range(u64 as,
+		hyperv_fill_flush_list_func fill_func, void *data);
+int hyperv_fill_flush_guest_mapping_list(
+		struct hv_guest_mapping_flush_list *flush,
+		u64 start_gfn, u64 end_gfn);
+
+#ifdef CONFIG_X86_64
+void hv_apic_init(void);
+void __init hv_init_spinlocks(void);
+bool hv_vcpu_is_preempted(int vcpu);
+#else
+static inline void hv_apic_init(void) {}
+#endif
+
+struct irq_domain *hv_create_pci_msi_domain(void);
+
+int hv_map_ioapic_interrupt(int ioapic_id, bool level, int vcpu, int vector,
+		struct hv_interrupt_entry *entry);
+int hv_unmap_ioapic_interrupt(int ioapic_id, struct hv_interrupt_entry *entry);
+int hv_set_mem_host_visibility(unsigned long addr, int numpages, bool visible);
+
+#ifdef CONFIG_AMD_MEM_ENCRYPT
+void hv_ghcb_msr_write(u64 msr, u64 value);
+void hv_ghcb_msr_read(u64 msr, u64 *value);
+bool hv_ghcb_negotiate_protocol(void);
+void hv_ghcb_terminate(unsigned int set, unsigned int reason);
+#else
+static inline void hv_ghcb_msr_write(u64 msr, u64 value) {}
+static inline void hv_ghcb_msr_read(u64 msr, u64 *value) {}
+static inline bool hv_ghcb_negotiate_protocol(void) { return false; }
+static inline void hv_ghcb_terminate(unsigned int set, unsigned int reason) {}
+#endif
+
+extern bool hv_isolation_type_snp(void);
+
+static inline bool hv_is_synic_reg(unsigned int reg)
+{
+	if ((reg &gt;= HV_REGISTER_SCONTROL) &amp;&amp;
+	    (reg &lt;= HV_REGISTER_SINT15))
+		return true;
+	return false;
+}
+
+static inline u64 hv_get_register(unsigned int reg)
+{
+	u64 value;
+
+	if (hv_is_synic_reg(reg) &amp;&amp; hv_isolation_type_snp())
+		hv_ghcb_msr_read(reg, &amp;value);
+	else
+		rdmsrl(reg, value);
+	return value;
+}
+
+static inline void hv_set_register(unsigned int reg, u64 value)
+{
+	if (hv_is_synic_reg(reg) &amp;&amp; hv_isolation_type_snp()) {
+		hv_ghcb_msr_write(reg, value);
+
+		/* Write proxy bit via wrmsl instruction */
+		if (reg &gt;= HV_REGISTER_SINT0 &amp;&amp;
+		    reg &lt;= HV_REGISTER_SINT15)
+			wrmsrl(reg, value | 1 &lt;&lt; 20);
+	} else {
+		wrmsrl(reg, value);
+	}
+}
+
+#else /* CONFIG_HYPERV */
+static inline void hyperv_init(void) {}
+static inline void hyperv_setup_mmu_ops(void) {}
+static inline void set_hv_tscchange_cb(void (*cb)(void)) {}
+static inline void clear_hv_tscchange_cb(void) {}
+static inline void hyperv_stop_tsc_emulation(void) {};
+static inline struct hv_vp_assist_page *hv_get_vp_assist_page(unsigned int cpu)
+{
+	return NULL;
+}
+static inline int hyperv_flush_guest_mapping(u64 as) { return -1; }
+static inline int hyperv_flush_guest_mapping_range(u64 as,
+		hyperv_fill_flush_list_func fill_func, void *data)
+{
+	return -1;
+}
+static inline void hv_set_register(unsigned int reg, u64 value) { }
+static inline u64 hv_get_register(unsigned int reg) { return 0; }
+static inline int hv_set_mem_host_visibility(unsigned long addr, int numpages,
+					     bool visible)
+{
+	return -1;
+}
+#endif /* CONFIG_HYPERV */
+
+
+#include &lt;asm-generic/mshyperv.h&gt;
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
+</script></body></html>

@@ -1,0 +1,353 @@
+<doctype html>
+<html lang="ja">
+<head><title>mmu.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 282; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __KVM_X86_MMU_H
+#define __KVM_X86_MMU_H
+
+#include &lt;linux/kvm_host.h&gt;
+#include &quot;kvm_cache_regs.h&quot;
+#include &quot;cpuid.h&quot;
+
+extern bool __read_mostly enable_mmio_caching;
+
+#define PT_WRITABLE_SHIFT 1
+#define PT_USER_SHIFT 2
+
+#define PT_PRESENT_MASK (1ULL &lt;&lt; 0)
+#define PT_WRITABLE_MASK (1ULL &lt;&lt; PT_WRITABLE_SHIFT)
+#define PT_USER_MASK (1ULL &lt;&lt; PT_USER_SHIFT)
+#define PT_PWT_MASK (1ULL &lt;&lt; 3)
+#define PT_PCD_MASK (1ULL &lt;&lt; 4)
+#define PT_ACCESSED_SHIFT 5
+#define PT_ACCESSED_MASK (1ULL &lt;&lt; PT_ACCESSED_SHIFT)
+#define PT_DIRTY_SHIFT 6
+#define PT_DIRTY_MASK (1ULL &lt;&lt; PT_DIRTY_SHIFT)
+#define PT_PAGE_SIZE_SHIFT 7
+#define PT_PAGE_SIZE_MASK (1ULL &lt;&lt; PT_PAGE_SIZE_SHIFT)
+#define PT_PAT_MASK (1ULL &lt;&lt; 7)
+#define PT_GLOBAL_MASK (1ULL &lt;&lt; 8)
+#define PT64_NX_SHIFT 63
+#define PT64_NX_MASK (1ULL &lt;&lt; PT64_NX_SHIFT)
+
+#define PT_PAT_SHIFT 7
+#define PT_DIR_PAT_SHIFT 12
+#define PT_DIR_PAT_MASK (1ULL &lt;&lt; PT_DIR_PAT_SHIFT)
+
+#define PT64_ROOT_5LEVEL 5
+#define PT64_ROOT_4LEVEL 4
+#define PT32_ROOT_LEVEL 2
+#define PT32E_ROOT_LEVEL 3
+
+#define KVM_MMU_CR4_ROLE_BITS (X86_CR4_PSE | X86_CR4_PAE | X86_CR4_LA57 | \
+			       X86_CR4_SMEP | X86_CR4_SMAP | X86_CR4_PKE)
+
+#define KVM_MMU_CR0_ROLE_BITS (X86_CR0_PG | X86_CR0_WP)
+#define KVM_MMU_EFER_ROLE_BITS (EFER_LME | EFER_NX)
+
+static __always_inline u64 rsvd_bits(int s, int e)
+{
+	BUILD_BUG_ON(__builtin_constant_p(e) &amp;&amp; __builtin_constant_p(s) &amp;&amp; e &lt; s);
+
+	if (__builtin_constant_p(e))
+		BUILD_BUG_ON(e &gt; 63);
+	else
+		e &amp;= 63;
+
+<blue>	if (e < s)</blue>
+		return 0;
+
+<blue>	return ((2ULL << (e - s)) - 1) << s;</blue>
+}
+
+/*
+ * The number of non-reserved physical address bits irrespective of features
+ * that repurpose legal bits, e.g. MKTME.
+ */
+extern u8 __read_mostly shadow_phys_bits;
+
+static inline gfn_t kvm_mmu_max_gfn(void)
+{
+	/*
+	 * Note that this uses the host MAXPHYADDR, not the guest&#x27;s.
+	 * EPT/NPT cannot support GPAs that would exceed host.MAXPHYADDR;
+	 * assuming KVM is running on bare metal, guest accesses beyond
+	 * host.MAXPHYADDR will hit a #PF(RSVD) and never cause a vmexit
+	 * (either EPT Violation/Misconfig or #NPF), and so KVM will never
+	 * install a SPTE for such addresses.  If KVM is running as a VM
+	 * itself, on the other hand, it might see a MAXPHYADDR that is less
+	 * than hardware&#x27;s real MAXPHYADDR.  Using the host MAXPHYADDR
+	 * disallows such SPTEs entirely and simplifies the TDP MMU.
+	 */
+<blue>	int max_gpa_bits = likely(tdp_enabled) ? shadow_phys_bits : 52;</blue>
+
+	return (1ULL &lt;&lt; (max_gpa_bits - PAGE_SHIFT)) - 1;
+}
+
+static inline u8 kvm_get_shadow_phys_bits(void)
+{
+	/*
+	 * boot_cpu_data.x86_phys_bits is reduced when MKTME or SME are detected
+	 * in CPU detection code, but the processor treats those reduced bits as
+	 * &#x27;keyID&#x27; thus they are not reserved bits. Therefore KVM needs to look at
+	 * the physical address bits reported by CPUID.
+	 */
+<yellow>	if (likely(boot_cpu_data.extended_cpuid_level >= 0x80000008))</yellow>
+<yellow>		return cpuid_eax(0x80000008) & 0xff;</yellow>
+
+	/*
+	 * Quite weird to have VMX or SVM but not MAXPHYADDR; probably a VM with
+	 * custom CPUID.  Proceed with whatever the kernel found since these features
+	 * aren&#x27;t virtualizable (SME/SEV also require CPUIDs higher than 0x80000008).
+	 */
+<yellow>	return boot_cpu_data.x86_phys_bits;</yellow>
+}
+
+void kvm_mmu_set_mmio_spte_mask(u64 mmio_value, u64 mmio_mask, u64 access_mask);
+void kvm_mmu_set_me_spte_mask(u64 me_value, u64 me_mask);
+void kvm_mmu_set_ept_masks(bool has_ad_bits, bool has_exec_only);
+
+void kvm_init_mmu(struct kvm_vcpu *vcpu);
+void kvm_init_shadow_npt_mmu(struct kvm_vcpu *vcpu, unsigned long cr0,
+			     unsigned long cr4, u64 efer, gpa_t nested_cr3);
+void kvm_init_shadow_ept_mmu(struct kvm_vcpu *vcpu, bool execonly,
+			     int huge_page_level, bool accessed_dirty,
+			     gpa_t new_eptp);
+bool kvm_can_do_async_pf(struct kvm_vcpu *vcpu);
+int kvm_handle_page_fault(struct kvm_vcpu *vcpu, u64 error_code,
+				u64 fault_address, char *insn, int insn_len);
+
+int kvm_mmu_load(struct kvm_vcpu *vcpu);
+void kvm_mmu_unload(struct kvm_vcpu *vcpu);
+void kvm_mmu_free_obsolete_roots(struct kvm_vcpu *vcpu);
+void kvm_mmu_sync_roots(struct kvm_vcpu *vcpu);
+void kvm_mmu_sync_prev_roots(struct kvm_vcpu *vcpu);
+
+static inline int kvm_mmu_reload(struct kvm_vcpu *vcpu)
+{
+<blue>	if (likely(vcpu->arch.mmu->root.hpa != INVALID_PAGE))</blue>
+		return 0;
+
+<blue>	return kvm_mmu_load(vcpu);</blue>
+}
+
+static inline unsigned long kvm_get_pcid(struct kvm_vcpu *vcpu, gpa_t cr3)
+{
+	BUILD_BUG_ON((X86_CR3_PCID_MASK &amp; PAGE_MASK) != 0);
+
+<blue>	return kvm_read_cr4_bits(vcpu, X86_CR4_PCIDE)</blue>
+	       ? cr3 &amp; X86_CR3_PCID_MASK
+<blue>	       : 0;</blue>
+}
+
+static inline unsigned long kvm_get_active_pcid(struct kvm_vcpu *vcpu)
+{
+<blue>	return kvm_get_pcid(vcpu, kvm_read_cr3(vcpu));</blue>
+}
+
+static inline void kvm_mmu_load_pgd(struct kvm_vcpu *vcpu)
+{
+	u64 root_hpa = vcpu-&gt;arch.mmu-&gt;root.hpa;
+
+	if (!VALID_PAGE(root_hpa))
+		return;
+
+	static_call(kvm_x86_load_mmu_pgd)(vcpu, root_hpa,
+<blue>					  vcpu->arch.mmu->root_role.level);</blue>
+}
+
+/*
+ * Check if a given access (described through the I/D, W/R and U/S bits of a
+ * page fault error code pfec) causes a permission fault with the given PTE
+ * access rights (in ACC_* format).
+ *
+ * Return zero if the access does not fault; return the page fault error code
+ * if the access faults.
+ */
+static inline u8 permission_fault(struct kvm_vcpu *vcpu, struct kvm_mmu *mmu,
+				  unsigned pte_access, unsigned pte_pkey,
+				  u64 access)
+{
+	/* strip nested paging fault error codes */
+	unsigned int pfec = access;
+	unsigned long rflags = static_call(kvm_x86_get_rflags)(vcpu);
+
+	/*
+	 * For explicit supervisor accesses, SMAP is disabled if EFLAGS.AC = 1.
+	 * For implicit supervisor accesses, SMAP cannot be overridden.
+	 *
+	 * SMAP works on supervisor accesses only, and not_smap can
+	 * be set or not set when user access with neither has any bearing
+	 * on the result.
+	 *
+	 * We put the SMAP checking bit in place of the PFERR_RSVD_MASK bit;
+	 * this bit will always be zero in pfec, but it will be one in index
+	 * if SMAP checks are being disabled.
+	 */
+	u64 implicit_access = access &amp; PFERR_IMPLICIT_ACCESS;
+	bool not_smap = ((rflags &amp; X86_EFLAGS_AC) | implicit_access) == X86_EFLAGS_AC;
+	int index = (pfec + (not_smap &lt;&lt; PFERR_RSVD_BIT)) &gt;&gt; 1;
+<blue>	bool fault = (mmu->permissions[index] >> pte_access) & 1;</blue>
+	u32 errcode = PFERR_PRESENT_MASK;
+
+<yellow>	WARN_ON(pfec & (PFERR_PK_MASK | PFERR_RSVD_MASK));</yellow>
+<blue>	if (unlikely(mmu->pkru_mask)) {</blue>
+		u32 pkru_bits, offset;
+
+		/*
+		* PKRU defines 32 bits, there are 16 domains and 2
+		* attribute bits per domain in pkru.  pte_pkey is the
+		* index of the protection domain, so pte_pkey * 2 is
+		* is the index of the first bit for the domain.
+		*/
+<yellow>		pkru_bits = (vcpu->arch.pkru >> (pte_pkey * 2)) & 3;</yellow>
+
+		/* clear present bit, replace PFEC.RSVD with ACC_USER_MASK. */
+		offset = (pfec &amp; ~1) +
+			((pte_access &amp; PT_USER_MASK) &lt;&lt; (PFERR_RSVD_BIT - PT_USER_SHIFT));
+
+<blue>		pkru_bits &= mmu->pkru_mask >> offset;</blue>
+		errcode |= -pkru_bits &amp; PFERR_PK_MASK;
+		fault |= (pkru_bits != 0);
+	}
+
+<blue>	return -(u32)fault & errcode;</blue>
+}
+
+void kvm_zap_gfn_range(struct kvm *kvm, gfn_t gfn_start, gfn_t gfn_end);
+
+int kvm_arch_write_log_dirty(struct kvm_vcpu *vcpu);
+
+int kvm_mmu_post_init_vm(struct kvm *kvm);
+void kvm_mmu_pre_destroy_vm(struct kvm *kvm);
+
+static inline bool kvm_shadow_root_allocated(struct kvm *kvm)
+{
+	/*
+	 * Read shadow_root_allocated before related pointers. Hence, threads
+	 * reading shadow_root_allocated in any lock context are guaranteed to
+	 * see the pointers. Pairs with smp_store_release in
+	 * mmu_first_shadow_root_alloc.
+	 */
+<blue>	return smp_load_acquire(&kvm->arch.shadow_root_allocated);</blue>
+}
+
+#ifdef CONFIG_X86_64
+<blue>static inline bool is_tdp_mmu_enabled(struct kvm *kvm) { return kvm->arch.tdp_mmu_enabled; }</blue>
+#else
+static inline bool is_tdp_mmu_enabled(struct kvm *kvm) { return false; }
+#endif
+
+static inline bool kvm_memslots_have_rmaps(struct kvm *kvm)
+{
+<blue>	return !is_tdp_mmu_enabled(kvm) || kvm_shadow_root_allocated(kvm);</blue>
+}
+
+static inline gfn_t gfn_to_index(gfn_t gfn, gfn_t base_gfn, int level)
+{
+	/* KVM_HPAGE_GFN_SHIFT(PG_LEVEL_4K) must be 0. */
+<blue>	return (gfn >> KVM_HPAGE_GFN_SHIFT(level)) -</blue>
+<blue>		(base_gfn >> KVM_HPAGE_GFN_SHIFT(level));</blue>
+}
+
+static inline unsigned long
+__kvm_mmu_slot_lpages(struct kvm_memory_slot *slot, unsigned long npages,
+		      int level)
+{
+<blue>	return gfn_to_index(slot->base_gfn + npages - 1,</blue>
+			    slot-&gt;base_gfn, level) + 1;
+}
+
+static inline unsigned long
+kvm_mmu_slot_lpages(struct kvm_memory_slot *slot, int level)
+{
+	return __kvm_mmu_slot_lpages(slot, slot-&gt;npages, level);
+}
+
+static inline void kvm_update_page_stats(struct kvm *kvm, int level, int count)
+{
+<blue>	atomic64_add(count, &kvm->stat.pages[level - 1]);</blue>
+}
+
+gpa_t translate_nested_gpa(struct kvm_vcpu *vcpu, gpa_t gpa, u64 access,
+			   struct x86_exception *exception);
+
+static inline gpa_t kvm_translate_gpa(struct kvm_vcpu *vcpu,
+				      struct kvm_mmu *mmu,
+				      gpa_t gpa, u64 access,
+				      struct x86_exception *exception)
+{
+<blue>	if (mmu != &vcpu->arch.nested_mmu)</blue>
+		return gpa;
+<blue>	return translate_nested_gpa(vcpu, gpa, access, exception);</blue>
+}
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
+</script></body></html>

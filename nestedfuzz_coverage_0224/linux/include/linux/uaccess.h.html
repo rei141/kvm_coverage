@@ -1,0 +1,491 @@
+<doctype html>
+<html lang="ja">
+<head><title>uaccess.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 420; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __LINUX_UACCESS_H__
+#define __LINUX_UACCESS_H__
+
+#include &lt;linux/fault-inject-usercopy.h&gt;
+#include &lt;linux/instrumented.h&gt;
+#include &lt;linux/minmax.h&gt;
+#include &lt;linux/sched.h&gt;
+#include &lt;linux/thread_info.h&gt;
+
+#include &lt;asm/uaccess.h&gt;
+
+/*
+ * Architectures should provide two primitives (raw_copy_{to,from}_user())
+ * and get rid of their private instances of copy_{to,from}_user() and
+ * __copy_{to,from}_user{,_inatomic}().
+ *
+ * raw_copy_{to,from}_user(to, from, size) should copy up to size bytes and
+ * return the amount left to copy.  They should assume that access_ok() has
+ * already been checked (and succeeded); they should *not* zero-pad anything.
+ * No KASAN or object size checks either - those belong here.
+ *
+ * Both of these functions should attempt to copy size bytes starting at from
+ * into the area starting at to.  They must not fetch or store anything
+ * outside of those areas.  Return value must be between 0 (everything
+ * copied successfully) and size (nothing copied).
+ *
+ * If raw_copy_{to,from}_user(to, from, size) returns N, size - N bytes starting
+ * at to must become equal to the bytes fetched from the corresponding area
+ * starting at from.  All data past to + size - N must be left unmodified.
+ *
+ * If copying succeeds, the return value must be 0.  If some data cannot be
+ * fetched, it is permitted to copy less than had been fetched; the only
+ * hard requirement is that not storing anything at all (i.e. returning size)
+ * should happen only when nothing could be copied.  In other words, you don&#x27;t
+ * have to squeeze as much as possible - it is allowed, but not necessary.
+ *
+ * For raw_copy_from_user() to always points to kernel memory and no faults
+ * on store should happen.  Interpretation of from is affected by set_fs().
+ * For raw_copy_to_user() it&#x27;s the other way round.
+ *
+ * Both can be inlined - it&#x27;s up to architectures whether it wants to bother
+ * with that.  They should not be used directly; they are used to implement
+ * the 6 functions (copy_{to,from}_user(), __copy_{to,from}_user_inatomic())
+ * that are used instead.  Out of those, __... ones are inlined.  Plain
+ * copy_{to,from}_user() might or might not be inlined.  If you want them
+ * inlined, have asm/uaccess.h define INLINE_COPY_{TO,FROM}_USER.
+ *
+ * NOTE: only copy_from_user() zero-pads the destination in case of short copy.
+ * Neither __copy_from_user() nor __copy_from_user_inatomic() zero anything
+ * at all; their callers absolutely must check the return value.
+ *
+ * Biarch ones should also provide raw_copy_in_user() - similar to the above,
+ * but both source and destination are __user pointers (affected by set_fs()
+ * as usual) and both source and destination can trigger faults.
+ */
+
+static __always_inline __must_check unsigned long
+__copy_from_user_inatomic(void *to, const void __user *from, unsigned long n)
+{
+	unsigned long res;
+
+	instrument_copy_from_user_before(to, from, n);
+	check_object_size(to, n, false);
+	res = raw_copy_from_user(to, from, n);
+	instrument_copy_from_user_after(to, from, n, res);
+	return res;
+}
+
+static __always_inline __must_check unsigned long
+__copy_from_user(void *to, const void __user *from, unsigned long n)
+{
+	unsigned long res;
+
+<blue>	might_fault();</blue>
+	instrument_copy_from_user_before(to, from, n);
+	if (should_fail_usercopy())
+		return n;
+	check_object_size(to, n, false);
+	res = raw_copy_from_user(to, from, n);
+	instrument_copy_from_user_after(to, from, n, res);
+	return res;
+}
+
+/**
+ * __copy_to_user_inatomic: - Copy a block of data into user space, with less checking.
+ * @to:   Destination address, in user space.
+ * @from: Source address, in kernel space.
+ * @n:    Number of bytes to copy.
+ *
+ * Context: User context only.
+ *
+ * Copy data from kernel space to user space.  Caller must check
+ * the specified block with access_ok() before calling this function.
+ * The caller should also make sure he pins the user space address
+ * so that we don&#x27;t result in page fault and sleep.
+ */
+static __always_inline __must_check unsigned long
+__copy_to_user_inatomic(void __user *to, const void *from, unsigned long n)
+{
+	if (should_fail_usercopy())
+		return n;
+	instrument_copy_to_user(to, from, n);
+	check_object_size(from, n, true);
+	return raw_copy_to_user(to, from, n);
+}
+
+static __always_inline __must_check unsigned long
+__copy_to_user(void __user *to, const void *from, unsigned long n)
+{
+<blue>	might_fault();</blue>
+	if (should_fail_usercopy())
+		return n;
+<yellow>	instrument_copy_to_user(to, from, n);</yellow>
+	check_object_size(from, n, true);
+<yellow>	return raw_copy_to_user(to, from, n);</yellow>
+}
+
+#ifdef INLINE_COPY_FROM_USER
+static inline __must_check unsigned long
+_copy_from_user(void *to, const void __user *from, unsigned long n)
+{
+	unsigned long res = n;
+	might_fault();
+	if (!should_fail_usercopy() &amp;&amp; likely(access_ok(from, n))) {
+		instrument_copy_from_user_before(to, from, n);
+		res = raw_copy_from_user(to, from, n);
+		instrument_copy_from_user_after(to, from, n, res);
+	}
+	if (unlikely(res))
+		memset(to + (n - res), 0, res);
+	return res;
+}
+#else
+extern __must_check unsigned long
+_copy_from_user(void *, const void __user *, unsigned long);
+#endif
+
+#ifdef INLINE_COPY_TO_USER
+static inline __must_check unsigned long
+_copy_to_user(void __user *to, const void *from, unsigned long n)
+{
+	might_fault();
+	if (should_fail_usercopy())
+		return n;
+	if (access_ok(to, n)) {
+		instrument_copy_to_user(to, from, n);
+		n = raw_copy_to_user(to, from, n);
+	}
+	return n;
+}
+#else
+extern __must_check unsigned long
+_copy_to_user(void __user *, const void *, unsigned long);
+#endif
+
+static __always_inline unsigned long __must_check
+copy_from_user(void *to, const void __user *from, unsigned long n)
+{
+<yellow>	if (check_copy_size(to, n, false))</yellow>
+<blue>		n = _copy_from_user(to, from, n);</blue>
+	return n;
+}
+
+static __always_inline unsigned long __must_check
+copy_to_user(void __user *to, const void *from, unsigned long n)
+{
+<blue>	if (check_copy_size(from, n, true))</blue>
+<blue>		n = _copy_to_user(to, from, n);</blue>
+	return n;
+}
+
+#ifndef copy_mc_to_kernel
+/*
+ * Without arch opt-in this generic copy_mc_to_kernel() will not handle
+ * #MC (or arch equivalent) during source read.
+ */
+static inline unsigned long __must_check
+copy_mc_to_kernel(void *dst, const void *src, size_t cnt)
+{
+	memcpy(dst, src, cnt);
+	return 0;
+}
+#endif
+
+static __always_inline void pagefault_disabled_inc(void)
+{
+<blue>	current->pagefault_disabled++;</blue>
+}
+
+static __always_inline void pagefault_disabled_dec(void)
+{
+	current-&gt;pagefault_disabled--;
+}
+
+/*
+ * These routines enable/disable the pagefault handler. If disabled, it will
+ * not take any locks and go straight to the fixup table.
+ *
+ * User access methods will not sleep when called from a pagefault_disabled()
+ * environment.
+ */
+static inline void pagefault_disable(void)
+{
+<blue>	pagefault_disabled_inc();</blue>
+	/*
+	 * make sure to have issued the store before a pagefault
+	 * can hit.
+	 */
+	barrier();
+}
+
+static inline void pagefault_enable(void)
+{
+	/*
+	 * make sure to issue those last loads/stores before enabling
+	 * the pagefault handler again.
+	 */
+	barrier();
+	pagefault_disabled_dec();
+}
+
+/*
+ * Is the pagefault handler disabled? If so, user access methods will not sleep.
+ */
+static inline bool pagefault_disabled(void)
+{
+<yellow>	return current->pagefault_disabled != 0;</yellow>
+}
+
+/*
+ * The pagefault handler is in general disabled by pagefault_disable() or
+ * when in irq context (via in_atomic()).
+ *
+ * This function should only be used by the fault handlers. Other users should
+ * stick to pagefault_disabled().
+ * Please NEVER use preempt_disable() to disable the fault handler. With
+ * !CONFIG_PREEMPT_COUNT, this is like a NOP. So the handler won&#x27;t be disabled.
+ * in_atomic() will report different values based on !CONFIG_PREEMPT_COUNT.
+ */
+#define faulthandler_disabled() (pagefault_disabled() || in_atomic())
+
+#ifndef CONFIG_ARCH_HAS_SUBPAGE_FAULTS
+
+/**
+ * probe_subpage_writeable: probe the user range for write faults at sub-page
+ *			    granularity (e.g. arm64 MTE)
+ * @uaddr: start of address range
+ * @size: size of address range
+ *
+ * Returns 0 on success, the number of bytes not probed on fault.
+ *
+ * It is expected that the caller checked for the write permission of each
+ * page in the range either by put_user() or GUP. The architecture port can
+ * implement a more efficient get_user() probing if the same sub-page faults
+ * are triggered by either a read or a write.
+ */
+static inline size_t probe_subpage_writeable(char __user *uaddr, size_t size)
+{
+	return 0;
+}
+
+#endif /* CONFIG_ARCH_HAS_SUBPAGE_FAULTS */
+
+#ifndef ARCH_HAS_NOCACHE_UACCESS
+
+static inline __must_check unsigned long
+__copy_from_user_inatomic_nocache(void *to, const void __user *from,
+				  unsigned long n)
+{
+	return __copy_from_user_inatomic(to, from, n);
+}
+
+#endif		/* ARCH_HAS_NOCACHE_UACCESS */
+
+extern __must_check int check_zeroed_user(const void __user *from, size_t size);
+
+/**
+ * copy_struct_from_user: copy a struct from userspace
+ * @dst:   Destination address, in kernel space. This buffer must be @ksize
+ *         bytes long.
+ * @ksize: Size of @dst struct.
+ * @src:   Source address, in userspace.
+ * @usize: (Alleged) size of @src struct.
+ *
+ * Copies a struct from userspace to kernel space, in a way that guarantees
+ * backwards-compatibility for struct syscall arguments (as long as future
+ * struct extensions are made such that all new fields are *appended* to the
+ * old struct, and zeroed-out new fields have the same meaning as the old
+ * struct).
+ *
+ * @ksize is just sizeof(*dst), and @usize should&#x27;ve been passed by userspace.
+ * The recommended usage is something like the following:
+ *
+ *   SYSCALL_DEFINE2(foobar, const struct foo __user *, uarg, size_t, usize)
+ *   {
+ *      int err;
+ *      struct foo karg = {};
+ *
+ *      if (usize &gt; PAGE_SIZE)
+ *        return -E2BIG;
+ *      if (usize &lt; FOO_SIZE_VER0)
+ *        return -EINVAL;
+ *
+ *      err = copy_struct_from_user(&amp;karg, sizeof(karg), uarg, usize);
+ *      if (err)
+ *        return err;
+ *
+ *      // ...
+ *   }
+ *
+ * There are three cases to consider:
+ *  * If @usize == @ksize, then it&#x27;s copied verbatim.
+ *  * If @usize &lt; @ksize, then the userspace has passed an old struct to a
+ *    newer kernel. The rest of the trailing bytes in @dst (@ksize - @usize)
+ *    are to be zero-filled.
+ *  * If @usize &gt; @ksize, then the userspace has passed a new struct to an
+ *    older kernel. The trailing bytes unknown to the kernel (@usize - @ksize)
+ *    are checked to ensure they are zeroed, otherwise -E2BIG is returned.
+ *
+ * Returns (in all cases, some data may have been copied):
+ *  * -E2BIG:  (@usize &gt; @ksize) and there are non-zero trailing bytes in @src.
+ *  * -EFAULT: access to userspace failed.
+ */
+static __always_inline __must_check int
+copy_struct_from_user(void *dst, size_t ksize, const void __user *src,
+		      size_t usize)
+{
+	size_t size = min(ksize, usize);
+	size_t rest = max(ksize, usize) - size;
+
+	/* Deal with trailing bytes. */
+	if (usize &lt; ksize) {
+		memset(dst + size, 0, rest);
+	} else if (usize &gt; ksize) {
+		int ret = check_zeroed_user(src + size, rest);
+		if (ret &lt;= 0)
+			return ret ?: -E2BIG;
+	}
+	/* Copy the interoperable parts of the struct. */
+	if (copy_from_user(dst, src, size))
+		return -EFAULT;
+	return 0;
+}
+
+bool copy_from_kernel_nofault_allowed(const void *unsafe_src, size_t size);
+
+long copy_from_kernel_nofault(void *dst, const void *src, size_t size);
+long notrace copy_to_kernel_nofault(void *dst, const void *src, size_t size);
+
+long copy_from_user_nofault(void *dst, const void __user *src, size_t size);
+long notrace copy_to_user_nofault(void __user *dst, const void *src,
+		size_t size);
+
+long strncpy_from_kernel_nofault(char *dst, const void *unsafe_addr,
+		long count);
+
+long strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr,
+		long count);
+long strnlen_user_nofault(const void __user *unsafe_addr, long count);
+
+#ifndef __get_kernel_nofault
+#define __get_kernel_nofault(dst, src, type, label)	\
+do {							\
+	type __user *p = (type __force __user *)(src);	\
+	type data;					\
+	if (__get_user(data, p))			\
+		goto label;				\
+	*(type *)dst = data;				\
+} while (0)
+
+#define __put_kernel_nofault(dst, src, type, label)	\
+do {							\
+	type __user *p = (type __force __user *)(dst);	\
+	type data = *(type *)src;			\
+	if (__put_user(data, p))			\
+		goto label;				\
+} while (0)
+#endif
+
+/**
+ * get_kernel_nofault(): safely attempt to read from a location
+ * @val: read into this variable
+ * @ptr: address to read from
+ *
+ * Returns 0 on success, or -EFAULT.
+ */
+#define get_kernel_nofault(val, ptr) ({				\
+	const typeof(val) *__gk_ptr = (ptr);			\
+	copy_from_kernel_nofault(&amp;(val), __gk_ptr, sizeof(val));\
+})
+
+#ifndef user_access_begin
+#define user_access_begin(ptr,len) access_ok(ptr, len)
+#define user_access_end() do { } while (0)
+#define unsafe_op_wrap(op, err) do { if (unlikely(op)) goto err; } while (0)
+#define unsafe_get_user(x,p,e) unsafe_op_wrap(__get_user(x,p),e)
+#define unsafe_put_user(x,p,e) unsafe_op_wrap(__put_user(x,p),e)
+#define unsafe_copy_to_user(d,s,l,e) unsafe_op_wrap(__copy_to_user(d,s,l),e)
+#define unsafe_copy_from_user(d,s,l,e) unsafe_op_wrap(__copy_from_user(d,s,l),e)
+static inline unsigned long user_access_save(void) { return 0UL; }
+static inline void user_access_restore(unsigned long flags) { }
+#endif
+#ifndef user_write_access_begin
+#define user_write_access_begin user_access_begin
+#define user_write_access_end user_access_end
+#endif
+#ifndef user_read_access_begin
+#define user_read_access_begin user_access_begin
+#define user_read_access_end user_access_end
+#endif
+
+#ifdef CONFIG_HARDENED_USERCOPY
+void __noreturn usercopy_abort(const char *name, const char *detail,
+			       bool to_user, unsigned long offset,
+			       unsigned long len);
+#endif
+
+#endif		/* __LINUX_UACCESS_H__ */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
+</script></body></html>

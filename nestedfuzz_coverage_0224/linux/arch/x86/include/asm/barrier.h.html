@@ -1,0 +1,174 @@
+<doctype html>
+<html lang="ja">
+<head><title>barrier.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 103; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_BARRIER_H
+#define _ASM_X86_BARRIER_H
+
+#include &lt;asm/alternative.h&gt;
+#include &lt;asm/nops.h&gt;
+
+/*
+ * Force strict CPU ordering.
+ * And yes, this might be required on UP too when we&#x27;re talking
+ * to devices.
+ */
+
+#ifdef CONFIG_X86_32
+#define mb() asm volatile(ALTERNATIVE(&quot;lock; addl $0,-4(%%esp)&quot;, &quot;mfence&quot;, \
+				      X86_FEATURE_XMM2) ::: &quot;memory&quot;, &quot;cc&quot;)
+#define rmb() asm volatile(ALTERNATIVE(&quot;lock; addl $0,-4(%%esp)&quot;, &quot;lfence&quot;, \
+				       X86_FEATURE_XMM2) ::: &quot;memory&quot;, &quot;cc&quot;)
+#define wmb() asm volatile(ALTERNATIVE(&quot;lock; addl $0,-4(%%esp)&quot;, &quot;sfence&quot;, \
+				       X86_FEATURE_XMM2) ::: &quot;memory&quot;, &quot;cc&quot;)
+#else
+#define __mb()	asm volatile(&quot;mfence&quot;:::&quot;memory&quot;)
+#define __rmb()	asm volatile(&quot;lfence&quot;:::&quot;memory&quot;)
+#define __wmb()	asm volatile(&quot;sfence&quot; ::: &quot;memory&quot;)
+#endif
+
+/**
+ * array_index_mask_nospec() - generate a mask that is ~0UL when the
+ * 	bounds check succeeds and 0 otherwise
+ * @index: array element index
+ * @size: number of elements in array
+ *
+ * Returns:
+ *     0 - (index &lt; size)
+ */
+static inline unsigned long array_index_mask_nospec(unsigned long index,
+		unsigned long size)
+{
+	unsigned long mask;
+
+<blue>	asm volatile ("cmp %1,%2; sbb %0,%0;"</blue>
+			:&quot;=r&quot; (mask)
+			:&quot;g&quot;(size),&quot;r&quot; (index)
+			:&quot;cc&quot;);
+	return mask;
+}
+
+/* Override the default implementation from linux/nospec.h. */
+#define array_index_mask_nospec array_index_mask_nospec
+
+/* Prevent speculative execution past this barrier. */
+#define barrier_nospec() alternative(&quot;&quot;, &quot;lfence&quot;, X86_FEATURE_LFENCE_RDTSC)
+
+#define __dma_rmb()	barrier()
+#define __dma_wmb()	barrier()
+
+#define __smp_mb()	asm volatile(&quot;lock; addl $0,-4(%%&quot; _ASM_SP &quot;)&quot; ::: &quot;memory&quot;, &quot;cc&quot;)
+
+#define __smp_rmb()	dma_rmb()
+#define __smp_wmb()	barrier()
+#define __smp_store_mb(var, value) do { (void)xchg(&amp;var, value); } while (0)
+
+#define __smp_store_release(p, v)					\
+do {									\
+	compiletime_assert_atomic_type(*p);				\
+	barrier();							\
+	WRITE_ONCE(*p, v);						\
+} while (0)
+
+#define __smp_load_acquire(p)						\
+({									\
+	typeof(*p) ___p1 = READ_ONCE(*p);				\
+	compiletime_assert_atomic_type(*p);				\
+	barrier();							\
+	___p1;								\
+})
+
+/* Atomic operations are already serializing on x86 */
+#define __smp_mb__before_atomic()	do { } while (0)
+#define __smp_mb__after_atomic()	do { } while (0)
+
+#include &lt;asm-generic/barrier.h&gt;
+
+/*
+ * Make previous memory operations globally visible before
+ * a WRMSR.
+ *
+ * MFENCE makes writes visible, but only affects load/store
+ * instructions.  WRMSR is unfortunately not a load/store
+ * instruction and is unaffected by MFENCE.  The LFENCE ensures
+ * that the WRMSR is not reordered.
+ *
+ * Most WRMSRs are full serializing instructions themselves and
+ * do not require this barrier.  This is only required for the
+ * IA32_TSC_DEADLINE and X2APIC MSRs.
+ */
+static inline void weak_wrmsr_fence(void)
+{
+	asm volatile(&quot;mfence; lfence&quot; : : : &quot;memory&quot;);
+}
+
+#endif /* _ASM_X86_BARRIER_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
+</script></body></html>

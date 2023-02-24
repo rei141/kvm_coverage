@@ -1,0 +1,164 @@
+<doctype html>
+<html lang="ja">
+<head><title>page.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 93; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_PAGE_H
+#define _ASM_X86_PAGE_H
+
+#include &lt;linux/types.h&gt;
+
+#ifdef __KERNEL__
+
+#include &lt;asm/page_types.h&gt;
+
+#ifdef CONFIG_X86_64
+#include &lt;asm/page_64.h&gt;
+#else
+#include &lt;asm/page_32.h&gt;
+#endif	/* CONFIG_X86_64 */
+
+#ifndef __ASSEMBLY__
+
+struct page;
+
+#include &lt;linux/range.h&gt;
+extern struct range pfn_mapped[];
+extern int nr_pfn_mapped;
+
+static inline void clear_user_page(void *page, unsigned long vaddr,
+				   struct page *pg)
+{
+	clear_page(page);
+}
+
+static inline void copy_user_page(void *to, void *from, unsigned long vaddr,
+				  struct page *topage)
+{
+	copy_page(to, from);
+}
+
+#define alloc_zeroed_user_highpage_movable(vma, vaddr) \
+	alloc_page_vma(GFP_HIGHUSER_MOVABLE | __GFP_ZERO, vma, vaddr)
+#define __HAVE_ARCH_ALLOC_ZEROED_USER_HIGHPAGE_MOVABLE
+
+#ifndef __pa
+#define __pa(x)		__phys_addr((unsigned long)(x))
+#endif
+
+#define __pa_nodebug(x)	__phys_addr_nodebug((unsigned long)(x))
+/* __pa_symbol should be used for C visible symbols.
+   This seems to be the official gcc blessed way to do such arithmetic. */
+/*
+ * We need __phys_reloc_hide() here because gcc may assume that there is no
+ * overflow during __pa() calculation and can optimize it unexpectedly.
+ * Newer versions of gcc provide -fno-strict-overflow switch to handle this
+ * case properly. Once all supported versions of gcc understand it, we can
+ * remove this Voodoo magic stuff. (i.e. once gcc3.x is deprecated)
+ */
+#define __pa_symbol(x) \
+	__phys_addr_symbol(__phys_reloc_hide((unsigned long)(x)))
+
+#ifndef __va
+#define __va(x)			((void *)((unsigned long)(x)+PAGE_OFFSET))
+#endif
+
+#define __boot_va(x)		__va(x)
+#define __boot_pa(x)		__pa(x)
+
+/*
+ * virt_to_page(kaddr) returns a valid pointer if and only if
+ * virt_addr_valid(kaddr) returns true.
+ */
+#define virt_to_page(kaddr)	pfn_to_page(__pa(kaddr) &gt;&gt; PAGE_SHIFT)
+#define pfn_to_kaddr(pfn)      __va((pfn) &lt;&lt; PAGE_SHIFT)
+extern bool __virt_addr_valid(unsigned long kaddr);
+#define virt_addr_valid(kaddr)	__virt_addr_valid((unsigned long) (kaddr))
+
+static __always_inline u64 __canonical_address(u64 vaddr, u8 vaddr_bits)
+{
+<blue>	return ((s64)vaddr << (64 - vaddr_bits)) >> (64 - vaddr_bits);</blue>
+}
+
+static __always_inline u64 __is_canonical_address(u64 vaddr, u8 vaddr_bits)
+{
+<blue>	return __canonical_address(vaddr, vaddr_bits) == vaddr;</blue>
+}
+
+#endif	/* __ASSEMBLY__ */
+
+#include &lt;asm-generic/memory_model.h&gt;
+#include &lt;asm-generic/getorder.h&gt;
+
+#define HAVE_ARCH_HUGETLB_UNMAPPED_AREA
+
+#endif	/* __KERNEL__ */
+#endif /* _ASM_X86_PAGE_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
+</script></body></html>

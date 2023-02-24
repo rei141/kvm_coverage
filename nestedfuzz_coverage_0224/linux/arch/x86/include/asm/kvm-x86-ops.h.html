@@ -1,0 +1,207 @@
+<doctype html>
+<html lang="ja">
+<head><title>kvm-x86-ops.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 136; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#if !defined(KVM_X86_OP) || !defined(KVM_X86_OP_OPTIONAL)
+BUILD_BUG_ON(1)
+#endif
+
+/*
+ * KVM_X86_OP() and KVM_X86_OP_OPTIONAL() are used to help generate
+ * both DECLARE/DEFINE_STATIC_CALL() invocations and
+ * &quot;static_call_update()&quot; calls.
+ *
+ * KVM_X86_OP_OPTIONAL() can be used for those functions that can have
+ * a NULL definition, for example if &quot;static_call_cond()&quot; will be used
+ * at the call sites.  KVM_X86_OP_OPTIONAL_RET0() can be used likewise
+ * to make a definition optional, but in this case the default will
+ * be __static_call_return0.
+ */
+<yellow>KVM_X86_OP(hardware_enable)</yellow>
+<yellow>KVM_X86_OP(hardware_disable)</yellow>
+<yellow>KVM_X86_OP(hardware_unsetup)</yellow>
+<yellow>KVM_X86_OP(has_emulated_msr)</yellow>
+<yellow>KVM_X86_OP(vcpu_after_set_cpuid)</yellow>
+<yellow>KVM_X86_OP(vm_init)</yellow>
+KVM_X86_OP_OPTIONAL(vm_destroy)
+<yellow>KVM_X86_OP_OPTIONAL_RET0(vcpu_precreate)</yellow>
+<yellow>KVM_X86_OP(vcpu_create)</yellow>
+<yellow>KVM_X86_OP(vcpu_free)</yellow>
+<yellow>KVM_X86_OP(vcpu_reset)</yellow>
+<yellow>KVM_X86_OP(prepare_switch_to_guest)</yellow>
+<yellow>KVM_X86_OP(vcpu_load)</yellow>
+<yellow>KVM_X86_OP(vcpu_put)</yellow>
+<yellow>KVM_X86_OP(update_exception_bitmap)</yellow>
+<yellow>KVM_X86_OP(get_msr)</yellow>
+<yellow>KVM_X86_OP(set_msr)</yellow>
+<yellow>KVM_X86_OP(get_segment_base)</yellow>
+<yellow>KVM_X86_OP(get_segment)</yellow>
+<yellow>KVM_X86_OP(get_cpl)</yellow>
+<yellow>KVM_X86_OP(set_segment)</yellow>
+<yellow>KVM_X86_OP(get_cs_db_l_bits)</yellow>
+<yellow>KVM_X86_OP(set_cr0)</yellow>
+KVM_X86_OP_OPTIONAL(post_set_cr3)
+<yellow>KVM_X86_OP(is_valid_cr4)</yellow>
+<yellow>KVM_X86_OP(set_cr4)</yellow>
+<yellow>KVM_X86_OP(set_efer)</yellow>
+<yellow>KVM_X86_OP(get_idt)</yellow>
+<yellow>KVM_X86_OP(set_idt)</yellow>
+<yellow>KVM_X86_OP(get_gdt)</yellow>
+<yellow>KVM_X86_OP(set_gdt)</yellow>
+<yellow>KVM_X86_OP(sync_dirty_debug_regs)</yellow>
+<yellow>KVM_X86_OP(set_dr7)</yellow>
+<yellow>KVM_X86_OP(cache_reg)</yellow>
+<yellow>KVM_X86_OP(get_rflags)</yellow>
+<yellow>KVM_X86_OP(set_rflags)</yellow>
+<yellow>KVM_X86_OP(get_if_flag)</yellow>
+<yellow>KVM_X86_OP(flush_tlb_all)</yellow>
+<yellow>KVM_X86_OP(flush_tlb_current)</yellow>
+KVM_X86_OP_OPTIONAL(tlb_remote_flush)
+KVM_X86_OP_OPTIONAL(tlb_remote_flush_with_range)
+<yellow>KVM_X86_OP(flush_tlb_gva)</yellow>
+<yellow>KVM_X86_OP(flush_tlb_guest)</yellow>
+<yellow>KVM_X86_OP(vcpu_pre_run)</yellow>
+<yellow>KVM_X86_OP(vcpu_run)</yellow>
+<yellow>KVM_X86_OP(handle_exit)</yellow>
+<yellow>KVM_X86_OP(skip_emulated_instruction)</yellow>
+KVM_X86_OP_OPTIONAL(update_emulated_instruction)
+<yellow>KVM_X86_OP(set_interrupt_shadow)</yellow>
+<yellow>KVM_X86_OP(get_interrupt_shadow)</yellow>
+<yellow>KVM_X86_OP(patch_hypercall)</yellow>
+<yellow>KVM_X86_OP(inject_irq)</yellow>
+<yellow>KVM_X86_OP(inject_nmi)</yellow>
+<yellow>KVM_X86_OP(inject_exception)</yellow>
+<yellow>KVM_X86_OP(cancel_injection)</yellow>
+<yellow>KVM_X86_OP(interrupt_allowed)</yellow>
+<yellow>KVM_X86_OP(nmi_allowed)</yellow>
+<yellow>KVM_X86_OP(get_nmi_mask)</yellow>
+<yellow>KVM_X86_OP(set_nmi_mask)</yellow>
+<yellow>KVM_X86_OP(enable_nmi_window)</yellow>
+<yellow>KVM_X86_OP(enable_irq_window)</yellow>
+KVM_X86_OP_OPTIONAL(update_cr8_intercept)
+<yellow>KVM_X86_OP(check_apicv_inhibit_reasons)</yellow>
+<yellow>KVM_X86_OP(refresh_apicv_exec_ctrl)</yellow>
+KVM_X86_OP_OPTIONAL(hwapic_irr_update)
+KVM_X86_OP_OPTIONAL(hwapic_isr_update)
+<yellow>KVM_X86_OP_OPTIONAL_RET0(guest_apic_has_interrupt)</yellow>
+KVM_X86_OP_OPTIONAL(load_eoi_exitmap)
+KVM_X86_OP_OPTIONAL(set_virtual_apic_mode)
+KVM_X86_OP_OPTIONAL(set_apic_access_page_addr)
+<yellow>KVM_X86_OP(deliver_interrupt)</yellow>
+KVM_X86_OP_OPTIONAL(sync_pir_to_irr)
+<yellow>KVM_X86_OP_OPTIONAL_RET0(set_tss_addr)</yellow>
+<yellow>KVM_X86_OP_OPTIONAL_RET0(set_identity_map_addr)</yellow>
+<yellow>KVM_X86_OP_OPTIONAL_RET0(get_mt_mask)</yellow>
+<yellow>KVM_X86_OP(load_mmu_pgd)</yellow>
+<yellow>KVM_X86_OP(has_wbinvd_exit)</yellow>
+<yellow>KVM_X86_OP(get_l2_tsc_offset)</yellow>
+<yellow>KVM_X86_OP(get_l2_tsc_multiplier)</yellow>
+<yellow>KVM_X86_OP(write_tsc_offset)</yellow>
+<yellow>KVM_X86_OP(write_tsc_multiplier)</yellow>
+<yellow>KVM_X86_OP(get_exit_info)</yellow>
+<yellow>KVM_X86_OP(check_intercept)</yellow>
+<yellow>KVM_X86_OP(handle_exit_irqoff)</yellow>
+<yellow>KVM_X86_OP(request_immediate_exit)</yellow>
+<yellow>KVM_X86_OP(sched_in)</yellow>
+KVM_X86_OP_OPTIONAL(update_cpu_dirty_logging)
+KVM_X86_OP_OPTIONAL(vcpu_blocking)
+KVM_X86_OP_OPTIONAL(vcpu_unblocking)
+KVM_X86_OP_OPTIONAL(pi_update_irte)
+KVM_X86_OP_OPTIONAL(pi_start_assignment)
+KVM_X86_OP_OPTIONAL(apicv_post_state_restore)
+<yellow>KVM_X86_OP_OPTIONAL_RET0(dy_apicv_has_pending_interrupt)</yellow>
+KVM_X86_OP_OPTIONAL(set_hv_timer)
+KVM_X86_OP_OPTIONAL(cancel_hv_timer)
+<yellow>KVM_X86_OP(setup_mce)</yellow>
+<yellow>KVM_X86_OP(smi_allowed)</yellow>
+<yellow>KVM_X86_OP(enter_smm)</yellow>
+<yellow>KVM_X86_OP(leave_smm)</yellow>
+<yellow>KVM_X86_OP(enable_smi_window)</yellow>
+KVM_X86_OP_OPTIONAL(mem_enc_ioctl)
+KVM_X86_OP_OPTIONAL(mem_enc_register_region)
+KVM_X86_OP_OPTIONAL(mem_enc_unregister_region)
+KVM_X86_OP_OPTIONAL(vm_copy_enc_context_from)
+KVM_X86_OP_OPTIONAL(vm_move_enc_context_from)
+KVM_X86_OP_OPTIONAL(guest_memory_reclaimed)
+<yellow>KVM_X86_OP(get_msr_feature)</yellow>
+<yellow>KVM_X86_OP(can_emulate_instruction)</yellow>
+<yellow>KVM_X86_OP(apic_init_signal_blocked)</yellow>
+KVM_X86_OP_OPTIONAL(enable_direct_tlbflush)
+KVM_X86_OP_OPTIONAL(migrate_timers)
+<yellow>KVM_X86_OP(msr_filter_changed)</yellow>
+<yellow>KVM_X86_OP(complete_emulated_msr)</yellow>
+<yellow>KVM_X86_OP(vcpu_deliver_sipi_vector)</yellow>
+<yellow>KVM_X86_OP_OPTIONAL_RET0(vcpu_get_apicv_inhibit_reasons);</yellow>
+
+#undef KVM_X86_OP
+#undef KVM_X86_OP_OPTIONAL
+#undef KVM_X86_OP_OPTIONAL_RET0
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
+</script></body></html>
