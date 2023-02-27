@@ -4413,7 +4413,7 @@ static u32 vmx_vmexit_ctrl(void)
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 
 <blue>	if (is_guest_mode(vcpu)) {</blue>
-<yellow>		vmx->nested.update_vmcs01_apicv_status = true;</yellow>
+<blue>		vmx->nested.update_vmcs01_apicv_status = true;</blue>
 		return;
 	}
 
@@ -5767,22 +5767,22 @@ static int handle_ept_misconfig(struct kvm_vcpu *vcpu)
 <yellow>{</yellow>
 	gpa_t gpa;
 
-<yellow>	if (!vmx_can_emulate_instruction(vcpu, EMULTYPE_PF, NULL, 0))</yellow>
+<blue>	if (!vmx_can_emulate_instruction(vcpu, EMULTYPE_PF, NULL, 0))</blue>
 		return 1;
 
 	/*
 	 * A nested guest cannot optimize MMIO vmexits, because we have an
 	 * nGPA here instead of the required GPA.
 	 */
-<yellow>	gpa = vmcs_read64(GUEST_PHYSICAL_ADDRESS);</yellow>
-<yellow>	if (!is_guest_mode(vcpu) &&</yellow>
-<yellow>	    !kvm_io_bus_write(vcpu, KVM_FAST_MMIO_BUS, gpa, 0, NULL)) {</yellow>
+<blue>	gpa = vmcs_read64(GUEST_PHYSICAL_ADDRESS);</blue>
+<blue>	if (!is_guest_mode(vcpu) &&</blue>
+<blue>	    !kvm_io_bus_write(vcpu, KVM_FAST_MMIO_BUS, gpa, 0, NULL)) {</blue>
 <yellow>		trace_kvm_fast_mmio(gpa);</yellow>
 <yellow>		return kvm_skip_emulated_instruction(vcpu);</yellow>
 	}
 
-<yellow>	return kvm_mmu_page_fault(vcpu, gpa, PFERR_RSVD_MASK, NULL, 0);</yellow>
-<yellow>}</yellow>
+<blue>	return kvm_mmu_page_fault(vcpu, gpa, PFERR_RSVD_MASK, NULL, 0);</blue>
+<blue>}</blue>
 
 static int handle_nmi_window(struct kvm_vcpu *vcpu)
 {
@@ -6531,7 +6531,7 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 <blue>	else if (exit_reason.basic == EXIT_REASON_HLT)</blue>
 <blue>		return kvm_emulate_halt(vcpu);</blue>
 <blue>	else if (exit_reason.basic == EXIT_REASON_EPT_MISCONFIG)</blue>
-<yellow>		return handle_ept_misconfig(vcpu);</yellow>
+<blue>		return handle_ept_misconfig(vcpu);</blue>
 #endif
 
 <blue>	exit_handler_index = array_index_nospec((u16)exit_reason.basic,</blue>
@@ -6672,7 +6672,7 @@ static void vmx_update_cr8_intercept(struct kvm_vcpu *vcpu, int tpr, int irr)
 
 	/* Postpone execution until vmcs01 is the current VMCS. */
 <blue>	if (is_guest_mode(vcpu)) {</blue>
-<yellow>		vmx->nested.change_vmcs01_virtual_apic_mode = true;</yellow>
+<blue>		vmx->nested.change_vmcs01_virtual_apic_mode = true;</blue>
 		return;
 	}
 
@@ -7331,7 +7331,7 @@ static fastpath_t vmx_vcpu_run(struct kvm_vcpu *vcpu)
 <blue>	vmx->idt_vectoring_info = 0;</blue>
 
 	if (unlikely(vmx-&gt;fail)) {
-<yellow>		vmx->exit_reason.full = 0xdead;</yellow>
+<blue>		vmx->exit_reason.full = 0xdead;</blue>
 		return EXIT_FASTPATH_NONE;
 	}
 
@@ -7853,12 +7853,12 @@ static int vmx_check_intercept_io(struct kvm_vcpu *vcpu,
 	bool intercept;
 	int size;
 
-<yellow>	if (info->intercept == x86_intercept_in ||</yellow>
+<blue>	if (info->intercept == x86_intercept_in ||</blue>
 	    info-&gt;intercept == x86_intercept_ins) {
-<yellow>		port = info->src_val;</yellow>
+<blue>		port = info->src_val;</blue>
 <yellow>		size = info->dst_bytes;</yellow>
 	} else {
-<yellow>		port = info->dst_val;</yellow>
+<blue>		port = info->dst_val;</blue>
 <yellow>		size = info->src_bytes;</yellow>
 	}
 
@@ -7869,14 +7869,14 @@ static int vmx_check_intercept_io(struct kvm_vcpu *vcpu,
 	 *
 	 * Otherwise, IO instruction VM-exits are controlled by the IO bitmaps.
 	 */
-<yellow>	if (!nested_cpu_has(vmcs12, CPU_BASED_USE_IO_BITMAPS))</yellow>
+<blue>	if (!nested_cpu_has(vmcs12, CPU_BASED_USE_IO_BITMAPS))</blue>
 <yellow>		intercept = nested_cpu_has(vmcs12,</yellow>
 					   CPU_BASED_UNCOND_IO_EXITING);
 	else
-<yellow>		intercept = nested_vmx_check_io_bitmaps(vcpu, port, size);</yellow>
+<blue>		intercept = nested_vmx_check_io_bitmaps(vcpu, port, size);</blue>
 
 	/* FIXME: produce nested vmexit and return X86EMUL_INTERCEPTED.  */
-<yellow>	return intercept ? X86EMUL_UNHANDLEABLE : X86EMUL_CONTINUE;</yellow>
+<blue>	return intercept ? X86EMUL_UNHANDLEABLE : X86EMUL_CONTINUE;</blue>
 }
 
 static int vmx_check_intercept(struct kvm_vcpu *vcpu,
@@ -7904,7 +7904,7 @@ static int vmx_check_intercept(struct kvm_vcpu *vcpu,
 	case x86_intercept_ins:
 	case x86_intercept_out:
 	case x86_intercept_outs:
-<yellow>		return vmx_check_intercept_io(vcpu, info);</yellow>
+<blue>		return vmx_check_intercept_io(vcpu, info);</blue>
 
 	case x86_intercept_lgdt:
 	case x86_intercept_lidt:
@@ -8673,7 +8673,7 @@ module_init(vmx_init);
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 73.7%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.7%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 76.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.4%</li>`
 </script></body></html>
