@@ -470,19 +470,19 @@ static void nested_ept_inject_page_fault(struct kvm_vcpu *vcpu,
 static void nested_ept_new_eptp(struct kvm_vcpu *vcpu)
 {
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
-<yellow>	bool execonly = vmx->nested.msrs.ept_caps & VMX_EPT_EXECUTE_ONLY_BIT;</yellow>
+<blue>	bool execonly = vmx->nested.msrs.ept_caps & VMX_EPT_EXECUTE_ONLY_BIT;</blue>
 <yellow>	int ept_lpage_level = ept_caps_to_lpage_level(vmx->nested.msrs.ept_caps);</yellow>
 
 	kvm_init_shadow_ept_mmu(vcpu, execonly, ept_lpage_level,
 				nested_ept_ad_enabled(vcpu),
-<yellow>				nested_ept_get_eptp(vcpu));</yellow>
+<blue>				nested_ept_get_eptp(vcpu));</blue>
 }
 
 static void nested_ept_init_mmu_context(struct kvm_vcpu *vcpu)
 {
-<yellow>	WARN_ON(mmu_is_nested(vcpu));</yellow>
+<blue>	WARN_ON(mmu_is_nested(vcpu));</blue>
 
-<yellow>	vcpu->arch.mmu = &vcpu->arch.guest_mmu;</yellow>
+<blue>	vcpu->arch.mmu = &vcpu->arch.guest_mmu;</blue>
 	nested_ept_new_eptp(vcpu);
 	vcpu-&gt;arch.mmu-&gt;get_guest_pgd     = nested_ept_get_eptp;
 	vcpu-&gt;arch.mmu-&gt;inject_page_fault = nested_ept_inject_page_fault;
@@ -2648,7 +2648,7 @@ static int prepare_vmcs02(struct kvm_vcpu *vcpu, struct vmcs12 *vmcs12,
 <blue>	nested_vmx_transition_tlb_flush(vcpu, vmcs12, true);</blue>
 
 <blue>	if (nested_cpu_has_ept(vmcs12))</blue>
-<yellow>		nested_ept_init_mmu_context(vcpu);</yellow>
+<blue>		nested_ept_init_mmu_context(vcpu);</blue>
 
 	/*
 	 * Override the CR0/CR4 read shadows after setting the effective guest
@@ -2697,7 +2697,7 @@ static int prepare_vmcs02(struct kvm_vcpu *vcpu, struct vmcs12 *vmcs12,
 
 	/* Late preparation of GUEST_PDPTRs now that EFER and CRs are set. */
 <blue>	if (load_guest_pdptrs_vmcs12 && nested_cpu_has_ept(vmcs12) &&</blue>
-<yellow>	    is_pae_paging(vcpu)) {</yellow>
+<blue>	    is_pae_paging(vcpu)) {</blue>
 <yellow>		vmcs_write64(GUEST_PDPTR0, vmcs12->guest_pdptr0);</yellow>
 <yellow>		vmcs_write64(GUEST_PDPTR1, vmcs12->guest_pdptr1);</yellow>
 <yellow>		vmcs_write64(GUEST_PDPTR2, vmcs12->guest_pdptr2);</yellow>
@@ -7125,7 +7125,7 @@ struct kvm_x86_nested_ops vmx_nested_ops = {
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 71.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 72.3%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.5%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.4%</li>`
 </script></body></html>

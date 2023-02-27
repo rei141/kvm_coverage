@@ -133,12 +133,12 @@ static inline u16 nested_get_vpid02(struct kvm_vcpu *vcpu)
 static inline unsigned long nested_ept_get_eptp(struct kvm_vcpu *vcpu)
 {
 	/* return the page table to be shadowed - in our case, EPT12 */
-<yellow>	return get_vmcs12(vcpu)->ept_pointer;</yellow>
+<blue>	return get_vmcs12(vcpu)->ept_pointer;</blue>
 }
 
 static inline bool nested_ept_ad_enabled(struct kvm_vcpu *vcpu)
 {
-<yellow>	return nested_ept_get_eptp(vcpu) & VMX_EPTP_AD_ENABLE_BIT;</yellow>
+<blue>	return nested_ept_get_eptp(vcpu) & VMX_EPTP_AD_ENABLE_BIT;</blue>
 }
 
 /*
@@ -324,8 +324,8 @@ static inline bool nested_guest_cr0_valid(struct kvm_vcpu *vcpu, unsigned long v
 
 	if (to_vmx(vcpu)-&gt;nested.msrs.secondary_ctls_high &amp;
 		SECONDARY_EXEC_UNRESTRICTED_GUEST &amp;&amp;
-<yellow>	    nested_cpu_has2(vmcs12, SECONDARY_EXEC_UNRESTRICTED_GUEST))</yellow>
-<yellow>		fixed0 &= ~(X86_CR0_PE | X86_CR0_PG);</yellow>
+<blue>	    nested_cpu_has2(vmcs12, SECONDARY_EXEC_UNRESTRICTED_GUEST))</blue>
+<blue>		fixed0 &= ~(X86_CR0_PE | X86_CR0_PG);</blue>
 
 <blue>	return fixed_bits_valid(val, fixed0, fixed1);</blue>
 }
@@ -359,7 +359,7 @@ extern struct kvm_x86_nested_ops vmx_nested_ops;
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 71.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 72.3%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.5%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.4%</li>`
 </script></body></html>
