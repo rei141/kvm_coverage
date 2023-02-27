@@ -437,14 +437,14 @@ static void nested_ept_invalidate_addr(struct kvm_vcpu *vcpu, gpa_t eptp,
 static void nested_ept_inject_page_fault(struct kvm_vcpu *vcpu,
 		struct x86_exception *fault)
 {
-<yellow>	struct vmcs12 *vmcs12 = get_vmcs12(vcpu);</yellow>
+<blue>	struct vmcs12 *vmcs12 = get_vmcs12(vcpu);</blue>
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	u32 vm_exit_reason;
 	unsigned long exit_qualification = vcpu-&gt;arch.exit_qualification;
 
-<yellow>	if (vmx->nested.pml_full) {</yellow>
+<blue>	if (vmx->nested.pml_full) {</blue>
 		vm_exit_reason = EXIT_REASON_PML_FULL;
-<yellow>		vmx->nested.pml_full = false;</yellow>
+<blue>		vmx->nested.pml_full = false;</blue>
 		exit_qualification &amp;= INTR_INFO_UNBLOCK_NMI;
 	} else {
 <yellow>		if (fault->error_code & PFERR_RSVD_MASK)</yellow>
@@ -463,7 +463,7 @@ static void nested_ept_inject_page_fault(struct kvm_vcpu *vcpu,
 					   fault-&gt;address);
 	}
 
-<yellow>	nested_vmx_vmexit(vcpu, vm_exit_reason, 0, exit_qualification);</yellow>
+<blue>	nested_vmx_vmexit(vcpu, vm_exit_reason, 0, exit_qualification);</blue>
 	vmcs12-&gt;guest_physical_address = fault-&gt;address;
 }
 
@@ -1151,7 +1151,7 @@ static int nested_vmx_load_cr3(struct kvm_vcpu *vcpu, unsigned long cr3,
 	 * must not be dereferenced.
 	 */
 <blue>	if (reload_pdptrs && !nested_ept && is_pae_paging(vcpu) &&</blue>
-<yellow>	    CC(!load_pdptrs(vcpu, cr3))) {</yellow>
+<blue>	    CC(!load_pdptrs(vcpu, cr3))) {</blue>
 		*entry_failure_code = ENTRY_FAIL_PDPTE;
 		return -EINVAL;
 	}
@@ -2213,7 +2213,7 @@ static u64 nested_vmx_calc_efer(struct vcpu_vmx *vmx, struct vmcs12 *vmcs12)
 	else if (vmcs12-&gt;vm_entry_controls &amp; VM_ENTRY_IA32E_MODE)
 <blue>		return vmx->vcpu.arch.efer | (EFER_LMA | EFER_LME);</blue>
 	else
-<yellow>		return vmx->vcpu.arch.efer & ~(EFER_LMA | EFER_LME);</yellow>
+<blue>		return vmx->vcpu.arch.efer & ~(EFER_LMA | EFER_LME);</blue>
 }
 
 static void prepare_vmcs02_constant_state(struct vcpu_vmx *vmx)
@@ -3360,38 +3360,38 @@ static bool nested_get_vmcs12_pages(struct kvm_vcpu *vcpu)
 <yellow>}</yellow>
 
 static int nested_vmx_write_pml_buffer(struct kvm_vcpu *vcpu, gpa_t gpa)
-<yellow>{</yellow>
+<blue>{</blue>
 	struct vmcs12 *vmcs12;
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	gpa_t dst;
 
-<yellow>	if (WARN_ON_ONCE(!is_guest_mode(vcpu)))</yellow>
+<blue>	if (WARN_ON_ONCE(!is_guest_mode(vcpu)))</blue>
 		return 0;
 
-<yellow>	if (WARN_ON_ONCE(vmx->nested.pml_full))</yellow>
+<blue>	if (WARN_ON_ONCE(vmx->nested.pml_full))</blue>
 		return 1;
 
 	/*
 	 * Check if PML is enabled for the nested guest. Whether eptp bit 6 is
 	 * set is already checked as part of A/D emulation.
 	 */
-<yellow>	vmcs12 = get_vmcs12(vcpu);</yellow>
-<yellow>	if (!nested_cpu_has_pml(vmcs12))</yellow>
+<blue>	vmcs12 = get_vmcs12(vcpu);</blue>
+<blue>	if (!nested_cpu_has_pml(vmcs12))</blue>
 		return 0;
 
-<yellow>	if (vmcs12->guest_pml_index >= PML_ENTITY_NUM) {</yellow>
-<yellow>		vmx->nested.pml_full = true;</yellow>
+<blue>	if (vmcs12->guest_pml_index >= PML_ENTITY_NUM) {</blue>
+<blue>		vmx->nested.pml_full = true;</blue>
 		return 1;
 	}
 
 	gpa &amp;= ~0xFFFull;
-<yellow>	dst = vmcs12->pml_address + sizeof(u64) * vmcs12->guest_pml_index;</yellow>
+<blue>	dst = vmcs12->pml_address + sizeof(u64) * vmcs12->guest_pml_index;</blue>
 
 	if (kvm_write_guest_page(vcpu-&gt;kvm, gpa_to_gfn(dst), &amp;gpa,
 				 offset_in_page(dst), sizeof(gpa)))
 		return 0;
 
-<yellow>	vmcs12->guest_pml_index--;</yellow>
+<blue>	vmcs12->guest_pml_index--;</blue>
 
 	return 0;
 }
@@ -3596,7 +3596,7 @@ vmentry_fail_vmexit:
 <blue>	load_vmcs12_host_state(vcpu, vmcs12);</blue>
 	vmcs12-&gt;vm_exit_reason = exit_reason.full;
 <blue>	if (enable_shadow_vmcs || evmptr_is_valid(vmx->nested.hv_evmcs_vmptr))</blue>
-<yellow>		vmx->nested.need_vmcs12_to_shadow_sync = true;</yellow>
+<blue>		vmx->nested.need_vmcs12_to_shadow_sync = true;</blue>
 	return NVMX_VMENTRY_VMEXIT;
 }
 
@@ -3951,7 +3951,7 @@ static void nested_vmx_inject_exception_vmexit(struct kvm_vcpu *vcpu)
 
 <blue>	if (!(vmcs12->idt_vectoring_info_field & VECTORING_INFO_VALID_MASK) &&</blue>
 <blue>	    vmx_get_nmi_mask(vcpu))</blue>
-<yellow>		intr_info |= INTR_INFO_UNBLOCK_NMI;</yellow>
+<blue>		intr_info |= INTR_INFO_UNBLOCK_NMI;</blue>
 
 <blue>	nested_vmx_vmexit(vcpu, EXIT_REASON_EXCEPTION_NMI, intr_info, exit_qual);</blue>
 }
@@ -5556,7 +5556,7 @@ static int handle_vmwrite(struct kvm_vcpu *vcpu)
 	 */
 <blue>	if (vmcs_field_readonly(field) &&</blue>
 <blue>	    !nested_cpu_has_vmwrite_any_field(vcpu))</blue>
-<yellow>		return nested_vmx_fail(vcpu, VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);</yellow>
+<blue>		return nested_vmx_fail(vcpu, VMXERR_VMWRITE_READ_ONLY_VMCS_COMPONENT);</blue>
 
 	/*
 	 * Ensure vmcs12 is up-to-date before any VMWRITE that dirties
@@ -5920,10 +5920,10 @@ static int nested_vmx_eptp_switching(struct kvm_vcpu *vcpu,
 }
 
 static int handle_vmfunc(struct kvm_vcpu *vcpu)
-<yellow>{</yellow>
+<blue>{</blue>
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	struct vmcs12 *vmcs12;
-<yellow>	u32 function = kvm_rax_read(vcpu);</yellow>
+<blue>	u32 function = kvm_rax_read(vcpu);</blue>
 
 	/*
 	 * VMFUNC is only supported for nested guests, but we always enable the
@@ -5935,18 +5935,18 @@ static int handle_vmfunc(struct kvm_vcpu *vcpu)
 		return 1;
 	}
 
-<yellow>	vmcs12 = get_vmcs12(vcpu);</yellow>
+<blue>	vmcs12 = get_vmcs12(vcpu);</blue>
 
 	/*
 	 * #UD on out-of-bounds function has priority over VM-Exit, and VMFUNC
 	 * is enabled in vmcs02 if and only if it&#x27;s enabled in vmcs12.
 	 */
-<yellow>	if (WARN_ON_ONCE((function > 63) || !nested_cpu_has_vmfunc(vmcs12))) {</yellow>
+<blue>	if (WARN_ON_ONCE((function > 63) || !nested_cpu_has_vmfunc(vmcs12))) {</blue>
 		kvm_queue_exception(vcpu, UD_VECTOR);
 		return 1;
 	}
 
-<yellow>	if (!(vmcs12->vm_function_control & BIT_ULL(function)))</yellow>
+<blue>	if (!(vmcs12->vm_function_control & BIT_ULL(function)))</blue>
 		goto fail;
 
 <yellow>	switch (function) {</yellow>
@@ -5965,7 +5965,7 @@ fail:
 	 * nested VM-Exit.  Pass the original exit reason, i.e. don&#x27;t hardcode
 	 * EXIT_REASON_VMFUNC as the exit reason.
 	 */
-<yellow>	nested_vmx_vmexit(vcpu, vmx->exit_reason.full,</yellow>
+<blue>	nested_vmx_vmexit(vcpu, vmx->exit_reason.full,</blue>
 			  vmx_get_intr_info(vcpu),
 			  vmx_get_exit_qual(vcpu));
 	return 1;
@@ -7125,7 +7125,7 @@ struct kvm_x86_nested_ops vmx_nested_ops = {
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 72.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 73.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.7%</li>`
 </script></body></html>

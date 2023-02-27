@@ -266,7 +266,7 @@ static inline u8 permission_fault(struct kvm_vcpu *vcpu, struct kvm_mmu *mmu,
 		offset = (pfec &amp; ~1) +
 			((pte_access &amp; PT_USER_MASK) &lt;&lt; (PFERR_RSVD_BIT - PT_USER_SHIFT));
 
-<yellow>		pkru_bits &= mmu->pkru_mask >> offset;</yellow>
+<blue>		pkru_bits &= mmu->pkru_mask >> offset;</blue>
 		errcode |= -pkru_bits &amp; PFERR_PK_MASK;
 		fault |= (pkru_bits != 0);
 	}
@@ -347,7 +347,7 @@ static inline gpa_t kvm_translate_gpa(struct kvm_vcpu *vcpu,
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 72.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 73.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.7%</li>`
 </script></body></html>

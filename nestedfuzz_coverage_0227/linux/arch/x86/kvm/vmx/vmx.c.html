@@ -5318,7 +5318,7 @@ static __always_inline int handle_external_interrupt(struct kvm_vcpu *vcpu)
 
 static int handle_triple_fault(struct kvm_vcpu *vcpu)
 <yellow>{</yellow>
-<yellow>	vcpu->run->exit_reason = KVM_EXIT_SHUTDOWN;</yellow>
+<blue>	vcpu->run->exit_reason = KVM_EXIT_SHUTDOWN;</blue>
 <yellow>	vcpu->mmio_needed = 0;</yellow>
 	return 0;
 }
@@ -5478,8 +5478,8 @@ static int handle_cr(struct kvm_vcpu *vcpu)
 		}
 		break;
 	case 3: /* lmsw */
-<yellow>		val = (exit_qualification >> LMSW_SOURCE_DATA_SHIFT) & 0x0f;</yellow>
-<yellow>		trace_kvm_cr_write(0, (kvm_read_cr0(vcpu) & ~0xful) | val);</yellow>
+<blue>		val = (exit_qualification >> LMSW_SOURCE_DATA_SHIFT) & 0x0f;</blue>
+<blue>		trace_kvm_cr_write(0, (kvm_read_cr0(vcpu) & ~0xful) | val);</blue>
 		kvm_lmsw(vcpu, val);
 
 		return kvm_skip_emulated_instruction(vcpu);
@@ -6667,7 +6667,7 @@ static void vmx_update_cr8_intercept(struct kvm_vcpu *vcpu, int tpr, int irr)
 		return;
 
 <blue>	if (!flexpriority_enabled &&</blue>
-<yellow>	    !cpu_has_vmx_virtualize_x2apic_mode())</yellow>
+<blue>	    !cpu_has_vmx_virtualize_x2apic_mode())</blue>
 		return;
 
 	/* Postpone execution until vmcs01 is the current VMCS. */
@@ -8025,7 +8025,7 @@ static void vmx_setup_mce(struct kvm_vcpu *vcpu)
 <blue>		to_vmx(vcpu)->msr_ia32_feature_control_valid_bits |=</blue>
 			FEAT_CTL_LMCE_ENABLED;
 	else
-<yellow>		to_vmx(vcpu)->msr_ia32_feature_control_valid_bits &=</yellow>
+<blue>		to_vmx(vcpu)->msr_ia32_feature_control_valid_bits &=</blue>
 			~FEAT_CTL_LMCE_ENABLED;
 <yellow>}</yellow>
 
@@ -8673,7 +8673,7 @@ module_init(vmx_init);
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 72.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 73.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.7%</li>`
 </script></body></html>
