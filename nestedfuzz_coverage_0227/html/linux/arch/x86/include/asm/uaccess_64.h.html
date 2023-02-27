@@ -1,0 +1,199 @@
+<doctype html>
+<html lang="ja">
+<head><title>uaccess_64.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 128; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_UACCESS_64_H
+#define _ASM_X86_UACCESS_64_H
+
+/*
+ * User space memory access functions
+ */
+#include &lt;linux/compiler.h&gt;
+#include &lt;linux/lockdep.h&gt;
+#include &lt;linux/kasan-checks.h&gt;
+#include &lt;asm/alternative.h&gt;
+#include &lt;asm/cpufeatures.h&gt;
+#include &lt;asm/page.h&gt;
+
+/*
+ * Copy To/From Userspace
+ */
+
+/* Handles exceptions in both to and from, but doesn&#x27;t do access_ok */
+__must_check unsigned long
+copy_user_enhanced_fast_string(void *to, const void *from, unsigned len);
+__must_check unsigned long
+copy_user_generic_string(void *to, const void *from, unsigned len);
+__must_check unsigned long
+copy_user_generic_unrolled(void *to, const void *from, unsigned len);
+
+static __always_inline __must_check unsigned long
+copy_user_generic(void *to, const void *from, unsigned len)
+{
+	unsigned ret;
+
+	/*
+	 * If CPU has ERMS feature, use copy_user_enhanced_fast_string.
+	 * Otherwise, if CPU has rep_good feature, use copy_user_generic_string.
+	 * Otherwise, use copy_user_generic_unrolled.
+	 */
+<yellow>	alternative_call_2(copy_user_generic_unrolled,</yellow>
+			 copy_user_generic_string,
+			 X86_FEATURE_REP_GOOD,
+			 copy_user_enhanced_fast_string,
+			 X86_FEATURE_ERMS,
+			 ASM_OUTPUT2(&quot;=a&quot; (ret), &quot;=D&quot; (to), &quot;=S&quot; (from),
+				     &quot;=d&quot; (len)),
+			 &quot;1&quot; (to), &quot;2&quot; (from), &quot;3&quot; (len)
+			 : &quot;memory&quot;, &quot;rcx&quot;, &quot;r8&quot;, &quot;r9&quot;, &quot;r10&quot;, &quot;r11&quot;);
+	return ret;
+}
+
+static __always_inline __must_check unsigned long
+raw_copy_from_user(void *dst, const void __user *src, unsigned long size)
+{
+	return copy_user_generic(dst, (__force void *)src, size);
+}
+
+static __always_inline __must_check unsigned long
+raw_copy_to_user(void __user *dst, const void *src, unsigned long size)
+{
+<yellow>	return copy_user_generic((__force void *)dst, src, size);</yellow>
+}
+
+extern long __copy_user_nocache(void *dst, const void __user *src,
+				unsigned size, int zerorest);
+
+extern long __copy_user_flushcache(void *dst, const void __user *src, unsigned size);
+extern void memcpy_page_flushcache(char *to, struct page *page, size_t offset,
+			   size_t len);
+
+static inline int
+__copy_from_user_inatomic_nocache(void *dst, const void __user *src,
+				  unsigned size)
+{
+	kasan_check_write(dst, size);
+	return __copy_user_nocache(dst, src, size, 0);
+}
+
+static inline int
+__copy_from_user_flushcache(void *dst, const void __user *src, unsigned size)
+{
+	kasan_check_write(dst, size);
+	return __copy_user_flushcache(dst, src, size);
+}
+
+/*
+ * Zero Userspace.
+ */
+
+__must_check unsigned long
+clear_user_original(void __user *addr, unsigned long len);
+__must_check unsigned long
+clear_user_rep_good(void __user *addr, unsigned long len);
+__must_check unsigned long
+clear_user_erms(void __user *addr, unsigned long len);
+
+static __always_inline __must_check unsigned long __clear_user(void __user *addr, unsigned long size)
+{
+	might_fault();
+	stac();
+
+	/*
+	 * No memory constraint because it doesn&#x27;t change any memory gcc
+	 * knows about.
+	 */
+	asm volatile(
+		&quot;1:\n\t&quot;
+		ALTERNATIVE_3(&quot;rep stosb&quot;,
+			      &quot;call clear_user_erms&quot;,	  ALT_NOT(X86_FEATURE_FSRM),
+			      &quot;call clear_user_rep_good&quot;, ALT_NOT(X86_FEATURE_ERMS),
+			      &quot;call clear_user_original&quot;, ALT_NOT(X86_FEATURE_REP_GOOD))
+		&quot;2:\n&quot;
+	       _ASM_EXTABLE_UA(1b, 2b)
+	       : &quot;+c&quot; (size), &quot;+D&quot; (addr), ASM_CALL_CONSTRAINT
+	       : &quot;a&quot; (0)
+		/* rep_good clobbers %rdx */
+	       : &quot;rdx&quot;);
+
+	clac();
+
+	return size;
+}
+
+static __always_inline unsigned long clear_user(void __user *to, unsigned long n)
+{
+	if (access_ok(to, n))
+		return __clear_user(to, n);
+	return n;
+}
+#endif /* _ASM_X86_UACCESS_64_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 72.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.4%</li>`
+</script></body></html>
