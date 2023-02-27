@@ -1,0 +1,286 @@
+<doctype html>
+<html lang="ja">
+<head><title>hyperv.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 215; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+/*
+ * KVM Microsoft Hyper-V emulation
+ *
+ * derived from arch/x86/kvm/x86.c
+ *
+ * Copyright (C) 2006 Qumranet, Inc.
+ * Copyright (C) 2008 Qumranet, Inc.
+ * Copyright IBM Corporation, 2008
+ * Copyright 2010 Red Hat, Inc. and/or its affiliates.
+ * Copyright (C) 2015 Andrey Smetanin &lt;asmetanin@virtuozzo.com&gt;
+ *
+ * Authors:
+ *   Avi Kivity   &lt;avi@qumranet.com&gt;
+ *   Yaniv Kamay  &lt;yaniv@qumranet.com&gt;
+ *   Amit Shah    &lt;amit.shah@qumranet.com&gt;
+ *   Ben-Ami Yassour &lt;benami@il.ibm.com&gt;
+ *   Andrey Smetanin &lt;asmetanin@virtuozzo.com&gt;
+ */
+
+#ifndef __ARCH_X86_KVM_HYPERV_H__
+#define __ARCH_X86_KVM_HYPERV_H__
+
+#include &lt;linux/kvm_host.h&gt;
+#include &quot;x86.h&quot;
+
+/* &quot;Hv#1&quot; signature */
+#define HYPERV_CPUID_SIGNATURE_EAX 0x31237648
+
+/*
+ * The #defines related to the synthetic debugger are required by KDNet, but
+ * they are not documented in the Hyper-V TLFS because the synthetic debugger
+ * functionality has been deprecated and is subject to removal in future
+ * versions of Windows.
+ */
+#define HYPERV_CPUID_SYNDBG_VENDOR_AND_MAX_FUNCTIONS	0x40000080
+#define HYPERV_CPUID_SYNDBG_INTERFACE			0x40000081
+#define HYPERV_CPUID_SYNDBG_PLATFORM_CAPABILITIES	0x40000082
+
+/*
+ * Hyper-V synthetic debugger platform capabilities
+ * These are HYPERV_CPUID_SYNDBG_PLATFORM_CAPABILITIES.EAX bits.
+ */
+#define HV_X64_SYNDBG_CAP_ALLOW_KERNEL_DEBUGGING	BIT(1)
+
+/* Hyper-V Synthetic debug options MSR */
+#define HV_X64_MSR_SYNDBG_CONTROL		0x400000F1
+#define HV_X64_MSR_SYNDBG_STATUS		0x400000F2
+#define HV_X64_MSR_SYNDBG_SEND_BUFFER		0x400000F3
+#define HV_X64_MSR_SYNDBG_RECV_BUFFER		0x400000F4
+#define HV_X64_MSR_SYNDBG_PENDING_BUFFER	0x400000F5
+#define HV_X64_MSR_SYNDBG_OPTIONS		0x400000FF
+
+/* Hyper-V HV_X64_MSR_SYNDBG_OPTIONS bits */
+#define HV_X64_SYNDBG_OPTION_USE_HCALLS		BIT(2)
+
+static inline struct kvm_hv *to_kvm_hv(struct kvm *kvm)
+{
+	return &amp;kvm-&gt;arch.hyperv;
+}
+
+static inline struct kvm_vcpu_hv *to_hv_vcpu(struct kvm_vcpu *vcpu)
+{
+<blue>	return vcpu->arch.hyperv;</blue>
+}
+
+static inline struct kvm_vcpu_hv_synic *to_hv_synic(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
+
+<blue>	return &hv_vcpu->synic;</blue>
+}
+
+static inline struct kvm_vcpu *hv_synic_to_vcpu(struct kvm_vcpu_hv_synic *synic)
+{
+	struct kvm_vcpu_hv *hv_vcpu = container_of(synic, struct kvm_vcpu_hv, synic);
+
+<blue>	return hv_vcpu->vcpu;</blue>
+}
+
+static inline struct kvm_hv_syndbg *to_hv_syndbg(struct kvm_vcpu *vcpu)
+{
+<blue>	return &vcpu->kvm->arch.hyperv.hv_syndbg;</blue>
+}
+
+static inline u32 kvm_hv_get_vpindex(struct kvm_vcpu *vcpu)
+{
+<yellow>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</yellow>
+
+<blue>	return hv_vcpu ? hv_vcpu->vp_index : vcpu->vcpu_idx;</blue>
+}
+
+int kvm_hv_set_msr_common(struct kvm_vcpu *vcpu, u32 msr, u64 data, bool host);
+int kvm_hv_get_msr_common(struct kvm_vcpu *vcpu, u32 msr, u64 *pdata, bool host);
+
+static inline bool kvm_hv_hypercall_enabled(struct kvm_vcpu *vcpu)
+{
+<yellow>	return vcpu->arch.hyperv_enabled && to_kvm_hv(vcpu->kvm)->hv_guest_os_id;</yellow>
+}
+
+int kvm_hv_hypercall(struct kvm_vcpu *vcpu);
+
+void kvm_hv_irq_routing_update(struct kvm *kvm);
+int kvm_hv_synic_set_irq(struct kvm *kvm, u32 vcpu_id, u32 sint);
+void kvm_hv_synic_send_eoi(struct kvm_vcpu *vcpu, int vector);
+int kvm_hv_activate_synic(struct kvm_vcpu *vcpu, bool dont_zero_synic_pages);
+
+void kvm_hv_vcpu_uninit(struct kvm_vcpu *vcpu);
+
+bool kvm_hv_assist_page_enabled(struct kvm_vcpu *vcpu);
+int kvm_hv_get_assist_page(struct kvm_vcpu *vcpu);
+
+static inline struct kvm_vcpu_hv_stimer *to_hv_stimer(struct kvm_vcpu *vcpu,
+						      int timer_index)
+{
+	return &amp;to_hv_vcpu(vcpu)-&gt;stimer[timer_index];
+}
+
+static inline struct kvm_vcpu *hv_stimer_to_vcpu(struct kvm_vcpu_hv_stimer *stimer)
+{
+	struct kvm_vcpu_hv *hv_vcpu;
+
+<blue>	hv_vcpu = container_of(stimer - stimer->index, struct kvm_vcpu_hv,</blue>
+			       stimer[0]);
+	return hv_vcpu-&gt;vcpu;
+}
+
+static inline bool kvm_hv_has_stimer_pending(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
+
+	if (!hv_vcpu)
+		return false;
+
+<blue>	return !bitmap_empty(hv_vcpu->stimer_pending_bitmap,</blue>
+			     HV_SYNIC_STIMER_COUNT);
+}
+
+void kvm_hv_process_stimers(struct kvm_vcpu *vcpu);
+
+void kvm_hv_setup_tsc_page(struct kvm *kvm,
+			   struct pvclock_vcpu_time_info *hv_clock);
+void kvm_hv_request_tsc_page_update(struct kvm *kvm);
+
+void kvm_hv_init_vm(struct kvm *kvm);
+void kvm_hv_destroy_vm(struct kvm *kvm);
+int kvm_hv_vcpu_init(struct kvm_vcpu *vcpu);
+void kvm_hv_set_cpuid(struct kvm_vcpu *vcpu, bool hyperv_enabled);
+int kvm_hv_set_enforce_cpuid(struct kvm_vcpu *vcpu, bool enforce);
+int kvm_vm_ioctl_hv_eventfd(struct kvm *kvm, struct kvm_hyperv_eventfd *args);
+int kvm_get_hv_cpuid(struct kvm_vcpu *vcpu, struct kvm_cpuid2 *cpuid,
+		     struct kvm_cpuid_entry2 __user *entries);
+
+static inline struct kvm_vcpu_hv_tlb_flush_fifo *kvm_hv_get_tlb_flush_fifo(struct kvm_vcpu *vcpu,
+									   bool is_guest_mode)
+{
+<yellow>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</yellow>
+	int i = is_guest_mode ? HV_L2_TLB_FLUSH_FIFO :
+				HV_L1_TLB_FLUSH_FIFO;
+
+	return &amp;hv_vcpu-&gt;tlb_flush_fifo[i];
+}
+
+static inline void kvm_hv_vcpu_purge_flush_tlb(struct kvm_vcpu *vcpu)
+{
+	struct kvm_vcpu_hv_tlb_flush_fifo *tlb_flush_fifo;
+
+<blue>	if (!to_hv_vcpu(vcpu) || !kvm_check_request(KVM_REQ_HV_TLB_FLUSH, vcpu))</blue>
+		return;
+
+	tlb_flush_fifo = kvm_hv_get_tlb_flush_fifo(vcpu, is_guest_mode(vcpu));
+
+	kfifo_reset_out(&amp;tlb_flush_fifo-&gt;entries);
+}
+
+static inline bool guest_hv_cpuid_has_l2_tlb_flush(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
+
+	return hv_vcpu &amp;&amp;
+<blue>		(hv_vcpu->cpuid_cache.nested_eax & HV_X64_NESTED_DIRECT_FLUSH);</blue>
+}
+
+static inline bool kvm_hv_is_tlb_flush_hcall(struct kvm_vcpu *vcpu)
+{
+<yellow>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</yellow>
+	u16 code;
+
+	if (!hv_vcpu)
+		return false;
+
+<yellow>	code = is_64_bit_hypercall(vcpu) ? kvm_rcx_read(vcpu) :</yellow>
+<yellow>					   kvm_rax_read(vcpu);</yellow>
+
+<yellow>	return (code == HVCALL_FLUSH_VIRTUAL_ADDRESS_SPACE ||</yellow>
+<yellow>		code == HVCALL_FLUSH_VIRTUAL_ADDRESS_LIST ||</yellow>
+		code == HVCALL_FLUSH_VIRTUAL_ADDRESS_SPACE_EX ||
+		code == HVCALL_FLUSH_VIRTUAL_ADDRESS_LIST_EX);
+}
+
+static inline int kvm_hv_verify_vp_assist(struct kvm_vcpu *vcpu)
+{
+	if (!to_hv_vcpu(vcpu))
+		return 0;
+
+	if (!kvm_hv_assist_page_enabled(vcpu))
+		return 0;
+
+	return kvm_hv_get_assist_page(vcpu);
+}
+
+int kvm_hv_vcpu_flush_tlb(struct kvm_vcpu *vcpu);
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 71.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 49.4%</li>`
+</script></body></html>
