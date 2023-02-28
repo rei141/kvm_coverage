@@ -1,0 +1,148 @@
+<doctype html>
+<html lang="ja">
+<head><title>rcuwait.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 77; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _LINUX_RCUWAIT_H_
+#define _LINUX_RCUWAIT_H_
+
+#include &lt;linux/rcupdate.h&gt;
+#include &lt;linux/sched/signal.h&gt;
+
+/*
+ * rcuwait provides a way of blocking and waking up a single
+ * task in an rcu-safe manner.
+ *
+ * The only time @task is non-nil is when a user is blocked (or
+ * checking if it needs to) on a condition, and reset as soon as we
+ * know that the condition has succeeded and are awoken.
+ */
+struct rcuwait {
+	struct task_struct __rcu *task;
+};
+
+#define __RCUWAIT_INITIALIZER(name)		\
+	{ .task = NULL, }
+
+static inline void rcuwait_init(struct rcuwait *w)
+{
+	w-&gt;task = NULL;
+}
+
+/*
+ * Note: this provides no serialization and, just as with waitqueues,
+ * requires care to estimate as to whether or not the wait is active.
+ */
+static inline int rcuwait_active(struct rcuwait *w)
+{
+<yellow>	return !!rcu_access_pointer(w->task);</yellow>
+}
+
+extern int rcuwait_wake_up(struct rcuwait *w);
+
+/*
+ * The caller is responsible for locking around rcuwait_wait_event(),
+ * and [prepare_to/finish]_rcuwait() such that writes to @task are
+ * properly serialized.
+ */
+
+static inline void prepare_to_rcuwait(struct rcuwait *w)
+{
+	rcu_assign_pointer(w-&gt;task, current);
+}
+
+extern void finish_rcuwait(struct rcuwait *w);
+
+#define rcuwait_wait_event(w, condition, state)				\
+({									\
+	int __ret = 0;							\
+	prepare_to_rcuwait(w);						\
+	for (;;) {							\
+		/*							\
+		 * Implicit barrier (A) pairs with (B) in		\
+		 * rcuwait_wake_up().					\
+		 */							\
+		set_current_state(state);				\
+		if (condition)						\
+			break;						\
+									\
+		if (signal_pending_state(state, current)) {		\
+			__ret = -EINTR;					\
+			break;						\
+		}							\
+									\
+		schedule();						\
+	}								\
+	finish_rcuwait(w);						\
+	__ret;								\
+})
+
+#endif /* _LINUX_RCUWAIT_H_ */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 77.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>

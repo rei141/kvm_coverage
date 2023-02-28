@@ -1,0 +1,186 @@
+<doctype html>
+<html lang="ja">
+<head><title>irq.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 115; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+/*
+ * irq.h: in kernel interrupt controller related definitions
+ * Copyright (c) 2007, Intel Corporation.
+ *
+ * Authors:
+ *   Yaozu (Eddie) Dong &lt;Eddie.dong@intel.com&gt;
+ */
+
+#ifndef __IRQ_H
+#define __IRQ_H
+
+#include &lt;linux/mm_types.h&gt;
+#include &lt;linux/hrtimer.h&gt;
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/spinlock.h&gt;
+
+#include &lt;kvm/iodev.h&gt;
+#include &quot;lapic.h&quot;
+
+#define PIC_NUM_PINS 16
+#define SELECT_PIC(irq) \
+	((irq) &lt; 8 ? KVM_IRQCHIP_PIC_MASTER : KVM_IRQCHIP_PIC_SLAVE)
+
+struct kvm;
+struct kvm_vcpu;
+
+struct kvm_kpic_state {
+	u8 last_irr;	/* edge detection */
+	u8 irr;		/* interrupt request register */
+	u8 imr;		/* interrupt mask register */
+	u8 isr;		/* interrupt service register */
+	u8 priority_add;	/* highest irq priority */
+	u8 irq_base;
+	u8 read_reg_select;
+	u8 poll;
+	u8 special_mask;
+	u8 init_state;
+	u8 auto_eoi;
+	u8 rotate_on_auto_eoi;
+	u8 special_fully_nested_mode;
+	u8 init4;		/* true if 4 byte init */
+	u8 elcr;		/* PIIX edge/trigger selection */
+	u8 elcr_mask;
+	u8 isr_ack;	/* interrupt ack detection */
+	struct kvm_pic *pics_state;
+};
+
+struct kvm_pic {
+	spinlock_t lock;
+	bool wakeup_needed;
+	unsigned pending_acks;
+	struct kvm *kvm;
+	struct kvm_kpic_state pics[2]; /* 0 is master pic, 1 is slave pic */
+	int output;		/* intr from master PIC */
+	struct kvm_io_device dev_master;
+	struct kvm_io_device dev_slave;
+	struct kvm_io_device dev_elcr;
+	unsigned long irq_states[PIC_NUM_PINS];
+};
+
+int kvm_pic_init(struct kvm *kvm);
+void kvm_pic_destroy(struct kvm *kvm);
+int kvm_pic_read_irq(struct kvm *kvm);
+void kvm_pic_update_irq(struct kvm_pic *s);
+
+static inline int irqchip_split(struct kvm *kvm)
+{
+<blue>	int mode = kvm->arch.irqchip_mode;</blue>
+
+	/* Matches smp_wmb() when setting irqchip_mode */
+	smp_rmb();
+	return mode == KVM_IRQCHIP_SPLIT;
+}
+
+static inline int irqchip_kernel(struct kvm *kvm)
+{
+<yellow>	int mode = kvm->arch.irqchip_mode;</yellow>
+
+	/* Matches smp_wmb() when setting irqchip_mode */
+	smp_rmb();
+<yellow>	return mode == KVM_IRQCHIP_KERNEL;</yellow>
+}
+
+static inline int pic_in_kernel(struct kvm *kvm)
+{
+	return irqchip_kernel(kvm);
+}
+
+static inline int irqchip_in_kernel(struct kvm *kvm)
+{
+<blue>	int mode = kvm->arch.irqchip_mode;</blue>
+
+	/* Matches smp_wmb() when setting irqchip_mode */
+	smp_rmb();
+<yellow>	return mode != KVM_IRQCHIP_NONE;</yellow>
+}
+
+void kvm_inject_pending_timer_irqs(struct kvm_vcpu *vcpu);
+void kvm_inject_apic_timer_irqs(struct kvm_vcpu *vcpu);
+void kvm_apic_nmi_wd_deliver(struct kvm_vcpu *vcpu);
+void __kvm_migrate_apic_timer(struct kvm_vcpu *vcpu);
+void __kvm_migrate_pit_timer(struct kvm_vcpu *vcpu);
+void __kvm_migrate_timers(struct kvm_vcpu *vcpu);
+
+int apic_has_pending_timer(struct kvm_vcpu *vcpu);
+
+int kvm_setup_default_irq_routing(struct kvm *kvm);
+int kvm_setup_empty_irq_routing(struct kvm *kvm);
+int kvm_irq_delivery_to_apic(struct kvm *kvm, struct kvm_lapic *src,
+			     struct kvm_lapic_irq *irq,
+			     struct dest_map *dest_map);
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 77.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+</script></body></html>
