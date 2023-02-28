@@ -1726,12 +1726,12 @@ static void vmx_update_emulated_instruction(struct kvm_vcpu *vcpu)
 	 * priority than MTF.  Record the pending MTF state to be delivered in
 	 * vmx_check_nested_events().
 	 */
-<yellow>	if (nested_cpu_has_mtf(vmcs12) &&</yellow>
-<yellow>	    (!vcpu->arch.exception.pending ||</yellow>
-<yellow>	     vcpu->arch.exception.vector == DB_VECTOR) &&</yellow>
-<yellow>	    (!vcpu->arch.exception_vmexit.pending ||</yellow>
+<blue>	if (nested_cpu_has_mtf(vmcs12) &&</blue>
+<blue>	    (!vcpu->arch.exception.pending ||</blue>
+<blue>	     vcpu->arch.exception.vector == DB_VECTOR) &&</blue>
+<blue>	    (!vcpu->arch.exception_vmexit.pending ||</blue>
 <yellow>	     vcpu->arch.exception_vmexit.vector == DB_VECTOR)) {</yellow>
-<yellow>		vmx->nested.mtf_pending = true;</yellow>
+<blue>		vmx->nested.mtf_pending = true;</blue>
 <yellow>		kvm_make_request(KVM_REQ_EVENT, vcpu);</yellow>
 	} else {
 <blue>		vmx->nested.mtf_pending = false;</blue>
@@ -8672,8 +8672,8 @@ module_init(vmx_init);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 77.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.1%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 48.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 81.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.8%</li>`
 </script></body></html>

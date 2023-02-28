@@ -1,0 +1,193 @@
+<doctype html>
+<html lang="ja">
+<head><title>hyperv_timer.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 122; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+
+/*
+ * Definitions for the clocksource provided by the Hyper-V
+ * hypervisor to guest VMs, as described in the Hyper-V Top
+ * Level Functional Spec (TLFS).
+ *
+ * Copyright (C) 2019, Microsoft, Inc.
+ *
+ * Author:  Michael Kelley &lt;mikelley@microsoft.com&gt;
+ */
+
+#ifndef __CLKSOURCE_HYPERV_TIMER_H
+#define __CLKSOURCE_HYPERV_TIMER_H
+
+#include &lt;linux/clocksource.h&gt;
+#include &lt;linux/math64.h&gt;
+#include &lt;asm/hyperv-tlfs.h&gt;
+
+#define HV_MAX_MAX_DELTA_TICKS 0xffffffff
+#define HV_MIN_DELTA_TICKS 1
+
+#ifdef CONFIG_HYPERV_TIMER
+
+#include &lt;asm/hyperv_timer.h&gt;
+
+/* Routines called by the VMbus driver */
+extern int hv_stimer_alloc(bool have_percpu_irqs);
+extern int hv_stimer_cleanup(unsigned int cpu);
+extern void hv_stimer_legacy_init(unsigned int cpu, int sint);
+extern void hv_stimer_legacy_cleanup(unsigned int cpu);
+extern void hv_stimer_global_cleanup(void);
+extern void hv_stimer0_isr(void);
+
+extern void hv_init_clocksource(void);
+extern void hv_remap_tsc_clocksource(void);
+
+extern unsigned long hv_get_tsc_pfn(void);
+extern struct ms_hyperv_tsc_page *hv_get_tsc_page(void);
+
+static inline notrace u64
+hv_read_tsc_page_tsc(const struct ms_hyperv_tsc_page *tsc_pg, u64 *cur_tsc)
+{
+	u64 scale, offset;
+	u32 sequence;
+
+	/*
+	 * The protocol for reading Hyper-V TSC page is specified in Hypervisor
+	 * Top-Level Functional Specification ver. 3.0 and above. To get the
+	 * reference time we must do the following:
+	 * - READ ReferenceTscSequence
+	 *   A special &#x27;0&#x27; value indicates the time source is unreliable and we
+	 *   need to use something else. The currently published specification
+	 *   versions (up to 4.0b) contain a mistake and wrongly claim &#x27;-1&#x27;
+	 *   instead of &#x27;0&#x27; as the special value, see commit c35b82ef0294.
+	 * - ReferenceTime =
+	 *        ((RDTSC() * ReferenceTscScale) &gt;&gt; 64) + ReferenceTscOffset
+	 * - READ ReferenceTscSequence again. In case its value has changed
+	 *   since our first reading we need to discard ReferenceTime and repeat
+	 *   the whole sequence as the hypervisor was updating the page in
+	 *   between.
+	 */
+	do {
+<yellow>		sequence = READ_ONCE(tsc_pg->tsc_sequence);</yellow>
+		if (!sequence)
+			return U64_MAX;
+		/*
+		 * Make sure we read sequence before we read other values from
+		 * TSC page.
+		 */
+		smp_rmb();
+
+<yellow>		scale = READ_ONCE(tsc_pg->tsc_scale);</yellow>
+		offset = READ_ONCE(tsc_pg-&gt;tsc_offset);
+		*cur_tsc = hv_get_raw_timer();
+
+		/*
+		 * Make sure we read sequence after we read all other values
+		 * from TSC page.
+		 */
+		smp_rmb();
+
+	} while (READ_ONCE(tsc_pg-&gt;tsc_sequence) != sequence);
+
+<yellow>	return mul_u64_u64_shr(*cur_tsc, scale, 64) + offset;</yellow>
+}
+
+static inline notrace u64
+hv_read_tsc_page(const struct ms_hyperv_tsc_page *tsc_pg)
+{
+	u64 cur_tsc;
+
+	return hv_read_tsc_page_tsc(tsc_pg, &amp;cur_tsc);
+}
+
+#else /* CONFIG_HYPERV_TIMER */
+static inline unsigned long hv_get_tsc_pfn(void)
+{
+	return 0;
+}
+
+static inline struct ms_hyperv_tsc_page *hv_get_tsc_page(void)
+{
+	return NULL;
+}
+
+static inline u64 hv_read_tsc_page_tsc(const struct ms_hyperv_tsc_page *tsc_pg,
+				       u64 *cur_tsc)
+{
+	return U64_MAX;
+}
+
+static inline int hv_stimer_cleanup(unsigned int cpu) { return 0; }
+static inline void hv_stimer_legacy_init(unsigned int cpu, int sint) {}
+static inline void hv_stimer_legacy_cleanup(unsigned int cpu) {}
+static inline void hv_stimer_global_cleanup(void) {}
+static inline void hv_stimer0_isr(void) {}
+
+#endif /* CONFIG_HYPERV_TIMER */
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 48.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 81.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.8%</li>`
+</script></body></html>

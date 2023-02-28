@@ -388,7 +388,7 @@ static inline int ept_caps_to_lpage_level(u32 ept_caps)
 {
 	if (ept_caps &amp; VMX_EPT_1GB_PAGE_BIT)
 		return PG_LEVEL_1G;
-<yellow>	if (ept_caps & VMX_EPT_2MB_PAGE_BIT)</yellow>
+<blue>	if (ept_caps & VMX_EPT_2MB_PAGE_BIT)</blue>
 		return PG_LEVEL_2M;
 	return PG_LEVEL_4K;
 }
@@ -469,8 +469,8 @@ static inline bool cpu_has_notify_vmexit(void)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 47.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 77.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.1%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 48.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 81.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.3%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.8%</li>`
 </script></body></html>
