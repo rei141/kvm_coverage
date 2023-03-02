@@ -1,0 +1,294 @@
+<doctype html>
+<html lang="ja">
+<head><title>dirty_ring.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 223; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * KVM dirty ring implementation
+ *
+ * Copyright 2019 Red Hat, Inc.
+ */
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/kvm.h&gt;
+#include &lt;linux/vmalloc.h&gt;
+#include &lt;linux/kvm_dirty_ring.h&gt;
+#include &lt;trace/events/kvm.h&gt;
+#include &quot;kvm_mm.h&quot;
+
+int __weak kvm_cpu_dirty_log_size(void)
+{
+	return 0;
+<yellow>}</yellow>
+
+u32 kvm_dirty_ring_get_rsvd_entries(void)
+{
+<yellow>	return KVM_DIRTY_RING_RSVD_ENTRIES + kvm_cpu_dirty_log_size();</yellow>
+}
+
+bool kvm_use_dirty_bitmap(struct kvm *kvm)
+{
+<yellow>	lockdep_assert_held(&kvm->slots_lock);</yellow>
+
+<yellow>	return !kvm->dirty_ring_size || kvm->dirty_ring_with_bitmap;</yellow>
+<yellow>}</yellow>
+
+#ifndef CONFIG_NEED_KVM_DIRTY_RING_WITH_BITMAP
+bool kvm_arch_allow_write_without_running_vcpu(struct kvm *kvm)
+{
+	return false;
+<yellow>}</yellow>
+#endif
+
+static u32 kvm_dirty_ring_used(struct kvm_dirty_ring *ring)
+{
+<yellow>	return READ_ONCE(ring->dirty_index) - READ_ONCE(ring->reset_index);</yellow>
+}
+
+static bool kvm_dirty_ring_soft_full(struct kvm_dirty_ring *ring)
+{
+<yellow>	return kvm_dirty_ring_used(ring) >= ring->soft_limit;</yellow>
+}
+
+static bool kvm_dirty_ring_full(struct kvm_dirty_ring *ring)
+{
+<yellow>	return kvm_dirty_ring_used(ring) >= ring->size;</yellow>
+}
+
+static void kvm_reset_dirty_gfn(struct kvm *kvm, u32 slot, u64 offset, u64 mask)
+{
+	struct kvm_memory_slot *memslot;
+	int as_id, id;
+
+	as_id = slot &gt;&gt; 16;
+	id = (u16)slot;
+
+<yellow>	if (as_id >= KVM_ADDRESS_SPACE_NUM || id >= KVM_USER_MEM_SLOTS)</yellow>
+		return;
+
+<yellow>	memslot = id_to_memslot(__kvm_memslots(kvm, as_id), id);</yellow>
+
+<yellow>	if (!memslot || (offset + __fls(mask)) >= memslot->npages)</yellow>
+		return;
+
+<yellow>	KVM_MMU_LOCK(kvm);</yellow>
+	kvm_arch_mmu_enable_log_dirty_pt_masked(kvm, memslot, offset, mask);
+	KVM_MMU_UNLOCK(kvm);
+<yellow>}</yellow>
+
+int kvm_dirty_ring_alloc(struct kvm_dirty_ring *ring, int index, u32 size)
+{
+<yellow>	ring->dirty_gfns = vzalloc(size);</yellow>
+	if (!ring-&gt;dirty_gfns)
+		return -ENOMEM;
+
+<yellow>	ring->size = size / sizeof(struct kvm_dirty_gfn);</yellow>
+	ring-&gt;soft_limit = ring-&gt;size - kvm_dirty_ring_get_rsvd_entries();
+	ring-&gt;dirty_index = 0;
+	ring-&gt;reset_index = 0;
+	ring-&gt;index = index;
+
+	return 0;
+<yellow>}</yellow>
+
+static inline void kvm_dirty_gfn_set_invalid(struct kvm_dirty_gfn *gfn)
+{
+	smp_store_release(&amp;gfn-&gt;flags, 0);
+}
+
+static inline void kvm_dirty_gfn_set_dirtied(struct kvm_dirty_gfn *gfn)
+{
+	gfn-&gt;flags = KVM_DIRTY_GFN_F_DIRTY;
+}
+
+static inline bool kvm_dirty_gfn_harvested(struct kvm_dirty_gfn *gfn)
+{
+	return smp_load_acquire(&amp;gfn-&gt;flags) &amp; KVM_DIRTY_GFN_F_RESET;
+}
+
+int kvm_dirty_ring_reset(struct kvm *kvm, struct kvm_dirty_ring *ring)
+{
+	u32 cur_slot, next_slot;
+	u64 cur_offset, next_offset;
+	unsigned long mask;
+	int count = 0;
+	struct kvm_dirty_gfn *entry;
+	bool first_round = true;
+
+	/* This is only needed to make compilers happy */
+	cur_slot = cur_offset = mask = 0;
+
+	while (true) {
+<yellow>		entry = &ring->dirty_gfns[ring->reset_index & (ring->size - 1)];</yellow>
+
+		if (!kvm_dirty_gfn_harvested(entry))
+			break;
+
+<yellow>		next_slot = READ_ONCE(entry->slot);</yellow>
+		next_offset = READ_ONCE(entry-&gt;offset);
+
+		/* Update the flags to reflect that this GFN is reset */
+		kvm_dirty_gfn_set_invalid(entry);
+
+		ring-&gt;reset_index++;
+		count++;
+		/*
+		 * Try to coalesce the reset operations when the guest is
+		 * scanning pages in the same slot.
+		 */
+<yellow>		if (!first_round && next_slot == cur_slot) {</yellow>
+<yellow>			s64 delta = next_offset - cur_offset;</yellow>
+
+			if (delta &gt;= 0 &amp;&amp; delta &lt; BITS_PER_LONG) {
+<yellow>				mask |= 1ull << delta;</yellow>
+				continue;
+			}
+
+			/* Backwards visit, careful about overflows!  */
+<yellow>			if (delta > -BITS_PER_LONG && delta < 0 &&</yellow>
+<yellow>			    (mask << -delta >> -delta) == mask) {</yellow>
+				cur_offset = next_offset;
+<yellow>				mask = (mask << -delta) | 1;</yellow>
+				continue;
+			}
+		}
+<yellow>		kvm_reset_dirty_gfn(kvm, cur_slot, cur_offset, mask);</yellow>
+		cur_slot = next_slot;
+		cur_offset = next_offset;
+		mask = 1;
+		first_round = false;
+	}
+
+<yellow>	kvm_reset_dirty_gfn(kvm, cur_slot, cur_offset, mask);</yellow>
+
+	/*
+	 * The request KVM_REQ_DIRTY_RING_SOFT_FULL will be cleared
+	 * by the VCPU thread next time when it enters the guest.
+	 */
+
+<yellow>	trace_kvm_dirty_ring_reset(ring);</yellow>
+
+	return count;
+<yellow>}</yellow>
+
+void kvm_dirty_ring_push(struct kvm_vcpu *vcpu, u32 slot, u64 offset)
+{
+	struct kvm_dirty_ring *ring = &amp;vcpu-&gt;dirty_ring;
+	struct kvm_dirty_gfn *entry;
+
+	/* It should never get full */
+<yellow>	WARN_ON_ONCE(kvm_dirty_ring_full(ring));</yellow>
+
+<yellow>	entry = &ring->dirty_gfns[ring->dirty_index & (ring->size - 1)];</yellow>
+
+	entry-&gt;slot = slot;
+	entry-&gt;offset = offset;
+	/*
+	 * Make sure the data is filled in before we publish this to
+	 * the userspace program.  There&#x27;s no paired kernel-side reader.
+	 */
+	smp_wmb();
+	kvm_dirty_gfn_set_dirtied(entry);
+	ring-&gt;dirty_index++;
+<yellow>	trace_kvm_dirty_ring_push(ring, slot, offset);</yellow>
+
+<yellow>	if (kvm_dirty_ring_soft_full(ring))</yellow>
+<yellow>		kvm_make_request(KVM_REQ_DIRTY_RING_SOFT_FULL, vcpu);</yellow>
+<yellow>}</yellow>
+
+bool kvm_dirty_ring_check_request(struct kvm_vcpu *vcpu)
+{
+	/*
+	 * The VCPU isn&#x27;t runnable when the dirty ring becomes soft full.
+	 * The KVM_REQ_DIRTY_RING_SOFT_FULL event is always set to prevent
+	 * the VCPU from running until the dirty pages are harvested and
+	 * the dirty ring is reset by userspace.
+	 */
+<blue>	if (kvm_check_request(KVM_REQ_DIRTY_RING_SOFT_FULL, vcpu) &&</blue>
+	    kvm_dirty_ring_soft_full(&amp;vcpu-&gt;dirty_ring)) {
+<yellow>		kvm_make_request(KVM_REQ_DIRTY_RING_SOFT_FULL, vcpu);</yellow>
+		vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_DIRTY_RING_FULL;
+<yellow>		trace_kvm_dirty_ring_exit(vcpu);</yellow>
+		return true;
+	}
+
+	return false;
+<blue>}</blue>
+
+struct page *kvm_dirty_ring_get_page(struct kvm_dirty_ring *ring, u32 offset)
+{
+<yellow>	return vmalloc_to_page((void *)ring->dirty_gfns + offset * PAGE_SIZE);</yellow>
+}
+
+void kvm_dirty_ring_free(struct kvm_dirty_ring *ring)
+{
+<yellow>	vfree(ring->dirty_gfns);</yellow>
+	ring-&gt;dirty_gfns = NULL;
+}
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
+</script></body></html>

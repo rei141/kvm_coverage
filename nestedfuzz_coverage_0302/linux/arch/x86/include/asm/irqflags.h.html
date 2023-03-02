@@ -1,0 +1,214 @@
+<doctype html>
+<html lang="ja">
+<head><title>irqflags.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 143; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _X86_IRQFLAGS_H_
+#define _X86_IRQFLAGS_H_
+
+#include &lt;asm/processor-flags.h&gt;
+
+#ifndef __ASSEMBLY__
+
+#include &lt;asm/nospec-branch.h&gt;
+
+/* Provide __cpuidle; we can&#x27;t safely include &lt;linux/cpu.h&gt; */
+#define __cpuidle __section(&quot;.cpuidle.text&quot;)
+
+/*
+ * Interrupt control:
+ */
+
+/* Declaration required for gcc &lt; 4.9 to prevent -Werror=missing-prototypes */
+extern inline unsigned long native_save_fl(void);
+extern __always_inline unsigned long native_save_fl(void)
+{
+	unsigned long flags;
+
+	/*
+	 * &quot;=rm&quot; is safe here, because &quot;pop&quot; adjusts the stack before
+	 * it evaluates its effective address -- this is part of the
+	 * documented behavior of the &quot;pop&quot; instruction.
+	 */
+	asm volatile(&quot;# __raw_save_flags\n\t&quot;
+		     &quot;pushf ; pop %0&quot;
+		     : &quot;=rm&quot; (flags)
+		     : /* no input */
+		     : &quot;memory&quot;);
+
+	return flags;
+}
+
+static __always_inline void native_irq_disable(void)
+{
+	asm volatile(&quot;cli&quot;: : :&quot;memory&quot;);
+}
+
+static __always_inline void native_irq_enable(void)
+{
+	asm volatile(&quot;sti&quot;: : :&quot;memory&quot;);
+}
+
+static inline __cpuidle void native_safe_halt(void)
+{
+	mds_idle_clear_cpu_buffers();
+	asm volatile(&quot;sti; hlt&quot;: : :&quot;memory&quot;);
+}
+
+static inline __cpuidle void native_halt(void)
+{
+	mds_idle_clear_cpu_buffers();
+	asm volatile(&quot;hlt&quot;: : :&quot;memory&quot;);
+}
+
+#endif
+
+#ifdef CONFIG_PARAVIRT_XXL
+#include &lt;asm/paravirt.h&gt;
+#else
+#ifndef __ASSEMBLY__
+#include &lt;linux/types.h&gt;
+
+static __always_inline unsigned long arch_local_save_flags(void)
+{
+	return native_save_fl();
+}
+
+static __always_inline void arch_local_irq_disable(void)
+{
+	native_irq_disable();
+}
+
+static __always_inline void arch_local_irq_enable(void)
+{
+	native_irq_enable();
+}
+
+/*
+ * Used in the idle loop; sti takes one instruction cycle
+ * to complete:
+ */
+static inline __cpuidle void arch_safe_halt(void)
+{
+	native_safe_halt();
+}
+
+/*
+ * Used when interrupts are already enabled or to
+ * shutdown the processor:
+ */
+static inline __cpuidle void halt(void)
+{
+	native_halt();
+}
+
+/*
+ * For spinlocks, etc:
+ */
+static __always_inline unsigned long arch_local_irq_save(void)
+{
+	unsigned long flags = arch_local_save_flags();
+	arch_local_irq_disable();
+	return flags;
+}
+#else
+
+#ifdef CONFIG_X86_64
+#ifdef CONFIG_DEBUG_ENTRY
+#define SAVE_FLAGS		pushfq; popq %rax
+#endif
+
+#endif
+
+#endif /* __ASSEMBLY__ */
+#endif /* CONFIG_PARAVIRT_XXL */
+
+#ifndef __ASSEMBLY__
+static __always_inline int arch_irqs_disabled_flags(unsigned long flags)
+{
+	return !(flags &amp; X86_EFLAGS_IF);
+}
+
+static __always_inline int arch_irqs_disabled(void)
+{
+<blue>	unsigned long flags = arch_local_save_flags();</blue>
+
+	return arch_irqs_disabled_flags(flags);
+}
+
+static __always_inline void arch_local_irq_restore(unsigned long flags)
+{
+<blue>	if (!arch_irqs_disabled_flags(flags))</blue>
+<blue>		arch_local_irq_enable();</blue>
+}
+#endif /* !__ASSEMBLY__ */
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
+</script></body></html>

@@ -1,0 +1,120 @@
+<doctype html>
+<html lang="ja">
+<head><title>access_ok.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 49; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __ASM_GENERIC_ACCESS_OK_H__
+#define __ASM_GENERIC_ACCESS_OK_H__
+
+/*
+ * Checking whether a pointer is valid for user space access.
+ * These definitions work on most architectures, but overrides can
+ * be used where necessary.
+ */
+
+/*
+ * architectures with compat tasks have a variable TASK_SIZE and should
+ * override this to a constant.
+ */
+#ifndef TASK_SIZE_MAX
+#define TASK_SIZE_MAX			TASK_SIZE
+#endif
+
+#ifndef __access_ok
+/*
+ * &#x27;size&#x27; is a compile-time constant for most callers, so optimize for
+ * this case to turn the check into a single comparison against a constant
+ * limit and catch all possible overflows.
+ * On architectures with separate user address space (m68k, s390, parisc,
+ * sparc64) or those without an MMU, this should always return true.
+ *
+ * This version was originally contributed by Jonas Bonn for the
+ * OpenRISC architecture, and was found to be the most efficient
+ * for constant &#x27;size&#x27; and &#x27;limit&#x27; values.
+ */
+static inline int __access_ok(const void __user *ptr, unsigned long size)
+{
+<blue>	unsigned long limit = TASK_SIZE_MAX;</blue>
+	unsigned long addr = (unsigned long)ptr;
+
+	if (IS_ENABLED(CONFIG_ALTERNATE_USER_ADDRESS_SPACE) ||
+	    !IS_ENABLED(CONFIG_MMU))
+		return true;
+
+<blue>	return (size <= limit) && (addr <= (limit - size));</blue>
+}
+#endif
+
+#ifndef access_ok
+#define access_ok(addr, size) likely(__access_ok(addr, size))
+#endif
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
+</script></body></html>
