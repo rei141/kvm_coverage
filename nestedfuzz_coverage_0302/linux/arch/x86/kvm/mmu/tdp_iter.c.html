@@ -198,11 +198,11 @@ static bool try_step_side(struct tdp_iter *iter)
  */
 static bool try_step_up(struct tdp_iter *iter)
 {
-<yellow>	if (iter->level == iter->root_level)</yellow>
+<blue>	if (iter->level == iter->root_level)</blue>
 		return false;
 
-<yellow>	iter->level++;</yellow>
-<yellow>	iter->gfn = round_gfn_for_level(iter->gfn, iter->level);</yellow>
+<blue>	iter->level++;</blue>
+<blue>	iter->gfn = round_gfn_for_level(iter->gfn, iter->level);</blue>
 	tdp_iter_refresh_sptep(iter);
 
 	return true;
@@ -237,7 +237,7 @@ void tdp_iter_next(struct tdp_iter *iter)
 	do {
 <blue>		if (try_step_side(iter))</blue>
 			return;
-<yellow>	} while (try_step_up(iter));</yellow>
+<blue>	} while (try_step_up(iter));</blue>
 <yellow>	iter->valid = false;</yellow>
 <blue>}</blue>
 
@@ -245,8 +245,8 @@ void tdp_iter_next(struct tdp_iter *iter)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 83.0%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
 </script></body></html>

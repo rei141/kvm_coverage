@@ -1703,14 +1703,14 @@ static void rmap_add(struct kvm_vcpu *vcpu, const struct kvm_memory_slot *slot,
 }
 
 bool kvm_age_gfn(struct kvm *kvm, struct kvm_gfn_range *range)
-<yellow>{</yellow>
+<blue>{</blue>
 	bool young = false;
 
-<yellow>	if (kvm_memslots_have_rmaps(kvm))</yellow>
+<blue>	if (kvm_memslots_have_rmaps(kvm))</blue>
 <yellow>		young = kvm_handle_gfn_range(kvm, range, kvm_age_rmap);</yellow>
 
-<yellow>	if (is_tdp_mmu_enabled(kvm))</yellow>
-<yellow>		young |= kvm_tdp_mmu_age_gfn_range(kvm, range);</yellow>
+<blue>	if (is_tdp_mmu_enabled(kvm))</blue>
+<blue>		young |= kvm_tdp_mmu_age_gfn_range(kvm, range);</blue>
 
 	return young;
 }
@@ -7052,8 +7052,8 @@ void kvm_mmu_pre_destroy_vm(struct kvm *kvm)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 83.0%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
 </script></body></html>

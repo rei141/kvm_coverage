@@ -3270,9 +3270,9 @@ static bool nested_get_vmcs12_pages(struct kvm_vcpu *vcpu)
 <blue>		if (!kvm_vcpu_map(vcpu, gpa_to_gfn(vmcs12->apic_access_addr), map)) {</blue>
 <blue>			vmcs_write64(APIC_ACCESS_ADDR, pfn_to_hpa(map->pfn));</blue>
 		} else {
-<yellow>			pr_debug_ratelimited("%s: no backing for APIC-access address in vmcs12\n",</yellow>
+<blue>			pr_debug_ratelimited("%s: no backing for APIC-access address in vmcs12\n",</blue>
 					     __func__);
-<yellow>			vcpu->run->exit_reason = KVM_EXIT_INTERNAL_ERROR;</yellow>
+<blue>			vcpu->run->exit_reason = KVM_EXIT_INTERNAL_ERROR;</blue>
 			vcpu-&gt;run-&gt;internal.suberror =
 				KVM_INTERNAL_ERROR_EMULATION;
 			vcpu-&gt;run-&gt;internal.ndata = 0;
@@ -3285,9 +3285,9 @@ static bool nested_get_vmcs12_pages(struct kvm_vcpu *vcpu)
 
 <blue>		if (!kvm_vcpu_map(vcpu, gpa_to_gfn(vmcs12->virtual_apic_page_addr), map)) {</blue>
 <blue>			vmcs_write64(VIRTUAL_APIC_PAGE_ADDR, pfn_to_hpa(map->pfn));</blue>
-<yellow>		} else if (nested_cpu_has(vmcs12, CPU_BASED_CR8_LOAD_EXITING) &&</yellow>
+<blue>		} else if (nested_cpu_has(vmcs12, CPU_BASED_CR8_LOAD_EXITING) &&</blue>
 		           nested_cpu_has(vmcs12, CPU_BASED_CR8_STORE_EXITING) &amp;&amp;
-<yellow>			   !nested_cpu_has2(vmcs12, SECONDARY_EXEC_VIRTUALIZE_APIC_ACCESSES)) {</yellow>
+<blue>			   !nested_cpu_has2(vmcs12, SECONDARY_EXEC_VIRTUALIZE_APIC_ACCESSES)) {</blue>
 			/*
 			 * The processor will never use the TPR shadow, simply
 			 * clear the bit from the execution control.  Such a
@@ -3296,13 +3296,13 @@ static bool nested_get_vmcs12_pages(struct kvm_vcpu *vcpu)
 			 * _not_ what the processor does but it&#x27;s basically the
 			 * only possibility we have.
 			 */
-<yellow>			exec_controls_clearbit(vmx, CPU_BASED_TPR_SHADOW);</yellow>
+<blue>			exec_controls_clearbit(vmx, CPU_BASED_TPR_SHADOW);</blue>
 		} else {
 			/*
 			 * Write an illegal value to VIRTUAL_APIC_PAGE_ADDR to
 			 * force VM-Entry to fail.
 			 */
-<yellow>			vmcs_write64(VIRTUAL_APIC_PAGE_ADDR, INVALID_GPA);</yellow>
+<blue>			vmcs_write64(VIRTUAL_APIC_PAGE_ADDR, INVALID_GPA);</blue>
 		}
 	}
 
@@ -3322,8 +3322,8 @@ static bool nested_get_vmcs12_pages(struct kvm_vcpu *vcpu)
 			 * descriptor. (Note that KVM may do this when it
 			 * should not, per the architectural specification.)
 			 */
-<yellow>			vmx->nested.pi_desc = NULL;</yellow>
-<yellow>			pin_controls_clearbit(vmx, PIN_BASED_POSTED_INTR);</yellow>
+<blue>			vmx->nested.pi_desc = NULL;</blue>
+<blue>			pin_controls_clearbit(vmx, PIN_BASED_POSTED_INTR);</blue>
 		}
 	}
 <blue>	if (nested_vmx_prepare_msr_bitmap(vcpu, vmcs12))</blue>
@@ -3504,7 +3504,7 @@ enum nvmx_vmentry_status nested_vmx_enter_non_root_mode(struct kvm_vcpu *vcpu,
 
 	if (from_vmentry) {
 <blue>		if (unlikely(!nested_get_vmcs12_pages(vcpu))) {</blue>
-<yellow>			vmx_switch_vmcs(vcpu, &vmx->vmcs01);</yellow>
+<blue>			vmx_switch_vmcs(vcpu, &vmx->vmcs01);</blue>
 			return NVMX_VMENTRY_KVM_INTERNAL_ERROR;
 		}
 
@@ -6542,9 +6542,9 @@ static int vmx_get_nested_state(struct kvm_vcpu *vcpu,
 <blue>		sync_vmcs02_to_vmcs12(vcpu, vmcs12);</blue>
 		sync_vmcs02_to_vmcs12_rare(vcpu, vmcs12);
 	} else  {
-<yellow>		copy_vmcs02_to_vmcs12_rare(vcpu, get_vmcs12(vcpu));</yellow>
-<yellow>		if (!vmx->nested.need_vmcs12_to_shadow_sync) {</yellow>
-<yellow>			if (evmptr_is_valid(vmx->nested.hv_evmcs_vmptr))</yellow>
+<blue>		copy_vmcs02_to_vmcs12_rare(vcpu, get_vmcs12(vcpu));</blue>
+<blue>		if (!vmx->nested.need_vmcs12_to_shadow_sync) {</blue>
+<blue>			if (evmptr_is_valid(vmx->nested.hv_evmcs_vmptr))</blue>
 				/*
 				 * L1 hypervisor is not obliged to keep eVMCS
 				 * clean fields data always up-to-date while
@@ -6553,8 +6553,8 @@ static int vmx_get_nested_state(struct kvm_vcpu *vcpu,
 				 * to ignore it here and do full copy.
 				 */
 <yellow>				copy_enlightened_to_vmcs12(vmx, 0);</yellow>
-<yellow>			else if (enable_shadow_vmcs)</yellow>
-<yellow>				copy_shadow_to_vmcs12(vmx);</yellow>
+<blue>			else if (enable_shadow_vmcs)</blue>
+<blue>				copy_shadow_to_vmcs12(vmx);</blue>
 		}
 	}
 
@@ -6569,9 +6569,9 @@ static int vmx_get_nested_state(struct kvm_vcpu *vcpu,
 		return -EFAULT;
 
 <blue>	if (nested_cpu_has_shadow_vmcs(vmcs12) &&</blue>
-<yellow>	    vmcs12->vmcs_link_pointer != INVALID_GPA) {</yellow>
+<blue>	    vmcs12->vmcs_link_pointer != INVALID_GPA) {</blue>
 		if (copy_to_user(user_vmx_nested_state-&gt;shadow_vmcs12,
-<yellow>				 get_shadow_vmcs12(vcpu), VMCS12_SIZE))</yellow>
+<blue>				 get_shadow_vmcs12(vcpu), VMCS12_SIZE))</blue>
 			return -EFAULT;
 	}
 out:
@@ -7124,8 +7124,8 @@ struct kvm_x86_nested_ops vmx_nested_ops = {
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 83.0%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
 </script></body></html>
