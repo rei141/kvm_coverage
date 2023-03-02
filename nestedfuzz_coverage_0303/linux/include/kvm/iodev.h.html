@@ -1,0 +1,136 @@
+<doctype html>
+<html lang="ja">
+<head><title>iodev.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 65; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0-only */
+
+#ifndef __KVM_IODEV_H__
+#define __KVM_IODEV_H__
+
+#include &lt;linux/kvm_types.h&gt;
+#include &lt;linux/errno.h&gt;
+
+struct kvm_io_device;
+struct kvm_vcpu;
+
+/**
+ * kvm_io_device_ops are called under kvm slots_lock.
+ * read and write handlers return 0 if the transaction has been handled,
+ * or non-zero to have it passed to the next device.
+ **/
+struct kvm_io_device_ops {
+	int (*read)(struct kvm_vcpu *vcpu,
+		    struct kvm_io_device *this,
+		    gpa_t addr,
+		    int len,
+		    void *val);
+	int (*write)(struct kvm_vcpu *vcpu,
+		     struct kvm_io_device *this,
+		     gpa_t addr,
+		     int len,
+		     const void *val);
+	void (*destructor)(struct kvm_io_device *this);
+};
+
+
+struct kvm_io_device {
+	const struct kvm_io_device_ops *ops;
+};
+
+static inline void kvm_iodevice_init(struct kvm_io_device *dev,
+				     const struct kvm_io_device_ops *ops)
+{
+<blue>	dev->ops = ops;</blue>
+}
+
+static inline int kvm_iodevice_read(struct kvm_vcpu *vcpu,
+				    struct kvm_io_device *dev, gpa_t addr,
+				    int l, void *v)
+{
+<blue>	return dev->ops->read ? dev->ops->read(vcpu, dev, addr, l, v)</blue>
+				: -EOPNOTSUPP;
+}
+
+static inline int kvm_iodevice_write(struct kvm_vcpu *vcpu,
+				     struct kvm_io_device *dev, gpa_t addr,
+				     int l, const void *v)
+{
+<blue>	return dev->ops->write ? dev->ops->write(vcpu, dev, addr, l, v)</blue>
+				 : -EOPNOTSUPP;
+}
+
+static inline void kvm_iodevice_destructor(struct kvm_io_device *dev)
+{
+<blue>	if (dev->ops->destructor)</blue>
+<blue>		dev->ops->destructor(dev);</blue>
+}
+
+#endif /* __KVM_IODEV_H__ */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 83.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
+</script></body></html>

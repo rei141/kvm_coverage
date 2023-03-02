@@ -1,0 +1,823 @@
+<doctype html>
+<html lang="ja">
+<head><title>i8254.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 752; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/*
+ * 8253/8254 interval timer emulation
+ *
+ * Copyright (c) 2003-2004 Fabrice Bellard
+ * Copyright (c) 2006 Intel Corporation
+ * Copyright (c) 2007 Keir Fraser, XenSource Inc
+ * Copyright (c) 2008 Intel Corporation
+ * Copyright 2009 Red Hat, Inc. and/or its affiliates.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * Authors:
+ *   Sheng Yang &lt;sheng.yang@intel.com&gt;
+ *   Based on QEMU and Xen.
+ */
+
+#define pr_fmt(fmt) &quot;pit: &quot; fmt
+
+#include &lt;linux/kvm_host.h&gt;
+#include &lt;linux/slab.h&gt;
+
+#include &quot;ioapic.h&quot;
+#include &quot;irq.h&quot;
+#include &quot;i8254.h&quot;
+#include &quot;x86.h&quot;
+
+#ifndef CONFIG_X86_64
+#define mod_64(x, y) ((x) - (y) * div64_u64(x, y))
+#else
+#define mod_64(x, y) ((x) % (y))
+#endif
+
+#define RW_STATE_LSB 1
+#define RW_STATE_MSB 2
+#define RW_STATE_WORD0 3
+#define RW_STATE_WORD1 4
+
+static void pit_set_gate(struct kvm_pit *pit, int channel, u32 val)
+{
+	struct kvm_kpit_channel_state *c = &amp;pit-&gt;pit_state.channels[channel];
+
+	switch (c-&gt;mode) {
+	default:
+	case 0:
+	case 4:
+		/* XXX: just disable/enable counting */
+		break;
+	case 1:
+	case 2:
+	case 3:
+	case 5:
+		/* Restart counting on rising edge. */
+<yellow>		if (c->gate < val)</yellow>
+<yellow>			c->count_load_time = ktime_get();</yellow>
+		break;
+	}
+
+<yellow>	c->gate = val;</yellow>
+}
+
+static int pit_get_gate(struct kvm_pit *pit, int channel)
+{
+	return pit-&gt;pit_state.channels[channel].gate;
+}
+
+static s64 __kpit_elapsed(struct kvm_pit *pit)
+{
+	s64 elapsed;
+	ktime_t remaining;
+	struct kvm_kpit_state *ps = &amp;pit-&gt;pit_state;
+
+<yellow>	if (!ps->period)</yellow>
+		return 0;
+
+	/*
+	 * The Counter does not stop when it reaches zero. In
+	 * Modes 0, 1, 4, and 5 the Counter ``wraps around&#x27;&#x27; to
+	 * the highest count, either FFFF hex for binary counting
+	 * or 9999 for BCD counting, and continues counting.
+	 * Modes 2 and 3 are periodic; the Counter reloads
+	 * itself with the initial count and continues counting
+	 * from there.
+	 */
+<yellow>	remaining = hrtimer_get_remaining(&ps->timer);</yellow>
+	elapsed = ps-&gt;period - ktime_to_ns(remaining);
+
+	return elapsed;
+}
+
+<yellow>static s64 kpit_elapsed(struct kvm_pit *pit, struct kvm_kpit_channel_state *c,</yellow>
+			int channel)
+{
+	if (channel == 0)
+<yellow>		return __kpit_elapsed(pit);</yellow>
+
+<yellow>	return ktime_to_ns(ktime_sub(ktime_get(), c->count_load_time));</yellow>
+}
+
+static int pit_get_count(struct kvm_pit *pit, int channel)
+{
+<yellow>	struct kvm_kpit_channel_state *c = &pit->pit_state.channels[channel];</yellow>
+	s64 d, t;
+	int counter;
+
+<yellow>	t = kpit_elapsed(pit, c, channel);</yellow>
+<yellow>	d = mul_u64_u32_div(t, KVM_PIT_FREQ, NSEC_PER_SEC);</yellow>
+
+	switch (c-&gt;mode) {
+	case 0:
+	case 1:
+	case 4:
+	case 5:
+<yellow>		counter = (c->count - d) & 0xffff;</yellow>
+		break;
+	case 3:
+		/* XXX: may be incorrect for odd counts */
+<yellow>		counter = c->count - (mod_64((2 * d), c->count));</yellow>
+		break;
+	default:
+<yellow>		counter = c->count - mod_64(d, c->count);</yellow>
+		break;
+	}
+	return counter;
+<yellow>}</yellow>
+
+static int pit_get_out(struct kvm_pit *pit, int channel)
+{
+<yellow>	struct kvm_kpit_channel_state *c = &pit->pit_state.channels[channel];</yellow>
+	s64 d, t;
+	int out;
+
+<yellow>	t = kpit_elapsed(pit, c, channel);</yellow>
+<yellow>	d = mul_u64_u32_div(t, KVM_PIT_FREQ, NSEC_PER_SEC);</yellow>
+
+	switch (c-&gt;mode) {
+	default:
+	case 0:
+<yellow>		out = (d >= c->count);</yellow>
+		break;
+	case 1:
+<yellow>		out = (d < c->count);</yellow>
+		break;
+	case 2:
+<yellow>		out = ((mod_64(d, c->count) == 0) && (d != 0));</yellow>
+		break;
+	case 3:
+<yellow>		out = (mod_64(d, c->count) < ((c->count + 1) >> 1));</yellow>
+		break;
+	case 4:
+	case 5:
+<yellow>		out = (d == c->count);</yellow>
+		break;
+	}
+
+	return out;
+<yellow>}</yellow>
+
+<yellow>static void pit_latch_count(struct kvm_pit *pit, int channel)</yellow>
+{
+<yellow>	struct kvm_kpit_channel_state *c = &pit->pit_state.channels[channel];</yellow>
+
+	if (!c-&gt;count_latched) {
+<yellow>		c->latched_count = pit_get_count(pit, channel);</yellow>
+		c-&gt;count_latched = c-&gt;rw_mode;
+	}
+}
+
+static void pit_latch_status(struct kvm_pit *pit, int channel)
+{
+<yellow>	struct kvm_kpit_channel_state *c = &pit->pit_state.channels[channel];</yellow>
+
+	if (!c-&gt;status_latched) {
+		/* TODO: Return NULL COUNT (bit 6). */
+<yellow>		c->status = ((pit_get_out(pit, channel) << 7) |</yellow>
+				(c-&gt;rw_mode &lt;&lt; 4) |
+				(c-&gt;mode &lt;&lt; 1) |
+				c-&gt;bcd);
+		c-&gt;status_latched = 1;
+	}
+}
+
+static inline struct kvm_pit *pit_state_to_pit(struct kvm_kpit_state *ps)
+{
+	return container_of(ps, struct kvm_pit, pit_state);
+}
+
+static void kvm_pit_ack_irq(struct kvm_irq_ack_notifier *kian)
+{
+	struct kvm_kpit_state *ps = container_of(kian, struct kvm_kpit_state,
+						 irq_ack_notifier);
+	struct kvm_pit *pit = pit_state_to_pit(ps);
+
+<blue>	atomic_set(&ps->irq_ack, 1);</blue>
+	/* irq_ack should be set before pending is read.  Order accesses with
+	 * inc(pending) in pit_timer_fn and xchg(irq_ack, 0) in pit_do_work.
+	 */
+	smp_mb();
+<blue>	if (atomic_dec_if_positive(&ps->pending) > 0)</blue>
+<blue>		kthread_queue_work(pit->worker, &pit->expired);</blue>
+<blue>}</blue>
+
+void __kvm_migrate_pit_timer(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_pit *pit = vcpu->kvm->arch.vpit;</blue>
+	struct hrtimer *timer;
+
+	/* Somewhat arbitrarily make vcpu0 the owner of the PIT. */
+<blue>	if (vcpu->vcpu_id || !pit)</blue>
+		return;
+
+	timer = &amp;pit-&gt;pit_state.timer;
+<blue>	mutex_lock(&pit->pit_state.lock);</blue>
+	if (hrtimer_cancel(timer))
+<blue>		hrtimer_start_expires(timer, HRTIMER_MODE_ABS);</blue>
+<blue>	mutex_unlock(&pit->pit_state.lock);</blue>
+<blue>}</blue>
+
+static void destroy_pit_timer(struct kvm_pit *pit)
+{
+<yellow>	hrtimer_cancel(&pit->pit_state.timer);</yellow>
+	kthread_flush_work(&amp;pit-&gt;expired);
+}
+
+static void pit_do_work(struct kthread_work *work)
+<yellow>{</yellow>
+	struct kvm_pit *pit = container_of(work, struct kvm_pit, expired);
+<yellow>	struct kvm *kvm = pit->kvm;</yellow>
+	struct kvm_vcpu *vcpu;
+	unsigned long i;
+	struct kvm_kpit_state *ps = &amp;pit-&gt;pit_state;
+
+<yellow>	if (atomic_read(&ps->reinject) && !atomic_xchg(&ps->irq_ack, 0))</yellow>
+<yellow>		return;</yellow>
+
+<yellow>	kvm_set_irq(kvm, pit->irq_source_id, 0, 1, false);</yellow>
+	kvm_set_irq(kvm, pit-&gt;irq_source_id, 0, 0, false);
+
+	/*
+	 * Provides NMI watchdog support via Virtual Wire mode.
+	 * The route is: PIT -&gt; LVT0 in NMI mode.
+	 *
+	 * Note: Our Virtual Wire implementation does not follow
+	 * the MP specification.  We propagate a PIT interrupt to all
+	 * VCPUs and only when LVT0 is in NMI mode.  The interrupt can
+	 * also be simultaneously delivered through PIC and IOAPIC.
+	 */
+	if (atomic_read(&amp;kvm-&gt;arch.vapics_in_nmi_mode) &gt; 0)
+<yellow>		kvm_for_each_vcpu(i, vcpu, kvm)</yellow>
+<yellow>			kvm_apic_nmi_wd_deliver(vcpu);</yellow>
+}
+
+static enum hrtimer_restart pit_timer_fn(struct hrtimer *data)
+{
+	struct kvm_kpit_state *ps = container_of(data, struct kvm_kpit_state, timer);
+	struct kvm_pit *pt = pit_state_to_pit(ps);
+
+<yellow>	if (atomic_read(&ps->reinject))</yellow>
+<yellow>		atomic_inc(&ps->pending);</yellow>
+
+<yellow>	kthread_queue_work(pt->worker, &pt->expired);</yellow>
+
+<yellow>	if (ps->is_periodic) {</yellow>
+<yellow>		hrtimer_add_expires_ns(&ps->timer, ps->period);</yellow>
+		return HRTIMER_RESTART;
+	} else
+		return HRTIMER_NORESTART;
+<yellow>}</yellow>
+
+static inline void kvm_pit_reset_reinject(struct kvm_pit *pit)
+{
+<blue>	atomic_set(&pit->pit_state.pending, 0);</blue>
+	atomic_set(&amp;pit-&gt;pit_state.irq_ack, 1);
+}
+
+void kvm_pit_set_reinject(struct kvm_pit *pit, bool reinject)
+{
+	struct kvm_kpit_state *ps = &amp;pit-&gt;pit_state;
+<yellow>	struct kvm *kvm = pit->kvm;</yellow>
+
+	if (atomic_read(&amp;ps-&gt;reinject) == reinject)
+		return;
+
+	/*
+	 * AMD SVM AVIC accelerates EOI write and does not trap.
+	 * This cause in-kernel PIT re-inject mode to fail
+	 * since it checks ps-&gt;irq_ack before kvm_set_irq()
+	 * and relies on the ack notifier to timely queue
+	 * the pt-&gt;worker work iterm and reinject the missed tick.
+	 * So, deactivate APICv when PIT is in reinject mode.
+	 */
+	if (reinject) {
+		kvm_set_apicv_inhibit(kvm, APICV_INHIBIT_REASON_PIT_REINJ);
+		/* The initial state is preserved while ps-&gt;reinject == 0. */
+<yellow>		kvm_pit_reset_reinject(pit);</yellow>
+<yellow>		kvm_register_irq_ack_notifier(kvm, &ps->irq_ack_notifier);</yellow>
+		kvm_register_irq_mask_notifier(kvm, 0, &amp;pit-&gt;mask_notifier);
+	} else {
+<yellow>		kvm_clear_apicv_inhibit(kvm, APICV_INHIBIT_REASON_PIT_REINJ);</yellow>
+		kvm_unregister_irq_ack_notifier(kvm, &amp;ps-&gt;irq_ack_notifier);
+		kvm_unregister_irq_mask_notifier(kvm, 0, &amp;pit-&gt;mask_notifier);
+	}
+
+<yellow>	atomic_set(&ps->reinject, reinject);</yellow>
+<yellow>}</yellow>
+
+static void create_pit_timer(struct kvm_pit *pit, u32 val, int is_period)
+{
+	struct kvm_kpit_state *ps = &amp;pit-&gt;pit_state;
+<blue>	struct kvm *kvm = pit->kvm;</blue>
+	s64 interval;
+
+<blue>	if (!ioapic_in_kernel(kvm) ||</blue>
+<blue>	    ps->flags & KVM_PIT_FLAGS_HPET_LEGACY)</blue>
+		return;
+
+<blue>	interval = mul_u64_u32_div(val, NSEC_PER_SEC, KVM_PIT_FREQ);</blue>
+
+<yellow>	pr_debug("create pit timer, interval is %llu nsec\n", interval);</yellow>
+
+	/* TODO The new value only affected after the retriggered */
+<blue>	hrtimer_cancel(&ps->timer);</blue>
+	kthread_flush_work(&amp;pit-&gt;expired);
+	ps-&gt;period = interval;
+	ps-&gt;is_periodic = is_period;
+
+	kvm_pit_reset_reinject(pit);
+
+	/*
+	 * Do not allow the guest to program periodic timers with small
+	 * interval, since the hrtimers are not throttled by the host
+	 * scheduler.
+	 */
+<blue>	if (ps->is_periodic) {</blue>
+<blue>		s64 min_period = min_timer_period_us * 1000LL;</blue>
+
+		if (ps-&gt;period &lt; min_period) {
+<yellow>			pr_info_ratelimited(</yellow>
+			    &quot;kvm: requested %lld ns &quot;
+			    &quot;i8254 timer period limited to %lld ns\n&quot;,
+			    ps-&gt;period, min_period);
+<yellow>			ps->period = min_period;</yellow>
+		}
+	}
+
+<blue>	hrtimer_start(&ps->timer, ktime_add_ns(ktime_get(), interval),</blue>
+		      HRTIMER_MODE_ABS);
+}
+
+static void pit_load_count(struct kvm_pit *pit, int channel, u32 val)
+{
+	struct kvm_kpit_state *ps = &amp;pit-&gt;pit_state;
+
+<blue>	pr_debug("load_count val is %u, channel is %d\n", val, channel);</blue>
+
+	/*
+	 * The largest possible initial count is 0; this is equivalent
+	 * to 216 for binary counting and 104 for BCD counting.
+	 */
+<blue>	if (val == 0)</blue>
+		val = 0x10000;
+
+<blue>	ps->channels[channel].count = val;</blue>
+
+	if (channel != 0) {
+<yellow>		ps->channels[channel].count_load_time = ktime_get();</yellow>
+		return;
+	}
+
+	/* Two types of timer
+	 * mode 1 is one shot, mode 2 is period, otherwise del timer */
+<blue>	switch (ps->channels[0].mode) {</blue>
+	case 0:
+	case 1:
+        /* FIXME: enhance mode 4 precision */
+	case 4:
+<yellow>		create_pit_timer(pit, val, 0);</yellow>
+		break;
+	case 2:
+	case 3:
+<blue>		create_pit_timer(pit, val, 1);</blue>
+		break;
+	default:
+<yellow>		destroy_pit_timer(pit);</yellow>
+	}
+<blue>}</blue>
+
+void kvm_pit_load_count(struct kvm_pit *pit, int channel, u32 val,
+		int hpet_legacy_start)
+{
+	u8 saved_mode;
+
+<yellow>	WARN_ON_ONCE(!mutex_is_locked(&pit->pit_state.lock));</yellow>
+
+<yellow>	if (hpet_legacy_start) {</yellow>
+		/* save existing mode for later reenablement */
+<yellow>		WARN_ON(channel != 0);</yellow>
+<yellow>		saved_mode = pit->pit_state.channels[0].mode;</yellow>
+		pit-&gt;pit_state.channels[0].mode = 0xff; /* disable timer */
+		pit_load_count(pit, channel, val);
+		pit-&gt;pit_state.channels[0].mode = saved_mode;
+	} else {
+<yellow>		pit_load_count(pit, channel, val);</yellow>
+	}
+<yellow>}</yellow>
+
+static inline struct kvm_pit *dev_to_pit(struct kvm_io_device *dev)
+{
+	return container_of(dev, struct kvm_pit, dev);
+}
+
+static inline struct kvm_pit *speaker_to_pit(struct kvm_io_device *dev)
+{
+<yellow>	return container_of(dev, struct kvm_pit, speaker_dev);</yellow>
+}
+
+static inline int pit_in_range(gpa_t addr)
+{
+	return ((addr &gt;= KVM_PIT_BASE_ADDRESS) &amp;&amp;
+		(addr &lt; KVM_PIT_BASE_ADDRESS + KVM_PIT_MEM_LENGTH));
+}
+
+static int pit_ioport_write(struct kvm_vcpu *vcpu,
+				struct kvm_io_device *this,
+			    gpa_t addr, int len, const void *data)
+{
+	struct kvm_pit *pit = dev_to_pit(this);
+	struct kvm_kpit_state *pit_state = &amp;pit-&gt;pit_state;
+	int channel, access;
+	struct kvm_kpit_channel_state *s;
+<blue>	u32 val = *(u32 *) data;</blue>
+	if (!pit_in_range(addr))
+		return -EOPNOTSUPP;
+
+<blue>	val  &= 0xff;</blue>
+	addr &amp;= KVM_PIT_CHANNEL_MASK;
+
+	mutex_lock(&amp;pit_state-&gt;lock);
+
+	if (val != 0)
+<blue>		pr_debug("write addr is 0x%x, len is %d, val is 0x%x\n",</blue>
+			 (unsigned int)addr, len, val);
+
+<blue>	if (addr == 3) {</blue>
+<blue>		channel = val >> 6;</blue>
+		if (channel == 3) {
+			/* Read-Back Command. */
+<yellow>			for (channel = 0; channel < 3; channel++) {</yellow>
+<yellow>				if (val & (2 << channel)) {</yellow>
+<yellow>					if (!(val & 0x20))</yellow>
+<yellow>						pit_latch_count(pit, channel);</yellow>
+<yellow>					if (!(val & 0x10))</yellow>
+<yellow>						pit_latch_status(pit, channel);</yellow>
+				}
+			}
+		} else {
+			/* Select Counter &lt;channel&gt;. */
+<yellow>			s = &pit_state->channels[channel];</yellow>
+<blue>			access = (val >> 4) & KVM_PIT_CHANNEL_MASK;</blue>
+<yellow>			if (access == 0) {</yellow>
+<yellow>				pit_latch_count(pit, channel);</yellow>
+			} else {
+<blue>				s->rw_mode = access;</blue>
+				s-&gt;read_state = access;
+				s-&gt;write_state = access;
+<blue>				s->mode = (val >> 1) & 7;</blue>
+				if (s-&gt;mode &gt; 5)
+<yellow>					s->mode -= 4;</yellow>
+<blue>				s->bcd = val & 1;</blue>
+			}
+		}
+	} else {
+		/* Write Count. */
+		s = &amp;pit_state-&gt;channels[addr];
+<blue>		switch (s->write_state) {</blue>
+		default:
+		case RW_STATE_LSB:
+<yellow>			pit_load_count(pit, addr, val);</yellow>
+			break;
+		case RW_STATE_MSB:
+<yellow>			pit_load_count(pit, addr, val << 8);</yellow>
+			break;
+		case RW_STATE_WORD0:
+<blue>			s->write_latch = val;</blue>
+			s-&gt;write_state = RW_STATE_WORD1;
+			break;
+		case RW_STATE_WORD1:
+<blue>			pit_load_count(pit, addr, s->write_latch | (val << 8));</blue>
+			s-&gt;write_state = RW_STATE_WORD0;
+			break;
+		}
+	}
+
+<blue>	mutex_unlock(&pit_state->lock);</blue>
+	return 0;
+<blue>}</blue>
+
+static int pit_ioport_read(struct kvm_vcpu *vcpu,
+			   struct kvm_io_device *this,
+			   gpa_t addr, int len, void *data)
+<yellow>{</yellow>
+	struct kvm_pit *pit = dev_to_pit(this);
+	struct kvm_kpit_state *pit_state = &amp;pit-&gt;pit_state;
+	int ret, count;
+	struct kvm_kpit_channel_state *s;
+<yellow>	if (!pit_in_range(addr))</yellow>
+		return -EOPNOTSUPP;
+
+<yellow>	addr &= KVM_PIT_CHANNEL_MASK;</yellow>
+	if (addr == 3)
+		return 0;
+
+	s = &amp;pit_state-&gt;channels[addr];
+
+<yellow>	mutex_lock(&pit_state->lock);</yellow>
+
+	if (s-&gt;status_latched) {
+<yellow>		s->status_latched = 0;</yellow>
+		ret = s-&gt;status;
+<yellow>	} else if (s->count_latched) {</yellow>
+		switch (s-&gt;count_latched) {
+		default:
+		case RW_STATE_LSB:
+<yellow>			ret = s->latched_count & 0xff;</yellow>
+			s-&gt;count_latched = 0;
+			break;
+		case RW_STATE_MSB:
+<yellow>			ret = s->latched_count >> 8;</yellow>
+			s-&gt;count_latched = 0;
+			break;
+		case RW_STATE_WORD0:
+			ret = s-&gt;latched_count &amp; 0xff;
+<yellow>			s->count_latched = RW_STATE_MSB;</yellow>
+			break;
+		}
+	} else {
+<yellow>		switch (s->read_state) {</yellow>
+		default:
+		case RW_STATE_LSB:
+<yellow>			count = pit_get_count(pit, addr);</yellow>
+			ret = count &amp; 0xff;
+			break;
+		case RW_STATE_MSB:
+<yellow>			count = pit_get_count(pit, addr);</yellow>
+			ret = (count &gt;&gt; 8) &amp; 0xff;
+			break;
+		case RW_STATE_WORD0:
+<yellow>			count = pit_get_count(pit, addr);</yellow>
+			ret = count &amp; 0xff;
+			s-&gt;read_state = RW_STATE_WORD1;
+			break;
+		case RW_STATE_WORD1:
+<yellow>			count = pit_get_count(pit, addr);</yellow>
+			ret = (count &gt;&gt; 8) &amp; 0xff;
+			s-&gt;read_state = RW_STATE_WORD0;
+			break;
+		}
+	}
+
+<yellow>	if (len > sizeof(ret))</yellow>
+		len = sizeof(ret);
+<yellow>	memcpy(data, (char *)&ret, len);</yellow>
+
+	mutex_unlock(&amp;pit_state-&gt;lock);
+	return 0;
+}
+
+static int speaker_ioport_write(struct kvm_vcpu *vcpu,
+				struct kvm_io_device *this,
+				gpa_t addr, int len, const void *data)
+{
+	struct kvm_pit *pit = speaker_to_pit(this);
+	struct kvm_kpit_state *pit_state = &amp;pit-&gt;pit_state;
+<yellow>	u32 val = *(u32 *) data;</yellow>
+	if (addr != KVM_SPEAKER_BASE_ADDRESS)
+		return -EOPNOTSUPP;
+
+<yellow>	mutex_lock(&pit_state->lock);</yellow>
+	if (val &amp; (1 &lt;&lt; 1))
+<yellow>		pit_state->flags |= KVM_PIT_FLAGS_SPEAKER_DATA_ON;</yellow>
+	else
+<yellow>		pit_state->flags &= ~KVM_PIT_FLAGS_SPEAKER_DATA_ON;</yellow>
+<yellow>	pit_set_gate(pit, 2, val & 1);</yellow>
+	mutex_unlock(&amp;pit_state-&gt;lock);
+	return 0;
+<yellow>}</yellow>
+
+static int speaker_ioport_read(struct kvm_vcpu *vcpu,
+				   struct kvm_io_device *this,
+				   gpa_t addr, int len, void *data)
+<yellow>{</yellow>
+<yellow>	struct kvm_pit *pit = speaker_to_pit(this);</yellow>
+	struct kvm_kpit_state *pit_state = &amp;pit-&gt;pit_state;
+	unsigned int refresh_clock;
+	int ret;
+	if (addr != KVM_SPEAKER_BASE_ADDRESS)
+		return -EOPNOTSUPP;
+
+	/* Refresh clock toggles at about 15us. We approximate as 2^14ns. */
+	refresh_clock = ((unsigned int)ktime_to_ns(ktime_get()) &gt;&gt; 14) &amp; 1;
+
+<yellow>	mutex_lock(&pit_state->lock);</yellow>
+	ret = (!!(pit_state-&gt;flags &amp; KVM_PIT_FLAGS_SPEAKER_DATA_ON) &lt;&lt; 1) |
+		pit_get_gate(pit, 2) | (pit_get_out(pit, 2) &lt;&lt; 5) |
+		(refresh_clock &lt;&lt; 4);
+	if (len &gt; sizeof(ret))
+		len = sizeof(ret);
+<yellow>	memcpy(data, (char *)&ret, len);</yellow>
+	mutex_unlock(&amp;pit_state-&gt;lock);
+	return 0;
+}
+
+static void kvm_pit_reset(struct kvm_pit *pit)
+{
+	int i;
+	struct kvm_kpit_channel_state *c;
+
+	pit-&gt;pit_state.flags = 0;
+	for (i = 0; i &lt; 3; i++) {
+<yellow>		c = &pit->pit_state.channels[i];</yellow>
+		c-&gt;mode = 0xff;
+		c-&gt;gate = (i != 2);
+		pit_load_count(pit, i, 0);
+	}
+
+<yellow>	kvm_pit_reset_reinject(pit);</yellow>
+}
+
+static void pit_mask_notifer(struct kvm_irq_mask_notifier *kimn, bool mask)
+{
+	struct kvm_pit *pit = container_of(kimn, struct kvm_pit, mask_notifier);
+
+<blue>	if (!mask)</blue>
+<blue>		kvm_pit_reset_reinject(pit);</blue>
+<blue>}</blue>
+
+static const struct kvm_io_device_ops pit_dev_ops = {
+	.read     = pit_ioport_read,
+	.write    = pit_ioport_write,
+};
+
+static const struct kvm_io_device_ops speaker_dev_ops = {
+	.read     = speaker_ioport_read,
+	.write    = speaker_ioport_write,
+};
+
+struct kvm_pit *kvm_create_pit(struct kvm *kvm, u32 flags)
+{
+	struct kvm_pit *pit;
+	struct kvm_kpit_state *pit_state;
+	struct pid *pid;
+	pid_t pid_nr;
+	int ret;
+
+<yellow>	pit = kzalloc(sizeof(struct kvm_pit), GFP_KERNEL_ACCOUNT);</yellow>
+	if (!pit)
+		return NULL;
+
+<yellow>	pit->irq_source_id = kvm_request_irq_source_id(kvm);</yellow>
+	if (pit-&gt;irq_source_id &lt; 0)
+		goto fail_request;
+
+<yellow>	mutex_init(&pit->pit_state.lock);</yellow>
+
+<yellow>	pid = get_pid(task_tgid(current));</yellow>
+<yellow>	pid_nr = pid_vnr(pid);</yellow>
+	put_pid(pid);
+
+	pit-&gt;worker = kthread_create_worker(0, &quot;kvm-pit/%d&quot;, pid_nr);
+	if (IS_ERR(pit-&gt;worker))
+		goto fail_kthread;
+
+<yellow>	kthread_init_work(&pit->expired, pit_do_work);</yellow>
+
+	pit-&gt;kvm = kvm;
+
+	pit_state = &amp;pit-&gt;pit_state;
+	hrtimer_init(&amp;pit_state-&gt;timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
+	pit_state-&gt;timer.function = pit_timer_fn;
+
+	pit_state-&gt;irq_ack_notifier.gsi = 0;
+	pit_state-&gt;irq_ack_notifier.irq_acked = kvm_pit_ack_irq;
+	pit-&gt;mask_notifier.func = pit_mask_notifer;
+
+<yellow>	kvm_pit_reset(pit);</yellow>
+
+	kvm_pit_set_reinject(pit, true);
+
+	mutex_lock(&amp;kvm-&gt;slots_lock);
+	kvm_iodevice_init(&amp;pit-&gt;dev, &amp;pit_dev_ops);
+	ret = kvm_io_bus_register_dev(kvm, KVM_PIO_BUS, KVM_PIT_BASE_ADDRESS,
+				      KVM_PIT_MEM_LENGTH, &amp;pit-&gt;dev);
+	if (ret &lt; 0)
+		goto fail_register_pit;
+
+<yellow>	if (flags & KVM_PIT_SPEAKER_DUMMY) {</yellow>
+<yellow>		kvm_iodevice_init(&pit->speaker_dev, &speaker_dev_ops);</yellow>
+		ret = kvm_io_bus_register_dev(kvm, KVM_PIO_BUS,
+					      KVM_SPEAKER_BASE_ADDRESS, 4,
+					      &amp;pit-&gt;speaker_dev);
+		if (ret &lt; 0)
+			goto fail_register_speaker;
+	}
+<yellow>	mutex_unlock(&kvm->slots_lock);</yellow>
+
+	return pit;
+
+fail_register_speaker:
+<yellow>	kvm_io_bus_unregister_dev(kvm, KVM_PIO_BUS, &pit->dev);</yellow>
+fail_register_pit:
+<yellow>	mutex_unlock(&kvm->slots_lock);</yellow>
+	kvm_pit_set_reinject(pit, false);
+	kthread_destroy_worker(pit-&gt;worker);
+fail_kthread:
+<yellow>	kvm_free_irq_source_id(kvm, pit->irq_source_id);</yellow>
+fail_request:
+<yellow>	kfree(pit);</yellow>
+	return NULL;
+<yellow>}</yellow>
+
+void kvm_free_pit(struct kvm *kvm)
+{
+<yellow>	struct kvm_pit *pit = kvm->arch.vpit;</yellow>
+
+	if (pit) {
+<yellow>		mutex_lock(&kvm->slots_lock);</yellow>
+		kvm_io_bus_unregister_dev(kvm, KVM_PIO_BUS, &amp;pit-&gt;dev);
+		kvm_io_bus_unregister_dev(kvm, KVM_PIO_BUS, &amp;pit-&gt;speaker_dev);
+		mutex_unlock(&amp;kvm-&gt;slots_lock);
+		kvm_pit_set_reinject(pit, false);
+		hrtimer_cancel(&amp;pit-&gt;pit_state.timer);
+		kthread_destroy_worker(pit-&gt;worker);
+		kvm_free_irq_source_id(kvm, pit-&gt;irq_source_id);
+		kfree(pit);
+	}
+<yellow>}</yellow>
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 83.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
+</script></body></html>

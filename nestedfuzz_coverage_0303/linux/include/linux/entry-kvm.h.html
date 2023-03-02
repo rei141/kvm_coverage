@@ -1,0 +1,171 @@
+<doctype html>
+<html lang="ja">
+<head><title>entry-kvm.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 100; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef __LINUX_ENTRYKVM_H
+#define __LINUX_ENTRYKVM_H
+
+#include &lt;linux/static_call_types.h&gt;
+#include &lt;linux/resume_user_mode.h&gt;
+#include &lt;linux/syscalls.h&gt;
+#include &lt;linux/seccomp.h&gt;
+#include &lt;linux/sched.h&gt;
+#include &lt;linux/tick.h&gt;
+
+/* Transfer to guest mode work */
+#ifdef CONFIG_KVM_XFER_TO_GUEST_WORK
+
+#ifndef ARCH_XFER_TO_GUEST_MODE_WORK
+# define ARCH_XFER_TO_GUEST_MODE_WORK	(0)
+#endif
+
+#define XFER_TO_GUEST_MODE_WORK						\
+	(_TIF_NEED_RESCHED | _TIF_SIGPENDING | _TIF_NOTIFY_SIGNAL |	\
+	 _TIF_NOTIFY_RESUME | ARCH_XFER_TO_GUEST_MODE_WORK)
+
+struct kvm_vcpu;
+
+/**
+ * arch_xfer_to_guest_mode_handle_work - Architecture specific xfer to guest
+ *					 mode work handling function.
+ * @vcpu:	Pointer to current&#x27;s VCPU data
+ * @ti_work:	Cached TIF flags gathered in xfer_to_guest_mode_handle_work()
+ *
+ * Invoked from xfer_to_guest_mode_handle_work(). Defaults to NOOP. Can be
+ * replaced by architecture specific code.
+ */
+static inline int arch_xfer_to_guest_mode_handle_work(struct kvm_vcpu *vcpu,
+						      unsigned long ti_work);
+
+#ifndef arch_xfer_to_guest_mode_work
+static inline int arch_xfer_to_guest_mode_handle_work(struct kvm_vcpu *vcpu,
+						      unsigned long ti_work)
+{
+	return 0;
+}
+#endif
+
+/**
+ * xfer_to_guest_mode_handle_work - Check and handle pending work which needs
+ *				    to be handled before going to guest mode
+ * @vcpu:	Pointer to current&#x27;s VCPU data
+ *
+ * Returns: 0 or an error code
+ */
+int xfer_to_guest_mode_handle_work(struct kvm_vcpu *vcpu);
+
+/**
+ * xfer_to_guest_mode_prepare - Perform last minute preparation work that
+ *				need to be handled while IRQs are disabled
+ *				upon entering to guest.
+ *
+ * Has to be invoked with interrupts disabled before the last call
+ * to xfer_to_guest_mode_work_pending().
+ */
+static inline void xfer_to_guest_mode_prepare(void)
+{
+<blue>	lockdep_assert_irqs_disabled();</blue>
+<blue>	tick_nohz_user_enter_prepare();</blue>
+}
+
+/**
+ * __xfer_to_guest_mode_work_pending - Check if work is pending
+ *
+ * Returns: True if work pending, False otherwise.
+ *
+ * Bare variant of xfer_to_guest_mode_work_pending(). Can be called from
+ * interrupt enabled code for racy quick checks with care.
+ */
+static inline bool __xfer_to_guest_mode_work_pending(void)
+{
+<blue>	unsigned long ti_work = read_thread_flags();</blue>
+
+	return !!(ti_work &amp; XFER_TO_GUEST_MODE_WORK);
+}
+
+/**
+ * xfer_to_guest_mode_work_pending - Check if work is pending which needs to be
+ *				     handled before returning to guest mode
+ *
+ * Returns: True if work pending, False otherwise.
+ *
+ * Has to be invoked with interrupts disabled before the transition to
+ * guest mode.
+ */
+static inline bool xfer_to_guest_mode_work_pending(void)
+{
+<blue>	lockdep_assert_irqs_disabled();</blue>
+<blue>	return __xfer_to_guest_mode_work_pending();</blue>
+}
+#endif /* CONFIG_KVM_XFER_TO_GUEST_WORK */
+
+#endif
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 83.9%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.0%</li>`
+</script></body></html>
