@@ -179,7 +179,7 @@ static __always_inline void instrument_atomic_read_write(const volatile void *v,
 static __always_inline void
 instrument_copy_to_user(void __user *to, const void *from, unsigned long n)
 {
-<blue>	kasan_check_read(from, n);</blue>
+<yellow>	kasan_check_read(from, n);</yellow>
 	kcsan_check_read(from, n);
 	kmsan_copy_to_user(to, from, n, 0);
 }
@@ -197,7 +197,7 @@ instrument_copy_to_user(void __user *to, const void *from, unsigned long n)
 static __always_inline void
 instrument_copy_from_user_before(const void *to, const void __user *from, unsigned long n)
 {
-<blue>	kasan_check_write(to, n);</blue>
+	kasan_check_write(to, n);
 	kcsan_check_write(to, n);
 }
 
@@ -257,8 +257,8 @@ instrument_copy_from_user_after(const void *to, const void __user *from,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

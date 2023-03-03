@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 322; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 323; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -120,7 +120,13 @@ struct kvm_mmu_page {
 	bool tdp_mmu_page;
 	bool unsync;
 	u8 mmu_valid_gen;
-	bool lpage_disallowed; /* Can&#x27;t be replaced by an equiv large page */
+
+	 /*
+	  * The shadow page can&#x27;t be replaced by an equivalent huge page
+	  * because it is being used to map an executable page in the guest
+	  * and the NX huge page mitigation is enabled.
+	  */
+	bool nx_huge_page_disallowed;
 
 	/*
 	 * The following two entries are used to key the shadow page in the
@@ -163,7 +169,14 @@ struct kvm_mmu_page {
 		};
 	};
 
-	struct list_head lpage_disallowed_link;
+	/*
+	 * Tracks shadow pages that, if zapped, would allow KVM to create an NX
+	 * huge page.  A shadow page will have nx_huge_page_disallowed set but
+	 * not be on the list if a huge page is disallowed for other reasons,
+	 * e.g. because KVM is shadowing a PTE at the same gfn, the memslot
+	 * isn&#x27;t properly aligned, etc...
+	 */
+	struct list_head possible_nx_huge_page_link;
 #ifdef CONFIG_X86_32
 	/*
 	 * Used out of the mmu-lock to avoid reading spte values while an
@@ -182,18 +195,6 @@ struct kvm_mmu_page {
 };
 
 extern struct kmem_cache *mmu_page_header_cache;
-
-static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
-{
-<blue>	struct page *page = pfn_to_page(shadow_page >> PAGE_SHIFT);</blue>
-
-	return (struct kvm_mmu_page *)page_private(page);
-}
-
-static inline struct kvm_mmu_page *sptep_to_sp(u64 *sptep)
-{
-<blue>	return to_shadow_page(__pa(sptep));</blue>
-}
 
 static inline int kvm_mmu_role_as_id(union kvm_mmu_page_role role)
 {
@@ -233,7 +234,7 @@ unsigned int pte_list_count(struct kvm_rmap_head *rmap_head);
 extern int nx_huge_pages;
 static inline bool is_nx_huge_page_enabled(struct kvm *kvm)
 {
-<yellow>	return READ_ONCE(nx_huge_pages) && !kvm->arch.disable_nx_huge_pages;</yellow>
+<blue>	return READ_ONCE(nx_huge_pages) && !kvm->arch.disable_nx_huge_pages;</blue>
 }
 
 struct kvm_page_fault {
@@ -333,7 +334,7 @@ static inline int kvm_mmu_do_page_fault(struct kvm_vcpu *vcpu, gpa_t cr2_or_gpa,
 		.prefetch = prefetch,
 <yellow>		.is_tdp = likely(vcpu->arch.mmu->page_fault == kvm_tdp_page_fault),</yellow>
 		.nx_huge_page_workaround_enabled =
-<blue>			is_nx_huge_page_enabled(vcpu->kvm),</blue>
+<yellow>			is_nx_huge_page_enabled(vcpu->kvm),</yellow>
 
 		.max_level = KVM_MAX_HUGEPAGE_LEVEL,
 		.req_level = PG_LEVEL_4K,
@@ -378,16 +379,16 @@ void disallowed_hugepage_adjust(struct kvm_page_fault *fault, u64 spte, int cur_
 
 void *mmu_memory_cache_alloc(struct kvm_mmu_memory_cache *mc);
 
-void account_huge_nx_page(struct kvm *kvm, struct kvm_mmu_page *sp);
-void unaccount_huge_nx_page(struct kvm *kvm, struct kvm_mmu_page *sp);
+void track_possible_nx_huge_page(struct kvm *kvm, struct kvm_mmu_page *sp);
+void untrack_possible_nx_huge_page(struct kvm *kvm, struct kvm_mmu_page *sp);
 
 #endif /* __KVM_X86_MMU_INTERNAL_H */
 
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

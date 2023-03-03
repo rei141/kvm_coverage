@@ -207,7 +207,7 @@ static inline void refcount_set(refcount_t *r, int n)
  */
 static inline unsigned int refcount_read(const refcount_t *r)
 {
-<yellow>	return atomic_read(&r->refs);</yellow>
+<blue>	return atomic_read(&r->refs);</blue>
 }
 
 static inline __must_check bool __refcount_add_not_zero(int i, refcount_t *r, int *oldp)
@@ -253,7 +253,7 @@ static inline __must_check bool refcount_add_not_zero(int i, refcount_t *r)
 
 static inline void __refcount_add(int i, refcount_t *r, int *oldp)
 {
-<blue>	int old = atomic_fetch_add_relaxed(i, &r->refs);</blue>
+<yellow>	int old = atomic_fetch_add_relaxed(i, &r->refs);</yellow>
 
 	if (oldp)
 		*oldp = old;
@@ -332,7 +332,7 @@ static inline void refcount_inc(refcount_t *r)
 
 static inline __must_check bool __refcount_sub_and_test(int i, refcount_t *r, int *oldp)
 {
-<blue>	int old = atomic_fetch_sub_release(i, &r->refs);</blue>
+<yellow>	int old = atomic_fetch_sub_release(i, &r->refs);</yellow>
 
 	if (oldp)
 		*oldp = old;
@@ -434,8 +434,8 @@ extern __must_check bool refcount_dec_and_lock_irqsave(refcount_t *r,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -1,6 +1,6 @@
 <doctype html>
 <html lang="ja">
-<head><title>evmcs.c</title><meta charset="utf-8">
+<head><title>hyperv.c</title><meta charset="utf-8">
 <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 <style>
     code{
@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 510; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 523; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -66,9 +66,9 @@
 #include &lt;linux/errno.h&gt;
 #include &lt;linux/smp.h&gt;
 
-#include &quot;../hyperv.h&quot;
 #include &quot;../cpuid.h&quot;
-#include &quot;evmcs.h&quot;
+#include &quot;hyperv.h&quot;
+#include &quot;nested.h&quot;
 #include &quot;vmcs.h&quot;
 #include &quot;vmx.h&quot;
 #include &quot;trace.h&quot;
@@ -385,25 +385,18 @@ const struct evmcs_field vmcs_field_to_evmcs_1[] = {
 };
 const unsigned int nr_evmcs_1_fields = ARRAY_SIZE(vmcs_field_to_evmcs_1);
 
-bool nested_enlightened_vmentry(struct kvm_vcpu *vcpu, u64 *evmcs_gpa)
-<blue>{</blue>
-	struct hv_vp_assist_page assist_page;
+u64 nested_get_evmptr(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
 
-<blue>	*evmcs_gpa = -1ull;</blue>
+	if (unlikely(kvm_hv_get_assist_page(vcpu)))
+<blue>		return EVMPTR_INVALID;</blue>
 
-	if (unlikely(!kvm_hv_get_assist_page(vcpu, &amp;assist_page)))
-		return false;
+<blue>	if (unlikely(!hv_vcpu->vp_assist_page.enlighten_vmentry))</blue>
+		return EVMPTR_INVALID;
 
-<blue>	if (unlikely(!assist_page.enlighten_vmentry))</blue>
-		return false;
-
-<blue>	if (unlikely(!evmptr_is_valid(assist_page.current_nested_vmcs)))</blue>
-		return false;
-
-<blue>	*evmcs_gpa = assist_page.current_nested_vmcs;</blue>
-
-	return true;
-}
+<blue>	return hv_vcpu->vp_assist_page.current_nested_vmcs;</blue>
+<blue>}</blue>
 
 <blue>uint16_t nested_get_evmcs_version(struct kvm_vcpu *vcpu)</blue>
 {
@@ -571,11 +564,31 @@ int nested_enable_evmcs(struct kvm_vcpu *vcpu,
 	return 0;
 <blue>}</blue>
 
+bool nested_evmcs_l2_tlb_flush_enabled(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
+	struct vcpu_vmx *vmx = to_vmx(vcpu);
+<blue>	struct hv_enlightened_vmcs *evmcs = vmx->nested.hv_evmcs;</blue>
+
+	if (!hv_vcpu || !evmcs)
+<blue>		return false;</blue>
+
+<blue>	if (!evmcs->hv_enlightenments_control.nested_flush_hypercall)</blue>
+		return false;
+
+<blue>	return hv_vcpu->vp_assist_page.nested_control.features.directhypercall;</blue>
+<blue>}</blue>
+
+void vmx_hv_inject_synthetic_vmexit_post_tlb_flush(struct kvm_vcpu *vcpu)
+{
+<yellow>	nested_vmx_vmexit(vcpu, HV_VMX_SYNTHETIC_EXIT_REASON_TRAP_AFTER_FLUSH, 0, 0);</yellow>
+}
+
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

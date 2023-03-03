@@ -156,7 +156,7 @@ static unsigned long ioapic_read_indirect(struct kvm_ioapic *ioapic)
 
 static void rtc_irq_eoi_tracking_reset(struct kvm_ioapic *ioapic)
 {
-<blue>	ioapic->rtc_status.pending_eoi = 0;</blue>
+<yellow>	ioapic->rtc_status.pending_eoi = 0;</yellow>
 	bitmap_zero(ioapic-&gt;rtc_status.dest_map.map, KVM_MAX_VCPU_IDS);
 }
 
@@ -208,16 +208,16 @@ void kvm_rtc_eoi_tracking_restore_one(struct kvm_vcpu *vcpu)
 }
 
 static void kvm_rtc_eoi_tracking_restore_all(struct kvm_ioapic *ioapic)
-<blue>{</blue>
+<yellow>{</yellow>
 	struct kvm_vcpu *vcpu;
 	unsigned long i;
 
 	if (RTC_GSI &gt;= IOAPIC_NUM_PINS)
 		return;
 
-<blue>	rtc_irq_eoi_tracking_reset(ioapic);</blue>
+<yellow>	rtc_irq_eoi_tracking_reset(ioapic);</yellow>
 	kvm_for_each_vcpu(i, vcpu, ioapic-&gt;kvm)
-<blue>	    __rtc_irq_eoi_tracking_restore_one(vcpu);</blue>
+<yellow>	    __rtc_irq_eoi_tracking_restore_one(vcpu);</yellow>
 }
 
 static void rtc_irq_eoi(struct kvm_ioapic *ioapic, struct kvm_vcpu *vcpu,
@@ -333,7 +333,7 @@ static void kvm_ioapic_inject_all(struct kvm_ioapic *ioapic, unsigned long irr)
 <yellow>	for_each_set_bit(idx, &irr, IOAPIC_NUM_PINS)</yellow>
 <yellow>		ioapic_set_irq(ioapic, idx, 1, true);</yellow>
 
-<blue>	kvm_rtc_eoi_tracking_restore_all(ioapic);</blue>
+<yellow>	kvm_rtc_eoi_tracking_restore_all(ioapic);</yellow>
 }
 
 
@@ -370,10 +370,10 @@ void kvm_ioapic_scan_entry(struct kvm_vcpu *vcpu, ulong *ioapic_handled_vectors)
 
 void kvm_arch_post_irq_ack_notifier_list_update(struct kvm *kvm)
 {
-<blue>	if (!ioapic_in_kernel(kvm))</blue>
+<yellow>	if (!ioapic_in_kernel(kvm))</yellow>
 		return;
-<blue>	kvm_make_scan_ioapic_request(kvm);</blue>
-<blue>}</blue>
+<yellow>	kvm_make_scan_ioapic_request(kvm);</yellow>
+<yellow>}</yellow>
 
 static void ioapic_write_indirect(struct kvm_ioapic *ioapic, u32 val)
 <yellow>{</yellow>
@@ -751,8 +751,8 @@ int kvm_ioapic_init(struct kvm *kvm)
 <blue>	ioapic = kzalloc(sizeof(struct kvm_ioapic), GFP_KERNEL_ACCOUNT);</blue>
 	if (!ioapic)
 		return -ENOMEM;
-<blue>	spin_lock_init(&ioapic->lock);</blue>
-	INIT_DELAYED_WORK(&amp;ioapic-&gt;eoi_inject, kvm_ioapic_eoi_inject_work);
+	spin_lock_init(&amp;ioapic-&gt;lock);
+<blue>	INIT_DELAYED_WORK(&ioapic->eoi_inject, kvm_ioapic_eoi_inject_work);</blue>
 	kvm-&gt;arch.vioapic = ioapic;
 <blue>	kvm_ioapic_reset(ioapic);</blue>
 	kvm_iodevice_init(&amp;ioapic-&gt;dev, &amp;ioapic_mmio_ops);
@@ -796,22 +796,22 @@ void kvm_get_ioapic(struct kvm *kvm, struct kvm_ioapic_state *state)
 
 void kvm_set_ioapic(struct kvm *kvm, struct kvm_ioapic_state *state)
 {
-<blue>	struct kvm_ioapic *ioapic = kvm->arch.vioapic;</blue>
+<yellow>	struct kvm_ioapic *ioapic = kvm->arch.vioapic;</yellow>
 
 	spin_lock(&amp;ioapic-&gt;lock);
 	memcpy(ioapic, state, sizeof(struct kvm_ioapic_state));
 	ioapic-&gt;irr = 0;
 	ioapic-&gt;irr_delivered = 0;
 	kvm_make_scan_ioapic_request(kvm);
-<blue>	kvm_ioapic_inject_all(ioapic, state->irr);</blue>
+<yellow>	kvm_ioapic_inject_all(ioapic, state->irr);</yellow>
 	spin_unlock(&amp;ioapic-&gt;lock);
 }
 
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

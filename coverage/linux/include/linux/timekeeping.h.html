@@ -139,7 +139,7 @@ extern u32 ktime_get_resolution_ns(void);
  */
 static inline ktime_t ktime_get_real(void)
 {
-<blue>	return ktime_get_with_offset(TK_OFFS_REAL);</blue>
+<yellow>	return ktime_get_with_offset(TK_OFFS_REAL);</yellow>
 }
 
 static inline ktime_t ktime_get_coarse_real(void)
@@ -219,7 +219,7 @@ static inline u64 ktime_get_ns(void)
 
 static inline u64 ktime_get_real_ns(void)
 {
-<blue>	return ktime_to_ns(ktime_get_real());</blue>
+<yellow>	return ktime_to_ns(ktime_get_real());</yellow>
 }
 
 static inline u64 ktime_get_boottime_ns(void)
@@ -377,8 +377,8 @@ extern int update_persistent_clock64(struct timespec64 now);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

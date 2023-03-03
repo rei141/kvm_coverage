@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 23; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 49; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -66,16 +66,42 @@
 #define _ASM_X86_CURRENT_H
 
 #include &lt;linux/compiler.h&gt;
-#include &lt;asm/percpu.h&gt;
 
 #ifndef __ASSEMBLY__
+
+#include &lt;linux/cache.h&gt;
+#include &lt;asm/percpu.h&gt;
+
 struct task_struct;
 
-DECLARE_PER_CPU(struct task_struct *, current_task);
+struct pcpu_hot {
+	union {
+		struct {
+			struct task_struct	*current_task;
+			int			preempt_count;
+			int			cpu_number;
+#ifdef CONFIG_CALL_DEPTH_TRACKING
+			u64			call_depth;
+#endif
+			unsigned long		top_of_stack;
+			void			*hardirq_stack_ptr;
+			u16			softirq_pending;
+#ifdef CONFIG_X86_64
+			bool			hardirq_stack_inuse;
+#else
+			void			*softirq_stack_ptr;
+#endif
+		};
+		u8	pad[64];
+	};
+};
+static_assert(sizeof(struct pcpu_hot) == 64);
+
+DECLARE_PER_CPU_ALIGNED(struct pcpu_hot, pcpu_hot);
 
 static __always_inline struct task_struct *get_current(void)
 {
-<yellow>	return this_cpu_read_stable(current_task);</yellow>
+<yellow>	return this_cpu_read_stable(pcpu_hot.current_task);</yellow>
 }
 
 #define current get_current()
@@ -87,8 +113,8 @@ static __always_inline struct task_struct *get_current(void)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -142,7 +142,7 @@ static inline void __list_add_rcu(struct list_head *new,
 	if (!__list_add_valid(new, prev, next))
 		return;
 
-	new-&gt;next = next;
+<blue>	new->next = next;</blue>
 	new-&gt;prev = prev;
 	rcu_assign_pointer(list_next_rcu(prev), new);
 	next-&gt;prev = new;
@@ -166,7 +166,7 @@ static inline void __list_add_rcu(struct list_head *new,
  */
 static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 {
-<yellow>	__list_add_rcu(new, head, head->next);</yellow>
+<blue>	__list_add_rcu(new, head, head->next);</blue>
 }
 
 /**
@@ -217,8 +217,8 @@ static inline void list_add_tail_rcu(struct list_head *new,
  */
 static inline void list_del_rcu(struct list_head *entry)
 {
-	__list_del_entry(entry);
-	entry-&gt;prev = LIST_POISON2;
+<blue>	__list_del_entry(entry);</blue>
+<blue>	entry->prev = LIST_POISON2;</blue>
 }
 
 /**
@@ -870,8 +870,8 @@ static inline void hlist_add_behind_rcu(struct hlist_node *n,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -118,12 +118,12 @@ static inline bool kvm_vcpu_is_illegal_gpa(struct kvm_vcpu *vcpu, gpa_t gpa)
 static inline bool kvm_vcpu_is_legal_aligned_gpa(struct kvm_vcpu *vcpu,
 						 gpa_t gpa, gpa_t alignment)
 {
-<yellow>	return IS_ALIGNED(gpa, alignment) && kvm_vcpu_is_legal_gpa(vcpu, gpa);</yellow>
+<blue>	return IS_ALIGNED(gpa, alignment) && kvm_vcpu_is_legal_gpa(vcpu, gpa);</blue>
 }
 
 static inline bool page_address_valid(struct kvm_vcpu *vcpu, gpa_t gpa)
 {
-	return kvm_vcpu_is_legal_aligned_gpa(vcpu, gpa, PAGE_SIZE);
+<blue>	return kvm_vcpu_is_legal_aligned_gpa(vcpu, gpa, PAGE_SIZE);</blue>
 }
 
 static __always_inline void cpuid_entry_override(struct kvm_cpuid_entry2 *entry,
@@ -132,7 +132,7 @@ static __always_inline void cpuid_entry_override(struct kvm_cpuid_entry2 *entry,
 	u32 *reg = cpuid_entry_get_reg(entry, leaf * 32);
 
 	BUILD_BUG_ON(leaf &gt;= ARRAY_SIZE(kvm_cpu_caps));
-	*reg = kvm_cpu_caps[leaf];
+<blue>	*reg = kvm_cpu_caps[leaf];</blue>
 }
 
 static __always_inline u32 *guest_cpuid_get_register(struct kvm_vcpu *vcpu,
@@ -142,7 +142,7 @@ static __always_inline u32 *guest_cpuid_get_register(struct kvm_vcpu *vcpu,
 	struct kvm_cpuid_entry2 *entry;
 
 <blue>	entry = kvm_find_cpuid_entry_index(vcpu, cpuid.function, cpuid.index);</blue>
-<yellow>	if (!entry)</yellow>
+<blue>	if (!entry)</blue>
 		return NULL;
 
 <yellow>	return __cpuid_entry_get_reg(entry, cpuid.reg);</yellow>
@@ -155,7 +155,7 @@ static __always_inline bool guest_cpuid_has(struct kvm_vcpu *vcpu,
 
 <blue>	reg = guest_cpuid_get_register(vcpu, x86_feature);</blue>
 <blue>	if (!reg)</blue>
-		return false;
+<yellow>		return false;</yellow>
 
 <blue>	return *reg & __feature_bit(x86_feature);</blue>
 }
@@ -174,18 +174,18 @@ static inline bool guest_cpuid_is_amd_or_hygon(struct kvm_vcpu *vcpu)
 {
 	struct kvm_cpuid_entry2 *best;
 
-	best = kvm_find_cpuid_entry(vcpu, 0);
+<blue>	best = kvm_find_cpuid_entry(vcpu, 0);</blue>
 	return best &amp;&amp;
-	       (is_guest_vendor_amd(best-&gt;ebx, best-&gt;ecx, best-&gt;edx) ||
-		is_guest_vendor_hygon(best-&gt;ebx, best-&gt;ecx, best-&gt;edx));
+<blue>	       (is_guest_vendor_amd(best->ebx, best->ecx, best->edx) ||</blue>
+<blue>		is_guest_vendor_hygon(best->ebx, best->ecx, best->edx));</blue>
 }
 
 static inline bool guest_cpuid_is_intel(struct kvm_vcpu *vcpu)
 {
 	struct kvm_cpuid_entry2 *best;
 
-	best = kvm_find_cpuid_entry(vcpu, 0);
-	return best &amp;&amp; is_guest_vendor_intel(best-&gt;ebx, best-&gt;ecx, best-&gt;edx);
+<blue>	best = kvm_find_cpuid_entry(vcpu, 0);</blue>
+<blue>	return best && is_guest_vendor_intel(best->ebx, best->ecx, best->edx);</blue>
 }
 
 static inline int guest_cpuid_family(struct kvm_vcpu *vcpu)
@@ -242,12 +242,12 @@ static inline bool guest_has_pred_cmd_msr(struct kvm_vcpu *vcpu)
 
 static inline bool supports_cpuid_fault(struct kvm_vcpu *vcpu)
 {
-	return vcpu-&gt;arch.msr_platform_info &amp; MSR_PLATFORM_INFO_CPUID_FAULT;
+<yellow>	return vcpu->arch.msr_platform_info & MSR_PLATFORM_INFO_CPUID_FAULT;</yellow>
 }
 
 static inline bool cpuid_fault_enabled(struct kvm_vcpu *vcpu)
 {
-	return vcpu-&gt;arch.msr_misc_features_enables &amp;
+<blue>	return vcpu->arch.msr_misc_features_enables &</blue>
 		  MSR_MISC_FEATURES_ENABLES_CPUID_FAULT;
 }
 
@@ -256,7 +256,7 @@ static __always_inline void kvm_cpu_cap_clear(unsigned int x86_feature)
 	unsigned int x86_leaf = __feature_leaf(x86_feature);
 
 	reverse_cpuid_check(x86_leaf);
-	kvm_cpu_caps[x86_leaf] &amp;= ~__feature_bit(x86_feature);
+<yellow>	kvm_cpu_caps[x86_leaf] &= ~__feature_bit(x86_feature);</yellow>
 }
 
 static __always_inline void kvm_cpu_cap_set(unsigned int x86_feature)
@@ -264,7 +264,7 @@ static __always_inline void kvm_cpu_cap_set(unsigned int x86_feature)
 	unsigned int x86_leaf = __feature_leaf(x86_feature);
 
 	reverse_cpuid_check(x86_leaf);
-	kvm_cpu_caps[x86_leaf] |= __feature_bit(x86_feature);
+<yellow>	kvm_cpu_caps[x86_leaf] |= __feature_bit(x86_feature);</yellow>
 }
 
 static __always_inline u32 kvm_cpu_cap_get(unsigned int x86_feature)
@@ -289,10 +289,10 @@ static __always_inline void kvm_cpu_cap_check_and_set(unsigned int x86_feature)
 static __always_inline bool guest_pv_has(struct kvm_vcpu *vcpu,
 					 unsigned int kvm_feature)
 {
-	if (!vcpu-&gt;arch.pv_cpuid.enforce)
+<blue>	if (!vcpu->arch.pv_cpuid.enforce)</blue>
 		return true;
 
-	return vcpu-&gt;arch.pv_cpuid.features &amp; (1u &lt;&lt; kvm_feature);
+<yellow>	return vcpu->arch.pv_cpuid.features & (1u << kvm_feature);</yellow>
 }
 
 #endif
@@ -300,8 +300,8 @@ static __always_inline bool guest_pv_has(struct kvm_vcpu *vcpu,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

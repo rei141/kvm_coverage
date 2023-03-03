@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 1060; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 1086; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -170,6 +170,15 @@ static inline int rcu_preempt_depth(void)
 }
 
 #endif /* #else #ifdef CONFIG_PREEMPT_RCU */
+
+#ifdef CONFIG_RCU_LAZY
+void call_rcu_hurry(struct rcu_head *head, rcu_callback_t func);
+#else
+static inline void call_rcu_hurry(struct rcu_head *head, rcu_callback_t func)
+{
+	call_rcu(head, func);
+}
+#endif
 
 /* Internal to kernel */
 void rcu_init(void);
@@ -304,6 +313,18 @@ static inline void exit_tasks_rcu_finish(void) { }
 #endif /* #else #ifdef CONFIG_TASKS_RCU_GENERIC */
 
 /**
+ * rcu_trace_implies_rcu_gp - does an RCU Tasks Trace grace period imply an RCU grace period?
+ *
+ * As an accident of implementation, an RCU Tasks Trace grace period also
+ * acts as an RCU grace period.  However, this could change at any time.
+ * Code relying on this accident must call this function to verify that
+ * this accident is still happening.
+ *
+ * You have been warned!
+ */
+static inline bool rcu_trace_implies_rcu_gp(void) { return true; }
+
+/**
  * cond_resched_tasks_rcu_qs - Report potential quiescent states to RCU
  *
  * This macro resembles cond_resched(), except that it is defined to
@@ -364,12 +385,12 @@ extern struct lockdep_map rcu_callback_map;
 
 static inline void rcu_lock_acquire(struct lockdep_map *map)
 {
-	lock_acquire(map, 0, 0, 2, 0, NULL, _THIS_IP_);
+<blue>	lock_acquire(map, 0, 0, 2, 0, NULL, _THIS_IP_);</blue>
 }
 
 static inline void rcu_lock_release(struct lockdep_map *map)
 {
-	lock_release(map, _THIS_IP_);
+<blue>	lock_release(map, _THIS_IP_);</blue>
 }
 
 int debug_lockdep_rcu_enabled(void);
@@ -401,6 +422,11 @@ static inline int rcu_read_lock_sched_held(void)
 static inline int rcu_read_lock_any_held(void)
 {
 	return !preemptible();
+}
+
+static inline int debug_lockdep_rcu_enabled(void)
+{
+	return 0;
 }
 
 #endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
@@ -798,8 +824,8 @@ static __always_inline void rcu_read_lock(void)
 {
 <blue>	__rcu_read_lock();</blue>
 	__acquire(RCU);
-	rcu_lock_acquire(&amp;rcu_lock_map);
-	RCU_LOCKDEP_WARN(!rcu_is_watching(),
+<blue>	rcu_lock_acquire(&rcu_lock_map);</blue>
+<yellow>	RCU_LOCKDEP_WARN(!rcu_is_watching(),</yellow>
 			 &quot;rcu_read_lock() used illegally while idle&quot;);
 }
 
@@ -827,11 +853,11 @@ static __always_inline void rcu_read_lock(void)
  */
 static inline void rcu_read_unlock(void)
 {
-	RCU_LOCKDEP_WARN(!rcu_is_watching(),
+<blue>	RCU_LOCKDEP_WARN(!rcu_is_watching(),</blue>
 			 &quot;rcu_read_unlock() used illegally while idle&quot;);
 	__release(RCU);
 <blue>	__rcu_read_unlock();</blue>
-	rcu_lock_release(&amp;rcu_lock_map); /* Keep acq info for rls diags. */
+<blue>	rcu_lock_release(&rcu_lock_map); /* Keep acq info for rls diags. */</blue>
 }
 
 /**
@@ -898,7 +924,7 @@ static inline void rcu_read_lock_sched(void)
 /* Used by lockdep and tracing: cannot be traced, cannot call lockdep. */
 static inline notrace void rcu_read_lock_sched_notrace(void)
 {
-	preempt_disable_notrace();
+<blue>	preempt_disable_notrace();</blue>
 	__acquire(RCU_SCHED);
 }
 
@@ -920,7 +946,7 @@ static inline void rcu_read_unlock_sched(void)
 static inline notrace void rcu_read_unlock_sched_notrace(void)
 {
 	__release(RCU_SCHED);
-	preempt_enable_notrace();
+<blue>	preempt_enable_notrace();</blue>
 }
 
 /**
@@ -1124,8 +1150,8 @@ extern int rcu_normal;
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

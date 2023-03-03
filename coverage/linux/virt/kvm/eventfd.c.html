@@ -138,7 +138,7 @@ irqfd_resampler_ack(struct kvm_irq_ack_notifier *kian)
 	kvm_set_irq(kvm, KVM_IRQFD_RESAMPLE_IRQ_SOURCE_ID,
 		    resampler-&gt;notifier.gsi, 0, false);
 
-	idx = srcu_read_lock(&amp;kvm-&gt;irq_srcu);
+<yellow>	idx = srcu_read_lock(&kvm->irq_srcu);</yellow>
 
 	list_for_each_entry_srcu(irqfd, &amp;resampler-&gt;list, resampler_link,
 	    srcu_read_lock_held(&amp;kvm-&gt;irq_srcu))
@@ -155,7 +155,7 @@ irqfd_resampler_shutdown(struct kvm_kernel_irqfd *irqfd)
 
 	mutex_lock(&amp;kvm-&gt;irqfds.resampler_lock);
 
-	list_del_rcu(&amp;irqfd-&gt;resampler_link);
+<yellow>	list_del_rcu(&irqfd->resampler_link);</yellow>
 	synchronize_srcu(&amp;kvm-&gt;irq_srcu);
 
 	if (list_empty(&amp;resampler-&gt;list)) {
@@ -261,7 +261,7 @@ irqfd_wakeup(wait_queue_entry_t *wait, unsigned mode, int sync, void *key)
 		u64 cnt;
 <yellow>		eventfd_ctx_do_read(irqfd->eventfd, &cnt);</yellow>
 
-		idx = srcu_read_lock(&amp;kvm-&gt;irq_srcu);
+<yellow>		idx = srcu_read_lock(&kvm->irq_srcu);</yellow>
 		do {
 <yellow>			seq = read_seqcount_begin(&irqfd->irq_entry_sc);</yellow>
 <yellow>			irq = irqfd->irq_entry;</yellow>
@@ -317,7 +317,7 @@ static void irqfd_update(struct kvm *kvm, struct kvm_kernel_irqfd *irqfd)
 
 <yellow>	n_entries = kvm_irq_map_gsi(kvm, entries, irqfd->gsi);</yellow>
 
-	write_seqcount_begin(&amp;irqfd-&gt;irq_entry_sc);
+<yellow>	write_seqcount_begin(&irqfd->irq_entry_sc);</yellow>
 
 	e = entries;
 	if (n_entries == 1)
@@ -432,14 +432,14 @@ kvm_irqfd_assign(struct kvm *kvm, struct kvm_irqfd *args)
 			resampler-&gt;notifier.irq_acked = irqfd_resampler_ack;
 			INIT_LIST_HEAD(&amp;resampler-&gt;link);
 
-			list_add(&amp;resampler-&gt;link, &amp;kvm-&gt;irqfds.resampler_list);
+<yellow>			list_add(&resampler->link, &kvm->irqfds.resampler_list);</yellow>
 <yellow>			kvm_register_irq_ack_notifier(kvm,</yellow>
 						      &amp;resampler-&gt;notifier);
 			irqfd-&gt;resampler = resampler;
 		}
 
 <yellow>		list_add_rcu(&irqfd->resampler_link, &irqfd->resampler->list);</yellow>
-		synchronize_srcu(&amp;kvm-&gt;irq_srcu);
+<yellow>		synchronize_srcu(&kvm->irq_srcu);</yellow>
 
 		mutex_unlock(&amp;kvm-&gt;irqfds.resampler_lock);
 	}
@@ -466,9 +466,9 @@ kvm_irqfd_assign(struct kvm *kvm, struct kvm_irqfd *args)
 <yellow>	idx = srcu_read_lock(&kvm->irq_srcu);</yellow>
 	irqfd_update(kvm, irqfd);
 
-	list_add_tail(&amp;irqfd-&gt;list, &amp;kvm-&gt;irqfds.items);
+<yellow>	list_add_tail(&irqfd->list, &kvm->irqfds.items);</yellow>
 
-	spin_unlock_irq(&amp;kvm-&gt;irqfds.lock);
+<yellow>	spin_unlock_irq(&kvm->irqfds.lock);</yellow>
 
 	/*
 	 * Check if there was an event already pending on the eventfd
@@ -566,9 +566,9 @@ void kvm_notify_acked_irq(struct kvm *kvm, unsigned irqchip, unsigned pin)
 void kvm_register_irq_ack_notifier(struct kvm *kvm,
 				   struct kvm_irq_ack_notifier *kian)
 {
-<blue>	mutex_lock(&kvm->irq_lock);</blue>
+<yellow>	mutex_lock(&kvm->irq_lock);</yellow>
 <yellow>	hlist_add_head_rcu(&kian->link, &kvm->irq_ack_notifier_list);</yellow>
-<blue>	mutex_unlock(&kvm->irq_lock);</blue>
+<yellow>	mutex_unlock(&kvm->irq_lock);</yellow>
 	kvm_arch_post_irq_ack_notifier_list_update(kvm);
 }
 
@@ -622,7 +622,7 @@ kvm_irqfd_deassign(struct kvm *kvm, struct kvm_irqfd *args)
 <yellow>			write_seqcount_begin(&irqfd->irq_entry_sc);</yellow>
 			irqfd-&gt;irq_entry.type = 0;
 			write_seqcount_end(&amp;irqfd-&gt;irq_entry_sc);
-<yellow>			irqfd_deactivate(irqfd);</yellow>
+			irqfd_deactivate(irqfd);
 		}
 	}
 
@@ -662,8 +662,8 @@ kvm_irqfd_release(struct kvm *kvm)
 
 <yellow>	spin_lock_irq(&kvm->irqfds.lock);</yellow>
 
-	list_for_each_entry_safe(irqfd, tmp, &amp;kvm-&gt;irqfds.items, list)
-<yellow>		irqfd_deactivate(irqfd);</yellow>
+<yellow>	list_for_each_entry_safe(irqfd, tmp, &kvm->irqfds.items, list)</yellow>
+		irqfd_deactivate(irqfd);
 
 <yellow>	spin_unlock_irq(&kvm->irqfds.lock);</yellow>
 
@@ -757,7 +757,7 @@ static void
 ioeventfd_release(struct _ioeventfd *p)
 {
 <blue>	eventfd_ctx_put(p->eventfd);</blue>
-	list_del(&amp;p-&gt;list);
+<blue>	list_del(&p->list);</blue>
 	kfree(p);
 }
 
@@ -911,9 +911,9 @@ static int kvm_assign_ioeventfd_idx(struct kvm *kvm,
 		goto unlock_fail;
 
 <blue>	kvm_get_bus(kvm, bus_idx)->ioeventfd_count++;</blue>
-	list_add_tail(&amp;p-&gt;list, &amp;kvm-&gt;ioeventfds);
+<blue>	list_add_tail(&p->list, &kvm->ioeventfds);</blue>
 
-	mutex_unlock(&amp;kvm-&gt;slots_lock);
+<blue>	mutex_unlock(&kvm->slots_lock);</blue>
 
 	return 0;
 
@@ -958,8 +958,8 @@ kvm_deassign_ioeventfd_idx(struct kvm *kvm, enum kvm_bus bus_idx,
 			continue;
 
 <blue>		kvm_io_bus_unregister_dev(kvm, bus_idx, &p->dev);</blue>
-		bus = kvm_get_bus(kvm, bus_idx);
-		if (bus)
+<yellow>		bus = kvm_get_bus(kvm, bus_idx);</yellow>
+<blue>		if (bus)</blue>
 <blue>			bus->ioeventfd_count--;</blue>
 <blue>		ioeventfd_release(p);</blue>
 		ret = 0;
@@ -1048,8 +1048,8 @@ kvm_ioeventfd(struct kvm *kvm, struct kvm_ioeventfd *args)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

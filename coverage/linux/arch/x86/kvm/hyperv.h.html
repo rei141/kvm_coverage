@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 155; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 215; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -85,6 +85,7 @@
 #define __ARCH_X86_KVM_HYPERV_H__
 
 #include &lt;linux/kvm_host.h&gt;
+#include &quot;x86.h&quot;
 
 /* &quot;Hv#1&quot; signature */
 #define HYPERV_CPUID_SIGNATURE_EAX 0x31237648
@@ -128,28 +129,28 @@ static inline struct kvm_vcpu_hv *to_hv_vcpu(struct kvm_vcpu *vcpu)
 
 static inline struct kvm_vcpu_hv_synic *to_hv_synic(struct kvm_vcpu *vcpu)
 {
-	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
 
-	return &amp;hv_vcpu-&gt;synic;
+<blue>	return &hv_vcpu->synic;</blue>
 }
 
 static inline struct kvm_vcpu *hv_synic_to_vcpu(struct kvm_vcpu_hv_synic *synic)
 {
 	struct kvm_vcpu_hv *hv_vcpu = container_of(synic, struct kvm_vcpu_hv, synic);
 
-	return hv_vcpu-&gt;vcpu;
+<blue>	return hv_vcpu->vcpu;</blue>
 }
 
 static inline struct kvm_hv_syndbg *to_hv_syndbg(struct kvm_vcpu *vcpu)
 {
-	return &amp;vcpu-&gt;kvm-&gt;arch.hyperv.hv_syndbg;
+<blue>	return &vcpu->kvm->arch.hyperv.hv_syndbg;</blue>
 }
 
 static inline u32 kvm_hv_get_vpindex(struct kvm_vcpu *vcpu)
 {
-	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);
+<yellow>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</yellow>
 
-<yellow>	return hv_vcpu ? hv_vcpu->vp_index : vcpu->vcpu_idx;</yellow>
+<blue>	return hv_vcpu ? hv_vcpu->vp_index : vcpu->vcpu_idx;</blue>
 }
 
 int kvm_hv_set_msr_common(struct kvm_vcpu *vcpu, u32 msr, u64 data, bool host);
@@ -157,7 +158,7 @@ int kvm_hv_get_msr_common(struct kvm_vcpu *vcpu, u32 msr, u64 *pdata, bool host)
 
 static inline bool kvm_hv_hypercall_enabled(struct kvm_vcpu *vcpu)
 {
-	return vcpu-&gt;arch.hyperv_enabled &amp;&amp; to_kvm_hv(vcpu-&gt;kvm)-&gt;hv_guest_os_id;
+<yellow>	return vcpu->arch.hyperv_enabled && to_kvm_hv(vcpu->kvm)->hv_guest_os_id;</yellow>
 }
 
 int kvm_hv_hypercall(struct kvm_vcpu *vcpu);
@@ -170,8 +171,7 @@ int kvm_hv_activate_synic(struct kvm_vcpu *vcpu, bool dont_zero_synic_pages);
 void kvm_hv_vcpu_uninit(struct kvm_vcpu *vcpu);
 
 bool kvm_hv_assist_page_enabled(struct kvm_vcpu *vcpu);
-bool kvm_hv_get_assist_page(struct kvm_vcpu *vcpu,
-			    struct hv_vp_assist_page *assist_page);
+int kvm_hv_get_assist_page(struct kvm_vcpu *vcpu);
 
 static inline struct kvm_vcpu_hv_stimer *to_hv_stimer(struct kvm_vcpu *vcpu,
 						      int timer_index)
@@ -183,19 +183,19 @@ static inline struct kvm_vcpu *hv_stimer_to_vcpu(struct kvm_vcpu_hv_stimer *stim
 {
 	struct kvm_vcpu_hv *hv_vcpu;
 
-	hv_vcpu = container_of(stimer - stimer-&gt;index, struct kvm_vcpu_hv,
+<blue>	hv_vcpu = container_of(stimer - stimer->index, struct kvm_vcpu_hv,</blue>
 			       stimer[0]);
 	return hv_vcpu-&gt;vcpu;
 }
 
 static inline bool kvm_hv_has_stimer_pending(struct kvm_vcpu *vcpu)
 {
-	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
 
 	if (!hv_vcpu)
 		return false;
 
-	return !bitmap_empty(hv_vcpu-&gt;stimer_pending_bitmap,
+<blue>	return !bitmap_empty(hv_vcpu->stimer_pending_bitmap,</blue>
 			     HV_SYNIC_STIMER_COUNT);
 }
 
@@ -214,13 +214,73 @@ int kvm_vm_ioctl_hv_eventfd(struct kvm *kvm, struct kvm_hyperv_eventfd *args);
 int kvm_get_hv_cpuid(struct kvm_vcpu *vcpu, struct kvm_cpuid2 *cpuid,
 		     struct kvm_cpuid_entry2 __user *entries);
 
+static inline struct kvm_vcpu_hv_tlb_flush_fifo *kvm_hv_get_tlb_flush_fifo(struct kvm_vcpu *vcpu,
+									   bool is_guest_mode)
+{
+<yellow>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</yellow>
+	int i = is_guest_mode ? HV_L2_TLB_FLUSH_FIFO :
+				HV_L1_TLB_FLUSH_FIFO;
+
+	return &amp;hv_vcpu-&gt;tlb_flush_fifo[i];
+}
+
+static inline void kvm_hv_vcpu_purge_flush_tlb(struct kvm_vcpu *vcpu)
+{
+	struct kvm_vcpu_hv_tlb_flush_fifo *tlb_flush_fifo;
+
+<blue>	if (!to_hv_vcpu(vcpu) || !kvm_check_request(KVM_REQ_HV_TLB_FLUSH, vcpu))</blue>
+		return;
+
+	tlb_flush_fifo = kvm_hv_get_tlb_flush_fifo(vcpu, is_guest_mode(vcpu));
+
+	kfifo_reset_out(&amp;tlb_flush_fifo-&gt;entries);
+}
+
+static inline bool guest_hv_cpuid_has_l2_tlb_flush(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
+
+	return hv_vcpu &amp;&amp;
+<blue>		(hv_vcpu->cpuid_cache.nested_eax & HV_X64_NESTED_DIRECT_FLUSH);</blue>
+}
+
+static inline bool kvm_hv_is_tlb_flush_hcall(struct kvm_vcpu *vcpu)
+{
+<blue>	struct kvm_vcpu_hv *hv_vcpu = to_hv_vcpu(vcpu);</blue>
+	u16 code;
+
+	if (!hv_vcpu)
+		return false;
+
+<blue>	code = is_64_bit_hypercall(vcpu) ? kvm_rcx_read(vcpu) :</blue>
+<yellow>					   kvm_rax_read(vcpu);</yellow>
+
+<blue>	return (code == HVCALL_FLUSH_VIRTUAL_ADDRESS_SPACE ||</blue>
+<blue>		code == HVCALL_FLUSH_VIRTUAL_ADDRESS_LIST ||</blue>
+		code == HVCALL_FLUSH_VIRTUAL_ADDRESS_SPACE_EX ||
+		code == HVCALL_FLUSH_VIRTUAL_ADDRESS_LIST_EX);
+}
+
+static inline int kvm_hv_verify_vp_assist(struct kvm_vcpu *vcpu)
+{
+	if (!to_hv_vcpu(vcpu))
+		return 0;
+
+	if (!kvm_hv_assist_page_enabled(vcpu))
+		return 0;
+
+	return kvm_hv_get_assist_page(vcpu);
+}
+
+int kvm_hv_vcpu_flush_tlb(struct kvm_vcpu *vcpu);
+
 #endif
 
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -70,7 +70,7 @@
 #include &lt;linux/kvm_host.h&gt;
 
 #include &quot;hyperv.h&quot;
-#include &quot;kvm_cache_regs.h&quot;
+#include &quot;smm.h&quot;
 
 #define KVM_APIC_INIT		0
 #define KVM_APIC_SIPI		1
@@ -212,12 +212,12 @@ void kvm_lapic_exit(void);
 
 static inline void kvm_lapic_clear_vector(int vec, void *bitmap)
 {
-	clear_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));
+<yellow>	clear_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));</yellow>
 }
 
 static inline void kvm_lapic_set_vector(int vec, void *bitmap)
 {
-	set_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));
+<yellow>	set_bit(VEC_POS(vec), (bitmap) + REG_POS(vec));</yellow>
 }
 
 static inline void kvm_lapic_set_irr(int vec, struct kvm_lapic *apic)
@@ -232,12 +232,12 @@ static inline void kvm_lapic_set_irr(int vec, struct kvm_lapic *apic)
 
 static inline u32 __kvm_lapic_get_reg(char *regs, int reg_off)
 {
-	return *((u32 *) (regs + reg_off));
+<yellow>	return *((u32 *) (regs + reg_off));</yellow>
 }
 
 static inline u32 kvm_lapic_get_reg(struct kvm_lapic *apic, int reg_off)
 {
-	return __kvm_lapic_get_reg(apic-&gt;regs, reg_off);
+<blue>	return __kvm_lapic_get_reg(apic->regs, reg_off);</blue>
 }
 
 DECLARE_STATIC_KEY_FALSE(kvm_has_noapic_vcpu);
@@ -251,35 +251,35 @@ static inline bool lapic_in_kernel(struct kvm_vcpu *vcpu)
 
 extern struct static_key_false_deferred apic_hw_disabled;
 
-static inline int kvm_apic_hw_enabled(struct kvm_lapic *apic)
+static inline bool kvm_apic_hw_enabled(struct kvm_lapic *apic)
 {
-	if (static_branch_unlikely(&amp;apic_hw_disabled.key))
-		return apic-&gt;vcpu-&gt;arch.apic_base &amp; MSR_IA32_APICBASE_ENABLE;
-	return MSR_IA32_APICBASE_ENABLE;
+<blue>	if (static_branch_unlikely(&apic_hw_disabled.key))</blue>
+<yellow>		return apic->vcpu->arch.apic_base & MSR_IA32_APICBASE_ENABLE;</yellow>
+	return true;
 }
 
 extern struct static_key_false_deferred apic_sw_disabled;
 
-static inline bool kvm_apic_sw_enabled(struct kvm_lapic *apic)
+<blue>static inline bool kvm_apic_sw_enabled(struct kvm_lapic *apic)</blue>
 {
-	if (static_branch_unlikely(&amp;apic_sw_disabled.key))
-		return apic-&gt;sw_enabled;
+<blue>	if (static_branch_unlikely(&apic_sw_disabled.key))</blue>
+<blue>		return apic->sw_enabled;</blue>
 	return true;
 }
 
 static inline bool kvm_apic_present(struct kvm_vcpu *vcpu)
 {
-	return lapic_in_kernel(vcpu) &amp;&amp; kvm_apic_hw_enabled(vcpu-&gt;arch.apic);
+<blue>	return lapic_in_kernel(vcpu) && kvm_apic_hw_enabled(vcpu->arch.apic);</blue>
 }
 
-static inline int kvm_lapic_enabled(struct kvm_vcpu *vcpu)
+<blue>static inline int kvm_lapic_enabled(struct kvm_vcpu *vcpu)</blue>
 {
-	return kvm_apic_present(vcpu) &amp;&amp; kvm_apic_sw_enabled(vcpu-&gt;arch.apic);
+<blue>	return kvm_apic_present(vcpu) && kvm_apic_sw_enabled(vcpu->arch.apic);</blue>
 }
 
 static inline int apic_x2apic_mode(struct kvm_lapic *apic)
 {
-	return apic-&gt;vcpu-&gt;arch.apic_base &amp; X2APIC_ENABLE;
+<blue>	return apic->vcpu->arch.apic_base & X2APIC_ENABLE;</blue>
 }
 
 static inline bool kvm_vcpu_apicv_active(struct kvm_vcpu *vcpu)
@@ -294,19 +294,19 @@ static inline bool kvm_apic_has_pending_init_or_sipi(struct kvm_vcpu *vcpu)
 
 static inline bool kvm_apic_init_sipi_allowed(struct kvm_vcpu *vcpu)
 {
-	return !is_smm(vcpu) &amp;&amp;
-	       !static_call(kvm_x86_apic_init_signal_blocked)(vcpu);
+<blue>	return !is_smm(vcpu) &&</blue>
+<blue>	       !static_call(kvm_x86_apic_init_signal_blocked)(vcpu);</blue>
 }
 
 static inline bool kvm_lowest_prio_delivery(struct kvm_lapic_irq *irq)
 {
-	return (irq-&gt;delivery_mode == APIC_DM_LOWEST ||
-			irq-&gt;msi_redir_hint);
+<yellow>	return (irq->delivery_mode == APIC_DM_LOWEST ||</yellow>
+<yellow>			irq->msi_redir_hint);</yellow>
 }
 
 static inline int kvm_lapic_latched_init(struct kvm_vcpu *vcpu)
 {
-	return lapic_in_kernel(vcpu) &amp;&amp; test_bit(KVM_APIC_INIT, &amp;vcpu-&gt;arch.apic-&gt;pending_events);
+<blue>	return lapic_in_kernel(vcpu) && test_bit(KVM_APIC_INIT, &vcpu->arch.apic->pending_events);</blue>
 }
 
 bool kvm_apic_pending_eoi(struct kvm_vcpu *vcpu, int vector);
@@ -329,12 +329,12 @@ bool kvm_can_use_hv_timer(struct kvm_vcpu *vcpu);
 
 static inline enum lapic_mode kvm_apic_mode(u64 apic_base)
 {
-	return apic_base &amp; (MSR_IA32_APICBASE_ENABLE | X2APIC_ENABLE);
+<blue>	return apic_base & (MSR_IA32_APICBASE_ENABLE | X2APIC_ENABLE);</blue>
 }
 
 static inline u8 kvm_xapic_id(struct kvm_lapic *apic)
 {
-	return kvm_lapic_get_reg(apic, APIC_ID) &gt;&gt; 24;
+<blue>	return kvm_lapic_get_reg(apic, APIC_ID) >> 24;</blue>
 }
 
 #endif
@@ -342,8 +342,8 @@ static inline u8 kvm_xapic_id(struct kvm_lapic *apic)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

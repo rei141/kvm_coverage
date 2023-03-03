@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 475; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 492; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -251,7 +251,7 @@ extern u64 __read_mostly shadow_nonpresent_or_rsvd_mask;
  * should not modify the SPTE.
  *
  * Use a semi-arbitrary value that doesn&#x27;t set RWX bits, i.e. is not-present on
- * bot AMD and Intel CPUs, and doesn&#x27;t set PFN bits, i.e. doesn&#x27;t create a L1TF
+ * both AMD and Intel CPUs, and doesn&#x27;t set PFN bits, i.e. doesn&#x27;t create a L1TF
  * vulnerability.  Use only low bits to avoid 64-bit immediates.
  *
  * Only used by the TDP MMU.
@@ -281,6 +281,23 @@ static inline int spte_index(u64 *sptep)
  * high and low parts.  This mask covers the lower bits of the GFN.
  */
 extern u64 __read_mostly shadow_nonpresent_or_rsvd_lower_gfn_mask;
+
+static inline struct kvm_mmu_page *to_shadow_page(hpa_t shadow_page)
+{
+<blue>	struct page *page = pfn_to_page((shadow_page) >> PAGE_SHIFT);</blue>
+
+	return (struct kvm_mmu_page *)page_private(page);
+}
+
+static inline struct kvm_mmu_page *spte_to_child_sp(u64 spte)
+{
+<blue>	return to_shadow_page(spte & SPTE_BASE_ADDR_MASK);</blue>
+}
+
+static inline struct kvm_mmu_page *sptep_to_sp(u64 *sptep)
+{
+<blue>	return to_shadow_page(__pa(sptep));</blue>
+}
 
 static inline bool is_mmio_spte(u64 spte)
 {
@@ -368,7 +385,7 @@ static inline bool is_accessed_spte(u64 spte)
 <blue>	u64 accessed_mask = spte_shadow_accessed_mask(spte);</blue>
 
 <blue>	return accessed_mask ? spte & accessed_mask</blue>
-<yellow>			     : !is_access_track_spte(spte);</yellow>
+<blue>			     : !is_access_track_spte(spte);</blue>
 }
 
 static inline bool is_dirty_spte(u64 spte)
@@ -409,7 +426,7 @@ static __always_inline bool is_rsvd_spte(struct rsvd_bits_validate *rsvd_check,
  * A shadow-present leaf SPTE may be non-writable for 4 possible reasons:
  *
  *  1. To intercept writes for dirty logging. KVM write-protects huge pages
- *     so that they can be split be split down into the dirty logging
+ *     so that they can be split down into the dirty logging
  *     granularity (4KiB) whenever the guest writes to them. KVM also
  *     write-protects 4KiB pages so that writes can be recorded in the dirty log
  *     (e.g. if not using PML). SPTEs are write-protected for dirty logging
@@ -497,7 +514,7 @@ static inline u64 get_mmio_spte_generation(u64 spte)
 {
 	u64 gen;
 
-<blue>	gen = (spte & MMIO_SPTE_GEN_LOW_MASK) >> MMIO_SPTE_GEN_LOW_SHIFT;</blue>
+<yellow>	gen = (spte & MMIO_SPTE_GEN_LOW_MASK) >> MMIO_SPTE_GEN_LOW_SHIFT;</yellow>
 	gen |= (spte &amp; MMIO_SPTE_GEN_HIGH_MASK) &gt;&gt; MMIO_SPTE_GEN_HIGH_SHIFT;
 	return gen;
 }
@@ -539,8 +556,8 @@ void kvm_mmu_reset_all_pte_masks(void);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 2286; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 2285; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -113,8 +113,8 @@
 #endif
 
 /*
- * The bit 16 ~ bit 31 of kvm_memory_region::flags are internally used
- * in kvm, other bits are visible for userspace which are defined in
+ * The bit 16 ~ bit 31 of kvm_userspace_memory_region::flags are internally
+ * used in kvm, other bits are visible for userspace which are defined in
  * include/linux/kvm_h.
  */
 #define KVM_MEMSLOT_INVALID	(1UL &lt;&lt; 16)
@@ -159,6 +159,7 @@
 #define KVM_PFN_ERR_FAULT	(KVM_PFN_ERR_MASK)
 #define KVM_PFN_ERR_HWPOISON	(KVM_PFN_ERR_MASK + 1)
 #define KVM_PFN_ERR_RO_FAULT	(KVM_PFN_ERR_MASK + 2)
+#define KVM_PFN_ERR_SIGPENDING	(KVM_PFN_ERR_MASK + 3)
 
 /*
  * error pfns indicate that the gfn is in slot but faild to
@@ -167,6 +168,15 @@
 static inline bool is_error_pfn(kvm_pfn_t pfn)
 {
 	return !!(pfn &amp; KVM_PFN_ERR_MASK);
+}
+
+/*
+ * KVM_PFN_ERR_SIGPENDING indicates that fetching the PFN was interrupted
+ * by a pending signal.  Note, the signal may or may not be fatal.
+ */
+static inline bool is_sigpending_pfn(kvm_pfn_t pfn)
+{
+	return pfn == KVM_PFN_ERR_SIGPENDING;
 }
 
 /*
@@ -216,10 +226,11 @@ static inline bool is_error_page(struct page *page)
  * Architecture-independent vcpu-&gt;requests bit members
  * Bits 3-7 are reserved for more arch-independent bits.
  */
-#define KVM_REQ_TLB_FLUSH         (0 | KVM_REQUEST_WAIT | KVM_REQUEST_NO_WAKEUP)
-#define KVM_REQ_VM_DEAD           (1 | KVM_REQUEST_WAIT | KVM_REQUEST_NO_WAKEUP)
-#define KVM_REQ_UNBLOCK           2
-#define KVM_REQUEST_ARCH_BASE     8
+#define KVM_REQ_TLB_FLUSH		(0 | KVM_REQUEST_WAIT | KVM_REQUEST_NO_WAKEUP)
+#define KVM_REQ_VM_DEAD			(1 | KVM_REQUEST_WAIT | KVM_REQUEST_NO_WAKEUP)
+#define KVM_REQ_UNBLOCK			2
+#define KVM_REQ_DIRTY_RING_SOFT_FULL	3
+#define KVM_REQUEST_ARCH_BASE		8
 
 /*
  * KVM_REQ_OUTSIDE_GUEST_MODE exists is purely as way to force the vCPU to
@@ -479,7 +490,7 @@ static __always_inline void guest_context_enter_irqoff(void)
 	 */
 	if (!context_tracking_guest_enter()) {
 		instrumentation_begin();
-		rcu_virt_note_context_switch(smp_processor_id());
+		rcu_virt_note_context_switch();
 		instrumentation_end();
 	}
 }
@@ -718,6 +729,8 @@ struct kvm_irq_routing_table {
 };
 #endif
 
+bool kvm_arch_irqchip_in_kernel(struct kvm *kvm);
+
 #ifndef KVM_INTERNAL_MEM_SLOTS
 #define KVM_INTERNAL_MEM_SLOTS 0
 #endif
@@ -773,6 +786,11 @@ struct kvm {
 	/* The current active memslot set for each address space */
 	struct kvm_memslots __rcu *memslots[KVM_ADDRESS_SPACE_NUM];
 	struct xarray vcpu_array;
+	/*
+	 * Protected by slots_lock, but can be read outside if an
+	 * incorrect answer is acceptable.
+	 */
+	atomic_t nr_memslots_dirty_logging;
 
 	/* Used to wait for completion of MMU notifiers.  */
 	spinlock_t mn_invalidate_lock;
@@ -842,6 +860,7 @@ struct kvm {
 	bool override_halt_poll_ns;
 	unsigned int max_halt_poll_ns;
 	u32 dirty_ring_size;
+	bool dirty_ring_with_bitmap;
 	bool vm_bugged;
 	bool vm_dead;
 
@@ -880,7 +899,7 @@ struct kvm {
 static inline void kvm_vm_dead(struct kvm *kvm)
 {
 <yellow>	kvm->vm_dead = true;</yellow>
-<yellow>	kvm_make_all_cpus_request(kvm, KVM_REQ_VM_DEAD);</yellow>
+	kvm_make_all_cpus_request(kvm, KVM_REQ_VM_DEAD);
 }
 
 static inline void kvm_vm_bugged(struct kvm *kvm)
@@ -911,7 +930,7 @@ static inline void kvm_vm_bugged(struct kvm *kvm)
 static inline void kvm_vcpu_srcu_read_lock(struct kvm_vcpu *vcpu)
 {
 #ifdef CONFIG_PROVE_RCU
-	WARN_ONCE(vcpu-&gt;srcu_depth++,
+<blue>	WARN_ONCE(vcpu->srcu_depth++,</blue>
 		  &quot;KVM: Illegal vCPU srcu_idx LOCK, depth=%d&quot;, vcpu-&gt;srcu_depth - 1);
 #endif
 <blue>	vcpu->____srcu_idx = srcu_read_lock(&vcpu->kvm->srcu);</blue>
@@ -922,7 +941,7 @@ static inline void kvm_vcpu_srcu_read_unlock(struct kvm_vcpu *vcpu)
 <blue>	srcu_read_unlock(&vcpu->kvm->srcu, vcpu->____srcu_idx);</blue>
 
 #ifdef CONFIG_PROVE_RCU
-	WARN_ONCE(--vcpu-&gt;srcu_depth,
+<yellow>	WARN_ONCE(--vcpu->srcu_depth,</yellow>
 		  &quot;KVM: Illegal vCPU srcu_idx UNLOCK, depth=%d&quot;, vcpu-&gt;srcu_depth);
 #endif
 }
@@ -932,7 +951,7 @@ static inline bool kvm_dirty_log_manual_protect_and_init_set(struct kvm *kvm)
 <yellow>	return !!(kvm->manual_dirty_log_protect & KVM_DIRTY_LOG_INITIALLY_SET);</yellow>
 }
 
-static inline struct kvm_io_bus *kvm_get_bus(struct kvm *kvm, enum kvm_bus idx)
+<yellow>static inline struct kvm_io_bus *kvm_get_bus(struct kvm *kvm, enum kvm_bus idx)</yellow>
 {
 <blue>	return srcu_dereference_check(kvm->buses[idx], &kvm->srcu,</blue>
 				      lockdep_is_held(&amp;kvm-&gt;slots_lock) ||
@@ -1010,10 +1029,10 @@ void kvm_put_kvm(struct kvm *kvm);
 bool file_is_kvm(struct file *file);
 void kvm_put_kvm_no_destroy(struct kvm *kvm);
 
-static inline struct kvm_memslots *__kvm_memslots(struct kvm *kvm, int as_id)
+<blue>static inline struct kvm_memslots *__kvm_memslots(struct kvm *kvm, int as_id)</blue>
 {
 <blue>	as_id = array_index_nospec(as_id, KVM_ADDRESS_SPACE_NUM);</blue>
-<yellow>	return srcu_dereference_check(kvm->memslots[as_id], &kvm->srcu,</yellow>
+<blue>	return srcu_dereference_check(kvm->memslots[as_id], &kvm->srcu,</blue>
 			lockdep_is_held(&amp;kvm-&gt;slots_lock) ||
 			!refcount_read(&amp;kvm-&gt;users_count));
 }
@@ -1025,9 +1044,9 @@ static inline struct kvm_memslots *kvm_memslots(struct kvm *kvm)
 
 static inline struct kvm_memslots *kvm_vcpu_memslots(struct kvm_vcpu *vcpu)
 {
-<blue>	int as_id = kvm_arch_vcpu_memslots_id(vcpu);</blue>
+	int as_id = kvm_arch_vcpu_memslots_id(vcpu);
 
-	return __kvm_memslots(vcpu-&gt;kvm, as_id);
+<blue>	return __kvm_memslots(vcpu->kvm, as_id);</blue>
 }
 
 static inline bool kvm_memslots_empty(struct kvm_memslots *slots)
@@ -1074,7 +1093,7 @@ static inline void kvm_memslot_iter_start(struct kvm_memslot_iter *iter,
 					  struct kvm_memslots *slots,
 					  gfn_t start)
 {
-	int idx = slots-&gt;node_idx;
+<yellow>	int idx = slots->node_idx;</yellow>
 	struct rb_node *tmp;
 	struct kvm_memory_slot *slot;
 
@@ -1204,8 +1223,8 @@ kvm_pfn_t gfn_to_pfn_prot(struct kvm *kvm, gfn_t gfn, bool write_fault,
 kvm_pfn_t gfn_to_pfn_memslot(const struct kvm_memory_slot *slot, gfn_t gfn);
 kvm_pfn_t gfn_to_pfn_memslot_atomic(const struct kvm_memory_slot *slot, gfn_t gfn);
 kvm_pfn_t __gfn_to_pfn_memslot(const struct kvm_memory_slot *slot, gfn_t gfn,
-			       bool atomic, bool *async, bool write_fault,
-			       bool *writable, hva_t *hva);
+			       bool atomic, bool interruptible, bool *async,
+			       bool write_fault, bool *writable, hva_t *hva);
 
 void kvm_release_pfn_clean(kvm_pfn_t pfn);
 void kvm_release_pfn_dirty(kvm_pfn_t pfn);
@@ -1307,18 +1326,7 @@ void kvm_vcpu_mark_page_dirty(struct kvm_vcpu *vcpu, gfn_t gfn);
  * kvm_gpc_init - initialize gfn_to_pfn_cache.
  *
  * @gpc:	   struct gfn_to_pfn_cache object.
- *
- * This sets up a gfn_to_pfn_cache by initializing locks.  Note, the cache must
- * be zero-allocated (or zeroed by the caller before init).
- */
-void kvm_gpc_init(struct gfn_to_pfn_cache *gpc);
-
-/**
- * kvm_gpc_activate - prepare a cached kernel mapping and HPA for a given guest
- *                    physical address.
- *
  * @kvm:	   pointer to kvm instance.
- * @gpc:	   struct gfn_to_pfn_cache object.
  * @vcpu:	   vCPU to be used for marking pages dirty and to be woken on
  *		   invalidation.
  * @usage:	   indicates if the resulting host physical PFN is used while
@@ -1327,28 +1335,36 @@ void kvm_gpc_init(struct gfn_to_pfn_cache *gpc);
  *		   changes!---will also force @vcpu to exit the guest and
  *		   refresh the cache); and/or if the PFN used directly
  *		   by KVM (and thus needs a kernel virtual mapping).
+ *
+ * This sets up a gfn_to_pfn_cache by initializing locks and assigning the
+ * immutable attributes.  Note, the cache must be zero-allocated (or zeroed by
+ * the caller before init).
+ */
+void kvm_gpc_init(struct gfn_to_pfn_cache *gpc, struct kvm *kvm,
+		  struct kvm_vcpu *vcpu, enum pfn_cache_usage usage);
+
+/**
+ * kvm_gpc_activate - prepare a cached kernel mapping and HPA for a given guest
+ *                    physical address.
+ *
+ * @gpc:	   struct gfn_to_pfn_cache object.
  * @gpa:	   guest physical address to map.
  * @len:	   sanity check; the range being access must fit a single page.
  *
  * @return:	   0 for success.
  *		   -EINVAL for a mapping which would cross a page boundary.
- *                 -EFAULT for an untranslatable guest physical address.
+ *		   -EFAULT for an untranslatable guest physical address.
  *
- * This primes a gfn_to_pfn_cache and links it into the @kvm&#x27;s list for
- * invalidations to be processed.  Callers are required to use
- * kvm_gfn_to_pfn_cache_check() to ensure that the cache is valid before
- * accessing the target page.
+ * This primes a gfn_to_pfn_cache and links it into the @gpc-&gt;kvm&#x27;s list for
+ * invalidations to be processed.  Callers are required to use kvm_gpc_check()
+ * to ensure that the cache is valid before accessing the target page.
  */
-int kvm_gpc_activate(struct kvm *kvm, struct gfn_to_pfn_cache *gpc,
-		     struct kvm_vcpu *vcpu, enum pfn_cache_usage usage,
-		     gpa_t gpa, unsigned long len);
+int kvm_gpc_activate(struct gfn_to_pfn_cache *gpc, gpa_t gpa, unsigned long len);
 
 /**
- * kvm_gfn_to_pfn_cache_check - check validity of a gfn_to_pfn_cache.
+ * kvm_gpc_check - check validity of a gfn_to_pfn_cache.
  *
- * @kvm:	   pointer to kvm instance.
  * @gpc:	   struct gfn_to_pfn_cache object.
- * @gpa:	   current guest physical address to map.
  * @len:	   sanity check; the range being access must fit a single page.
  *
  * @return:	   %true if the cache is still valid and the address matches.
@@ -1361,52 +1377,35 @@ int kvm_gpc_activate(struct kvm *kvm, struct gfn_to_pfn_cache *gpc,
  * Callers in IN_GUEST_MODE may do so without locking, although they should
  * still hold a read lock on kvm-&gt;scru for the memslot checks.
  */
-bool kvm_gfn_to_pfn_cache_check(struct kvm *kvm, struct gfn_to_pfn_cache *gpc,
-				gpa_t gpa, unsigned long len);
+bool kvm_gpc_check(struct gfn_to_pfn_cache *gpc, unsigned long len);
 
 /**
- * kvm_gfn_to_pfn_cache_refresh - update a previously initialized cache.
+ * kvm_gpc_refresh - update a previously initialized cache.
  *
- * @kvm:	   pointer to kvm instance.
  * @gpc:	   struct gfn_to_pfn_cache object.
- * @gpa:	   updated guest physical address to map.
  * @len:	   sanity check; the range being access must fit a single page.
  *
  * @return:	   0 for success.
  *		   -EINVAL for a mapping which would cross a page boundary.
- *                 -EFAULT for an untranslatable guest physical address.
+ *		   -EFAULT for an untranslatable guest physical address.
  *
  * This will attempt to refresh a gfn_to_pfn_cache. Note that a successful
- * returm from this function does not mean the page can be immediately
+ * return from this function does not mean the page can be immediately
  * accessed because it may have raced with an invalidation. Callers must
  * still lock and check the cache status, as this function does not return
  * with the lock still held to permit access.
  */
-int kvm_gfn_to_pfn_cache_refresh(struct kvm *kvm, struct gfn_to_pfn_cache *gpc,
-				 gpa_t gpa, unsigned long len);
-
-/**
- * kvm_gfn_to_pfn_cache_unmap - temporarily unmap a gfn_to_pfn_cache.
- *
- * @kvm:	   pointer to kvm instance.
- * @gpc:	   struct gfn_to_pfn_cache object.
- *
- * This unmaps the referenced page. The cache is left in the invalid state
- * but at least the mapping from GPA to userspace HVA will remain cached
- * and can be reused on a subsequent refresh.
- */
-void kvm_gfn_to_pfn_cache_unmap(struct kvm *kvm, struct gfn_to_pfn_cache *gpc);
+int kvm_gpc_refresh(struct gfn_to_pfn_cache *gpc, unsigned long len);
 
 /**
  * kvm_gpc_deactivate - deactivate and unlink a gfn_to_pfn_cache.
  *
- * @kvm:	   pointer to kvm instance.
  * @gpc:	   struct gfn_to_pfn_cache object.
  *
- * This removes a cache from the @kvm&#x27;s list to be processed on MMU notifier
+ * This removes a cache from the VM&#x27;s list to be processed on MMU notifier
  * invocation.
  */
-void kvm_gpc_deactivate(struct kvm *kvm, struct gfn_to_pfn_cache *gpc);
+void kvm_gpc_deactivate(struct gfn_to_pfn_cache *gpc);
 
 void kvm_sigset_activate(struct kvm_vcpu *vcpu);
 void kvm_sigset_deactivate(struct kvm_vcpu *vcpu);
@@ -2008,15 +2007,15 @@ static inline int mmu_invalidate_retry_hva(struct kvm *kvm,
 					   unsigned long mmu_seq,
 					   unsigned long hva)
 {
-	lockdep_assert_held(&amp;kvm-&gt;mmu_lock);
+<blue>	lockdep_assert_held(&kvm->mmu_lock);</blue>
 	/*
 	 * If mmu_invalidate_in_progress is non-zero, then the range maintained
 	 * by kvm_mmu_notifier_invalidate_range_start contains all addresses
 	 * that might be being invalidated. Note that it may include some false
 	 * positives, due to shortcuts when handing concurrent invalidations.
 	 */
-	if (unlikely(kvm-&gt;mmu_invalidate_in_progress) &amp;&amp;
-	    hva &gt;= kvm-&gt;mmu_invalidate_range_start &amp;&amp;
+<blue>	if (unlikely(kvm->mmu_invalidate_in_progress) &&</blue>
+<blue>	    hva >= kvm->mmu_invalidate_range_start &&</blue>
 <blue>	    hva < kvm->mmu_invalidate_range_end)</blue>
 		return 1;
 <blue>	if (kvm->mmu_invalidate_seq != mmu_seq)</blue>
@@ -2097,7 +2096,7 @@ static inline void __kvm_make_request(int req, struct kvm_vcpu *vcpu)
 	 * Ensure the rest of the request is published to kvm_check_request&#x27;s
 	 * caller.  Paired with the smp_mb__after_atomic in kvm_check_request.
 	 */
-<yellow>	smp_wmb();</yellow>
+	smp_wmb();
 <blue>	set_bit(req & KVM_REQUEST_MASK, (void *)&vcpu->requests);</blue>
 <blue>}</blue>
 
@@ -2217,7 +2216,7 @@ extern struct kvm_device_ops kvm_arm_vgic_v3_ops;
 
 static inline void kvm_vcpu_set_in_spin_loop(struct kvm_vcpu *vcpu, bool val)
 {
-<blue>	vcpu->spin_loop.in_spin_loop = val;</blue>
+<yellow>	vcpu->spin_loop.in_spin_loop = val;</yellow>
 }
 static inline void kvm_vcpu_set_dy_eligible(struct kvm_vcpu *vcpu, bool val)
 {
@@ -2317,7 +2316,7 @@ int kvm_vm_create_worker_thread(struct kvm *kvm, kvm_vm_thread_fn_t thread_fn,
 #ifdef CONFIG_KVM_XFER_TO_GUEST_WORK
 static inline void kvm_handle_signal_exit(struct kvm_vcpu *vcpu)
 {
-	vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_INTR;
+<yellow>	vcpu->run->exit_reason = KVM_EXIT_INTR;</yellow>
 	vcpu-&gt;stat.signal_exits++;
 }
 #endif /* CONFIG_KVM_XFER_TO_GUEST_WORK */
@@ -2332,7 +2331,7 @@ static inline void kvm_handle_signal_exit(struct kvm_vcpu *vcpu)
  */
 static inline void kvm_account_pgtable_pages(void *virt, int nr)
 {
-<blue>	mod_lruvec_page_state(virt_to_page(virt), NR_SECONDARY_PAGETABLE, nr);</blue>
+	mod_lruvec_page_state(virt_to_page(virt), NR_SECONDARY_PAGETABLE, nr);
 }
 
 /*
@@ -2350,8 +2349,8 @@ static inline void kvm_account_pgtable_pages(void *virt, int nr)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

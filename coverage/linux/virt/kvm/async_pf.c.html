@@ -134,8 +134,8 @@ static void async_pf_execute(struct work_struct *work)
 
 <yellow>	spin_lock(&vcpu->async_pf.lock);</yellow>
 	first = list_empty(&amp;vcpu-&gt;async_pf.done);
-	list_add_tail(&amp;apf-&gt;link, &amp;vcpu-&gt;async_pf.done);
-	apf-&gt;vcpu = NULL;
+<yellow>	list_add_tail(&apf->link, &vcpu->async_pf.done);</yellow>
+<yellow>	apf->vcpu = NULL;</yellow>
 	spin_unlock(&amp;vcpu-&gt;async_pf.lock);
 
 	if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC) &amp;&amp; first)
@@ -163,7 +163,7 @@ void kvm_clear_async_pf_completion_queue(struct kvm_vcpu *vcpu)
 		struct kvm_async_pf *work =
 <yellow>			list_first_entry(&vcpu->async_pf.queue,</yellow>
 					 typeof(*work), queue);
-		list_del(&amp;work-&gt;queue);
+<yellow>		list_del(&work->queue);</yellow>
 
 		/*
 		 * We know it&#x27;s present in vcpu-&gt;async_pf.done, do
@@ -189,7 +189,7 @@ void kvm_clear_async_pf_completion_queue(struct kvm_vcpu *vcpu)
 		struct kvm_async_pf *work =
 <yellow>			list_first_entry(&vcpu->async_pf.done,</yellow>
 					 typeof(*work), link);
-		list_del(&amp;work-&gt;link);
+<yellow>		list_del(&work->link);</yellow>
 		kmem_cache_free(async_pf_cache, work);
 	}
 <blue>	spin_unlock(&vcpu->async_pf.lock);</blue>
@@ -206,14 +206,14 @@ void kvm_check_async_pf_completion(struct kvm_vcpu *vcpu)
 <yellow>		spin_lock(&vcpu->async_pf.lock);</yellow>
 		work = list_first_entry(&amp;vcpu-&gt;async_pf.done, typeof(*work),
 					      link);
-		list_del(&amp;work-&gt;link);
+<yellow>		list_del(&work->link);</yellow>
 		spin_unlock(&amp;vcpu-&gt;async_pf.lock);
 
 		kvm_arch_async_page_ready(vcpu, work);
 		if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC))
 			kvm_arch_async_page_present(vcpu, work);
 
-		list_del(&amp;work-&gt;queue);
+<yellow>		list_del(&work->queue);</yellow>
 		vcpu-&gt;async_pf.queued--;
 		kmem_cache_free(async_pf_cache, work);
 	}
@@ -254,8 +254,8 @@ bool kvm_setup_async_pf(struct kvm_vcpu *vcpu, gpa_t cr2_or_gpa,
 
 	INIT_WORK(&amp;work-&gt;work, async_pf_execute);
 
-	list_add_tail(&amp;work-&gt;queue, &amp;vcpu-&gt;async_pf.queue);
-	vcpu-&gt;async_pf.queued++;
+<yellow>	list_add_tail(&work->queue, &vcpu->async_pf.queue);</yellow>
+<yellow>	vcpu->async_pf.queued++;</yellow>
 	work-&gt;notpresent_injected = kvm_arch_async_page_not_present(vcpu, work);
 
 	schedule_work(&amp;work-&gt;work);
@@ -280,8 +280,8 @@ int kvm_async_pf_wakeup_all(struct kvm_vcpu *vcpu)
 
 	spin_lock(&amp;vcpu-&gt;async_pf.lock);
 	first = list_empty(&amp;vcpu-&gt;async_pf.done);
-	list_add_tail(&amp;work-&gt;link, &amp;vcpu-&gt;async_pf.done);
-	spin_unlock(&amp;vcpu-&gt;async_pf.lock);
+<yellow>	list_add_tail(&work->link, &vcpu->async_pf.done);</yellow>
+<yellow>	spin_unlock(&vcpu->async_pf.lock);</yellow>
 
 	if (!IS_ENABLED(CONFIG_KVM_ASYNC_PF_SYNC) &amp;&amp; first)
 <yellow>		kvm_arch_async_page_present_queued(vcpu);</yellow>
@@ -293,8 +293,8 @@ int kvm_async_pf_wakeup_all(struct kvm_vcpu *vcpu)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

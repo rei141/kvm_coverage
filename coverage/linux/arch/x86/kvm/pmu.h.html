@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 208; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 225; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -109,7 +109,7 @@ void kvm_pmu_ops_update(const struct kvm_pmu_ops *pmu_ops);
 
 static inline u64 pmc_bitmask(struct kvm_pmc *pmc)
 {
-<blue>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</blue>
+<yellow>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</yellow>
 
 <yellow>	return pmu->counter_bitmask[pmc->type];</yellow>
 }
@@ -118,17 +118,17 @@ static inline u64 pmc_read_counter(struct kvm_pmc *pmc)
 {
 	u64 counter, enabled, running;
 
-<blue>	counter = pmc->counter;</blue>
+<yellow>	counter = pmc->counter;</yellow>
 <yellow>	if (pmc->perf_event && !pmc->is_paused)</yellow>
 <yellow>		counter += perf_event_read_value(pmc->perf_event,</yellow>
 						 &amp;enabled, &amp;running);
 	/* FIXME: Scaling needed? */
-<blue>	return counter & pmc_bitmask(pmc);</blue>
+<yellow>	return counter & pmc_bitmask(pmc);</yellow>
 }
 
 static inline void pmc_release_perf_event(struct kvm_pmc *pmc)
 {
-	if (pmc-&gt;perf_event) {
+<yellow>	if (pmc->perf_event) {</yellow>
 <yellow>		perf_event_release_kernel(pmc->perf_event);</yellow>
 		pmc-&gt;perf_event = NULL;
 		pmc-&gt;current_config = 0;
@@ -146,18 +146,18 @@ static inline void pmc_release_perf_event(struct kvm_pmc *pmc)
 
 static inline bool pmc_is_gp(struct kvm_pmc *pmc)
 {
-	return pmc-&gt;type == KVM_PMC_GP;
+<yellow>	return pmc->type == KVM_PMC_GP;</yellow>
 }
 
 static inline bool pmc_is_fixed(struct kvm_pmc *pmc)
 {
-	return pmc-&gt;type == KVM_PMC_FIXED;
+<yellow>	return pmc->type == KVM_PMC_FIXED;</yellow>
 }
 
 static inline bool kvm_valid_perf_global_ctrl(struct kvm_pmu *pmu,
 						 u64 data)
 {
-<blue>	return !(pmu->global_ctrl_mask & data);</blue>
+<yellow>	return !(pmu->global_ctrl_mask & data);</yellow>
 }
 
 /* returns general purpose PMC with the specified MSR. Note that it can be
@@ -168,7 +168,7 @@ static inline struct kvm_pmc *get_gp_pmc(struct kvm_pmu *pmu, u32 msr,
 					 u32 base)
 {
 <blue>	if (msr >= base && msr < base + pmu->nr_arch_gp_counters) {</blue>
-<blue>		u32 index = array_index_nospec(msr - base,</blue>
+<yellow>		u32 index = array_index_nospec(msr - base,</yellow>
 					       pmu-&gt;nr_arch_gp_counters);
 
 		return &amp;pmu-&gt;gp_counters[index];
@@ -183,7 +183,7 @@ static inline struct kvm_pmc *get_fixed_pmc(struct kvm_pmu *pmu, u32 msr)
 	int base = MSR_CORE_PERF_FIXED_CTR0;
 
 <blue>	if (msr >= base && msr < base + pmu->nr_arch_fixed_counters) {</blue>
-<blue>		u32 index = array_index_nospec(msr - base,</blue>
+<yellow>		u32 index = array_index_nospec(msr - base,</yellow>
 					       pmu-&gt;nr_arch_fixed_counters);
 
 		return &amp;pmu-&gt;fixed_counters[index];
@@ -201,9 +201,10 @@ static inline u64 get_sample_period(struct kvm_pmc *pmc, u64 counter_value)
 	return sample_period;
 }
 
-<yellow>static inline void pmc_update_sample_period(struct kvm_pmc *pmc)</yellow>
+static inline void pmc_update_sample_period(struct kvm_pmc *pmc)
 {
-<yellow>	if (!pmc->perf_event || pmc->is_paused)</yellow>
+<yellow>	if (!pmc->perf_event || pmc->is_paused ||</yellow>
+<yellow>	    !is_sampling_event(pmc->perf_event))</yellow>
 		return;
 
 <yellow>	perf_event_period(pmc->perf_event,</yellow>
@@ -214,7 +215,7 @@ static inline bool pmc_speculative_in_use(struct kvm_pmc *pmc)
 {
 <yellow>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</yellow>
 
-	if (pmc_is_fixed(pmc))
+<yellow>	if (pmc_is_fixed(pmc))</yellow>
 <yellow>		return fixed_ctrl_field(pmu->fixed_ctr_ctrl,</yellow>
 					pmc-&gt;idx - INTEL_PMC_IDX_FIXED) &amp; 0x3;
 
@@ -225,28 +226,44 @@ extern struct x86_pmu_capability kvm_pmu_cap;
 
 static inline void kvm_init_pmu_capability(void)
 {
-	bool is_intel = boot_cpu_data.x86_vendor == X86_VENDOR_INTEL;
+<yellow>	bool is_intel = boot_cpu_data.x86_vendor == X86_VENDOR_INTEL;</yellow>
 
-	perf_get_x86_pmu_capability(&amp;kvm_pmu_cap);
+	/*
+	 * Hybrid PMUs don&#x27;t play nice with virtualization without careful
+	 * configuration by userspace, and KVM&#x27;s APIs for reporting supported
+	 * vPMU features do not account for hybrid PMUs.  Disable vPMU support
+	 * for hybrid PMUs until KVM gains a way to let userspace opt-in.
+	 */
+	if (cpu_feature_enabled(X86_FEATURE_HYBRID_CPU))
+<yellow>		enable_pmu = false;</yellow>
 
-	 /*
-	  * For Intel, only support guest architectural pmu
-	  * on a host with architectural pmu.
-	  */
-	if ((is_intel &amp;&amp; !kvm_pmu_cap.version) || !kvm_pmu_cap.num_counters_gp)
-		enable_pmu = false;
+<yellow>	if (enable_pmu) {</yellow>
+<yellow>		perf_get_x86_pmu_capability(&kvm_pmu_cap);</yellow>
 
-	if (!enable_pmu) {
-		memset(&amp;kvm_pmu_cap, 0, sizeof(kvm_pmu_cap));
+		/*
+		 * For Intel, only support guest architectural pmu
+		 * on a host with architectural pmu.
+		 */
+<yellow>		if ((is_intel && !kvm_pmu_cap.version) ||</yellow>
+<yellow>		    !kvm_pmu_cap.num_counters_gp)</yellow>
+<yellow>			enable_pmu = false;</yellow>
+	}
+
+<yellow>	if (!enable_pmu) {</yellow>
+<yellow>		memset(&kvm_pmu_cap, 0, sizeof(kvm_pmu_cap));</yellow>
 		return;
 	}
 
-	kvm_pmu_cap.version = min(kvm_pmu_cap.version, 2);
+<yellow>	kvm_pmu_cap.version = min(kvm_pmu_cap.version, 2);</yellow>
 	kvm_pmu_cap.num_counters_fixed = min(kvm_pmu_cap.num_counters_fixed,
 					     KVM_PMC_MAX_FIXED);
 }
 
-void reprogram_counter(struct kvm_pmc *pmc);
+static inline void kvm_pmu_request_counter_reprogam(struct kvm_pmc *pmc)
+{
+<yellow>	set_bit(pmc->idx, pmc_to_pmu(pmc)->reprogram_pmi);</yellow>
+	kvm_make_request(KVM_REQ_PMU, pmc-&gt;vcpu);
+}
 
 void kvm_pmu_deliver_pmi(struct kvm_vcpu *vcpu);
 void kvm_pmu_handle_event(struct kvm_vcpu *vcpu);
@@ -272,8 +289,8 @@ extern struct kvm_pmu_ops amd_pmu_ops;
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

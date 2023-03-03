@@ -135,8 +135,8 @@ __copy_from_user(void *to, const void __user *from, unsigned long n)
 {
 	unsigned long res;
 
-	might_fault();
-<blue>	instrument_copy_from_user_before(to, from, n);</blue>
+<blue>	might_fault();</blue>
+	instrument_copy_from_user_before(to, from, n);
 	if (should_fail_usercopy())
 		return n;
 	check_object_size(to, n, false);
@@ -171,10 +171,10 @@ __copy_to_user_inatomic(void __user *to, const void *from, unsigned long n)
 static __always_inline __must_check unsigned long
 __copy_to_user(void __user *to, const void *from, unsigned long n)
 {
-	might_fault();
+<blue>	might_fault();</blue>
 	if (should_fail_usercopy())
 		return n;
-<blue>	instrument_copy_to_user(to, from, n);</blue>
+<yellow>	instrument_copy_to_user(to, from, n);</yellow>
 	check_object_size(from, n, true);
 <yellow>	return raw_copy_to_user(to, from, n);</yellow>
 }
@@ -288,7 +288,7 @@ static inline void pagefault_enable(void)
  */
 static inline bool pagefault_disabled(void)
 {
-	return current-&gt;pagefault_disabled != 0;
+<yellow>	return current->pagefault_disabled != 0;</yellow>
 }
 
 /*
@@ -484,8 +484,8 @@ void __noreturn usercopy_abort(const char *name, const char *detail,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

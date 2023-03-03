@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 441; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 442; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -258,8 +258,8 @@ int kvm_request_irq_source_id(struct kvm *kvm)
 	unsigned long *bitmap = &amp;kvm-&gt;arch.irq_sources_bitmap;
 	int irq_source_id;
 
-<blue>	mutex_lock(&kvm->irq_lock);</blue>
-<blue>	irq_source_id = find_first_zero_bit(bitmap, BITS_PER_LONG);</blue>
+<yellow>	mutex_lock(&kvm->irq_lock);</yellow>
+<yellow>	irq_source_id = find_first_zero_bit(bitmap, BITS_PER_LONG);</yellow>
 
 	if (irq_source_id &gt;= BITS_PER_LONG) {
 		printk(KERN_WARNING &quot;kvm: exhaust allocatable IRQ sources!\n&quot;);
@@ -269,9 +269,9 @@ int kvm_request_irq_source_id(struct kvm *kvm)
 
 	ASSERT(irq_source_id != KVM_USERSPACE_IRQ_SOURCE_ID);
 	ASSERT(irq_source_id != KVM_IRQFD_RESAMPLE_IRQ_SOURCE_ID);
-<blue>	set_bit(irq_source_id, bitmap);</blue>
+<yellow>	set_bit(irq_source_id, bitmap);</yellow>
 unlock:
-<blue>	mutex_unlock(&kvm->irq_lock);</blue>
+<yellow>	mutex_unlock(&kvm->irq_lock);</yellow>
 
 	return irq_source_id;
 }
@@ -300,10 +300,10 @@ unlock:
 void kvm_register_irq_mask_notifier(struct kvm *kvm, int irq,
 				    struct kvm_irq_mask_notifier *kimn)
 {
-<blue>	mutex_lock(&kvm->irq_lock);</blue>
+<yellow>	mutex_lock(&kvm->irq_lock);</yellow>
 	kimn-&gt;irq = irq;
 <yellow>	hlist_add_head_rcu(&kimn->link, &kvm->arch.mask_notifier_list);</yellow>
-<blue>	mutex_unlock(&kvm->irq_lock);</blue>
+<yellow>	mutex_unlock(&kvm->irq_lock);</yellow>
 }
 
 void kvm_unregister_irq_mask_notifier(struct kvm *kvm, int irq,
@@ -475,9 +475,9 @@ void kvm_scan_ioapic_routes(struct kvm_vcpu *vcpu,
 	u32 i, nr_ioapic_pins;
 	int idx;
 
-	idx = srcu_read_lock(&amp;kvm-&gt;irq_srcu);
-	table = srcu_dereference(kvm-&gt;irq_routing, &amp;kvm-&gt;irq_srcu);
-	nr_ioapic_pins = min_t(u32, table-&gt;nr_rt_entries,
+<yellow>	idx = srcu_read_lock(&kvm->irq_srcu);</yellow>
+<yellow>	table = srcu_dereference(kvm->irq_routing, &kvm->irq_srcu);</yellow>
+<yellow>	nr_ioapic_pins = min_t(u32, table->nr_rt_entries,</yellow>
 			       kvm-&gt;arch.nr_reserved_ioapic_pins);
 <yellow>	for (i = 0; i < nr_ioapic_pins; ++i) {</yellow>
 <yellow>		hlist_for_each_entry(entry, &table->map[i], link) {</yellow>
@@ -489,8 +489,9 @@ void kvm_scan_ioapic_routes(struct kvm_vcpu *vcpu,
 <yellow>			kvm_set_msi_irq(vcpu->kvm, entry, &irq);</yellow>
 
 			if (irq.trig_mode &amp;&amp;
-<yellow>			    kvm_apic_match_dest(vcpu, NULL, APIC_DEST_NOSHORT,</yellow>
-						irq.dest_id, irq.dest_mode))
+<yellow>			    (kvm_apic_match_dest(vcpu, NULL, APIC_DEST_NOSHORT,</yellow>
+						 irq.dest_id, irq.dest_mode) ||
+<yellow>			     kvm_apic_pending_eoi(vcpu, irq.vector)))</yellow>
 <yellow>				__set_bit(irq.vector, ioapic_handled_vectors);</yellow>
 		}
 	}
@@ -505,8 +506,8 @@ void kvm_arch_irq_routing_update(struct kvm *kvm)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

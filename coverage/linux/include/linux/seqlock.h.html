@@ -161,11 +161,11 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
 	seqcount_t *l = (seqcount_t *)s;
 	unsigned long flags;
 
-	local_irq_save(flags);
-	seqcount_acquire_read(&amp;l-&gt;dep_map, 0, 0, _RET_IP_);
+<blue>	local_irq_save(flags);</blue>
+<blue>	seqcount_acquire_read(&l->dep_map, 0, 0, _RET_IP_);</blue>
 	seqcount_release(&amp;l-&gt;dep_map, _RET_IP_);
-	local_irq_restore(flags);
-}
+<blue>	local_irq_restore(flags);</blue>
+<blue>}</blue>
 
 #else
 # define SEQCOUNT_DEP_MAP_INIT(lockname)
@@ -319,7 +319,7 @@ static inline seqcount_t *__seqprop_ptr(seqcount_t *s)
 
 static inline unsigned __seqprop_sequence(const seqcount_t *s)
 {
-<blue>	return READ_ONCE(s->sequence);</blue>
+	return READ_ONCE(s-&gt;sequence);
 }
 
 static inline bool __seqprop_preemptible(const seqcount_t *s)
@@ -329,7 +329,7 @@ static inline bool __seqprop_preemptible(const seqcount_t *s)
 
 static inline void __seqprop_assert(const seqcount_t *s)
 {
-	lockdep_assert_preemption_disabled();
+<yellow>	lockdep_assert_preemption_disabled();</yellow>
 }
 
 #define __SEQ_RT	IS_ENABLED(CONFIG_PREEMPT_RT)
@@ -529,7 +529,7 @@ do {									\
 static inline void do_raw_write_seqcount_begin(seqcount_t *s)
 {
 	kcsan_nestable_atomic_begin();
-<yellow>	s->sequence++;</yellow>
+<blue>	s->sequence++;</blue>
 	smp_wmb();
 }
 
@@ -550,7 +550,7 @@ do {									\
 static inline void do_raw_write_seqcount_end(seqcount_t *s)
 {
 	smp_wmb();
-<blue>	s->sequence++;</blue>
+	s-&gt;sequence++;
 	kcsan_nestable_atomic_end();
 }
 
@@ -575,7 +575,7 @@ do {									\
 
 static inline void do_write_seqcount_begin_nested(seqcount_t *s, int subclass)
 {
-<yellow>	do_raw_write_seqcount_begin(s);</yellow>
+<blue>	do_raw_write_seqcount_begin(s);</blue>
 	seqcount_acquire(&amp;s-&gt;dep_map, subclass, 0, _RET_IP_);
 }
 
@@ -601,7 +601,7 @@ do {									\
 
 static inline void do_write_seqcount_begin(seqcount_t *s)
 {
-<yellow>	do_write_seqcount_begin_nested(s, 0);</yellow>
+<blue>	do_write_seqcount_begin_nested(s, 0);</blue>
 }
 
 /**
@@ -621,8 +621,8 @@ do {									\
 
 static inline void do_write_seqcount_end(seqcount_t *s)
 {
-	seqcount_release(&amp;s-&gt;dep_map, _RET_IP_);
-<blue>	do_raw_write_seqcount_end(s);</blue>
+<blue>	seqcount_release(&s->dep_map, _RET_IP_);</blue>
+	do_raw_write_seqcount_end(s);
 }
 
 /**
@@ -1287,8 +1287,8 @@ done_seqretry_irqrestore(seqlock_t *lock, int seq, unsigned long flags)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

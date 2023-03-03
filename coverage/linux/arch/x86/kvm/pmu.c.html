@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 624; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 653; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -148,7 +148,7 @@ void kvm_pmu_ops_update(const struct kvm_pmu_ops *pmu_ops)
 
 static inline bool pmc_is_enabled(struct kvm_pmc *pmc)
 {
-<blue>	return static_call(kvm_x86_pmu_pmc_is_enabled)(pmc);</blue>
+<yellow>	return static_call(kvm_x86_pmu_pmc_is_enabled)(pmc);</yellow>
 }
 
 static void kvm_pmi_trigger_fn(struct irq_work *irq_work)
@@ -159,14 +159,10 @@ static void kvm_pmi_trigger_fn(struct irq_work *irq_work)
 <yellow>	kvm_pmu_deliver_pmi(vcpu);</yellow>
 <yellow>}</yellow>
 
-static inline void __kvm_perf_overflow(struct kvm_pmc *pmc, bool in_pmi)
+<yellow>static inline void __kvm_perf_overflow(struct kvm_pmc *pmc, bool in_pmi)</yellow>
 {
 <yellow>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</yellow>
 	bool skip_pmi = false;
-
-	/* Ignore counters that have been reprogrammed already. */
-	if (test_and_set_bit(pmc-&gt;idx, pmu-&gt;reprogram_pmi))
-		return;
 
 <yellow>	if (pmc->perf_event && pmc->perf_event->attr.precise_ip) {</yellow>
 <yellow>		if (!in_pmi) {</yellow>
@@ -185,7 +181,6 @@ static inline void __kvm_perf_overflow(struct kvm_pmc *pmc, bool in_pmi)
 	} else {
 <yellow>		__set_bit(pmc->idx, (unsigned long *)&pmu->global_status);</yellow>
 	}
-<yellow>	kvm_make_request(KVM_REQ_PMU, pmc->vcpu);</yellow>
 
 <yellow>	if (!pmc->intr || skip_pmi)</yellow>
 		return;
@@ -210,12 +205,22 @@ static void kvm_perf_overflow(struct perf_event *perf_event,
 {
 <yellow>	struct kvm_pmc *pmc = perf_event->overflow_handler_context;</yellow>
 
-	__kvm_perf_overflow(pmc, true);
-}
+	/*
+	 * Ignore overflow events for counters that are scheduled to be
+	 * reprogrammed, e.g. if a PMI for the previous event races with KVM&#x27;s
+	 * handling of a related guest WRMSR.
+	 */
+	if (test_and_set_bit(pmc-&gt;idx, pmc_to_pmu(pmc)-&gt;reprogram_pmi))
+		return;
 
-<yellow>static void pmc_reprogram_counter(struct kvm_pmc *pmc, u32 type,</yellow>
-				  u64 config, bool exclude_user,
-				  bool exclude_kernel, bool intr)
+<yellow>	__kvm_perf_overflow(pmc, true);</yellow>
+
+	kvm_make_request(KVM_REQ_PMU, pmc-&gt;vcpu);
+<yellow>}</yellow>
+
+<yellow>static int pmc_reprogram_counter(struct kvm_pmc *pmc, u32 type, u64 config,</yellow>
+				 bool exclude_user, bool exclude_kernel,
+				 bool intr)
 {
 <yellow>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</yellow>
 	struct perf_event *event;
@@ -267,14 +272,14 @@ static void kvm_perf_overflow(struct perf_event *perf_event,
 	if (IS_ERR(event)) {
 <yellow>		pr_debug_ratelimited("kvm_pmu: event creation failed %ld for pmc->idx = %d\n",</yellow>
 			    PTR_ERR(event), pmc-&gt;idx);
-		return;
+<yellow>		return PTR_ERR(event);</yellow>
 	}
 
 <yellow>	pmc->perf_event = event;</yellow>
 	pmc_to_pmu(pmc)-&gt;event_count++;
-	clear_bit(pmc-&gt;idx, pmc_to_pmu(pmc)-&gt;reprogram_pmi);
 	pmc-&gt;is_paused = false;
 	pmc-&gt;intr = intr || pebs;
+	return 0;
 }
 
 static void pmc_pause_counter(struct kvm_pmc *pmc)
@@ -296,7 +301,8 @@ static bool pmc_resume_counter(struct kvm_pmc *pmc)
 		return false;
 
 	/* recalibrate sample period and check if it&#x27;s accepted by perf core */
-<yellow>	if (perf_event_period(pmc->perf_event,</yellow>
+<yellow>	if (is_sampling_event(pmc->perf_event) &&</yellow>
+<yellow>	    perf_event_period(pmc->perf_event,</yellow>
 			      get_sample_period(pmc, pmc-&gt;counter)))
 		return false;
 
@@ -308,7 +314,6 @@ static bool pmc_resume_counter(struct kvm_pmc *pmc)
 <yellow>	perf_event_enable(pmc->perf_event);</yellow>
 	pmc-&gt;is_paused = false;
 
-	clear_bit(pmc-&gt;idx, (unsigned long *)&amp;pmc_to_pmu(pmc)-&gt;reprogram_pmi);
 	return true;
 }
 
@@ -332,7 +337,7 @@ static bool check_pmu_event_filter(struct kvm_pmc *pmc)
 		return false;
 
 <yellow>	filter = srcu_dereference(kvm->arch.pmu_event_filter, &kvm->srcu);</yellow>
-	if (!filter)
+<yellow>	if (!filter)</yellow>
 		goto out;
 
 <yellow>	if (pmc_is_gp(pmc)) {</yellow>
@@ -356,20 +361,23 @@ out:
 	return allow_event;
 }
 
-void reprogram_counter(struct kvm_pmc *pmc)
-<blue>{</blue>
-<blue>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</blue>
+static void reprogram_counter(struct kvm_pmc *pmc)
+{
+<yellow>	struct kvm_pmu *pmu = pmc_to_pmu(pmc);</yellow>
 	u64 eventsel = pmc-&gt;eventsel;
 	u64 new_config = eventsel;
 	u8 fixed_ctr_ctrl;
 
 <yellow>	pmc_pause_counter(pmc);</yellow>
 
-<blue>	if (!pmc_speculative_in_use(pmc) || !pmc_is_enabled(pmc))</blue>
-		return;
+<yellow>	if (!pmc_speculative_in_use(pmc) || !pmc_is_enabled(pmc))</yellow>
+		goto reprogram_complete;
 
 <yellow>	if (!check_pmu_event_filter(pmc))</yellow>
-		return;
+		goto reprogram_complete;
+
+<yellow>	if (pmc->counter < pmc->prev_counter)</yellow>
+<yellow>		__kvm_perf_overflow(pmc, false);</yellow>
 
 <yellow>	if (eventsel & ARCH_PERFMON_EVENTSEL_PIN_CONTROL)</yellow>
 <yellow>		printk_once("kvm pmu: pin control bit is ignored\n");</yellow>
@@ -387,31 +395,43 @@ void reprogram_counter(struct kvm_pmc *pmc)
 	}
 
 <yellow>	if (pmc->current_config == new_config && pmc_resume_counter(pmc))</yellow>
-		return;
+		goto reprogram_complete;
 
 <yellow>	pmc_release_perf_event(pmc);</yellow>
 
 <yellow>	pmc->current_config = new_config;</yellow>
-	pmc_reprogram_counter(pmc, PERF_TYPE_RAW,
-			      (eventsel &amp; pmu-&gt;raw_event_mask),
-			      !(eventsel &amp; ARCH_PERFMON_EVENTSEL_USR),
-			      !(eventsel &amp; ARCH_PERFMON_EVENTSEL_OS),
-			      eventsel &amp; ARCH_PERFMON_EVENTSEL_INT);
+
+	/*
+	 * If reprogramming fails, e.g. due to contention, leave the counter&#x27;s
+	 * regprogram bit set, i.e. opportunistically try again on the next PMU
+	 * refresh.  Don&#x27;t make a new request as doing so can stall the guest
+	 * if reprogramming repeatedly fails.
+	 */
+	if (pmc_reprogram_counter(pmc, PERF_TYPE_RAW,
+				  (eventsel &amp; pmu-&gt;raw_event_mask),
+				  !(eventsel &amp; ARCH_PERFMON_EVENTSEL_USR),
+				  !(eventsel &amp; ARCH_PERFMON_EVENTSEL_OS),
+				  eventsel &amp; ARCH_PERFMON_EVENTSEL_INT))
+		return;
+
+reprogram_complete:
+<yellow>	clear_bit(pmc->idx, (unsigned long *)&pmc_to_pmu(pmc)->reprogram_pmi);</yellow>
+	pmc-&gt;prev_counter = 0;
 }
-EXPORT_SYMBOL_GPL(reprogram_counter);
 
 void kvm_pmu_handle_event(struct kvm_vcpu *vcpu)
-{
-	struct kvm_pmu *pmu = vcpu_to_pmu(vcpu);
+<yellow>{</yellow>
+<yellow>	struct kvm_pmu *pmu = vcpu_to_pmu(vcpu);</yellow>
 	int bit;
 
 <yellow>	for_each_set_bit(bit, pmu->reprogram_pmi, X86_PMC_IDX_MAX) {</yellow>
 <yellow>		struct kvm_pmc *pmc = static_call(kvm_x86_pmu_pmc_idx_to_pmc)(pmu, bit);</yellow>
 
-<yellow>		if (unlikely(!pmc || !pmc->perf_event)) {</yellow>
+		if (unlikely(!pmc)) {
 <yellow>			clear_bit(bit, pmu->reprogram_pmi);</yellow>
 			continue;
 		}
+
 <yellow>		reprogram_counter(pmc);</yellow>
 	}
 
@@ -422,7 +442,7 @@ void kvm_pmu_handle_event(struct kvm_vcpu *vcpu)
 	 */
 <yellow>	if (unlikely(pmu->need_cleanup))</yellow>
 <yellow>		kvm_pmu_cleanup(vcpu);</yellow>
-<yellow>}</yellow>
+}
 
 /* check if idx is a valid index to access PMU */
 bool kvm_pmu_is_valid_rdpmc_ecx(struct kvm_vcpu *vcpu, unsigned int idx)
@@ -432,7 +452,7 @@ bool kvm_pmu_is_valid_rdpmc_ecx(struct kvm_vcpu *vcpu, unsigned int idx)
 
 bool is_vmware_backdoor_pmc(u32 pmc_idx)
 {
-<blue>	switch (pmc_idx) {</blue>
+<yellow>	switch (pmc_idx) {</yellow>
 	case VMWARE_BACKDOOR_PMC_HOST_TSC:
 	case VMWARE_BACKDOOR_PMC_REAL_TIME:
 	case VMWARE_BACKDOOR_PMC_APPARENT_TIME:
@@ -469,15 +489,15 @@ int kvm_pmu_rdpmc(struct kvm_vcpu *vcpu, unsigned idx, u64 *data)
 	bool fast_mode = idx &amp; (1u &lt;&lt; 31);
 	struct kvm_pmu *pmu = vcpu_to_pmu(vcpu);
 	struct kvm_pmc *pmc;
-<yellow>	u64 mask = fast_mode ? ~0u : ~0ull;</yellow>
+<blue>	u64 mask = fast_mode ? ~0u : ~0ull;</blue>
 
 <blue>	if (!pmu->version)</blue>
 		return 1;
 
-<blue>	if (is_vmware_backdoor_pmc(idx))</blue>
+<yellow>	if (is_vmware_backdoor_pmc(idx))</yellow>
 <yellow>		return kvm_pmu_rdpmc_vmware(vcpu, idx, data);</yellow>
 
-<blue>	pmc = static_call(kvm_x86_pmu_rdpmc_ecx_to_pmc)(vcpu, idx, &mask);</blue>
+<yellow>	pmc = static_call(kvm_x86_pmu_rdpmc_ecx_to_pmc)(vcpu, idx, &mask);</yellow>
 	if (!pmc)
 		return 1;
 
@@ -510,18 +530,18 @@ static void kvm_pmu_mark_pmc_in_use(struct kvm_vcpu *vcpu, u32 msr)
 	struct kvm_pmc *pmc = static_call(kvm_x86_pmu_msr_idx_to_pmc)(vcpu, msr);
 
 	if (pmc)
-<blue>		__set_bit(pmc->idx, pmu->pmc_in_use);</blue>
+<yellow>		__set_bit(pmc->idx, pmu->pmc_in_use);</yellow>
 }
 
 int kvm_pmu_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 {
-<blue>	return static_call(kvm_x86_pmu_get_msr)(vcpu, msr_info);</blue>
+<yellow>	return static_call(kvm_x86_pmu_get_msr)(vcpu, msr_info);</yellow>
 }
 
 int kvm_pmu_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 {
-<blue>	kvm_pmu_mark_pmc_in_use(vcpu, msr_info->index);</blue>
-<blue>	return static_call(kvm_x86_pmu_set_msr)(vcpu, msr_info);</blue>
+<yellow>	kvm_pmu_mark_pmc_in_use(vcpu, msr_info->index);</yellow>
+<yellow>	return static_call(kvm_x86_pmu_set_msr)(vcpu, msr_info);</yellow>
 }
 
 /* refresh PMU settings. This function generally is called when underlying
@@ -585,14 +605,9 @@ void kvm_pmu_destroy(struct kvm_vcpu *vcpu)
 
 static void kvm_pmu_incr_counter(struct kvm_pmc *pmc)
 {
-	u64 prev_count;
-
-<yellow>	prev_count = pmc->counter;</yellow>
+<yellow>	pmc->prev_counter = pmc->counter;</yellow>
 	pmc-&gt;counter = (pmc-&gt;counter + 1) &amp; pmc_bitmask(pmc);
-
-	reprogram_counter(pmc);
-	if (pmc-&gt;counter &lt; prev_count)
-<yellow>		__kvm_perf_overflow(pmc, false);</yellow>
+	kvm_pmu_request_counter_reprogam(pmc);
 }
 
 static inline bool eventsel_match_perf_hw_id(struct kvm_pmc *pmc,
@@ -605,13 +620,16 @@ static inline bool eventsel_match_perf_hw_id(struct kvm_pmc *pmc,
 static inline bool cpl_is_matched(struct kvm_pmc *pmc)
 {
 	bool select_os, select_user;
-<yellow>	u64 config = pmc->current_config;</yellow>
+	u64 config;
 
-	if (pmc_is_gp(pmc)) {
-<yellow>		select_os = config & ARCH_PERFMON_EVENTSEL_OS;</yellow>
+<yellow>	if (pmc_is_gp(pmc)) {</yellow>
+<yellow>		config = pmc->eventsel;</yellow>
+		select_os = config &amp; ARCH_PERFMON_EVENTSEL_OS;
 		select_user = config &amp; ARCH_PERFMON_EVENTSEL_USR;
 	} else {
-<yellow>		select_os = config & 0x1;</yellow>
+<yellow>		config = fixed_ctrl_field(pmc_to_pmu(pmc)->fixed_ctr_ctrl,</yellow>
+					  pmc-&gt;idx - INTEL_PMC_IDX_FIXED);
+		select_os = config &amp; 0x1;
 		select_user = config &amp; 0x2;
 	}
 
@@ -624,10 +642,10 @@ void kvm_pmu_trigger_event(struct kvm_vcpu *vcpu, u64 perf_hw_id)
 	struct kvm_pmc *pmc;
 	int i;
 
-<blue>	for_each_set_bit(i, pmu->all_valid_pmc_idx, X86_PMC_IDX_MAX) {</blue>
-<blue>		pmc = static_call(kvm_x86_pmu_pmc_idx_to_pmc)(pmu, i);</blue>
+<yellow>	for_each_set_bit(i, pmu->all_valid_pmc_idx, X86_PMC_IDX_MAX) {</yellow>
+<yellow>		pmc = static_call(kvm_x86_pmu_pmc_idx_to_pmc)(pmu, i);</yellow>
 
-<blue>		if (!pmc || !pmc_is_enabled(pmc) || !pmc_speculative_in_use(pmc))</blue>
+<yellow>		if (!pmc || !pmc_is_enabled(pmc) || !pmc_speculative_in_use(pmc))</yellow>
 			continue;
 
 		/* Ignore checks for edge detect, pin control, invert and CMASK bits */
@@ -640,6 +658,8 @@ EXPORT_SYMBOL_GPL(kvm_pmu_trigger_event);
 int kvm_vm_ioctl_set_pmu_event_filter(struct kvm *kvm, void __user *argp)
 <yellow>{</yellow>
 	struct kvm_pmu_event_filter tmp, *filter;
+	struct kvm_vcpu *vcpu;
+	unsigned long i;
 	size_t size;
 	int r;
 
@@ -674,11 +694,20 @@ int kvm_vm_ioctl_set_pmu_event_filter(struct kvm *kvm, void __user *argp)
 	sort(&amp;filter-&gt;events, filter-&gt;nevents, sizeof(__u64), cmp_u64, NULL);
 
 	mutex_lock(&amp;kvm-&gt;lock);
-	filter = rcu_replace_pointer(kvm-&gt;arch.pmu_event_filter, filter,
+<yellow>	filter = rcu_replace_pointer(kvm->arch.pmu_event_filter, filter,</yellow>
 				     mutex_is_locked(&amp;kvm-&gt;lock));
+	synchronize_srcu_expedited(&amp;kvm-&gt;srcu);
+
+	BUILD_BUG_ON(sizeof(((struct kvm_pmu *)0)-&gt;reprogram_pmi) &gt;
+		     sizeof(((struct kvm_pmu *)0)-&gt;__reprogram_pmi));
+
+	kvm_for_each_vcpu(i, vcpu, kvm)
+<yellow>		atomic64_set(&vcpu_to_pmu(vcpu)->__reprogram_pmi, -1ull);</yellow>
+
+<yellow>	kvm_make_all_cpus_request(kvm, KVM_REQ_PMU);</yellow>
+
 	mutex_unlock(&amp;kvm-&gt;lock);
 
-	synchronize_srcu_expedited(&amp;kvm-&gt;srcu);
 	r = 0;
 cleanup:
 <yellow>	kfree(filter);</yellow>
@@ -688,8 +717,8 @@ cleanup:
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

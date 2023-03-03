@@ -94,7 +94,7 @@ static DEFINE_PER_CPU(raw_spinlock_t, wakeup_vcpus_on_cpu_lock);
 
 static inline struct pi_desc *vcpu_to_pi_desc(struct kvm_vcpu *vcpu)
 {
-	return &amp;(to_vmx(vcpu)-&gt;pi_desc);
+<yellow>	return &(to_vmx(vcpu)->pi_desc);</yellow>
 }
 
 static int pi_try_set_control(struct pi_desc *pi_desc, u64 *pold, u64 new)
@@ -149,9 +149,9 @@ void vmx_vcpu_pi_load(struct kvm_vcpu *vcpu, int cpu)
 	 * list of the _previous_ pCPU, which will not be the same as the
 	 * current pCPU if the task was migrated.
 	 */
-	if (pi_desc-&gt;nv == POSTED_INTR_WAKEUP_VECTOR) {
+<blue>	if (pi_desc->nv == POSTED_INTR_WAKEUP_VECTOR) {</blue>
 <yellow>		raw_spin_lock(&per_cpu(wakeup_vcpus_on_cpu_lock, vcpu->cpu));</yellow>
-		list_del(&amp;vmx-&gt;pi_wakeup_list);
+<yellow>		list_del(&vmx->pi_wakeup_list);</yellow>
 		raw_spin_unlock(&amp;per_cpu(wakeup_vcpus_on_cpu_lock, vcpu-&gt;cpu));
 	}
 
@@ -213,10 +213,10 @@ static void pi_enable_wakeup_handler(struct kvm_vcpu *vcpu)
 
 <yellow>	local_irq_save(flags);</yellow>
 
-	raw_spin_lock(&amp;per_cpu(wakeup_vcpus_on_cpu_lock, vcpu-&gt;cpu));
-	list_add_tail(&amp;vmx-&gt;pi_wakeup_list,
+<yellow>	raw_spin_lock(&per_cpu(wakeup_vcpus_on_cpu_lock, vcpu->cpu));</yellow>
+<yellow>	list_add_tail(&vmx->pi_wakeup_list,</yellow>
 		      &amp;per_cpu(wakeup_vcpus_on_cpu, vcpu-&gt;cpu));
-	raw_spin_unlock(&amp;per_cpu(wakeup_vcpus_on_cpu_lock, vcpu-&gt;cpu));
+<yellow>	raw_spin_unlock(&per_cpu(wakeup_vcpus_on_cpu_lock, vcpu->cpu));</yellow>
 
 <yellow>	WARN(pi_desc->sn, "PI descriptor SN field set before blocking");</yellow>
 
@@ -344,8 +344,8 @@ int vmx_pi_update_irte(struct kvm *kvm, unsigned int host_irq,
 		return 0;
 
 <yellow>	idx = srcu_read_lock(&kvm->irq_srcu);</yellow>
-	irq_rt = srcu_dereference(kvm-&gt;irq_routing, &amp;kvm-&gt;irq_srcu);
-	if (guest_irq &gt;= irq_rt-&gt;nr_rt_entries ||
+<yellow>	irq_rt = srcu_dereference(kvm->irq_routing, &kvm->irq_srcu);</yellow>
+<yellow>	if (guest_irq >= irq_rt->nr_rt_entries ||</yellow>
 <yellow>	    hlist_empty(&irq_rt->map[guest_irq])) {</yellow>
 <yellow>		pr_warn_once("no route for guest_irq %u/%u (broken user space?)\n",</yellow>
 			     guest_irq, irq_rt-&gt;nr_rt_entries);
@@ -416,8 +416,8 @@ out:
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

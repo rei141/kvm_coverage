@@ -1,0 +1,721 @@
+<doctype html>
+<html lang="ja">
+<head><title>smm.c</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 650; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+
+#include &lt;linux/kvm_host.h&gt;
+#include &quot;x86.h&quot;
+#include &quot;kvm_cache_regs.h&quot;
+#include &quot;kvm_emulate.h&quot;
+#include &quot;smm.h&quot;
+#include &quot;cpuid.h&quot;
+#include &quot;trace.h&quot;
+
+#define CHECK_SMRAM32_OFFSET(field, offset) \
+	ASSERT_STRUCT_OFFSET(struct kvm_smram_state_32, field, offset - 0xFE00)
+
+#define CHECK_SMRAM64_OFFSET(field, offset) \
+	ASSERT_STRUCT_OFFSET(struct kvm_smram_state_64, field, offset - 0xFE00)
+
+static void check_smram_offsets(void)
+{
+	/* 32 bit SMRAM image */
+	CHECK_SMRAM32_OFFSET(reserved1,			0xFE00);
+	CHECK_SMRAM32_OFFSET(smbase,			0xFEF8);
+	CHECK_SMRAM32_OFFSET(smm_revision,		0xFEFC);
+	CHECK_SMRAM32_OFFSET(io_inst_restart,		0xFF00);
+	CHECK_SMRAM32_OFFSET(auto_hlt_restart,		0xFF02);
+	CHECK_SMRAM32_OFFSET(io_restart_rdi,		0xFF04);
+	CHECK_SMRAM32_OFFSET(io_restart_rcx,		0xFF08);
+	CHECK_SMRAM32_OFFSET(io_restart_rsi,		0xFF0C);
+	CHECK_SMRAM32_OFFSET(io_restart_rip,		0xFF10);
+	CHECK_SMRAM32_OFFSET(cr4,			0xFF14);
+	CHECK_SMRAM32_OFFSET(reserved2,			0xFF18);
+	CHECK_SMRAM32_OFFSET(int_shadow,		0xFF1A);
+	CHECK_SMRAM32_OFFSET(reserved3,			0xFF1B);
+	CHECK_SMRAM32_OFFSET(ds,			0xFF2C);
+	CHECK_SMRAM32_OFFSET(fs,			0xFF38);
+	CHECK_SMRAM32_OFFSET(gs,			0xFF44);
+	CHECK_SMRAM32_OFFSET(idtr,			0xFF50);
+	CHECK_SMRAM32_OFFSET(tr,			0xFF5C);
+	CHECK_SMRAM32_OFFSET(gdtr,			0xFF6C);
+	CHECK_SMRAM32_OFFSET(ldtr,			0xFF78);
+	CHECK_SMRAM32_OFFSET(es,			0xFF84);
+	CHECK_SMRAM32_OFFSET(cs,			0xFF90);
+	CHECK_SMRAM32_OFFSET(ss,			0xFF9C);
+	CHECK_SMRAM32_OFFSET(es_sel,			0xFFA8);
+	CHECK_SMRAM32_OFFSET(cs_sel,			0xFFAC);
+	CHECK_SMRAM32_OFFSET(ss_sel,			0xFFB0);
+	CHECK_SMRAM32_OFFSET(ds_sel,			0xFFB4);
+	CHECK_SMRAM32_OFFSET(fs_sel,			0xFFB8);
+	CHECK_SMRAM32_OFFSET(gs_sel,			0xFFBC);
+	CHECK_SMRAM32_OFFSET(ldtr_sel,			0xFFC0);
+	CHECK_SMRAM32_OFFSET(tr_sel,			0xFFC4);
+	CHECK_SMRAM32_OFFSET(dr7,			0xFFC8);
+	CHECK_SMRAM32_OFFSET(dr6,			0xFFCC);
+	CHECK_SMRAM32_OFFSET(gprs,			0xFFD0);
+	CHECK_SMRAM32_OFFSET(eip,			0xFFF0);
+	CHECK_SMRAM32_OFFSET(eflags,			0xFFF4);
+	CHECK_SMRAM32_OFFSET(cr3,			0xFFF8);
+	CHECK_SMRAM32_OFFSET(cr0,			0xFFFC);
+
+	/* 64 bit SMRAM image */
+	CHECK_SMRAM64_OFFSET(es,			0xFE00);
+	CHECK_SMRAM64_OFFSET(cs,			0xFE10);
+	CHECK_SMRAM64_OFFSET(ss,			0xFE20);
+	CHECK_SMRAM64_OFFSET(ds,			0xFE30);
+	CHECK_SMRAM64_OFFSET(fs,			0xFE40);
+	CHECK_SMRAM64_OFFSET(gs,			0xFE50);
+	CHECK_SMRAM64_OFFSET(gdtr,			0xFE60);
+	CHECK_SMRAM64_OFFSET(ldtr,			0xFE70);
+	CHECK_SMRAM64_OFFSET(idtr,			0xFE80);
+	CHECK_SMRAM64_OFFSET(tr,			0xFE90);
+	CHECK_SMRAM64_OFFSET(io_restart_rip,		0xFEA0);
+	CHECK_SMRAM64_OFFSET(io_restart_rcx,		0xFEA8);
+	CHECK_SMRAM64_OFFSET(io_restart_rsi,		0xFEB0);
+	CHECK_SMRAM64_OFFSET(io_restart_rdi,		0xFEB8);
+	CHECK_SMRAM64_OFFSET(io_restart_dword,		0xFEC0);
+	CHECK_SMRAM64_OFFSET(reserved1,			0xFEC4);
+	CHECK_SMRAM64_OFFSET(io_inst_restart,		0xFEC8);
+	CHECK_SMRAM64_OFFSET(auto_hlt_restart,		0xFEC9);
+	CHECK_SMRAM64_OFFSET(amd_nmi_mask,		0xFECA);
+	CHECK_SMRAM64_OFFSET(int_shadow,		0xFECB);
+	CHECK_SMRAM64_OFFSET(reserved2,			0xFECC);
+	CHECK_SMRAM64_OFFSET(efer,			0xFED0);
+	CHECK_SMRAM64_OFFSET(svm_guest_flag,		0xFED8);
+	CHECK_SMRAM64_OFFSET(svm_guest_vmcb_gpa,	0xFEE0);
+	CHECK_SMRAM64_OFFSET(svm_guest_virtual_int,	0xFEE8);
+	CHECK_SMRAM64_OFFSET(reserved3,			0xFEF0);
+	CHECK_SMRAM64_OFFSET(smm_revison,		0xFEFC);
+	CHECK_SMRAM64_OFFSET(smbase,			0xFF00);
+	CHECK_SMRAM64_OFFSET(reserved4,			0xFF04);
+	CHECK_SMRAM64_OFFSET(ssp,			0xFF18);
+	CHECK_SMRAM64_OFFSET(svm_guest_pat,		0xFF20);
+	CHECK_SMRAM64_OFFSET(svm_host_efer,		0xFF28);
+	CHECK_SMRAM64_OFFSET(svm_host_cr4,		0xFF30);
+	CHECK_SMRAM64_OFFSET(svm_host_cr3,		0xFF38);
+	CHECK_SMRAM64_OFFSET(svm_host_cr0,		0xFF40);
+	CHECK_SMRAM64_OFFSET(cr4,			0xFF48);
+	CHECK_SMRAM64_OFFSET(cr3,			0xFF50);
+	CHECK_SMRAM64_OFFSET(cr0,			0xFF58);
+	CHECK_SMRAM64_OFFSET(dr7,			0xFF60);
+	CHECK_SMRAM64_OFFSET(dr6,			0xFF68);
+	CHECK_SMRAM64_OFFSET(rflags,			0xFF70);
+	CHECK_SMRAM64_OFFSET(rip,			0xFF78);
+	CHECK_SMRAM64_OFFSET(gprs,			0xFF80);
+
+	BUILD_BUG_ON(sizeof(union kvm_smram) != 512);
+}
+
+#undef CHECK_SMRAM64_OFFSET
+#undef CHECK_SMRAM32_OFFSET
+
+
+void kvm_smm_changed(struct kvm_vcpu *vcpu, bool entering_smm)
+{
+	BUILD_BUG_ON(HF_SMM_MASK != X86EMUL_SMM_MASK);
+
+<yellow>	trace_kvm_smm_transition(vcpu->vcpu_id, vcpu->arch.smbase, entering_smm);</yellow>
+
+	if (entering_smm) {
+<yellow>		vcpu->arch.hflags |= HF_SMM_MASK;</yellow>
+	} else {
+<yellow>		vcpu->arch.hflags &= ~(HF_SMM_MASK | HF_SMM_INSIDE_NMI_MASK);</yellow>
+
+		/* Process a latched INIT or SMI, if any.  */
+		kvm_make_request(KVM_REQ_EVENT, vcpu);
+
+		/*
+		 * Even if KVM_SET_SREGS2 loaded PDPTRs out of band,
+		 * on SMM exit we still need to reload them from
+		 * guest memory
+		 */
+		vcpu-&gt;arch.pdptrs_from_userspace = false;
+	}
+
+<yellow>	kvm_mmu_reset_context(vcpu);</yellow>
+}
+
+void process_smi(struct kvm_vcpu *vcpu)
+{
+<yellow>	vcpu->arch.smi_pending = true;</yellow>
+	kvm_make_request(KVM_REQ_EVENT, vcpu);
+}
+
+static u32 enter_smm_get_segment_flags(struct kvm_segment *seg)
+{
+	u32 flags = 0;
+	flags |= seg-&gt;g       &lt;&lt; 23;
+	flags |= seg-&gt;db      &lt;&lt; 22;
+	flags |= seg-&gt;l       &lt;&lt; 21;
+	flags |= seg-&gt;avl     &lt;&lt; 20;
+	flags |= seg-&gt;present &lt;&lt; 15;
+	flags |= seg-&gt;dpl     &lt;&lt; 13;
+	flags |= seg-&gt;s       &lt;&lt; 12;
+	flags |= seg-&gt;type    &lt;&lt; 8;
+	return flags;
+}
+
+static void enter_smm_save_seg_32(struct kvm_vcpu *vcpu,
+				  struct kvm_smm_seg_state_32 *state,
+				  u32 *selector, int n)
+{
+	struct kvm_segment seg;
+
+<yellow>	kvm_get_segment(vcpu, &seg, n);</yellow>
+	*selector = seg.selector;
+	state-&gt;base = seg.base;
+	state-&gt;limit = seg.limit;
+	state-&gt;flags = enter_smm_get_segment_flags(&amp;seg);
+}
+
+#ifdef CONFIG_X86_64
+static void enter_smm_save_seg_64(struct kvm_vcpu *vcpu,
+				  struct kvm_smm_seg_state_64 *state,
+				  int n)
+{
+	struct kvm_segment seg;
+
+<yellow>	kvm_get_segment(vcpu, &seg, n);</yellow>
+	state-&gt;selector = seg.selector;
+	state-&gt;attributes = enter_smm_get_segment_flags(&amp;seg) &gt;&gt; 8;
+	state-&gt;limit = seg.limit;
+	state-&gt;base = seg.base;
+}
+#endif
+
+static void enter_smm_save_state_32(struct kvm_vcpu *vcpu,
+				    struct kvm_smram_state_32 *smram)
+{
+	struct desc_ptr dt;
+	unsigned long val;
+	int i;
+
+<yellow>	smram->cr0     = kvm_read_cr0(vcpu);</yellow>
+<yellow>	smram->cr3     = kvm_read_cr3(vcpu);</yellow>
+	smram-&gt;eflags  = kvm_get_rflags(vcpu);
+<yellow>	smram->eip     = kvm_rip_read(vcpu);</yellow>
+
+	for (i = 0; i &lt; 8; i++)
+<yellow>		smram->gprs[i] = kvm_register_read_raw(vcpu, i);</yellow>
+
+<yellow>	kvm_get_dr(vcpu, 6, &val);</yellow>
+	smram-&gt;dr6     = (u32)val;
+	kvm_get_dr(vcpu, 7, &amp;val);
+	smram-&gt;dr7     = (u32)val;
+
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;tr, &amp;smram-&gt;tr_sel, VCPU_SREG_TR);
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;ldtr, &amp;smram-&gt;ldtr_sel, VCPU_SREG_LDTR);
+
+	static_call(kvm_x86_get_gdt)(vcpu, &amp;dt);
+	smram-&gt;gdtr.base = dt.address;
+	smram-&gt;gdtr.limit = dt.size;
+
+	static_call(kvm_x86_get_idt)(vcpu, &amp;dt);
+	smram-&gt;idtr.base = dt.address;
+	smram-&gt;idtr.limit = dt.size;
+
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;es, &amp;smram-&gt;es_sel, VCPU_SREG_ES);
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;cs, &amp;smram-&gt;cs_sel, VCPU_SREG_CS);
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;ss, &amp;smram-&gt;ss_sel, VCPU_SREG_SS);
+
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;ds, &amp;smram-&gt;ds_sel, VCPU_SREG_DS);
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;fs, &amp;smram-&gt;fs_sel, VCPU_SREG_FS);
+	enter_smm_save_seg_32(vcpu, &amp;smram-&gt;gs, &amp;smram-&gt;gs_sel, VCPU_SREG_GS);
+
+<yellow>	smram->cr4 = kvm_read_cr4(vcpu);</yellow>
+	smram-&gt;smm_revision = 0x00020000;
+	smram-&gt;smbase = vcpu-&gt;arch.smbase;
+
+	smram-&gt;int_shadow = static_call(kvm_x86_get_interrupt_shadow)(vcpu);
+}
+
+#ifdef CONFIG_X86_64
+static void enter_smm_save_state_64(struct kvm_vcpu *vcpu,
+				    struct kvm_smram_state_64 *smram)
+{
+	struct desc_ptr dt;
+	unsigned long val;
+	int i;
+
+	for (i = 0; i &lt; 16; i++)
+<yellow>		smram->gprs[15 - i] = kvm_register_read_raw(vcpu, i);</yellow>
+
+<yellow>	smram->rip    = kvm_rip_read(vcpu);</yellow>
+	smram-&gt;rflags = kvm_get_rflags(vcpu);
+
+
+	kvm_get_dr(vcpu, 6, &amp;val);
+	smram-&gt;dr6 = val;
+	kvm_get_dr(vcpu, 7, &amp;val);
+	smram-&gt;dr7 = val;
+
+<yellow>	smram->cr0 = kvm_read_cr0(vcpu);</yellow>
+<yellow>	smram->cr3 = kvm_read_cr3(vcpu);</yellow>
+<yellow>	smram->cr4 = kvm_read_cr4(vcpu);</yellow>
+
+	smram-&gt;smbase = vcpu-&gt;arch.smbase;
+	smram-&gt;smm_revison = 0x00020064;
+
+	smram-&gt;efer = vcpu-&gt;arch.efer;
+
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;tr, VCPU_SREG_TR);
+
+	static_call(kvm_x86_get_idt)(vcpu, &amp;dt);
+	smram-&gt;idtr.limit = dt.size;
+	smram-&gt;idtr.base = dt.address;
+
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;ldtr, VCPU_SREG_LDTR);
+
+	static_call(kvm_x86_get_gdt)(vcpu, &amp;dt);
+	smram-&gt;gdtr.limit = dt.size;
+	smram-&gt;gdtr.base = dt.address;
+
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;es, VCPU_SREG_ES);
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;cs, VCPU_SREG_CS);
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;ss, VCPU_SREG_SS);
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;ds, VCPU_SREG_DS);
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;fs, VCPU_SREG_FS);
+	enter_smm_save_seg_64(vcpu, &amp;smram-&gt;gs, VCPU_SREG_GS);
+
+	smram-&gt;int_shadow = static_call(kvm_x86_get_interrupt_shadow)(vcpu);
+}
+#endif
+
+void enter_smm(struct kvm_vcpu *vcpu)
+<yellow>{</yellow>
+	struct kvm_segment cs, ds;
+	struct desc_ptr dt;
+	unsigned long cr0;
+	union kvm_smram smram;
+
+	check_smram_offsets();
+
+<yellow>	memset(smram.bytes, 0, sizeof(smram.bytes));</yellow>
+
+#ifdef CONFIG_X86_64
+<yellow>	if (guest_cpuid_has(vcpu, X86_FEATURE_LM))</yellow>
+<yellow>		enter_smm_save_state_64(vcpu, &smram.smram64);</yellow>
+	else
+#endif
+<yellow>		enter_smm_save_state_32(vcpu, &smram.smram32);</yellow>
+
+	/*
+	 * Give enter_smm() a chance to make ISA-specific changes to the vCPU
+	 * state (e.g. leave guest mode) after we&#x27;ve saved the state into the
+	 * SMM state-save area.
+	 *
+	 * Kill the VM in the unlikely case of failure, because the VM
+	 * can be in undefined state in this case.
+	 */
+<yellow>	if (static_call(kvm_x86_enter_smm)(vcpu, &smram))</yellow>
+		goto error;
+
+<yellow>	kvm_smm_changed(vcpu, true);</yellow>
+
+	if (kvm_vcpu_write_guest(vcpu, vcpu-&gt;arch.smbase + 0xfe00, &amp;smram, sizeof(smram)))
+		goto error;
+
+<yellow>	if (static_call(kvm_x86_get_nmi_mask)(vcpu))</yellow>
+<yellow>		vcpu->arch.hflags |= HF_SMM_INSIDE_NMI_MASK;</yellow>
+	else
+<yellow>		static_call(kvm_x86_set_nmi_mask)(vcpu, true);</yellow>
+
+<yellow>	kvm_set_rflags(vcpu, X86_EFLAGS_FIXED);</yellow>
+	kvm_rip_write(vcpu, 0x8000);
+
+	static_call(kvm_x86_set_interrupt_shadow)(vcpu, 0);
+
+	cr0 = vcpu-&gt;arch.cr0 &amp; ~(X86_CR0_PE | X86_CR0_EM | X86_CR0_TS | X86_CR0_PG);
+	static_call(kvm_x86_set_cr0)(vcpu, cr0);
+	vcpu-&gt;arch.cr0 = cr0;
+
+	static_call(kvm_x86_set_cr4)(vcpu, 0);
+
+	/* Undocumented: IDT limit is set to zero on entry to SMM.  */
+	dt.address = dt.size = 0;
+	static_call(kvm_x86_set_idt)(vcpu, &amp;dt);
+
+<yellow>	if (WARN_ON_ONCE(kvm_set_dr(vcpu, 7, DR7_FIXED_1)))</yellow>
+		goto error;
+
+<yellow>	cs.selector = (vcpu->arch.smbase >> 4) & 0xffff;</yellow>
+	cs.base = vcpu-&gt;arch.smbase;
+
+	ds.selector = 0;
+	ds.base = 0;
+
+	cs.limit    = ds.limit = 0xffffffff;
+	cs.type     = ds.type = 0x3;
+	cs.dpl      = ds.dpl = 0;
+	cs.db       = ds.db = 0;
+	cs.s        = ds.s = 1;
+	cs.l        = ds.l = 0;
+	cs.g        = ds.g = 1;
+	cs.avl      = ds.avl = 0;
+	cs.present  = ds.present = 1;
+	cs.unusable = ds.unusable = 0;
+	cs.padding  = ds.padding = 0;
+
+	kvm_set_segment(vcpu, &amp;cs, VCPU_SREG_CS);
+	kvm_set_segment(vcpu, &amp;ds, VCPU_SREG_DS);
+	kvm_set_segment(vcpu, &amp;ds, VCPU_SREG_ES);
+	kvm_set_segment(vcpu, &amp;ds, VCPU_SREG_FS);
+	kvm_set_segment(vcpu, &amp;ds, VCPU_SREG_GS);
+	kvm_set_segment(vcpu, &amp;ds, VCPU_SREG_SS);
+
+#ifdef CONFIG_X86_64
+<yellow>	if (guest_cpuid_has(vcpu, X86_FEATURE_LM))</yellow>
+<yellow>		if (static_call(kvm_x86_set_efer)(vcpu, 0))</yellow>
+			goto error;
+#endif
+
+<yellow>	kvm_update_cpuid_runtime(vcpu);</yellow>
+	kvm_mmu_reset_context(vcpu);
+	return;
+error:
+<yellow>	kvm_vm_dead(vcpu->kvm);</yellow>
+}
+
+static void rsm_set_desc_flags(struct kvm_segment *desc, u32 flags)
+{
+<yellow>	desc->g    = (flags >> 23) & 1;</yellow>
+	desc-&gt;db   = (flags &gt;&gt; 22) &amp; 1;
+	desc-&gt;l    = (flags &gt;&gt; 21) &amp; 1;
+	desc-&gt;avl  = (flags &gt;&gt; 20) &amp; 1;
+	desc-&gt;present = (flags &gt;&gt; 15) &amp; 1;
+	desc-&gt;dpl  = (flags &gt;&gt; 13) &amp; 3;
+	desc-&gt;s    = (flags &gt;&gt; 12) &amp; 1;
+	desc-&gt;type = (flags &gt;&gt;  8) &amp; 15;
+
+	desc-&gt;unusable = !desc-&gt;present;
+	desc-&gt;padding = 0;
+}
+
+static int rsm_load_seg_32(struct kvm_vcpu *vcpu,
+			   const struct kvm_smm_seg_state_32 *state,
+			   u16 selector, int n)
+{
+	struct kvm_segment desc;
+
+	desc.selector =           selector;
+<yellow>	desc.base =               state->base;</yellow>
+	desc.limit =              state-&gt;limit;
+	rsm_set_desc_flags(&amp;desc, state-&gt;flags);
+	kvm_set_segment(vcpu, &amp;desc, n);
+	return X86EMUL_CONTINUE;
+}
+
+#ifdef CONFIG_X86_64
+
+static int rsm_load_seg_64(struct kvm_vcpu *vcpu,
+			   const struct kvm_smm_seg_state_64 *state,
+			   int n)
+{
+	struct kvm_segment desc;
+
+	desc.selector =           state-&gt;selector;
+<yellow>	rsm_set_desc_flags(&desc, state->attributes << 8);</yellow>
+	desc.limit =              state-&gt;limit;
+	desc.base =               state-&gt;base;
+	kvm_set_segment(vcpu, &amp;desc, n);
+	return X86EMUL_CONTINUE;
+}
+#endif
+
+static int rsm_enter_protected_mode(struct kvm_vcpu *vcpu,
+				    u64 cr0, u64 cr3, u64 cr4)
+{
+	int bad;
+	u64 pcid;
+
+	/* In order to later set CR4.PCIDE, CR3[11:0] must be zero.  */
+	pcid = 0;
+<yellow>	if (cr4 & X86_CR4_PCIDE) {</yellow>
+<yellow>		pcid = cr3 & 0xfff;</yellow>
+		cr3 &amp;= ~0xfff;
+	}
+
+<yellow>	bad = kvm_set_cr3(vcpu, cr3);</yellow>
+	if (bad)
+		return X86EMUL_UNHANDLEABLE;
+
+	/*
+	 * First enable PAE, long mode needs it before CR0.PG = 1 is set.
+	 * Then enable protected mode.	However, PCID cannot be enabled
+	 * if EFER.LMA=0, so set it separately.
+	 */
+<yellow>	bad = kvm_set_cr4(vcpu, cr4 & ~X86_CR4_PCIDE);</yellow>
+	if (bad)
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	bad = kvm_set_cr0(vcpu, cr0);</yellow>
+	if (bad)
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	if (cr4 & X86_CR4_PCIDE) {</yellow>
+<yellow>		bad = kvm_set_cr4(vcpu, cr4);</yellow>
+		if (bad)
+			return X86EMUL_UNHANDLEABLE;
+<yellow>		if (pcid) {</yellow>
+<yellow>			bad = kvm_set_cr3(vcpu, cr3 | pcid);</yellow>
+			if (bad)
+				return X86EMUL_UNHANDLEABLE;
+		}
+
+	}
+
+	return X86EMUL_CONTINUE;
+<yellow>}</yellow>
+
+static int rsm_load_state_32(struct x86_emulate_ctxt *ctxt,
+			     const struct kvm_smram_state_32 *smstate)
+{
+<yellow>	struct kvm_vcpu *vcpu = ctxt->vcpu;</yellow>
+	struct desc_ptr dt;
+	int i, r;
+
+	ctxt-&gt;eflags =  smstate-&gt;eflags | X86_EFLAGS_FIXED;
+	ctxt-&gt;_eip =  smstate-&gt;eip;
+
+	for (i = 0; i &lt; 8; i++)
+<yellow>		*reg_write(ctxt, i) = smstate->gprs[i];</yellow>
+
+<yellow>	if (kvm_set_dr(vcpu, 6, smstate->dr6))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+<yellow>	if (kvm_set_dr(vcpu, 7, smstate->dr7))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	rsm_load_seg_32(vcpu, &smstate->tr, smstate->tr_sel, VCPU_SREG_TR);</yellow>
+	rsm_load_seg_32(vcpu, &amp;smstate-&gt;ldtr, smstate-&gt;ldtr_sel, VCPU_SREG_LDTR);
+
+	dt.address =               smstate-&gt;gdtr.base;
+	dt.size =                  smstate-&gt;gdtr.limit;
+	static_call(kvm_x86_set_gdt)(vcpu, &amp;dt);
+
+	dt.address =               smstate-&gt;idtr.base;
+	dt.size =                  smstate-&gt;idtr.limit;
+	static_call(kvm_x86_set_idt)(vcpu, &amp;dt);
+
+	rsm_load_seg_32(vcpu, &amp;smstate-&gt;es, smstate-&gt;es_sel, VCPU_SREG_ES);
+	rsm_load_seg_32(vcpu, &amp;smstate-&gt;cs, smstate-&gt;cs_sel, VCPU_SREG_CS);
+	rsm_load_seg_32(vcpu, &amp;smstate-&gt;ss, smstate-&gt;ss_sel, VCPU_SREG_SS);
+
+	rsm_load_seg_32(vcpu, &amp;smstate-&gt;ds, smstate-&gt;ds_sel, VCPU_SREG_DS);
+	rsm_load_seg_32(vcpu, &amp;smstate-&gt;fs, smstate-&gt;fs_sel, VCPU_SREG_FS);
+	rsm_load_seg_32(vcpu, &amp;smstate-&gt;gs, smstate-&gt;gs_sel, VCPU_SREG_GS);
+
+	vcpu-&gt;arch.smbase = smstate-&gt;smbase;
+
+	r = rsm_enter_protected_mode(vcpu, smstate-&gt;cr0,
+					smstate-&gt;cr3, smstate-&gt;cr4);
+
+	if (r != X86EMUL_CONTINUE)
+		return r;
+
+<yellow>	static_call(kvm_x86_set_interrupt_shadow)(vcpu, 0);</yellow>
+	ctxt-&gt;interruptibility = (u8)smstate-&gt;int_shadow;
+
+	return r;
+}
+
+#ifdef CONFIG_X86_64
+static int rsm_load_state_64(struct x86_emulate_ctxt *ctxt,
+			     const struct kvm_smram_state_64 *smstate)
+{
+<yellow>	struct kvm_vcpu *vcpu = ctxt->vcpu;</yellow>
+	struct desc_ptr dt;
+	int i, r;
+
+	for (i = 0; i &lt; 16; i++)
+<yellow>		*reg_write(ctxt, i) = smstate->gprs[15 - i];</yellow>
+
+<yellow>	ctxt->_eip   = smstate->rip;</yellow>
+	ctxt-&gt;eflags = smstate-&gt;rflags | X86_EFLAGS_FIXED;
+
+	if (kvm_set_dr(vcpu, 6, smstate-&gt;dr6))
+		return X86EMUL_UNHANDLEABLE;
+<yellow>	if (kvm_set_dr(vcpu, 7, smstate->dr7))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	vcpu->arch.smbase =         smstate->smbase;</yellow>
+
+	if (kvm_set_msr(vcpu, MSR_EFER, smstate-&gt;efer &amp; ~EFER_LMA))
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	rsm_load_seg_64(vcpu, &smstate->tr, VCPU_SREG_TR);</yellow>
+
+	dt.size =                   smstate-&gt;idtr.limit;
+	dt.address =                smstate-&gt;idtr.base;
+	static_call(kvm_x86_set_idt)(vcpu, &amp;dt);
+
+	rsm_load_seg_64(vcpu, &amp;smstate-&gt;ldtr, VCPU_SREG_LDTR);
+
+	dt.size =                   smstate-&gt;gdtr.limit;
+	dt.address =                smstate-&gt;gdtr.base;
+	static_call(kvm_x86_set_gdt)(vcpu, &amp;dt);
+
+	r = rsm_enter_protected_mode(vcpu, smstate-&gt;cr0, smstate-&gt;cr3, smstate-&gt;cr4);
+	if (r != X86EMUL_CONTINUE)
+		return r;
+
+<yellow>	rsm_load_seg_64(vcpu, &smstate->es, VCPU_SREG_ES);</yellow>
+	rsm_load_seg_64(vcpu, &amp;smstate-&gt;cs, VCPU_SREG_CS);
+	rsm_load_seg_64(vcpu, &amp;smstate-&gt;ss, VCPU_SREG_SS);
+	rsm_load_seg_64(vcpu, &amp;smstate-&gt;ds, VCPU_SREG_DS);
+	rsm_load_seg_64(vcpu, &amp;smstate-&gt;fs, VCPU_SREG_FS);
+	rsm_load_seg_64(vcpu, &amp;smstate-&gt;gs, VCPU_SREG_GS);
+
+	static_call(kvm_x86_set_interrupt_shadow)(vcpu, 0);
+	ctxt-&gt;interruptibility = (u8)smstate-&gt;int_shadow;
+
+	return X86EMUL_CONTINUE;
+}
+#endif
+
+int emulator_leave_smm(struct x86_emulate_ctxt *ctxt)
+<yellow>{</yellow>
+<yellow>	struct kvm_vcpu *vcpu = ctxt->vcpu;</yellow>
+	unsigned long cr0;
+	union kvm_smram smram;
+	u64 smbase;
+	int ret;
+
+	smbase = vcpu-&gt;arch.smbase;
+
+	ret = kvm_vcpu_read_guest(vcpu, smbase + 0xfe00, smram.bytes, sizeof(smram));
+	if (ret &lt; 0)
+		return X86EMUL_UNHANDLEABLE;
+
+<yellow>	if ((vcpu->arch.hflags & HF_SMM_INSIDE_NMI_MASK) == 0)</yellow>
+<yellow>		static_call(kvm_x86_set_nmi_mask)(vcpu, false);</yellow>
+
+<yellow>	kvm_smm_changed(vcpu, false);</yellow>
+
+	/*
+	 * Get back to real mode, to prepare a safe state in which to load
+	 * CR0/CR3/CR4/EFER.  It&#x27;s all a bit more complicated if the vCPU
+	 * supports long mode.
+	 */
+#ifdef CONFIG_X86_64
+<yellow>	if (guest_cpuid_has(vcpu, X86_FEATURE_LM)) {</yellow>
+		struct kvm_segment cs_desc;
+		unsigned long cr4;
+
+		/* Zero CR4.PCIDE before CR0.PG.  */
+<yellow>		cr4 = kvm_read_cr4(vcpu);</yellow>
+		if (cr4 &amp; X86_CR4_PCIDE)
+<yellow>			kvm_set_cr4(vcpu, cr4 & ~X86_CR4_PCIDE);</yellow>
+
+		/* A 32-bit code segment is required to clear EFER.LMA.  */
+<yellow>		memset(&cs_desc, 0, sizeof(cs_desc));</yellow>
+		cs_desc.type = 0xb;
+		cs_desc.s = cs_desc.g = cs_desc.present = 1;
+		kvm_set_segment(vcpu, &amp;cs_desc, VCPU_SREG_CS);
+	}
+#endif
+
+	/* For the 64-bit case, this will clear EFER.LMA.  */
+<yellow>	cr0 = kvm_read_cr0(vcpu);</yellow>
+	if (cr0 &amp; X86_CR0_PE)
+<yellow>		kvm_set_cr0(vcpu, cr0 & ~(X86_CR0_PG | X86_CR0_PE));</yellow>
+
+#ifdef CONFIG_X86_64
+<yellow>	if (guest_cpuid_has(vcpu, X86_FEATURE_LM)) {</yellow>
+		unsigned long cr4, efer;
+
+		/* Clear CR4.PAE before clearing EFER.LME. */
+<yellow>		cr4 = kvm_read_cr4(vcpu);</yellow>
+		if (cr4 &amp; X86_CR4_PAE)
+<yellow>			kvm_set_cr4(vcpu, cr4 & ~X86_CR4_PAE);</yellow>
+
+		/* And finally go back to 32-bit mode.  */
+		efer = 0;
+<yellow>		kvm_set_msr(vcpu, MSR_EFER, efer);</yellow>
+	}
+#endif
+
+	/*
+	 * Give leave_smm() a chance to make ISA-specific changes to the vCPU
+	 * state (e.g. enter guest mode) before loading state from the SMM
+	 * state-save area.
+	 */
+<yellow>	if (static_call(kvm_x86_leave_smm)(vcpu, &smram))</yellow>
+		return X86EMUL_UNHANDLEABLE;
+
+#ifdef CONFIG_X86_64
+<yellow>	if (guest_cpuid_has(vcpu, X86_FEATURE_LM))</yellow>
+<yellow>		return rsm_load_state_64(ctxt, &smram.smram64);</yellow>
+	else
+#endif
+<yellow>		return rsm_load_state_32(ctxt, &smram.smram32);</yellow>
+}
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
+</script></body></html>

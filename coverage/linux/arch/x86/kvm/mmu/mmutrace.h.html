@@ -127,7 +127,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 /*
  * A pagetable walk has started
  */
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	kvm_mmu_pagetable_walk,
 	TP_PROTO(u64 addr, u32 pferr),
 	TP_ARGS(addr, pferr),
@@ -148,7 +148,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 
 
 /* We just walked a paging element */
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	kvm_mmu_paging_element,
 	TP_PROTO(u64 pte, int level),
 	TP_ARGS(pte, level),
@@ -200,7 +200,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 	TP_ARGS(table_gfn, index, size)
 );
 
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	kvm_mmu_walker_error,
 	TP_PROTO(u32 pferr),
 	TP_ARGS(pferr),
@@ -270,7 +270,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 	TP_ARGS(sp)
 );
 
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	mark_mmio_spte,
 	TP_PROTO(u64 *sptep, gfn_t gfn, u64 spte),
 	TP_ARGS(sptep, gfn, spte),
@@ -349,7 +349,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 	)
 );
 
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	kvm_mmu_zap_all_fast,
 	TP_PROTO(struct kvm *kvm),
 	TP_ARGS(kvm),
@@ -393,7 +393,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 	)
 );
 
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	kvm_mmu_set_spte,
 	TP_PROTO(int level, gfn_t gfn, u64 *sptep),
 	TP_ARGS(level, gfn, sptep),
@@ -429,7 +429,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 	)
 );
 
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	kvm_mmu_spte_requested,
 	TP_PROTO(struct kvm_page_fault *fault),
 	TP_ARGS(fault),
@@ -480,7 +480,7 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 	)
 );
 
-<yellow>TRACE_EVENT(</yellow>
+<blue>TRACE_EVENT(</blue>
 	kvm_mmu_split_huge_page,
 	TP_PROTO(u64 gfn, u64 spte, int level, int errno),
 	TP_ARGS(gfn, spte, level, errno),
@@ -516,8 +516,8 @@ TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 523; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 525; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -132,6 +132,7 @@ enum cpuhp_state {
 	CPUHP_X86_APB_DEAD,
 	CPUHP_X86_MCE_DEAD,
 	CPUHP_VIRT_NET_DEAD,
+	CPUHP_IBMVNIC_DEAD,
 	CPUHP_SLUB_DEAD,
 	CPUHP_DEBUG_OBJ_DEAD,
 	CPUHP_MM_WRITEBACK_DEAD,
@@ -203,6 +204,7 @@ enum cpuhp_state {
 	 */
 	CPUHP_AP_IDLE_DEAD,
 	CPUHP_AP_OFFLINE,
+	CPUHP_AP_CACHECTRL_STARTING,
 	CPUHP_AP_SCHED_STARTING,
 	CPUHP_AP_RCUTREE_DYING,
 	CPUHP_AP_CPU_PM_STARTING,
@@ -347,7 +349,7 @@ static inline int cpuhp_setup_state(enum cpuhp_state state,
 				    int (*startup)(unsigned int cpu),
 				    int (*teardown)(unsigned int cpu))
 {
-<yellow>	return __cpuhp_setup_state(state, name, true, startup, teardown, false);</yellow>
+	return __cpuhp_setup_state(state, name, true, startup, teardown, false);
 }
 
 /**
@@ -515,7 +517,7 @@ static inline void cpuhp_remove_state(enum cpuhp_state state)
  */
 static inline void cpuhp_remove_state_nocalls(enum cpuhp_state state)
 {
-<yellow>	__cpuhp_remove_state(state, false);</yellow>
+	__cpuhp_remove_state(state, false);
 }
 
 /**
@@ -587,8 +589,8 @@ static inline void cpuhp_online_idle(enum cpuhp_state state) { }
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

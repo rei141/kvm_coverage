@@ -88,7 +88,7 @@ static __always_inline int
 atomic_read(const atomic_t *v)
 {
 <blue>	instrument_atomic_read(v, sizeof(*v));</blue>
-	return arch_atomic_read(v);
+<yellow>	return arch_atomic_read(v);</yellow>
 }
 
 static __always_inline int
@@ -176,7 +176,7 @@ atomic_fetch_add_release(int i, atomic_t *v)
 static __always_inline int
 atomic_fetch_add_relaxed(int i, atomic_t *v)
 {
-<blue>	instrument_atomic_read_write(v, sizeof(*v));</blue>
+<yellow>	instrument_atomic_read_write(v, sizeof(*v));</yellow>
 	return arch_atomic_fetch_add_relaxed(i, v);
 }
 
@@ -236,7 +236,7 @@ static __always_inline int
 atomic_fetch_sub_release(int i, atomic_t *v)
 {
 	kcsan_release();
-<blue>	instrument_atomic_read_write(v, sizeof(*v));</blue>
+<yellow>	instrument_atomic_read_write(v, sizeof(*v));</yellow>
 <yellow>	return arch_atomic_fetch_sub_release(i, v);</yellow>
 }
 
@@ -635,8 +635,8 @@ static __always_inline bool
 atomic_dec_and_test(atomic_t *v)
 {
 	kcsan_mb();
-	instrument_atomic_read_write(v, sizeof(*v));
-<yellow>	return arch_atomic_dec_and_test(v);</yellow>
+<blue>	instrument_atomic_read_write(v, sizeof(*v));</blue>
+	return arch_atomic_dec_and_test(v);
 }
 
 static __always_inline bool
@@ -2151,8 +2151,8 @@ atomic_long_dec_if_positive(atomic_long_t *v)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

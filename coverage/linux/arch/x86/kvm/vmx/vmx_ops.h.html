@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 348; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 362; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -69,18 +69,32 @@
 
 #include &lt;asm/vmx.h&gt;
 
-#include &quot;evmcs.h&quot;
+#include &quot;hyperv.h&quot;
 #include &quot;vmcs.h&quot;
 #include &quot;../x86.h&quot;
 
 void vmread_error(unsigned long field, bool fault);
-__attribute__((regparm(0))) void vmread_error_trampoline(unsigned long field,
-							 bool fault);
 void vmwrite_error(unsigned long field, unsigned long value);
 void vmclear_error(struct vmcs *vmcs, u64 phys_addr);
 void vmptrld_error(struct vmcs *vmcs, u64 phys_addr);
 void invvpid_error(unsigned long ext, u16 vpid, gva_t gva);
 void invept_error(unsigned long ext, u64 eptp, gpa_t gpa);
+
+#ifndef CONFIG_CC_HAS_ASM_GOTO_OUTPUT
+/*
+ * The VMREAD error trampoline _always_ uses the stack to pass parameters, even
+ * for 64-bit targets.  Preserving all registers allows the VMREAD inline asm
+ * blob to avoid clobbering GPRs, which in turn allows the compiler to better
+ * optimize sequences of VMREADs.
+ *
+ * Declare the trampoline as an opaque label as it&#x27;s not safe to call from C
+ * code; there is no way to tell the compiler to pass params on the stack for
+ * 64-bit targets.
+ *
+ * void vmread_error_trampoline(unsigned long field, bool fault);
+ */
+extern unsigned long vmread_error_trampoline;
+#endif
 
 static __always_inline void vmcs_check16(unsigned long field)
 {
@@ -319,10 +333,10 @@ static __always_inline void vmcs_set_bits(unsigned long field, u32 mask)
 {
 	BUILD_BUG_ON_MSG(__builtin_constant_p(field) &amp;&amp; ((field) &amp; 0x6000) == 0x2000,
 			 &quot;vmcs_set_bits does not support 64-bit fields&quot;);
-<blue>	if (static_branch_unlikely(&enable_evmcs))</blue>
+<yellow>	if (static_branch_unlikely(&enable_evmcs))</yellow>
 <yellow>		return evmcs_write32(field, evmcs_read32(field) | mask);</yellow>
 
-<blue>	__vmcs_writel(field, __vmcs_readl(field) | mask);</blue>
+<yellow>	__vmcs_writel(field, __vmcs_readl(field) | mask);</yellow>
 }
 
 static inline void vmcs_clear(struct vmcs *vmcs)
@@ -333,7 +347,7 @@ static inline void vmcs_clear(struct vmcs *vmcs)
 }
 
 static inline void vmcs_load(struct vmcs *vmcs)
-<blue>{</blue>
+{
 <blue>	u64 phys_addr = __pa(vmcs);</blue>
 
 	if (static_branch_unlikely(&amp;enable_evmcs))
@@ -385,7 +399,7 @@ static inline void vpid_sync_vcpu_global(void)
 
 static inline void vpid_sync_vcpu_addr(int vpid, gva_t addr)
 {
-<yellow>	if (vpid == 0)</yellow>
+<blue>	if (vpid == 0)</blue>
 		return;
 
 <blue>	if (cpu_has_vmx_invvpid_individual_addr())</blue>
@@ -412,8 +426,8 @@ static inline void ept_sync_context(u64 eptp)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

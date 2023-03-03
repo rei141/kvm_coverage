@@ -82,7 +82,7 @@
 	ERSN(SYSTEM_EVENT), ERSN(S390_STSI), ERSN(IOAPIC_EOI),          \
 	ERSN(HYPERV), ERSN(ARM_NISV), ERSN(X86_RDMSR), ERSN(X86_WRMSR)
 
-<yellow>TRACE_EVENT(kvm_userspace_exit,</yellow>
+<blue>TRACE_EVENT(kvm_userspace_exit,</blue>
 	    TP_PROTO(__u32 reason, int errno),
 	    TP_ARGS(reason, errno),
 
@@ -303,7 +303,7 @@
 	{0, &quot;unload&quot;},		\
 	{1, &quot;load&quot;}
 
-<yellow>TRACE_EVENT(kvm_fpu,</yellow>
+<blue>TRACE_EVENT(kvm_fpu,</blue>
 	TP_PROTO(int load),
 	TP_ARGS(load),
 
@@ -407,7 +407,7 @@
 
 #endif
 
-<yellow>TRACE_EVENT(kvm_halt_poll_ns,</yellow>
+<blue>TRACE_EVENT(kvm_halt_poll_ns,</blue>
 	TP_PROTO(bool grow, unsigned int vcpu_id, unsigned int new,
 		 unsigned int old),
 	TP_ARGS(grow, vcpu_id, new, old),
@@ -501,7 +501,7 @@
 	TP_printk(&quot;vcpu %d&quot;, __entry-&gt;vcpu_id)
 );
 
-<yellow>TRACE_EVENT(kvm_unmap_hva_range,</yellow>
+<blue>TRACE_EVENT(kvm_unmap_hva_range,</blue>
 	TP_PROTO(unsigned long start, unsigned long end),
 	TP_ARGS(start, end),
 
@@ -575,8 +575,8 @@
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

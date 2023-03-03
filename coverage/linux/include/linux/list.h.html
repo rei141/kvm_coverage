@@ -132,7 +132,7 @@ static inline void __list_add(struct list_head *new,
 	if (!__list_add_valid(new, prev, next))
 		return;
 
-	next-&gt;prev = new;
+<blue>	next->prev = new;</blue>
 	new-&gt;next = next;
 	new-&gt;prev = prev;
 	WRITE_ONCE(prev-&gt;next, new);
@@ -194,7 +194,7 @@ static inline void __list_del_clearprev(struct list_head *entry)
 
 static inline void __list_del_entry(struct list_head *entry)
 {
-	if (!__list_del_entry_valid(entry))
+<blue>	if (!__list_del_entry_valid(entry))</blue>
 		return;
 
 <blue>	__list_del(entry->prev, entry->next);</blue>
@@ -209,7 +209,7 @@ static inline void __list_del_entry(struct list_head *entry)
 static inline void list_del(struct list_head *entry)
 {
 <blue>	__list_del_entry(entry);</blue>
-	entry-&gt;next = LIST_POISON1;
+<blue>	entry->next = LIST_POISON1;</blue>
 	entry-&gt;prev = LIST_POISON2;
 }
 
@@ -267,7 +267,7 @@ static inline void list_swap(struct list_head *entry1,
 static inline void list_del_init(struct list_head *entry)
 {
 <yellow>	__list_del_entry(entry);</yellow>
-	INIT_LIST_HEAD(entry);
+<yellow>	INIT_LIST_HEAD(entry);</yellow>
 }
 
 /**
@@ -278,7 +278,7 @@ static inline void list_del_init(struct list_head *entry)
 static inline void list_move(struct list_head *list, struct list_head *head)
 {
 <blue>	__list_del_entry(list);</blue>
-	list_add(list, head);
+<blue>	list_add(list, head);</blue>
 }
 
 /**
@@ -289,8 +289,8 @@ static inline void list_move(struct list_head *list, struct list_head *head)
 static inline void list_move_tail(struct list_head *list,
 				  struct list_head *head)
 {
-	__list_del_entry(list);
-	list_add_tail(list, head);
+<yellow>	__list_del_entry(list);</yellow>
+<yellow>	list_add_tail(list, head);</yellow>
 }
 
 /**
@@ -959,7 +959,7 @@ static inline void __hlist_del(struct hlist_node *n)
 static inline void hlist_del(struct hlist_node *n)
 {
 <blue>	__hlist_del(n);</blue>
-	n-&gt;next = LIST_POISON1;
+<blue>	n->next = LIST_POISON1;</blue>
 <blue>	n->pprev = LIST_POISON2;</blue>
 }
 
@@ -1139,8 +1139,8 @@ static inline void hlist_move_list(struct hlist_head *old,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 1835; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 1843; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -176,12 +176,13 @@
  * Tracepoint for Xen hypercall.
  */
 <yellow>TRACE_EVENT(kvm_xen_hypercall,</yellow>
-	TP_PROTO(unsigned long nr, unsigned long a0, unsigned long a1,
-		 unsigned long a2, unsigned long a3, unsigned long a4,
-		 unsigned long a5),
-	    TP_ARGS(nr, a0, a1, a2, a3, a4, a5),
+	    TP_PROTO(u8 cpl, unsigned long nr,
+		     unsigned long a0, unsigned long a1, unsigned long a2,
+		     unsigned long a3, unsigned long a4, unsigned long a5),
+	    TP_ARGS(cpl, nr, a0, a1, a2, a3, a4, a5),
 
 	TP_STRUCT__entry(
+		__field(u8, cpl)
 		__field(unsigned long, nr)
 		__field(unsigned long, a0)
 		__field(unsigned long, a1)
@@ -192,6 +193,7 @@
 	),
 
 	TP_fast_assign(
+		__entry-&gt;cpl = cpl;
 		__entry-&gt;nr = nr;
 		__entry-&gt;a0 = a0;
 		__entry-&gt;a1 = a1;
@@ -201,8 +203,9 @@
 		__entry-&gt;a4 = a5;
 	),
 
-	TP_printk(&quot;nr 0x%lx a0 0x%lx a1 0x%lx a2 0x%lx a3 0x%lx a4 0x%lx a5 %lx&quot;,
-		  __entry-&gt;nr, __entry-&gt;a0, __entry-&gt;a1,  __entry-&gt;a2,
+	TP_printk(&quot;cpl %d nr 0x%lx a0 0x%lx a1 0x%lx a2 0x%lx a3 0x%lx a4 0x%lx a5 %lx&quot;,
+		  __entry-&gt;cpl, __entry-&gt;nr,
+		  __entry-&gt;a0, __entry-&gt;a1, __entry-&gt;a2,
 		  __entry-&gt;a3, __entry-&gt;a4, __entry-&gt;a5)
 );
 
@@ -268,7 +271,7 @@
 /*
  * Tracepoint for cpuid.
  */
-<yellow>TRACE_EVENT(kvm_cpuid,</yellow>
+<blue>TRACE_EVENT(kvm_cpuid,</blue>
 	TP_PROTO(unsigned int function, unsigned int index, unsigned long rax,
 		 unsigned long rbx, unsigned long rcx, unsigned long rdx,
 		 bool found, bool used_max_basic),
@@ -426,7 +429,7 @@ TRACE_EVENT(name,							     \
 /*
  * Tracepoint for kvm interrupt injection:
  */
-<yellow>TRACE_EVENT(kvm_inj_exception,</yellow>
+<blue>TRACE_EVENT(kvm_inj_exception,</blue>
 	TP_PROTO(unsigned exception, bool has_error, unsigned error_code,
 		 bool reinjected),
 	TP_ARGS(exception, has_error, error_code, reinjected),
@@ -538,7 +541,7 @@ TRACE_EVENT(name,							     \
 #define trace_kvm_cr_read(cr, val)		trace_kvm_cr(0, cr, val)
 #define trace_kvm_cr_write(cr, val)		trace_kvm_cr(1, cr, val)
 
-<yellow>TRACE_EVENT(kvm_pic_set_irq,</yellow>
+<blue>TRACE_EVENT(kvm_pic_set_irq,</blue>
 	    TP_PROTO(__u8 chip, __u8 pin, __u8 elcr, __u8 imr, bool coalesced),
 	    TP_ARGS(chip, pin, elcr, imr, coalesced),
 
@@ -657,7 +660,7 @@ TRACE_EVENT(name,							     \
 /*
  * Tracepoint for nested VMRUN
  */
-<yellow>TRACE_EVENT(kvm_nested_vmenter,</yellow>
+<blue>TRACE_EVENT(kvm_nested_vmenter,</blue>
 	    TP_PROTO(__u64 rip, __u64 vmcb, __u64 nested_rip, __u32 int_ctl,
 		     __u32 event_inj, bool tdp_enabled, __u64 guest_tdp_pgd,
 		     __u64 guest_cr3, __u32 isa),
@@ -701,7 +704,7 @@ TRACE_EVENT(name,							     \
 		  __entry-&gt;guest_pgd)
 );
 
-TRACE_EVENT(kvm_nested_intercepts,
+<yellow>TRACE_EVENT(kvm_nested_intercepts,</yellow>
 	    TP_PROTO(__u16 cr_read, __u16 cr_write, __u32 exceptions,
 		     __u32 intercept1, __u32 intercept2, __u32 intercept3),
 	    TP_ARGS(cr_read, cr_write, exceptions, intercept1,
@@ -738,7 +741,7 @@ TRACE_EVENT(kvm_nested_intercepts,
 /*
  * Tracepoint for #VMEXIT reinjected to the guest
  */
-<yellow>TRACE_EVENT(kvm_nested_vmexit_inject,</yellow>
+<blue>TRACE_EVENT(kvm_nested_vmexit_inject,</blue>
 	    TP_PROTO(__u32 exit_code,
 		     __u64 exit_info1, __u64 exit_info2,
 		     __u32 exit_int_info, __u32 exit_int_info_err, __u32 isa),
@@ -773,7 +776,7 @@ TRACE_EVENT(kvm_nested_intercepts,
 /*
  * Tracepoint for nested #vmexit because of interrupt pending
  */
-TRACE_EVENT(kvm_nested_intr_vmexit,
+<yellow>TRACE_EVENT(kvm_nested_intr_vmexit,</yellow>
 	    TP_PROTO(__u64 rip),
 	    TP_ARGS(rip),
 
@@ -791,7 +794,7 @@ TRACE_EVENT(kvm_nested_intr_vmexit,
 /*
  * Tracepoint for nested #vmexit because of interrupt pending
  */
-TRACE_EVENT(kvm_invlpga,
+<yellow>TRACE_EVENT(kvm_invlpga,</yellow>
 	    TP_PROTO(__u64 rip, int asid, u64 address),
 	    TP_ARGS(rip, asid, address),
 
@@ -814,7 +817,7 @@ TRACE_EVENT(kvm_invlpga,
 /*
  * Tracepoint for nested #vmexit because of interrupt pending
  */
-TRACE_EVENT(kvm_skinit,
+<yellow>TRACE_EVENT(kvm_skinit,</yellow>
 	    TP_PROTO(__u64 rip, __u32 slb),
 	    TP_ARGS(rip, slb),
 
@@ -871,7 +874,7 @@ TRACE_EVENT(kvm_skinit,
 	flags;						\
 	})
 
-<yellow>TRACE_EVENT(kvm_emulate_insn,</yellow>
+<blue>TRACE_EVENT(kvm_emulate_insn,</blue>
 	TP_PROTO(struct kvm_vcpu *vcpu, __u8 failed),
 	TP_ARGS(vcpu, failed),
 
@@ -932,7 +935,7 @@ TRACE_EVENT(kvm_skinit,
 		  __entry-&gt;gpa_match ? &quot;GPA&quot; : &quot;GVA&quot;)
 );
 
-<yellow>TRACE_EVENT(kvm_write_tsc_offset,</yellow>
+<blue>TRACE_EVENT(kvm_write_tsc_offset,</blue>
 	TP_PROTO(unsigned int vcpu_id, __u64 previous_tsc_offset,
 		 __u64 next_tsc_offset),
 	TP_ARGS(vcpu_id, previous_tsc_offset, next_tsc_offset),
@@ -981,7 +984,7 @@ TRACE_EVENT(kvm_skinit,
 		  __entry-&gt;offset_matched)
 );
 
-<yellow>TRACE_EVENT(kvm_track_tsc,</yellow>
+<blue>TRACE_EVENT(kvm_track_tsc,</blue>
 	TP_PROTO(unsigned int vcpu_id, unsigned int nr_matched,
 		 unsigned int online_vcpus, bool use_master_clock,
 		 unsigned int host_clock),
@@ -1031,7 +1034,7 @@ TRACE_EVENT(kvm_skinit,
 	TP_printk(&quot;vcpu %d: PML full&quot;, __entry-&gt;vcpu_id)
 );
 
-<yellow>TRACE_EVENT(kvm_ple_window_update,</yellow>
+<blue>TRACE_EVENT(kvm_ple_window_update,</blue>
 	TP_PROTO(unsigned int vcpu_id, unsigned int new, unsigned int old),
 	TP_ARGS(vcpu_id, new, old),
 
@@ -1238,7 +1241,7 @@ TRACE_EVENT(kvm_skinit,
 /*
  * Tracepoint for synic_set_msr.
  */
-<yellow>TRACE_EVENT(kvm_hv_synic_set_msr,</yellow>
+<blue>TRACE_EVENT(kvm_hv_synic_set_msr,</blue>
 	TP_PROTO(int vcpu_id, u32 msr, u64 data, bool host),
 	TP_ARGS(vcpu_id, msr, data, host),
 
@@ -1263,7 +1266,7 @@ TRACE_EVENT(kvm_skinit,
 /*
  * Tracepoint for stimer_set_config.
  */
-<yellow>TRACE_EVENT(kvm_hv_stimer_set_config,</yellow>
+<blue>TRACE_EVENT(kvm_hv_stimer_set_config,</blue>
 	TP_PROTO(int vcpu_id, int timer_index, u64 config, bool host),
 	TP_ARGS(vcpu_id, timer_index, config, host),
 
@@ -1289,7 +1292,7 @@ TRACE_EVENT(kvm_skinit,
 /*
  * Tracepoint for stimer_set_count.
  */
-<yellow>TRACE_EVENT(kvm_hv_stimer_set_count,</yellow>
+<blue>TRACE_EVENT(kvm_hv_stimer_set_count,</blue>
 	TP_PROTO(int vcpu_id, int timer_index, u64 count, bool host),
 	TP_ARGS(vcpu_id, timer_index, count, host),
 
@@ -1414,7 +1417,7 @@ TRACE_EVENT(kvm_skinit,
 /*
  * Tracepoint for stimer_cleanup.
  */
-<yellow>TRACE_EVENT(kvm_hv_stimer_cleanup,</yellow>
+<blue>TRACE_EVENT(kvm_hv_stimer_cleanup,</blue>
 	TP_PROTO(int vcpu_id, int timer_index),
 	TP_ARGS(vcpu_id, timer_index),
 
@@ -1432,7 +1435,7 @@ TRACE_EVENT(kvm_skinit,
 		  __entry-&gt;vcpu_id, __entry-&gt;timer_index)
 );
 
-<yellow>TRACE_EVENT(kvm_apicv_inhibit_changed,</yellow>
+<blue>TRACE_EVENT(kvm_apicv_inhibit_changed,</blue>
 	    TP_PROTO(int reason, bool set, unsigned long inhibits),
 	    TP_ARGS(reason, set, inhibits),
 
@@ -1480,7 +1483,7 @@ TRACE_EVENT(kvm_skinit,
 /*
  * Tracepoint for AMD AVIC
  */
-TRACE_EVENT(kvm_avic_incomplete_ipi,
+<yellow>TRACE_EVENT(kvm_avic_incomplete_ipi,</yellow>
 	    TP_PROTO(u32 vcpu, u32 icrh, u32 icrl, u32 id, u32 index),
 	    TP_ARGS(vcpu, icrh, icrl, id, index),
 
@@ -1505,7 +1508,7 @@ TRACE_EVENT(kvm_avic_incomplete_ipi,
 		  __entry-&gt;id, __entry-&gt;index)
 );
 
-TRACE_EVENT(kvm_avic_unaccelerated_access,
+<yellow>TRACE_EVENT(kvm_avic_unaccelerated_access,</yellow>
 	    TP_PROTO(u32 vcpu, u32 offset, bool ft, bool rw, u32 vec),
 	    TP_ARGS(vcpu, offset, ft, rw, vec),
 
@@ -1534,7 +1537,7 @@ TRACE_EVENT(kvm_avic_unaccelerated_access,
 		  __entry-&gt;vec)
 );
 
-TRACE_EVENT(kvm_avic_ga_log,
+<yellow>TRACE_EVENT(kvm_avic_ga_log,</yellow>
 	    TP_PROTO(u32 vmid, u32 vcpuid),
 	    TP_ARGS(vmid, vcpuid),
 
@@ -1552,7 +1555,7 @@ TRACE_EVENT(kvm_avic_ga_log,
 		  __entry-&gt;vmid, __entry-&gt;vcpuid)
 );
 
-TRACE_EVENT(kvm_avic_kick_vcpu_slowpath,
+<yellow>TRACE_EVENT(kvm_avic_kick_vcpu_slowpath,</yellow>
 	    TP_PROTO(u32 icrh, u32 icrl, u32 index),
 	    TP_ARGS(icrh, icrl, index),
 
@@ -1572,7 +1575,7 @@ TRACE_EVENT(kvm_avic_kick_vcpu_slowpath,
 		  __entry-&gt;icrh, __entry-&gt;icrl, __entry-&gt;index)
 );
 
-TRACE_EVENT(kvm_avic_doorbell,
+<yellow>TRACE_EVENT(kvm_avic_doorbell,</yellow>
 	    TP_PROTO(u32 vcpuid, u32 apicid),
 	    TP_ARGS(vcpuid, apicid),
 
@@ -1610,38 +1613,41 @@ TRACE_EVENT(kvm_avic_doorbell,
  * Tracepoint for kvm_hv_flush_tlb.
  */
 <yellow>TRACE_EVENT(kvm_hv_flush_tlb,</yellow>
-	TP_PROTO(u64 processor_mask, u64 address_space, u64 flags),
-	TP_ARGS(processor_mask, address_space, flags),
+	TP_PROTO(u64 processor_mask, u64 address_space, u64 flags, bool guest_mode),
+	TP_ARGS(processor_mask, address_space, flags, guest_mode),
 
 	TP_STRUCT__entry(
 		__field(u64, processor_mask)
 		__field(u64, address_space)
 		__field(u64, flags)
+		__field(bool, guest_mode)
 	),
 
 	TP_fast_assign(
 		__entry-&gt;processor_mask = processor_mask;
 		__entry-&gt;address_space = address_space;
 		__entry-&gt;flags = flags;
+		__entry-&gt;guest_mode = guest_mode;
 	),
 
-	TP_printk(&quot;processor_mask 0x%llx address_space 0x%llx flags 0x%llx&quot;,
+	TP_printk(&quot;processor_mask 0x%llx address_space 0x%llx flags 0x%llx %s&quot;,
 		  __entry-&gt;processor_mask, __entry-&gt;address_space,
-		  __entry-&gt;flags)
+		  __entry-&gt;flags, __entry-&gt;guest_mode ? &quot;(L2)&quot; : &quot;&quot;)
 );
 
 /*
  * Tracepoint for kvm_hv_flush_tlb_ex.
  */
 <yellow>TRACE_EVENT(kvm_hv_flush_tlb_ex,</yellow>
-	TP_PROTO(u64 valid_bank_mask, u64 format, u64 address_space, u64 flags),
-	TP_ARGS(valid_bank_mask, format, address_space, flags),
+	TP_PROTO(u64 valid_bank_mask, u64 format, u64 address_space, u64 flags, bool guest_mode),
+	TP_ARGS(valid_bank_mask, format, address_space, flags, guest_mode),
 
 	TP_STRUCT__entry(
 		__field(u64, valid_bank_mask)
 		__field(u64, format)
 		__field(u64, address_space)
 		__field(u64, flags)
+		__field(bool, guest_mode)
 	),
 
 	TP_fast_assign(
@@ -1649,12 +1655,14 @@ TRACE_EVENT(kvm_avic_doorbell,
 		__entry-&gt;format = format;
 		__entry-&gt;address_space = address_space;
 		__entry-&gt;flags = flags;
+		__entry-&gt;guest_mode = guest_mode;
 	),
 
 	TP_printk(&quot;valid_bank_mask 0x%llx format 0x%llx &quot;
-		  &quot;address_space 0x%llx flags 0x%llx&quot;,
+		  &quot;address_space 0x%llx flags 0x%llx %s&quot;,
 		  __entry-&gt;valid_bank_mask, __entry-&gt;format,
-		  __entry-&gt;address_space, __entry-&gt;flags)
+		  __entry-&gt;address_space, __entry-&gt;flags,
+		  __entry-&gt;guest_mode ? &quot;(L2)&quot; : &quot;&quot;)
 );
 
 /*
@@ -1741,7 +1749,7 @@ TRACE_EVENT(kvm_avic_doorbell,
 /*
  * Tracepoint for syndbg_set_msr.
  */
-<yellow>TRACE_EVENT(kvm_hv_syndbg_set_msr,</yellow>
+<blue>TRACE_EVENT(kvm_hv_syndbg_set_msr,</blue>
 	TP_PROTO(int vcpu_id, u32 vp_index, u32 msr, u64 data),
 	TP_ARGS(vcpu_id, vp_index, msr, data),
 
@@ -1767,7 +1775,7 @@ TRACE_EVENT(kvm_avic_doorbell,
 /*
  * Tracepoint for syndbg_get_msr.
  */
-<yellow>TRACE_EVENT(kvm_hv_syndbg_get_msr,</yellow>
+<blue>TRACE_EVENT(kvm_hv_syndbg_get_msr,</blue>
 	TP_PROTO(int vcpu_id, u32 vp_index, u32 msr, u64 data),
 	TP_ARGS(vcpu_id, vp_index, msr, data),
 
@@ -1793,7 +1801,7 @@ TRACE_EVENT(kvm_avic_doorbell,
 /*
  * Tracepoint for the start of VMGEXIT processing
  */
-TRACE_EVENT(kvm_vmgexit_enter,
+<yellow>TRACE_EVENT(kvm_vmgexit_enter,</yellow>
 	TP_PROTO(unsigned int vcpu_id, struct ghcb *ghcb),
 	TP_ARGS(vcpu_id, ghcb),
 
@@ -1819,7 +1827,7 @@ TRACE_EVENT(kvm_vmgexit_enter,
 /*
  * Tracepoint for the end of VMGEXIT processing
  */
-TRACE_EVENT(kvm_vmgexit_exit,
+<yellow>TRACE_EVENT(kvm_vmgexit_exit,</yellow>
 	TP_PROTO(unsigned int vcpu_id, struct ghcb *ghcb),
 	TP_ARGS(vcpu_id, ghcb),
 
@@ -1845,7 +1853,7 @@ TRACE_EVENT(kvm_vmgexit_exit,
 /*
  * Tracepoint for the start of VMGEXIT MSR procotol processing
  */
-TRACE_EVENT(kvm_vmgexit_msr_protocol_enter,
+<yellow>TRACE_EVENT(kvm_vmgexit_msr_protocol_enter,</yellow>
 	TP_PROTO(unsigned int vcpu_id, u64 ghcb_gpa),
 	TP_ARGS(vcpu_id, ghcb_gpa),
 
@@ -1866,7 +1874,7 @@ TRACE_EVENT(kvm_vmgexit_msr_protocol_enter,
 /*
  * Tracepoint for the end of VMGEXIT MSR procotol processing
  */
-TRACE_EVENT(kvm_vmgexit_msr_protocol_exit,
+<yellow>TRACE_EVENT(kvm_vmgexit_msr_protocol_exit,</yellow>
 	TP_PROTO(unsigned int vcpu_id, u64 ghcb_gpa, int result),
 	TP_ARGS(vcpu_id, ghcb_gpa, result),
 
@@ -1899,8 +1907,8 @@ TRACE_EVENT(kvm_vmgexit_msr_protocol_exit,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

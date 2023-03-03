@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 1876; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 2103; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -102,16 +102,15 @@ static int kvm_xen_shared_info_init(struct kvm *kvm, gfn_t gfn)
 	u32 wc_version;
 	u64 wall_nsec;
 	int ret = 0;
-	int idx = srcu_read_lock(&amp;kvm-&gt;srcu);
+<yellow>	int idx = srcu_read_lock(&kvm->srcu);</yellow>
 
-	if (gfn == GPA_INVALID) {
-<yellow>		kvm_gpc_deactivate(kvm, gpc);</yellow>
+	if (gfn == KVM_XEN_INVALID_GFN) {
+<yellow>		kvm_gpc_deactivate(gpc);</yellow>
 		goto out;
 	}
 
 	do {
-<yellow>		ret = kvm_gpc_activate(kvm, gpc, NULL, KVM_HOST_USES_PFN, gpa,</yellow>
-				       PAGE_SIZE);
+<yellow>		ret = kvm_gpc_activate(gpc, gpa, PAGE_SIZE);</yellow>
 		if (ret)
 			goto out;
 
@@ -141,7 +140,7 @@ static int kvm_xen_shared_info_init(struct kvm *kvm, gfn_t gfn)
 	BUILD_BUG_ON(offsetof(struct shared_info, wc_sec_hi) != 0xc0c);
 
 <yellow>	if (IS_ENABLED(CONFIG_64BIT) && kvm->arch.xen.long_mode) {</yellow>
-<yellow>		struct shared_info *shinfo = gpc->khva;</yellow>
+		struct shared_info *shinfo = gpc-&gt;khva;
 
 <yellow>		wc_sec_hi = &shinfo->wc_sec_hi;</yellow>
 		wc = &amp;shinfo-&gt;wc;
@@ -233,7 +232,274 @@ static void kvm_xen_init_timer(struct kvm_vcpu *vcpu)
 	vcpu-&gt;arch.xen.timer.function = xen_timer_callback;
 }
 
-static void kvm_xen_update_runstate(struct kvm_vcpu *v, int state)
+static void kvm_xen_update_runstate_guest(struct kvm_vcpu *v, bool atomic)
+<yellow>{</yellow>
+	struct kvm_vcpu_xen *vx = &amp;v-&gt;arch.xen;
+	struct gfn_to_pfn_cache *gpc1 = &amp;vx-&gt;runstate_cache;
+<yellow>	struct gfn_to_pfn_cache *gpc2 = &vx->runstate2_cache;</yellow>
+	size_t user_len, user_len1, user_len2;
+	struct vcpu_runstate_info rs;
+	unsigned long flags;
+	size_t times_ofs;
+	uint8_t *update_bit = NULL;
+	uint64_t entry_time;
+	uint64_t *rs_times;
+	int *rs_state;
+
+	/*
+	 * The only difference between 32-bit and 64-bit versions of the
+	 * runstate struct is the alignment of uint64_t in 32-bit, which
+	 * means that the 64-bit version has an additional 4 bytes of
+	 * padding after the first field &#x27;state&#x27;. Let&#x27;s be really really
+	 * paranoid about that, and matching it with our internal data
+	 * structures that we memcpy into it...
+	 */
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state) != 0);
+	BUILD_BUG_ON(offsetof(struct compat_vcpu_runstate_info, state) != 0);
+	BUILD_BUG_ON(sizeof(struct compat_vcpu_runstate_info) != 0x2c);
+#ifdef CONFIG_X86_64
+	/*
+	 * The 64-bit structure has 4 bytes of padding before &#x27;state_entry_time&#x27;
+	 * so each subsequent field is shifted by 4, and it&#x27;s 4 bytes longer.
+	 */
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state_entry_time) !=
+		     offsetof(struct compat_vcpu_runstate_info, state_entry_time) + 4);
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, time) !=
+		     offsetof(struct compat_vcpu_runstate_info, time) + 4);
+	BUILD_BUG_ON(sizeof(struct vcpu_runstate_info) != 0x2c + 4);
+#endif
+	/*
+	 * The state field is in the same place at the start of both structs,
+	 * and is the same size (int) as vx-&gt;current_runstate.
+	 */
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state) !=
+		     offsetof(struct compat_vcpu_runstate_info, state));
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, state) !=
+		     sizeof(vx-&gt;current_runstate));
+	BUILD_BUG_ON(sizeof_field(struct compat_vcpu_runstate_info, state) !=
+		     sizeof(vx-&gt;current_runstate));
+
+	/*
+	 * The state_entry_time field is 64 bits in both versions, and the
+	 * XEN_RUNSTATE_UPDATE flag is in the top bit, which given that x86
+	 * is little-endian means that it&#x27;s in the last *byte* of the word.
+	 * That detail is important later.
+	 */
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, state_entry_time) !=
+		     sizeof(uint64_t));
+	BUILD_BUG_ON(sizeof_field(struct compat_vcpu_runstate_info, state_entry_time) !=
+		     sizeof(uint64_t));
+	BUILD_BUG_ON((XEN_RUNSTATE_UPDATE &gt;&gt; 56) != 0x80);
+
+	/*
+	 * The time array is four 64-bit quantities in both versions, matching
+	 * the vx-&gt;runstate_times and immediately following state_entry_time.
+	 */
+	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state_entry_time) !=
+		     offsetof(struct vcpu_runstate_info, time) - sizeof(uint64_t));
+	BUILD_BUG_ON(offsetof(struct compat_vcpu_runstate_info, state_entry_time) !=
+		     offsetof(struct compat_vcpu_runstate_info, time) - sizeof(uint64_t));
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, time) !=
+		     sizeof_field(struct compat_vcpu_runstate_info, time));
+	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, time) !=
+		     sizeof(vx-&gt;runstate_times));
+
+<yellow>	if (IS_ENABLED(CONFIG_64BIT) && v->kvm->arch.xen.long_mode) {</yellow>
+		user_len = sizeof(struct vcpu_runstate_info);
+		times_ofs = offsetof(struct vcpu_runstate_info,
+				     state_entry_time);
+	} else {
+		user_len = sizeof(struct compat_vcpu_runstate_info);
+		times_ofs = offsetof(struct compat_vcpu_runstate_info,
+				     state_entry_time);
+	}
+
+	/*
+	 * There are basically no alignment constraints. The guest can set it
+	 * up so it crosses from one page to the next, and at arbitrary byte
+	 * alignment (and the 32-bit ABI doesn&#x27;t align the 64-bit integers
+	 * anyway, even if the overall struct had been 64-bit aligned).
+	 */
+<yellow>	if ((gpc1->gpa & ~PAGE_MASK) + user_len >= PAGE_SIZE) {</yellow>
+<yellow>		user_len1 = PAGE_SIZE - (gpc1->gpa & ~PAGE_MASK);</yellow>
+		user_len2 = user_len - user_len1;
+	} else {
+		user_len1 = user_len;
+		user_len2 = 0;
+	}
+<yellow>	BUG_ON(user_len1 + user_len2 != user_len);</yellow>
+
+ retry:
+	/*
+	 * Attempt to obtain the GPC lock on *both* (if there are two)
+	 * gfn_to_pfn caches that cover the region.
+	 */
+<yellow>	if (atomic) {</yellow>
+<yellow>		local_irq_save(flags);</yellow>
+<yellow>		if (!read_trylock(&gpc1->lock)) {</yellow>
+<yellow>			local_irq_restore(flags);</yellow>
+			return;
+		}
+	} else {
+		read_lock_irqsave(&amp;gpc1-&gt;lock, flags);
+	}
+<yellow>	while (!kvm_gpc_check(gpc1, user_len1)) {</yellow>
+<yellow>		read_unlock_irqrestore(&gpc1->lock, flags);</yellow>
+
+		/* When invoked from kvm_sched_out() we cannot sleep */
+		if (atomic)
+			return;
+
+<yellow>		if (kvm_gpc_refresh(gpc1, user_len1))</yellow>
+			return;
+
+<yellow>		read_lock_irqsave(&gpc1->lock, flags);</yellow>
+	}
+
+<yellow>	if (likely(!user_len2)) {</yellow>
+		/*
+		 * Set up three pointers directly to the runstate_info
+		 * struct in the guest (via the GPC).
+		 *
+		 *  • @rs_state   → state field
+		 *  • @rs_times   → state_entry_time field.
+		 *  • @update_bit → last byte of state_entry_time, which
+		 *                  contains the XEN_RUNSTATE_UPDATE bit.
+		 */
+<yellow>		rs_state = gpc1->khva;</yellow>
+		rs_times = gpc1-&gt;khva + times_ofs;
+<yellow>		if (v->kvm->arch.xen.runstate_update_flag)</yellow>
+<yellow>			update_bit = ((void *)(&rs_times[1])) - 1;</yellow>
+	} else {
+		/*
+		 * The guest&#x27;s runstate_info is split across two pages and we
+		 * need to hold and validate both GPCs simultaneously. We can
+		 * declare a lock ordering GPC1 &gt; GPC2 because nothing else
+		 * takes them more than one at a time. Set a subclass on the
+		 * gpc1 lock to make lockdep shut up about it.
+		 */
+<yellow>		lock_set_subclass(&gpc1->lock.dep_map, 1, _THIS_IP_);</yellow>
+		if (atomic) {
+<yellow>			if (!read_trylock(&gpc2->lock)) {</yellow>
+<yellow>				read_unlock_irqrestore(&gpc1->lock, flags);</yellow>
+				return;
+			}
+		} else {
+<yellow>			read_lock(&gpc2->lock);</yellow>
+		}
+
+<yellow>		if (!kvm_gpc_check(gpc2, user_len2)) {</yellow>
+<yellow>			read_unlock(&gpc2->lock);</yellow>
+			read_unlock_irqrestore(&amp;gpc1-&gt;lock, flags);
+
+			/* When invoked from kvm_sched_out() we cannot sleep */
+			if (atomic)
+				return;
+
+			/*
+			 * Use kvm_gpc_activate() here because if the runstate
+			 * area was configured in 32-bit mode and only extends
+			 * to the second page now because the guest changed to
+			 * 64-bit mode, the second GPC won&#x27;t have been set up.
+			 */
+			if (kvm_gpc_activate(gpc2, gpc1-&gt;gpa + user_len1,
+					     user_len2))
+				return;
+
+			/*
+			 * We dropped the lock on GPC1 so we have to go all the
+			 * way back and revalidate that too.
+			 */
+			goto retry;
+		}
+
+		/*
+		 * In this case, the runstate_info struct will be assembled on
+		 * the kernel stack (compat or not as appropriate) and will
+		 * be copied to GPC1/GPC2 with a dual memcpy. Set up the three
+		 * rs pointers accordingly.
+		 */
+		rs_times = &amp;rs.state_entry_time;
+
+		/*
+		 * The rs_state pointer points to the start of what we&#x27;ll
+		 * copy to the guest, which in the case of a compat guest
+		 * is the 32-bit field that the compiler thinks is padding.
+		 */
+<yellow>		rs_state = ((void *)rs_times) - times_ofs;</yellow>
+
+		/*
+		 * The update_bit is still directly in the guest memory,
+		 * via one GPC or the other.
+		 */
+<yellow>		if (v->kvm->arch.xen.runstate_update_flag) {</yellow>
+<yellow>			if (user_len1 >= times_ofs + sizeof(uint64_t))</yellow>
+<yellow>				update_bit = gpc1->khva + times_ofs +</yellow>
+					sizeof(uint64_t) - 1;
+			else
+<yellow>				update_bit = gpc2->khva + times_ofs +</yellow>
+					sizeof(uint64_t) - 1 - user_len1;
+		}
+
+#ifdef CONFIG_X86_64
+		/*
+		 * Don&#x27;t leak kernel memory through the padding in the 64-bit
+		 * version of the struct.
+		 */
+<yellow>		memset(&rs, 0, offsetof(struct vcpu_runstate_info, state_entry_time));</yellow>
+#endif
+	}
+
+	/*
+	 * First, set the XEN_RUNSTATE_UPDATE bit in the top bit of the
+	 * state_entry_time field, directly in the guest. We need to set
+	 * that (and write-barrier) before writing to the rest of the
+	 * structure, and clear it last. Just as Xen does, we address the
+	 * single *byte* in which it resides because it might be in a
+	 * different cache line to the rest of the 64-bit word, due to
+	 * the (lack of) alignment constraints.
+	 */
+<yellow>	entry_time = vx->runstate_entry_time;</yellow>
+	if (update_bit) {
+<yellow>		entry_time |= XEN_RUNSTATE_UPDATE;</yellow>
+		*update_bit = (vx-&gt;runstate_entry_time | XEN_RUNSTATE_UPDATE) &gt;&gt; 56;
+		smp_wmb();
+	}
+
+	/*
+	 * Now assemble the actual structure, either on our kernel stack
+	 * or directly in the guest according to how the rs_state and
+	 * rs_times pointers were set up above.
+	 */
+<yellow>	*rs_state = vx->current_runstate;</yellow>
+	rs_times[0] = entry_time;
+	memcpy(rs_times + 1, vx-&gt;runstate_times, sizeof(vx-&gt;runstate_times));
+
+	/* For the split case, we have to then copy it to the guest. */
+	if (user_len2) {
+<yellow>		memcpy(gpc1->khva, rs_state, user_len1);</yellow>
+		memcpy(gpc2-&gt;khva, ((void *)rs_state) + user_len1, user_len2);
+	}
+	smp_wmb();
+
+	/* Finally, clear the XEN_RUNSTATE_UPDATE bit. */
+<yellow>	if (update_bit) {</yellow>
+		entry_time &amp;= ~XEN_RUNSTATE_UPDATE;
+<yellow>		*update_bit = entry_time >> 56;</yellow>
+		smp_wmb();
+	}
+
+<yellow>	if (user_len2)</yellow>
+<yellow>		read_unlock(&gpc2->lock);</yellow>
+
+<yellow>	read_unlock_irqrestore(&gpc1->lock, flags);</yellow>
+
+	mark_page_dirty_in_slot(v-&gt;kvm, gpc1-&gt;memslot, gpc1-&gt;gpa &gt;&gt; PAGE_SHIFT);
+	if (user_len2)
+		mark_page_dirty_in_slot(v-&gt;kvm, gpc2-&gt;memslot, gpc2-&gt;gpa &gt;&gt; PAGE_SHIFT);
+}
+
+void kvm_xen_update_runstate(struct kvm_vcpu *v, int state)
 {
 	struct kvm_vcpu_xen *vx = &amp;v-&gt;arch.xen;
 <yellow>	u64 now = get_kvmclock_ns(v->kvm);</yellow>
@@ -259,122 +525,9 @@ static void kvm_xen_update_runstate(struct kvm_vcpu *v, int state)
 	vx-&gt;runstate_times[vx-&gt;current_runstate] += delta_ns;
 	vx-&gt;current_runstate = state;
 	vx-&gt;runstate_entry_time = now;
-}
 
-void kvm_xen_update_runstate_guest(struct kvm_vcpu *v, int state)
-{
-	struct kvm_vcpu_xen *vx = &amp;v-&gt;arch.xen;
-	struct gfn_to_pfn_cache *gpc = &amp;vx-&gt;runstate_cache;
-	uint64_t *user_times;
-	unsigned long flags;
-	size_t user_len;
-	int *user_state;
-
-<yellow>	kvm_xen_update_runstate(v, state);</yellow>
-
-<yellow>	if (!vx->runstate_cache.active)</yellow>
-		return;
-
-<yellow>	if (IS_ENABLED(CONFIG_64BIT) && v->kvm->arch.xen.long_mode)</yellow>
-		user_len = sizeof(struct vcpu_runstate_info);
-	else
-		user_len = sizeof(struct compat_vcpu_runstate_info);
-
-<yellow>	read_lock_irqsave(&gpc->lock, flags);</yellow>
-<yellow>	while (!kvm_gfn_to_pfn_cache_check(v->kvm, gpc, gpc->gpa,</yellow>
-					   user_len)) {
-<yellow>		read_unlock_irqrestore(&gpc->lock, flags);</yellow>
-
-		/* When invoked from kvm_sched_out() we cannot sleep */
-		if (state == RUNSTATE_runnable)
-			return;
-
-<yellow>		if (kvm_gfn_to_pfn_cache_refresh(v->kvm, gpc, gpc->gpa, user_len))</yellow>
-			return;
-
-<yellow>		read_lock_irqsave(&gpc->lock, flags);</yellow>
-	}
-
-	/*
-	 * The only difference between 32-bit and 64-bit versions of the
-	 * runstate struct us the alignment of uint64_t in 32-bit, which
-	 * means that the 64-bit version has an additional 4 bytes of
-	 * padding after the first field &#x27;state&#x27;.
-	 *
-	 * So we use &#x27;int __user *user_state&#x27; to point to the state field,
-	 * and &#x27;uint64_t __user *user_times&#x27; for runstate_entry_time. So
-	 * the actual array of time[] in each state starts at user_times[1].
-	 */
-	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state) != 0);
-	BUILD_BUG_ON(offsetof(struct compat_vcpu_runstate_info, state) != 0);
-	BUILD_BUG_ON(sizeof(struct compat_vcpu_runstate_info) != 0x2c);
-#ifdef CONFIG_X86_64
-	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state_entry_time) !=
-		     offsetof(struct compat_vcpu_runstate_info, state_entry_time) + 4);
-	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, time) !=
-		     offsetof(struct compat_vcpu_runstate_info, time) + 4);
-#endif
-
-<yellow>	user_state = gpc->khva;</yellow>
-
-<yellow>	if (IS_ENABLED(CONFIG_64BIT) && v->kvm->arch.xen.long_mode)</yellow>
-<yellow>		user_times = gpc->khva + offsetof(struct vcpu_runstate_info,</yellow>
-						  state_entry_time);
-	else
-<yellow>		user_times = gpc->khva + offsetof(struct compat_vcpu_runstate_info,</yellow>
-						  state_entry_time);
-
-	/*
-	 * First write the updated state_entry_time at the appropriate
-	 * location determined by &#x27;offset&#x27;.
-	 */
-	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, state_entry_time) !=
-		     sizeof(user_times[0]));
-	BUILD_BUG_ON(sizeof_field(struct compat_vcpu_runstate_info, state_entry_time) !=
-		     sizeof(user_times[0]));
-
-<yellow>	user_times[0] = vx->runstate_entry_time | XEN_RUNSTATE_UPDATE;</yellow>
-	smp_wmb();
-
-	/*
-	 * Next, write the new runstate. This is in the *same* place
-	 * for 32-bit and 64-bit guests, asserted here for paranoia.
-	 */
-	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state) !=
-		     offsetof(struct compat_vcpu_runstate_info, state));
-	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, state) !=
-		     sizeof(vx-&gt;current_runstate));
-	BUILD_BUG_ON(sizeof_field(struct compat_vcpu_runstate_info, state) !=
-		     sizeof(vx-&gt;current_runstate));
-
-	*user_state = vx-&gt;current_runstate;
-
-	/*
-	 * Write the actual runstate times immediately after the
-	 * runstate_entry_time.
-	 */
-	BUILD_BUG_ON(offsetof(struct vcpu_runstate_info, state_entry_time) !=
-		     offsetof(struct vcpu_runstate_info, time) - sizeof(u64));
-	BUILD_BUG_ON(offsetof(struct compat_vcpu_runstate_info, state_entry_time) !=
-		     offsetof(struct compat_vcpu_runstate_info, time) - sizeof(u64));
-	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, time) !=
-		     sizeof_field(struct compat_vcpu_runstate_info, time));
-	BUILD_BUG_ON(sizeof_field(struct vcpu_runstate_info, time) !=
-		     sizeof(vx-&gt;runstate_times));
-
-	memcpy(user_times + 1, vx-&gt;runstate_times, sizeof(vx-&gt;runstate_times));
-	smp_wmb();
-
-	/*
-	 * Finally, clear the XEN_RUNSTATE_UPDATE bit in the guest&#x27;s
-	 * runstate_entry_time field.
-	 */
-	user_times[0] &amp;= ~XEN_RUNSTATE_UPDATE;
-	smp_wmb();
-
-	read_unlock_irqrestore(&amp;gpc-&gt;lock, flags);
-
-	mark_page_dirty_in_slot(v-&gt;kvm, gpc-&gt;memslot, gpc-&gt;gpa &gt;&gt; PAGE_SHIFT);
+<yellow>	if (vx->runstate_cache.active)</yellow>
+<yellow>		kvm_xen_update_runstate_guest(v, state == RUNSTATE_runnable);</yellow>
 <yellow>}</yellow>
 
 <yellow>static void kvm_xen_inject_vcpu_vector(struct kvm_vcpu *v)</yellow>
@@ -415,12 +568,10 @@ void kvm_xen_inject_pending_events(struct kvm_vcpu *v)
 	 * little more honest about it.
 	 */
 <yellow>	read_lock_irqsave(&gpc->lock, flags);</yellow>
-<yellow>	while (!kvm_gfn_to_pfn_cache_check(v->kvm, gpc, gpc->gpa,</yellow>
-					   sizeof(struct vcpu_info))) {
+<yellow>	while (!kvm_gpc_check(gpc, sizeof(struct vcpu_info))) {</yellow>
 <yellow>		read_unlock_irqrestore(&gpc->lock, flags);</yellow>
 
-		if (kvm_gfn_to_pfn_cache_refresh(v-&gt;kvm, gpc, gpc-&gt;gpa,
-						 sizeof(struct vcpu_info)))
+		if (kvm_gpc_refresh(gpc, sizeof(struct vcpu_info)))
 			return;
 
 <yellow>		read_lock_irqsave(&gpc->lock, flags);</yellow>
@@ -428,7 +579,7 @@ void kvm_xen_inject_pending_events(struct kvm_vcpu *v)
 
 	/* Now gpc-&gt;khva is a valid kernel address for the vcpu_info */
 <yellow>	if (IS_ENABLED(CONFIG_64BIT) && v->kvm->arch.xen.long_mode) {</yellow>
-<yellow>		struct vcpu_info *vi = gpc->khva;</yellow>
+		struct vcpu_info *vi = gpc-&gt;khva;
 
 <yellow>		asm volatile(LOCK_PREFIX "orq %0, %1\n"</yellow>
 			     &quot;notq %0\n&quot;
@@ -462,7 +613,7 @@ void kvm_xen_inject_pending_events(struct kvm_vcpu *v)
 
 int __kvm_xen_has_interrupt(struct kvm_vcpu *v)
 {
-	struct gfn_to_pfn_cache *gpc = &amp;v-&gt;arch.xen.vcpu_info_cache;
+<yellow>	struct gfn_to_pfn_cache *gpc = &v->arch.xen.vcpu_info_cache;</yellow>
 	unsigned long flags;
 	u8 rc = 0;
 
@@ -479,9 +630,8 @@ int __kvm_xen_has_interrupt(struct kvm_vcpu *v)
 	BUILD_BUG_ON(sizeof(rc) !=
 		     sizeof_field(struct compat_vcpu_info, evtchn_upcall_pending));
 
-<yellow>	read_lock_irqsave(&gpc->lock, flags);</yellow>
-<yellow>	while (!kvm_gfn_to_pfn_cache_check(v->kvm, gpc, gpc->gpa,</yellow>
-					   sizeof(struct vcpu_info))) {
+	read_lock_irqsave(&amp;gpc-&gt;lock, flags);
+<yellow>	while (!kvm_gpc_check(gpc, sizeof(struct vcpu_info))) {</yellow>
 <yellow>		read_unlock_irqrestore(&gpc->lock, flags);</yellow>
 
 		/*
@@ -495,8 +645,7 @@ int __kvm_xen_has_interrupt(struct kvm_vcpu *v)
 <yellow>		if (in_atomic() || !task_is_running(current))</yellow>
 			return 1;
 
-<yellow>		if (kvm_gfn_to_pfn_cache_refresh(v->kvm, gpc, gpc->gpa,</yellow>
-						 sizeof(struct vcpu_info))) {
+<yellow>		if (kvm_gpc_refresh(gpc, sizeof(struct vcpu_info))) {</yellow>
 			/*
 			 * If this failed, userspace has screwed up the
 			 * vcpu_info mapping. No interrupts for you.
@@ -521,26 +670,26 @@ int kvm_xen_hvm_set_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
 		if (!IS_ENABLED(CONFIG_64BIT) &amp;&amp; data-&gt;u.long_mode) {
 			r = -EINVAL;
 		} else {
-<yellow>			mutex_lock(&kvm->lock);</yellow>
+<yellow>			mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 			kvm-&gt;arch.xen.long_mode = !!data-&gt;u.long_mode;
-			mutex_unlock(&amp;kvm-&gt;lock);
+			mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
 			r = 0;
 		}
 		break;
 
 	case KVM_XEN_ATTR_TYPE_SHARED_INFO:
-<yellow>		mutex_lock(&kvm->lock);</yellow>
+<yellow>		mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 <yellow>		r = kvm_xen_shared_info_init(kvm, data->u.shared_info.gfn);</yellow>
-		mutex_unlock(&amp;kvm-&gt;lock);
+		mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
 		break;
 
 	case KVM_XEN_ATTR_TYPE_UPCALL_VECTOR:
 <yellow>		if (data->u.vector && data->u.vector < 0x10)</yellow>
 			r = -EINVAL;
 		else {
-<yellow>			mutex_lock(&kvm->lock);</yellow>
+<yellow>			mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 			kvm-&gt;arch.xen.upcall_vector = data-&gt;u.vector;
-			mutex_unlock(&amp;kvm-&gt;lock);
+			mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
 			r = 0;
 		}
 		break;
@@ -550,9 +699,20 @@ int kvm_xen_hvm_set_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
 		break;
 
 	case KVM_XEN_ATTR_TYPE_XEN_VERSION:
-<yellow>		mutex_lock(&kvm->lock);</yellow>
+<yellow>		mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 		kvm-&gt;arch.xen.xen_version = data-&gt;u.xen_version;
-		mutex_unlock(&amp;kvm-&gt;lock);
+		mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
+		r = 0;
+		break;
+
+	case KVM_XEN_ATTR_TYPE_RUNSTATE_UPDATE_FLAG:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<yellow>		mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
+		kvm-&gt;arch.xen.runstate_update_flag = !!data-&gt;u.runstate_update_flag;
+		mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
 		r = 0;
 		break;
 
@@ -567,7 +727,7 @@ int kvm_xen_hvm_get_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
 {
 	int r = -ENOENT;
 
-<yellow>	mutex_lock(&kvm->lock);</yellow>
+<yellow>	mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 
 	switch (data-&gt;type) {
 	case KVM_XEN_ATTR_TYPE_LONG_MODE:
@@ -579,7 +739,7 @@ int kvm_xen_hvm_get_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
 <yellow>		if (kvm->arch.xen.shinfo_cache.active)</yellow>
 <yellow>			data->u.shared_info.gfn = gpa_to_gfn(kvm->arch.xen.shinfo_cache.gpa);</yellow>
 		else
-<yellow>			data->u.shared_info.gfn = GPA_INVALID;</yellow>
+<yellow>			data->u.shared_info.gfn = KVM_XEN_INVALID_GFN;</yellow>
 		r = 0;
 		break;
 
@@ -593,11 +753,20 @@ int kvm_xen_hvm_get_attr(struct kvm *kvm, struct kvm_xen_hvm_attr *data)
 		r = 0;
 		break;
 
+	case KVM_XEN_ATTR_TYPE_RUNSTATE_UPDATE_FLAG:
+		if (!sched_info_on()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
+<yellow>		data->u.runstate_update_flag = kvm->arch.xen.runstate_update_flag;</yellow>
+		r = 0;
+		break;
+
 	default:
 		break;
 	}
 
-<yellow>	mutex_unlock(&kvm->lock);</yellow>
+<yellow>	mutex_unlock(&kvm->arch.xen.xen_lock);</yellow>
 	return r;
 }
 
@@ -605,8 +774,8 @@ int kvm_xen_vcpu_set_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
 {
 	int idx, r = -ENOENT;
 
-<yellow>	mutex_lock(&vcpu->kvm->lock);</yellow>
-	idx = srcu_read_lock(&amp;vcpu-&gt;kvm-&gt;srcu);
+<yellow>	mutex_lock(&vcpu->kvm->arch.xen.xen_lock);</yellow>
+<yellow>	idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
 
 	switch (data-&gt;type) {
 	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_INFO:
@@ -616,54 +785,80 @@ int kvm_xen_vcpu_set_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
 		BUILD_BUG_ON(offsetof(struct vcpu_info, time) !=
 			     offsetof(struct compat_vcpu_info, time));
 
-<yellow>		if (data->u.gpa == GPA_INVALID) {</yellow>
-			kvm_gpc_deactivate(vcpu-&gt;kvm, &amp;vcpu-&gt;arch.xen.vcpu_info_cache);
+<yellow>		if (data->u.gpa == KVM_XEN_INVALID_GPA) {</yellow>
+			kvm_gpc_deactivate(&amp;vcpu-&gt;arch.xen.vcpu_info_cache);
 			r = 0;
 			break;
 		}
 
-<yellow>		r = kvm_gpc_activate(vcpu->kvm,</yellow>
-				     &amp;vcpu-&gt;arch.xen.vcpu_info_cache, NULL,
-				     KVM_HOST_USES_PFN, data-&gt;u.gpa,
-				     sizeof(struct vcpu_info));
+<yellow>		r = kvm_gpc_activate(&vcpu->arch.xen.vcpu_info_cache,</yellow>
+				     data-&gt;u.gpa, sizeof(struct vcpu_info));
 		if (!r)
 			kvm_make_request(KVM_REQ_CLOCK_UPDATE, vcpu);
 
 		break;
 
 	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_TIME_INFO:
-<yellow>		if (data->u.gpa == GPA_INVALID) {</yellow>
-			kvm_gpc_deactivate(vcpu-&gt;kvm,
-					   &amp;vcpu-&gt;arch.xen.vcpu_time_info_cache);
+<yellow>		if (data->u.gpa == KVM_XEN_INVALID_GPA) {</yellow>
+<yellow>			kvm_gpc_deactivate(&vcpu->arch.xen.vcpu_time_info_cache);</yellow>
 			r = 0;
 			break;
 		}
 
-<yellow>		r = kvm_gpc_activate(vcpu->kvm,</yellow>
-				     &amp;vcpu-&gt;arch.xen.vcpu_time_info_cache,
-				     NULL, KVM_HOST_USES_PFN, data-&gt;u.gpa,
+<yellow>		r = kvm_gpc_activate(&vcpu->arch.xen.vcpu_time_info_cache,</yellow>
+				     data-&gt;u.gpa,
 				     sizeof(struct pvclock_vcpu_time_info));
 		if (!r)
 <yellow>			kvm_make_request(KVM_REQ_CLOCK_UPDATE, vcpu);</yellow>
 		break;
 
-	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_ADDR:
+	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_ADDR: {
+		size_t sz, sz1, sz2;
+
 		if (!sched_info_on()) {
 			r = -EOPNOTSUPP;
 			break;
 		}
-<yellow>		if (data->u.gpa == GPA_INVALID) {</yellow>
-<yellow>			kvm_gpc_deactivate(vcpu->kvm,</yellow>
-					   &amp;vcpu-&gt;arch.xen.runstate_cache);
+<yellow>		if (data->u.gpa == KVM_XEN_INVALID_GPA) {</yellow>
 			r = 0;
+		deactivate_out:
+<yellow>			kvm_gpc_deactivate(&vcpu->arch.xen.runstate_cache);</yellow>
+<yellow>			kvm_gpc_deactivate(&vcpu->arch.xen.runstate2_cache);</yellow>
 			break;
 		}
 
-<yellow>		r = kvm_gpc_activate(vcpu->kvm, &vcpu->arch.xen.runstate_cache,</yellow>
-				     NULL, KVM_HOST_USES_PFN, data-&gt;u.gpa,
-				     sizeof(struct vcpu_runstate_info));
-		break;
+		/*
+		 * If the guest switches to 64-bit mode after setting the runstate
+		 * address, that&#x27;s actually OK. kvm_xen_update_runstate_guest()
+		 * will cope.
+		 */
+<yellow>		if (IS_ENABLED(CONFIG_64BIT) && vcpu->kvm->arch.xen.long_mode)</yellow>
+			sz = sizeof(struct vcpu_runstate_info);
+		else
+			sz = sizeof(struct compat_vcpu_runstate_info);
 
+		/* How much fits in the (first) page? */
+<yellow>		sz1 = PAGE_SIZE - (data->u.gpa & ~PAGE_MASK);</yellow>
+		r = kvm_gpc_activate(&amp;vcpu-&gt;arch.xen.runstate_cache,
+				     data-&gt;u.gpa, sz1);
+		if (r)
+			goto deactivate_out;
+
+		/* Either map the second page, or deactivate the second GPC */
+<yellow>		if (sz1 >= sz) {</yellow>
+<yellow>			kvm_gpc_deactivate(&vcpu->arch.xen.runstate2_cache);</yellow>
+		} else {
+<yellow>			sz2 = sz - sz1;</yellow>
+<yellow>			BUG_ON((data->u.gpa + sz1) & ~PAGE_MASK);</yellow>
+<yellow>			r = kvm_gpc_activate(&vcpu->arch.xen.runstate2_cache,</yellow>
+					     data-&gt;u.gpa + sz1, sz2);
+			if (r)
+				goto deactivate_out;
+		}
+
+<yellow>		kvm_xen_update_runstate_guest(vcpu, false);</yellow>
+		break;
+	}
 	case KVM_XEN_VCPU_ATTR_TYPE_RUNSTATE_CURRENT:
 		if (!sched_info_on()) {
 			r = -EOPNOTSUPP;
@@ -756,6 +951,8 @@ int kvm_xen_vcpu_set_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
 
 		if (data-&gt;u.runstate.state &lt;= RUNSTATE_offline)
 <yellow>			kvm_xen_update_runstate(vcpu, data->u.runstate.state);</yellow>
+<yellow>		else if (vcpu->arch.xen.runstate_cache.active)</yellow>
+			kvm_xen_update_runstate_guest(vcpu, false);
 		r = 0;
 		break;
 
@@ -805,7 +1002,7 @@ int kvm_xen_vcpu_set_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
 	}
 
 <yellow>	srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
-	mutex_unlock(&amp;vcpu-&gt;kvm-&gt;lock);
+	mutex_unlock(&amp;vcpu-&gt;kvm-&gt;arch.xen.xen_lock);
 	return r;
 }
 
@@ -813,14 +1010,14 @@ int kvm_xen_vcpu_get_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
 {
 	int r = -ENOENT;
 
-<yellow>	mutex_lock(&vcpu->kvm->lock);</yellow>
+<yellow>	mutex_lock(&vcpu->kvm->arch.xen.xen_lock);</yellow>
 
 	switch (data-&gt;type) {
 	case KVM_XEN_VCPU_ATTR_TYPE_VCPU_INFO:
 <yellow>		if (vcpu->arch.xen.vcpu_info_cache.active)</yellow>
 <yellow>			data->u.gpa = vcpu->arch.xen.vcpu_info_cache.gpa;</yellow>
 		else
-<yellow>			data->u.gpa = GPA_INVALID;</yellow>
+<yellow>			data->u.gpa = KVM_XEN_INVALID_GPA;</yellow>
 		r = 0;
 		break;
 
@@ -828,7 +1025,7 @@ int kvm_xen_vcpu_get_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
 <yellow>		if (vcpu->arch.xen.vcpu_time_info_cache.active)</yellow>
 <yellow>			data->u.gpa = vcpu->arch.xen.vcpu_time_info_cache.gpa;</yellow>
 		else
-			data-&gt;u.gpa = GPA_INVALID;
+			data-&gt;u.gpa = KVM_XEN_INVALID_GPA;
 		r = 0;
 		break;
 
@@ -896,7 +1093,7 @@ int kvm_xen_vcpu_get_attr(struct kvm_vcpu *vcpu, struct kvm_xen_vcpu_attr *data)
 		break;
 	}
 
-<yellow>	mutex_unlock(&vcpu->kvm->lock);</yellow>
+<yellow>	mutex_unlock(&vcpu->kvm->arch.xen.xen_lock);</yellow>
 	return r;
 }
 
@@ -952,6 +1149,7 @@ int kvm_xen_write_hypercall_page(struct kvm_vcpu *vcpu, u64 data)
 <yellow>		u8 blob_size = lm ? kvm->arch.xen_hvm_config.blob_size_64</yellow>
 				  : kvm-&gt;arch.xen_hvm_config.blob_size_32;
 		u8 *page;
+		int ret;
 
 <yellow>		if (page_num >= blob_size)</yellow>
 			return 1;
@@ -962,10 +1160,10 @@ int kvm_xen_write_hypercall_page(struct kvm_vcpu *vcpu, u64 data)
 		if (IS_ERR(page))
 <yellow>			return PTR_ERR(page);</yellow>
 
-<yellow>		if (kvm_vcpu_write_guest(vcpu, page_addr, page, PAGE_SIZE)) {</yellow>
-<yellow>			kfree(page);</yellow>
+<yellow>		ret = kvm_vcpu_write_guest(vcpu, page_addr, page, PAGE_SIZE);</yellow>
+		kfree(page);
+		if (ret)
 			return 1;
-		}
 	}
 	return 0;
 }
@@ -988,7 +1186,7 @@ int kvm_xen_hvm_config(struct kvm *kvm, struct kvm_xen_hvm_config *xhc)
 <yellow>	     xhc->blob_size_32 || xhc->blob_size_64))</yellow>
 		return -EINVAL;
 
-<yellow>	mutex_lock(&kvm->lock);</yellow>
+<yellow>	mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 
 <yellow>	if (xhc->msr && !kvm->arch.xen_hvm_config.msr)</yellow>
 <yellow>		static_branch_inc(&kvm_xen_enabled.key);</yellow>
@@ -997,7 +1195,7 @@ int kvm_xen_hvm_config(struct kvm *kvm, struct kvm_xen_hvm_config *xhc)
 
 <yellow>	memcpy(&kvm->arch.xen_hvm_config, xhc, sizeof(*xhc));</yellow>
 
-	mutex_unlock(&amp;kvm-&gt;lock);
+	mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
 	return 0;
 <yellow>}</yellow>
 
@@ -1035,9 +1233,9 @@ static bool wait_pending_event(struct kvm_vcpu *vcpu, int nr_ports,
 	bool ret = true;
 	int idx, i;
 
+<yellow>	idx = srcu_read_lock(&kvm->srcu);</yellow>
 	read_lock_irqsave(&amp;gpc-&gt;lock, flags);
-	idx = srcu_read_lock(&amp;kvm-&gt;srcu);
-	if (!kvm_gfn_to_pfn_cache_check(kvm, gpc, gpc-&gt;gpa, PAGE_SIZE))
+	if (!kvm_gpc_check(gpc, PAGE_SIZE))
 		goto out_rcu;
 
 	ret = false;
@@ -1057,8 +1255,8 @@ static bool wait_pending_event(struct kvm_vcpu *vcpu, int nr_ports,
 	}
 
  out_rcu:
+<yellow>	read_unlock_irqrestore(&gpc->lock, flags);</yellow>
 <yellow>	srcu_read_unlock(&kvm->srcu, idx);</yellow>
-	read_unlock_irqrestore(&amp;gpc-&gt;lock, flags);
 
 	return ret;
 }
@@ -1066,23 +1264,40 @@ static bool wait_pending_event(struct kvm_vcpu *vcpu, int nr_ports,
 static bool kvm_xen_schedop_poll(struct kvm_vcpu *vcpu, bool longmode,
 				 u64 param, u64 *r)
 {
-	int idx, i;
 	struct sched_poll sched_poll;
 	evtchn_port_t port, *ports;
-	gpa_t gpa;
+	struct x86_exception e;
+	int i;
 
-<yellow>	if (!longmode || !lapic_in_kernel(vcpu) ||</yellow>
+<yellow>	if (!lapic_in_kernel(vcpu) ||</yellow>
 <yellow>	    !(vcpu->kvm->arch.xen_hvm_config.flags & KVM_XEN_HVM_CONFIG_EVTCHN_SEND))</yellow>
 		return false;
 
-<yellow>	idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
-	gpa = kvm_mmu_gva_to_gpa_system(vcpu, param, NULL);
-<yellow>	srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
+<yellow>	if (IS_ENABLED(CONFIG_64BIT) && !longmode) {</yellow>
+		struct compat_sched_poll sp32;
 
-<yellow>	if (!gpa || kvm_vcpu_read_guest(vcpu, gpa, &sched_poll,</yellow>
-					sizeof(sched_poll))) {
-		*r = -EFAULT;
-		return true;
+		/* Sanity check that the compat struct definition is correct */
+		BUILD_BUG_ON(sizeof(sp32) != 16);
+
+<yellow>		if (kvm_read_guest_virt(vcpu, param, &sp32, sizeof(sp32), &e)) {</yellow>
+			*r = -EFAULT;
+			return true;
+		}
+
+		/*
+		 * This is a 32-bit pointer to an array of evtchn_port_t which
+		 * are uint32_t, so once it&#x27;s converted no further compat
+		 * handling is needed.
+		 */
+<yellow>		sched_poll.ports = (void *)(unsigned long)(sp32.ports);</yellow>
+		sched_poll.nr_ports = sp32.nr_ports;
+		sched_poll.timeout = sp32.timeout;
+	} else {
+<yellow>		if (kvm_read_guest_virt(vcpu, param, &sched_poll,</yellow>
+					sizeof(sched_poll), &amp;e)) {
+			*r = -EFAULT;
+			return true;
+		}
 	}
 
 <yellow>	if (unlikely(sched_poll.nr_ports > 1)) {</yellow>
@@ -1101,18 +1316,13 @@ static bool kvm_xen_schedop_poll(struct kvm_vcpu *vcpu, bool longmode,
 	} else
 		ports = &amp;port;
 
-<yellow>	for (i = 0; i < sched_poll.nr_ports; i++) {</yellow>
-<yellow>		idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
-		gpa = kvm_mmu_gva_to_gpa_system(vcpu,
-						(gva_t)(sched_poll.ports + i),
-						NULL);
-<yellow>		srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
+<yellow>	if (kvm_read_guest_virt(vcpu, (gva_t)sched_poll.ports, ports,</yellow>
+<yellow>				sched_poll.nr_ports * sizeof(*ports), &e)) {</yellow>
+		*r = -EFAULT;
+		return true;
+	}
 
-<yellow>		if (!gpa || kvm_vcpu_read_guest(vcpu, gpa,</yellow>
-						&amp;ports[i], sizeof(port))) {
-			*r = -EFAULT;
-			goto out;
-		}
+<yellow>	for (i = 0; i < sched_poll.nr_ports; i++) {</yellow>
 <yellow>		if (ports[i] >= max_evtchn_port(vcpu->kvm)) {</yellow>
 			*r = -EINVAL;
 			goto out;
@@ -1188,9 +1398,8 @@ static bool kvm_xen_hcall_vcpu_op(struct kvm_vcpu *vcpu, bool longmode, int cmd,
 				  int vcpu_id, u64 param, u64 *r)
 {
 	struct vcpu_set_singleshot_timer oneshot;
+	struct x86_exception e;
 	s64 delta;
-	gpa_t gpa;
-	int idx;
 
 <yellow>	if (!kvm_xen_timer_enabled(vcpu))</yellow>
 		return false;
@@ -1201,9 +1410,6 @@ static bool kvm_xen_hcall_vcpu_op(struct kvm_vcpu *vcpu, bool longmode, int cmd,
 			*r = -EINVAL;
 			return true;
 		}
-<yellow>		idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
-		gpa = kvm_mmu_gva_to_gpa_system(vcpu, param, NULL);
-<yellow>		srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
 
 		/*
 		 * The only difference for 32-bit compat is the 4 bytes of
@@ -1221,9 +1427,8 @@ static bool kvm_xen_hcall_vcpu_op(struct kvm_vcpu *vcpu, bool longmode, int cmd,
 		BUILD_BUG_ON(sizeof_field(struct compat_vcpu_set_singleshot_timer, flags) !=
 			     sizeof_field(struct vcpu_set_singleshot_timer, flags));
 
-		if (!gpa ||
-<yellow>		    kvm_vcpu_read_guest(vcpu, gpa, &oneshot, longmode ? sizeof(oneshot) :</yellow>
-					sizeof(struct compat_vcpu_set_singleshot_timer))) {
+<yellow>		if (kvm_read_guest_virt(vcpu, param, &oneshot, longmode ? sizeof(oneshot) :</yellow>
+					sizeof(struct compat_vcpu_set_singleshot_timer), &amp;e)) {
 <yellow>			*r = -EFAULT;</yellow>
 			return true;
 		}
@@ -1319,7 +1524,7 @@ int kvm_xen_hypercall(struct kvm_vcpu *vcpu)
 	}
 #endif
 <yellow>	cpl = static_call(kvm_x86_get_cpl)(vcpu);</yellow>
-<yellow>	trace_kvm_xen_hypercall(input, params[0], params[1], params[2],</yellow>
+<yellow>	trace_kvm_xen_hypercall(cpl, input, params[0], params[1], params[2],</yellow>
 				params[3], params[4], params[5]);
 
 	/*
@@ -1434,14 +1639,14 @@ int kvm_xen_set_evtchn_fast(struct kvm_xen_evtchn *xe, struct kvm *kvm)
 <yellow>	idx = srcu_read_lock(&kvm->srcu);</yellow>
 
 	read_lock_irqsave(&amp;gpc-&gt;lock, flags);
-	if (!kvm_gfn_to_pfn_cache_check(kvm, gpc, gpc-&gt;gpa, PAGE_SIZE))
+	if (!kvm_gpc_check(gpc, PAGE_SIZE))
 		goto out_rcu;
 
 <yellow>	if (IS_ENABLED(CONFIG_64BIT) && kvm->arch.xen.long_mode) {</yellow>
 <yellow>		struct shared_info *shinfo = gpc->khva;</yellow>
 		pending_bits = (unsigned long *)&amp;shinfo-&gt;evtchn_pending;
-<yellow>		mask_bits = (unsigned long *)&shinfo->evtchn_mask;</yellow>
-		port_word_bit = xe-&gt;port / 64;
+		mask_bits = (unsigned long *)&amp;shinfo-&gt;evtchn_mask;
+<yellow>		port_word_bit = xe->port / 64;</yellow>
 	} else {
 		struct compat_shared_info *shinfo = gpc-&gt;khva;
 		pending_bits = (unsigned long *)&amp;shinfo-&gt;evtchn_pending;
@@ -1464,11 +1669,11 @@ int kvm_xen_set_evtchn_fast(struct kvm_xen_evtchn *xe, struct kvm *kvm)
 	} else {
 		rc = 1; /* Delivered to the bitmap in shared_info. */
 		/* Now switch to the vCPU&#x27;s vcpu_info to set the index and pending_sel */
-		read_unlock_irqrestore(&amp;gpc-&gt;lock, flags);
+<yellow>		read_unlock_irqrestore(&gpc->lock, flags);</yellow>
 		gpc = &amp;vcpu-&gt;arch.xen.vcpu_info_cache;
 
 		read_lock_irqsave(&amp;gpc-&gt;lock, flags);
-		if (!kvm_gfn_to_pfn_cache_check(kvm, gpc, gpc-&gt;gpa, sizeof(struct vcpu_info))) {
+		if (!kvm_gpc_check(gpc, sizeof(struct vcpu_info))) {
 			/*
 			 * Could not access the vcpu_info. Set the bit in-kernel
 			 * and prod the vCPU to deliver it for itself.
@@ -1533,15 +1738,7 @@ static int kvm_xen_set_evtchn(struct kvm_xen_evtchn *xe, struct kvm *kvm)
 		mm_borrowed = true;
 	}
 
-	/*
-	 * For the irqfd workqueue, using the main kvm-&gt;lock mutex is
-	 * fine since this function is invoked from kvm_set_irq() with
-	 * no other lock held, no srcu. In future if it will be called
-	 * directly from a vCPU thread (e.g. on hypercall for an IPI)
-	 * then it may need to switch to using a leaf-node mutex for
-	 * serializing the shared_info mapping.
-	 */
-<yellow>	mutex_lock(&kvm->lock);</yellow>
+<yellow>	mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 
 	/*
 	 * It is theoretically possible for the page to be unmapped
@@ -1566,11 +1763,11 @@ static int kvm_xen_set_evtchn(struct kvm_xen_evtchn *xe, struct kvm *kvm)
 			break;
 
 <yellow>		idx = srcu_read_lock(&kvm->srcu);</yellow>
-		rc = kvm_gfn_to_pfn_cache_refresh(kvm, gpc, gpc-&gt;gpa, PAGE_SIZE);
+		rc = kvm_gpc_refresh(gpc, PAGE_SIZE);
 <yellow>		srcu_read_unlock(&kvm->srcu, idx);</yellow>
 	} while(!rc);
 
-<yellow>	mutex_unlock(&kvm->lock);</yellow>
+<yellow>	mutex_unlock(&kvm->arch.xen.xen_lock);</yellow>
 
 	if (mm_borrowed)
 <yellow>		kthread_unuse_mm(kvm->mm);</yellow>
@@ -1683,20 +1880,20 @@ static int kvm_xen_eventfd_update(struct kvm *kvm,
 {
 <yellow>	u32 port = data->u.evtchn.send_port;</yellow>
 	struct evtchnfd *evtchnfd;
+	int ret;
 
-<yellow>	if (!port || port >= max_evtchn_port(kvm))</yellow>
-		return -EINVAL;
-
-<yellow>	mutex_lock(&kvm->lock);</yellow>
+	/* Protect writes to evtchnfd as well as the idr lookup.  */
+	mutex_lock(&amp;kvm-&gt;arch.xen.xen_lock);
 	evtchnfd = idr_find(&amp;kvm-&gt;arch.xen.evtchn_ports, port);
-	mutex_unlock(&amp;kvm-&gt;lock);
 
+	ret = -ENOENT;
 	if (!evtchnfd)
-		return -ENOENT;
+		goto out_unlock;
 
 	/* For an UPDATE, nothing may change except the priority/vcpu */
+	ret = -EINVAL;
 <yellow>	if (evtchnfd->type != data->u.evtchn.type)</yellow>
-		return -EINVAL;
+		goto out_unlock;
 
 	/*
 	 * Port cannot change, and if it&#x27;s zero that was an eventfd
@@ -1704,20 +1901,21 @@ static int kvm_xen_eventfd_update(struct kvm *kvm,
 	 */
 <yellow>	if (!evtchnfd->deliver.port.port ||</yellow>
 <yellow>	    evtchnfd->deliver.port.port != data->u.evtchn.deliver.port.port)</yellow>
-		return -EINVAL;
+		goto out_unlock;
 
 	/* We only support 2 level event channels for now */
 <yellow>	if (data->u.evtchn.deliver.port.priority != KVM_IRQ_ROUTING_XEN_EVTCHN_PRIO_2LEVEL)</yellow>
-		return -EINVAL;
+		goto out_unlock;
 
-<yellow>	mutex_lock(&kvm->lock);</yellow>
-	evtchnfd-&gt;deliver.port.priority = data-&gt;u.evtchn.deliver.port.priority;
+<yellow>	evtchnfd->deliver.port.priority = data->u.evtchn.deliver.port.priority;</yellow>
 	if (evtchnfd-&gt;deliver.port.vcpu_id != data-&gt;u.evtchn.deliver.port.vcpu) {
 		evtchnfd-&gt;deliver.port.vcpu_id = data-&gt;u.evtchn.deliver.port.vcpu;
 <yellow>		evtchnfd->deliver.port.vcpu_idx = -1;</yellow>
 	}
-<yellow>	mutex_unlock(&kvm->lock);</yellow>
-	return 0;
+	ret = 0;
+out_unlock:
+<yellow>	mutex_unlock(&kvm->arch.xen.xen_lock);</yellow>
+	return ret;
 }
 
 /*
@@ -1729,13 +1927,10 @@ static int kvm_xen_eventfd_assign(struct kvm *kvm,
 {
 <yellow>	u32 port = data->u.evtchn.send_port;</yellow>
 	struct eventfd_ctx *eventfd = NULL;
-	struct evtchnfd *evtchnfd = NULL;
+	struct evtchnfd *evtchnfd;
 	int ret = -EINVAL;
 
-<yellow>	if (!port || port >= max_evtchn_port(kvm))</yellow>
-		return -EINVAL;
-
-<yellow>	evtchnfd = kzalloc(sizeof(struct evtchnfd), GFP_KERNEL);</yellow>
+	evtchnfd = kzalloc(sizeof(struct evtchnfd), GFP_KERNEL);
 	if (!evtchnfd)
 		return -ENOMEM;
 
@@ -1782,10 +1977,10 @@ static int kvm_xen_eventfd_assign(struct kvm *kvm,
 		evtchnfd-&gt;deliver.port.priority = data-&gt;u.evtchn.deliver.port.priority;
 	}
 
-<yellow>	mutex_lock(&kvm->lock);</yellow>
+<yellow>	mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 	ret = idr_alloc(&amp;kvm-&gt;arch.xen.evtchn_ports, evtchnfd, port, port + 1,
 			GFP_KERNEL);
-	mutex_unlock(&amp;kvm-&gt;lock);
+	mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
 	if (ret &gt;= 0)
 		return 0;
 
@@ -1803,16 +1998,15 @@ static int kvm_xen_eventfd_deassign(struct kvm *kvm, u32 port)
 {
 	struct evtchnfd *evtchnfd;
 
-<yellow>	mutex_lock(&kvm->lock);</yellow>
+<yellow>	mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
 	evtchnfd = idr_remove(&amp;kvm-&gt;arch.xen.evtchn_ports, port);
-	mutex_unlock(&amp;kvm-&gt;lock);
+	mutex_unlock(&amp;kvm-&gt;arch.xen.xen_lock);
 
 	if (!evtchnfd)
 		return -ENOENT;
 
-<yellow>	if (kvm)</yellow>
-<yellow>		synchronize_srcu(&kvm->srcu);</yellow>
-<yellow>	if (!evtchnfd->deliver.port.port)</yellow>
+<yellow>	synchronize_srcu(&kvm->srcu);</yellow>
+	if (!evtchnfd-&gt;deliver.port.port)
 <yellow>		eventfd_ctx_put(evtchnfd->deliver.eventfd.ctx);</yellow>
 <yellow>	kfree(evtchnfd);</yellow>
 	return 0;
@@ -1820,18 +2014,42 @@ static int kvm_xen_eventfd_deassign(struct kvm *kvm, u32 port)
 
 static int kvm_xen_eventfd_reset(struct kvm *kvm)
 {
-	struct evtchnfd *evtchnfd;
+	struct evtchnfd *evtchnfd, **all_evtchnfds;
 	int i;
+	int n = 0;
 
-	mutex_lock(&amp;kvm-&gt;lock);
+<yellow>	mutex_lock(&kvm->arch.xen.xen_lock);</yellow>
+
+	/*
+	 * Because synchronize_srcu() cannot be called inside the
+	 * critical section, first collect all the evtchnfd objects
+	 * in an array as they are removed from evtchn_ports.
+	 */
+<yellow>	idr_for_each_entry(&kvm->arch.xen.evtchn_ports, evtchnfd, i)</yellow>
+		n++;
+
+<yellow>	all_evtchnfds = kmalloc_array(n, sizeof(struct evtchnfd *), GFP_KERNEL);</yellow>
+	if (!all_evtchnfds) {
+<yellow>		mutex_unlock(&kvm->arch.xen.xen_lock);</yellow>
+		return -ENOMEM;
+	}
+
+	n = 0;
 <yellow>	idr_for_each_entry(&kvm->arch.xen.evtchn_ports, evtchnfd, i) {</yellow>
-<yellow>		idr_remove(&kvm->arch.xen.evtchn_ports, evtchnfd->send_port);</yellow>
-		synchronize_srcu(&amp;kvm-&gt;srcu);
+<yellow>		all_evtchnfds[n++] = evtchnfd;</yellow>
+		idr_remove(&amp;kvm-&gt;arch.xen.evtchn_ports, evtchnfd-&gt;send_port);
+	}
+<yellow>	mutex_unlock(&kvm->arch.xen.xen_lock);</yellow>
+
+	synchronize_srcu(&amp;kvm-&gt;srcu);
+
+	while (n--) {
+<yellow>		evtchnfd = all_evtchnfds[n];</yellow>
 		if (!evtchnfd-&gt;deliver.port.port)
 <yellow>			eventfd_ctx_put(evtchnfd->deliver.eventfd.ctx);</yellow>
 <yellow>		kfree(evtchnfd);</yellow>
 	}
-<yellow>	mutex_unlock(&kvm->lock);</yellow>
+<yellow>	kfree(all_evtchnfds);</yellow>
 
 	return 0;
 }
@@ -1860,20 +2078,22 @@ static bool kvm_xen_hcall_evtchn_send(struct kvm_vcpu *vcpu, u64 param, u64 *r)
 {
 	struct evtchnfd *evtchnfd;
 	struct evtchn_send send;
-	gpa_t gpa;
-	int idx;
+	struct x86_exception e;
 
-<yellow>	idx = srcu_read_lock(&vcpu->kvm->srcu);</yellow>
-	gpa = kvm_mmu_gva_to_gpa_system(vcpu, param, NULL);
-<yellow>	srcu_read_unlock(&vcpu->kvm->srcu, idx);</yellow>
-
-<yellow>	if (!gpa || kvm_vcpu_read_guest(vcpu, gpa, &send, sizeof(send))) {</yellow>
+	/* Sanity check: this structure is the same for 32-bit and 64-bit */
+	BUILD_BUG_ON(sizeof(send) != 4);
+<yellow>	if (kvm_read_guest_virt(vcpu, param, &send, sizeof(send), &e)) {</yellow>
 		*r = -EFAULT;
 		return true;
 	}
 
-	/* The evtchn_ports idr is protected by vcpu-&gt;kvm-&gt;srcu */
+	/*
+	 * evtchnfd is protected by kvm-&gt;srcu; the idr lookup instead
+	 * is protected by RCU.
+	 */
+<yellow>	rcu_read_lock();</yellow>
 <yellow>	evtchnfd = idr_find(&vcpu->kvm->arch.xen.evtchn_ports, send.port);</yellow>
+<yellow>	rcu_read_unlock();</yellow>
 	if (!evtchnfd)
 		return false;
 
@@ -1891,14 +2111,19 @@ static bool kvm_xen_hcall_evtchn_send(struct kvm_vcpu *vcpu, u64 param, u64 *r)
 
 void kvm_xen_init_vcpu(struct kvm_vcpu *vcpu)
 {
-<yellow>	vcpu->arch.xen.vcpu_id = vcpu->vcpu_idx;</yellow>
+<blue>	vcpu->arch.xen.vcpu_id = vcpu->vcpu_idx;</blue>
 	vcpu-&gt;arch.xen.poll_evtchn = 0;
 
 	timer_setup(&amp;vcpu-&gt;arch.xen.poll_timer, cancel_evtchn_poll, 0);
 
-	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.runstate_cache);
-	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.vcpu_info_cache);
-	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.vcpu_time_info_cache);
+	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.runstate_cache, vcpu-&gt;kvm, NULL,
+		     KVM_HOST_USES_PFN);
+	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.runstate2_cache, vcpu-&gt;kvm, NULL,
+		     KVM_HOST_USES_PFN);
+	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.vcpu_info_cache, vcpu-&gt;kvm, NULL,
+		     KVM_HOST_USES_PFN);
+	kvm_gpc_init(&amp;vcpu-&gt;arch.xen.vcpu_time_info_cache, vcpu-&gt;kvm, NULL,
+		     KVM_HOST_USES_PFN);
 }
 
 void kvm_xen_destroy_vcpu(struct kvm_vcpu *vcpu)
@@ -1906,17 +2131,19 @@ void kvm_xen_destroy_vcpu(struct kvm_vcpu *vcpu)
 <yellow>	if (kvm_xen_timer_enabled(vcpu))</yellow>
 <yellow>		kvm_xen_stop_timer(vcpu);</yellow>
 
-<yellow>	kvm_gpc_deactivate(vcpu->kvm, &vcpu->arch.xen.runstate_cache);</yellow>
-	kvm_gpc_deactivate(vcpu-&gt;kvm, &amp;vcpu-&gt;arch.xen.vcpu_info_cache);
-	kvm_gpc_deactivate(vcpu-&gt;kvm, &amp;vcpu-&gt;arch.xen.vcpu_time_info_cache);
+<yellow>	kvm_gpc_deactivate(&vcpu->arch.xen.runstate_cache);</yellow>
+	kvm_gpc_deactivate(&amp;vcpu-&gt;arch.xen.runstate2_cache);
+	kvm_gpc_deactivate(&amp;vcpu-&gt;arch.xen.vcpu_info_cache);
+	kvm_gpc_deactivate(&amp;vcpu-&gt;arch.xen.vcpu_time_info_cache);
 
 	del_timer_sync(&amp;vcpu-&gt;arch.xen.poll_timer);
 }
 
 void kvm_xen_init_vm(struct kvm *kvm)
 {
-<yellow>	idr_init(&kvm->arch.xen.evtchn_ports);</yellow>
-	kvm_gpc_init(&amp;kvm-&gt;arch.xen.shinfo_cache);
+<blue>	mutex_init(&kvm->arch.xen.xen_lock);</blue>
+	idr_init(&amp;kvm-&gt;arch.xen.evtchn_ports);
+	kvm_gpc_init(&amp;kvm-&gt;arch.xen.shinfo_cache, kvm, NULL, KVM_HOST_USES_PFN);
 }
 
 void kvm_xen_destroy_vm(struct kvm *kvm)
@@ -1924,7 +2151,7 @@ void kvm_xen_destroy_vm(struct kvm *kvm)
 	struct evtchnfd *evtchnfd;
 	int i;
 
-<yellow>	kvm_gpc_deactivate(kvm, &kvm->arch.xen.shinfo_cache);</yellow>
+<yellow>	kvm_gpc_deactivate(&kvm->arch.xen.shinfo_cache);</yellow>
 
 <yellow>	idr_for_each_entry(&kvm->arch.xen.evtchn_ports, evtchnfd, i) {</yellow>
 <yellow>		if (!evtchnfd->deliver.port.port)</yellow>
@@ -1940,8 +2167,8 @@ void kvm_xen_destroy_vm(struct kvm *kvm)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

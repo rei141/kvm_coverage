@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 796; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 809; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -67,12 +67,12 @@
 /* Various instructions on x86 need to be replaced for
  * para-virtualization: those hooks are defined here. */
 
+#include &lt;asm/paravirt_types.h&gt;
+
 #ifdef CONFIG_PARAVIRT
 #include &lt;asm/pgtable_types.h&gt;
 #include &lt;asm/asm.h&gt;
 #include &lt;asm/nospec-branch.h&gt;
-
-#include &lt;asm/paravirt_types.h&gt;
 
 #ifndef __ASSEMBLY__
 #include &lt;linux/bug.h&gt;
@@ -247,7 +247,7 @@ static inline void wbinvd(void)
 }
 
 static inline u64 paravirt_read_msr(unsigned msr)
-<yellow>{</yellow>
+{
 <blue>	return PVOP_CALL1(u64, cpu.read_msr, msr);</blue>
 }
 
@@ -336,7 +336,7 @@ static inline void paravirt_free_ldt(struct desc_struct *ldt, unsigned entries)
 
 static inline void load_TR_desc(void)
 {
-	PVOP_VCALL0(cpu.load_tr_desc);
+<yellow>	PVOP_VCALL0(cpu.load_tr_desc);</yellow>
 }
 static inline void load_gdt(const struct desc_ptr *dtr)
 {
@@ -364,7 +364,7 @@ static inline void load_TLS(struct thread_struct *t, unsigned cpu)
 static inline void load_gs_index(unsigned int gs)
 {
 	PVOP_VCALL1(cpu.load_gs_index, gs);
-<yellow>}</yellow>
+}
 
 static inline void write_ldt_entry(struct desc_struct *dt, int entry,
 				   const void *desc)
@@ -457,7 +457,7 @@ static inline void paravirt_release_p4d(unsigned long pfn)
 
 static inline pte_t __pte(pteval_t val)
 {
-<blue>	return (pte_t) { PVOP_ALT_CALLEE1(pteval_t, mmu.make_pte, val,</blue>
+	return (pte_t) { PVOP_ALT_CALLEE1(pteval_t, mmu.make_pte, val,
 					  &quot;mov %%rdi, %%rax&quot;,
 					  ALT_NOT(X86_FEATURE_XENPV)) };
 }
@@ -728,6 +728,7 @@ bool __raw_callee_save___native_vcpu_is_preempted(long cpu);
 	asm(&quot;.pushsection &quot; section &quot;, \&quot;ax\&quot;;&quot;				\
 	    &quot;.globl &quot; PV_THUNK_NAME(func) &quot;;&quot;				\
 	    &quot;.type &quot; PV_THUNK_NAME(func) &quot;, @function;&quot;			\
+	    ASM_FUNC_ALIGN						\
 	    PV_THUNK_NAME(func) &quot;:&quot;					\
 	    ASM_ENDBR							\
 	    FRAME_BEGIN							\
@@ -759,7 +760,7 @@ static __always_inline unsigned long arch_local_save_flags(void)
 
 static __always_inline void arch_local_irq_disable(void)
 {
-<blue>	PVOP_ALT_VCALLEE0(irq.irq_disable, "cli;", ALT_NOT(X86_FEATURE_XENPV));</blue>
+<yellow>	PVOP_ALT_VCALLEE0(irq.irq_disable, "cli;", ALT_NOT(X86_FEATURE_XENPV));</yellow>
 }
 
 static __always_inline void arch_local_irq_enable(void)
@@ -792,6 +793,18 @@ static __always_inline unsigned long arch_local_irq_save(void)
 #undef PVOP_CALL3
 #undef PVOP_VCALL4
 #undef PVOP_CALL4
+
+#define DEFINE_PARAVIRT_ASM(func, instr, sec)		\
+	asm (&quot;.pushsection &quot; #sec &quot;, \&quot;ax\&quot;\n&quot;		\
+	     &quot;.global &quot; #func &quot;\n\t&quot;			\
+	     &quot;.type &quot; #func &quot;, @function\n\t&quot;		\
+	     ASM_FUNC_ALIGN &quot;\n&quot;			\
+	     #func &quot;:\n\t&quot;				\
+	     ASM_ENDBR					\
+	     instr &quot;\n\t&quot;				\
+	     ASM_RET					\
+	     &quot;.size &quot; #func &quot;, . - &quot; #func &quot;\n\t&quot;	\
+	     &quot;.popsection&quot;)
 
 extern void default_banner(void);
 
@@ -860,8 +873,8 @@ static inline void paravirt_set_cap(void)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

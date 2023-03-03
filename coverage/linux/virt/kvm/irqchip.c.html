@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 241; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 240; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -80,7 +80,6 @@
 #include &lt;linux/srcu.h&gt;
 #include &lt;linux/export.h&gt;
 #include &lt;trace/events/kvm.h&gt;
-#include &quot;irq.h&quot;
 
 int kvm_irq_map_gsi(struct kvm *kvm,
 		    struct kvm_kernel_irq_routing_entry *entries, int gsi)
@@ -106,14 +105,14 @@ int kvm_irq_map_chip_pin(struct kvm *kvm, unsigned irqchip, unsigned pin)
 	struct kvm_irq_routing_table *irq_rt;
 
 <blue>	irq_rt = srcu_dereference(kvm->irq_routing, &kvm->irq_srcu);</blue>
-	return irq_rt-&gt;chip[irqchip][pin];
+<blue>	return irq_rt->chip[irqchip][pin];</blue>
 }
 
 int kvm_send_userspace_msi(struct kvm *kvm, struct kvm_msi *msi)
 <yellow>{</yellow>
 	struct kvm_kernel_irq_routing_entry route;
 
-<yellow>	if (!irqchip_in_kernel(kvm) || (msi->flags & ~KVM_MSI_VALID_DEVID))</yellow>
+<yellow>	if (!kvm_arch_irqchip_in_kernel(kvm) || (msi->flags & ~KVM_MSI_VALID_DEVID))</yellow>
 		return -EINVAL;
 
 <yellow>	route.msi.address_lo = msi->address_lo;</yellow>
@@ -305,8 +304,8 @@ out:
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

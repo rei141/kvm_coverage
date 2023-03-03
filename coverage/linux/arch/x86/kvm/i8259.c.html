@@ -241,7 +241,7 @@ static void pic_update_irq(struct kvm_pic *s)
 
 void kvm_pic_update_irq(struct kvm_pic *s)
 {
-<blue>	pic_lock(s);</blue>
+<yellow>	pic_lock(s);</yellow>
 	pic_update_irq(s);
 	pic_unlock(s);
 }
@@ -360,9 +360,9 @@ static void kvm_pic_reset(struct kvm_kpic_state *s)
 	if (!found)
 		return;
 
-<yellow>	for (irq = 0; irq < PIC_NUM_PINS/2; irq++)</yellow>
-<yellow>		if (edge_irr & (1 << irq))</yellow>
-<yellow>			pic_clear_isr(s, irq);</yellow>
+<blue>	for (irq = 0; irq < PIC_NUM_PINS/2; irq++)</blue>
+<blue>		if (edge_irr & (1 << irq))</blue>
+<blue>			pic_clear_isr(s, irq);</blue>
 }
 
 static void pic_ioport_write(void *opaque, u32 addr, u32 val)
@@ -392,7 +392,7 @@ static void pic_ioport_write(void *opaque, u32 addr, u32 val)
 			switch (cmd) {
 			case 0:
 			case 4:
-<blue>				s->rotate_on_auto_eoi = cmd >> 2;</blue>
+<yellow>				s->rotate_on_auto_eoi = cmd >> 2;</yellow>
 				break;
 			case 1:	/* end of interrupt */
 			case 5:
@@ -720,8 +720,8 @@ void kvm_pic_destroy(struct kvm *kvm)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

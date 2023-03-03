@@ -394,7 +394,7 @@ static inline void bitmap_or(unsigned long *dst, const unsigned long *src1,
 	if (small_const_nbits(nbits))
 		*dst = *src1 | *src2;
 	else
-		__bitmap_or(dst, src1, src2, nbits);
+<blue>		__bitmap_or(dst, src1, src2, nbits);</blue>
 }
 
 static inline void bitmap_xor(unsigned long *dst, const unsigned long *src1,
@@ -517,7 +517,7 @@ static __always_inline void bitmap_set(unsigned long *map, unsigned int start,
 		unsigned int nbits)
 {
 	if (__builtin_constant_p(nbits) &amp;&amp; nbits == 1)
-<blue>		__set_bit(start, map);</blue>
+<yellow>		__set_bit(start, map);</yellow>
 	else if (small_const_nbits(start + nbits))
 		*map |= GENMASK(start + nbits - 1, start);
 	else if (__builtin_constant_p(start &amp; BITMAP_MEM_MASK) &amp;&amp;
@@ -671,8 +671,8 @@ static inline void bitmap_set_value8(unsigned long *map, unsigned long value,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -135,11 +135,11 @@ static __always_inline void
 arch_clear_bit(long nr, volatile unsigned long *addr)
 {
 	if (__builtin_constant_p(nr)) {
-		asm volatile(LOCK_PREFIX &quot;andb %b1,%0&quot;
+<yellow>		asm volatile(LOCK_PREFIX "andb %b1,%0"</yellow>
 			: CONST_MASK_ADDR(nr, addr)
 			: &quot;iq&quot; (~CONST_MASK(nr)));
 	} else {
-<blue>		asm volatile(LOCK_PREFIX __ASM_SIZE(btr) " %1,%0"</blue>
+		asm volatile(LOCK_PREFIX __ASM_SIZE(btr) &quot; %1,%0&quot;
 			: : RLONG_ADDR(addr), &quot;Ir&quot; (nr) : &quot;memory&quot;);
 	}
 }
@@ -198,7 +198,7 @@ arch_change_bit(long nr, volatile unsigned long *addr)
 static __always_inline bool
 arch_test_and_set_bit(long nr, volatile unsigned long *addr)
 {
-<yellow>	return GEN_BINARY_RMWcc(LOCK_PREFIX __ASM_SIZE(bts), *addr, c, "Ir", nr);</yellow>
+	return GEN_BINARY_RMWcc(LOCK_PREFIX __ASM_SIZE(bts), *addr, c, &quot;Ir&quot;, nr);
 }
 
 static __always_inline bool
@@ -333,7 +333,7 @@ static __always_inline unsigned long variable_ffz(unsigned long word)
 {
 	asm(&quot;rep; bsf %1,%0&quot;
 		: &quot;=r&quot; (word)
-<blue>		: "r" (~word));</blue>
+<yellow>		: "r" (~word));</yellow>
 	return word;
 }
 
@@ -379,7 +379,7 @@ static __always_inline int variable_ffs(int x)
 	 * We cannot do this on 32 bits because at the very least some
 	 * 486 CPUs did not behave this way.
 	 */
-<yellow>	asm("bsfl %1,%0"</yellow>
+<blue>	asm("bsfl %1,%0"</blue>
 	    : &quot;=r&quot; (r)
 	    : &quot;rm&quot; (x), &quot;0&quot; (-1));
 #elif defined(CONFIG_X86_CMOV)
@@ -472,7 +472,7 @@ static __always_inline int fls64(__u64 x)
 <yellow>	asm("bsrq %1,%q0"</yellow>
 	    : &quot;+r&quot; (bitpos)
 	    : &quot;rm&quot; (x));
-	return bitpos + 1;
+<yellow>	return bitpos + 1;</yellow>
 }
 #else
 #include &lt;asm-generic/bitops/fls64.h&gt;
@@ -498,8 +498,8 @@ static __always_inline int fls64(__u64 x)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

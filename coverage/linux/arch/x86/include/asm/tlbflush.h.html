@@ -87,7 +87,7 @@ unsigned long cr4_read_shadow(void);
 /* Set in this cpu&#x27;s CR4. */
 static inline void cr4_set_bits_irqsoff(unsigned long mask)
 {
-	cr4_update_irqsoff(mask, 0);
+<blue>	cr4_update_irqsoff(mask, 0);</blue>
 }
 
 /* Clear in this cpu&#x27;s CR4. */
@@ -101,13 +101,13 @@ static inline void cr4_set_bits(unsigned long mask)
 {
 	unsigned long flags;
 
-	local_irq_save(flags);
-	cr4_set_bits_irqsoff(mask);
-<yellow>	local_irq_restore(flags);</yellow>
+<yellow>	local_irq_save(flags);</yellow>
+<blue>	cr4_set_bits_irqsoff(mask);</blue>
+<blue>	local_irq_restore(flags);</blue>
 }
 
 /* Clear in this cpu&#x27;s CR4. */
-<yellow>static inline void cr4_clear_bits(unsigned long mask)</yellow>
+static inline void cr4_clear_bits(unsigned long mask)
 {
 	unsigned long flags;
 
@@ -432,8 +432,8 @@ static inline void __native_tlb_flush_global(unsigned long cr4)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

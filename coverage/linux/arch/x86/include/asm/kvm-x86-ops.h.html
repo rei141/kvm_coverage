@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 136; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 138; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -173,10 +173,12 @@ KVM_X86_OP_OPTIONAL(apicv_post_state_restore)
 KVM_X86_OP_OPTIONAL(set_hv_timer)
 KVM_X86_OP_OPTIONAL(cancel_hv_timer)
 <yellow>KVM_X86_OP(setup_mce)</yellow>
+#ifdef CONFIG_KVM_SMM
 <yellow>KVM_X86_OP(smi_allowed)</yellow>
 <yellow>KVM_X86_OP(enter_smm)</yellow>
 <yellow>KVM_X86_OP(leave_smm)</yellow>
 <yellow>KVM_X86_OP(enable_smi_window)</yellow>
+#endif
 KVM_X86_OP_OPTIONAL(mem_enc_ioctl)
 KVM_X86_OP_OPTIONAL(mem_enc_register_region)
 KVM_X86_OP_OPTIONAL(mem_enc_unregister_region)
@@ -186,7 +188,7 @@ KVM_X86_OP_OPTIONAL(guest_memory_reclaimed)
 <yellow>KVM_X86_OP(get_msr_feature)</yellow>
 <yellow>KVM_X86_OP(can_emulate_instruction)</yellow>
 <yellow>KVM_X86_OP(apic_init_signal_blocked)</yellow>
-KVM_X86_OP_OPTIONAL(enable_direct_tlbflush)
+KVM_X86_OP_OPTIONAL(enable_l2_tlb_flush)
 KVM_X86_OP_OPTIONAL(migrate_timers)
 <yellow>KVM_X86_OP(msr_filter_changed)</yellow>
 <yellow>KVM_X86_OP(complete_emulated_msr)</yellow>
@@ -200,8 +202,8 @@ KVM_X86_OP_OPTIONAL(migrate_timers)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

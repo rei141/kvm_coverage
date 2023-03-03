@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 181; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 223; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -84,12 +84,26 @@ u32 kvm_dirty_ring_get_rsvd_entries(void)
 <yellow>	return KVM_DIRTY_RING_RSVD_ENTRIES + kvm_cpu_dirty_log_size();</yellow>
 }
 
+bool kvm_use_dirty_bitmap(struct kvm *kvm)
+{
+<yellow>	lockdep_assert_held(&kvm->slots_lock);</yellow>
+
+<yellow>	return !kvm->dirty_ring_size || kvm->dirty_ring_with_bitmap;</yellow>
+<yellow>}</yellow>
+
+#ifndef CONFIG_NEED_KVM_DIRTY_RING_WITH_BITMAP
+bool kvm_arch_allow_write_without_running_vcpu(struct kvm *kvm)
+{
+	return false;
+<yellow>}</yellow>
+#endif
+
 static u32 kvm_dirty_ring_used(struct kvm_dirty_ring *ring)
 {
 <yellow>	return READ_ONCE(ring->dirty_index) - READ_ONCE(ring->reset_index);</yellow>
 }
 
-bool kvm_dirty_ring_soft_full(struct kvm_dirty_ring *ring)
+static bool kvm_dirty_ring_soft_full(struct kvm_dirty_ring *ring)
 {
 <yellow>	return kvm_dirty_ring_used(ring) >= ring->soft_limit;</yellow>
 }
@@ -205,13 +219,19 @@ int kvm_dirty_ring_reset(struct kvm *kvm, struct kvm_dirty_ring *ring)
 
 <yellow>	kvm_reset_dirty_gfn(kvm, cur_slot, cur_offset, mask);</yellow>
 
+	/*
+	 * The request KVM_REQ_DIRTY_RING_SOFT_FULL will be cleared
+	 * by the VCPU thread next time when it enters the guest.
+	 */
+
 <yellow>	trace_kvm_dirty_ring_reset(ring);</yellow>
 
 	return count;
 <yellow>}</yellow>
 
-void kvm_dirty_ring_push(struct kvm_dirty_ring *ring, u32 slot, u64 offset)
+void kvm_dirty_ring_push(struct kvm_vcpu *vcpu, u32 slot, u64 offset)
 {
+	struct kvm_dirty_ring *ring = &amp;vcpu-&gt;dirty_ring;
 	struct kvm_dirty_gfn *entry;
 
 	/* It should never get full */
@@ -229,7 +249,29 @@ void kvm_dirty_ring_push(struct kvm_dirty_ring *ring, u32 slot, u64 offset)
 	kvm_dirty_gfn_set_dirtied(entry);
 	ring-&gt;dirty_index++;
 <yellow>	trace_kvm_dirty_ring_push(ring, slot, offset);</yellow>
+
+<yellow>	if (kvm_dirty_ring_soft_full(ring))</yellow>
+<yellow>		kvm_make_request(KVM_REQ_DIRTY_RING_SOFT_FULL, vcpu);</yellow>
 <yellow>}</yellow>
+
+bool kvm_dirty_ring_check_request(struct kvm_vcpu *vcpu)
+{
+	/*
+	 * The VCPU isn&#x27;t runnable when the dirty ring becomes soft full.
+	 * The KVM_REQ_DIRTY_RING_SOFT_FULL event is always set to prevent
+	 * the VCPU from running until the dirty pages are harvested and
+	 * the dirty ring is reset by userspace.
+	 */
+<blue>	if (kvm_check_request(KVM_REQ_DIRTY_RING_SOFT_FULL, vcpu) &&</blue>
+	    kvm_dirty_ring_soft_full(&amp;vcpu-&gt;dirty_ring)) {
+<yellow>		kvm_make_request(KVM_REQ_DIRTY_RING_SOFT_FULL, vcpu);</yellow>
+		vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_DIRTY_RING_FULL;
+<yellow>		trace_kvm_dirty_ring_exit(vcpu);</yellow>
+		return true;
+	}
+
+	return false;
+<blue>}</blue>
 
 struct page *kvm_dirty_ring_get_page(struct kvm_dirty_ring *ring, u32 offset)
 {
@@ -245,8 +287,8 @@ void kvm_dirty_ring_free(struct kvm_dirty_ring *ring)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

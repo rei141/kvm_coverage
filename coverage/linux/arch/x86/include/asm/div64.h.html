@@ -145,7 +145,7 @@ static inline u64 mul_u64_u64_div_u64(u64 a, u64 mul, u64 div)
 {
 	u64 q;
 
-<blue>	asm ("mulq %2; divq %3" : "=a" (q)</blue>
+<yellow>	asm ("mulq %2; divq %3" : "=a" (q)</yellow>
 				: &quot;a&quot; (a), &quot;rm&quot; (mul), &quot;rm&quot; (div)
 				: &quot;rdx&quot;);
 
@@ -155,7 +155,7 @@ static inline u64 mul_u64_u64_div_u64(u64 a, u64 mul, u64 div)
 
 static inline u64 mul_u64_u32_div(u64 a, u32 mul, u32 div)
 {
-<blue>	return mul_u64_u64_div_u64(a, mul, div);</blue>
+<yellow>	return mul_u64_u64_div_u64(a, mul, div);</yellow>
 }
 #define mul_u64_u32_div	mul_u64_u32_div
 
@@ -166,8 +166,8 @@ static inline u64 mul_u64_u32_div(u64 a, u32 mul, u32 div)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

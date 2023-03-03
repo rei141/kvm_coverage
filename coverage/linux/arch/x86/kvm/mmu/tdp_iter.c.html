@@ -75,7 +75,7 @@ static void tdp_iter_refresh_sptep(struct tdp_iter *iter)
 {
 <blue>	iter->sptep = iter->pt_path[iter->level - 1] +</blue>
 <blue>		SPTE_INDEX(iter->gfn << PAGE_SHIFT, iter->level);</blue>
-	iter-&gt;old_spte = kvm_tdp_mmu_read_spte(iter-&gt;sptep);
+<blue>	iter->old_spte = kvm_tdp_mmu_read_spte(iter->sptep);</blue>
 }
 
 static gfn_t round_gfn_for_level(gfn_t gfn, int level)
@@ -135,7 +135,7 @@ void tdp_iter_start(struct tdp_iter *iter, struct kvm_mmu_page *root,
 <yellow>		return NULL;</yellow>
 
 <blue>	return (tdp_ptep_t)__va(spte_to_pfn(spte) << PAGE_SHIFT);</blue>
-<blue>}</blue>
+<yellow>}</yellow>
 
 /*
  * Steps down one level in the paging structure towards the goal GFN. Returns
@@ -186,7 +186,7 @@ static bool try_step_side(struct tdp_iter *iter)
 <blue>	iter->gfn += KVM_PAGES_PER_HPAGE(iter->level);</blue>
 	iter-&gt;next_last_level_gfn = iter-&gt;gfn;
 	iter-&gt;sptep++;
-	iter-&gt;old_spte = kvm_tdp_mmu_read_spte(iter-&gt;sptep);
+<blue>	iter->old_spte = kvm_tdp_mmu_read_spte(iter->sptep);</blue>
 
 	return true;
 }
@@ -245,8 +245,8 @@ void tdp_iter_next(struct tdp_iter *iter)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

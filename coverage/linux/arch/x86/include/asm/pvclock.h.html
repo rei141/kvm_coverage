@@ -112,7 +112,7 @@ static inline u64 pvclock_scale_delta(u64 delta, u32 mul_frac, int shift)
 #endif
 
 <yellow>	if (shift < 0)</yellow>
-<blue>		delta >>= -shift;</blue>
+<yellow>		delta >>= -shift;</yellow>
 	else
 <blue>		delta <<= shift;</blue>
 
@@ -145,9 +145,9 @@ static __always_inline
 u64 __pvclock_read_cycles(const struct pvclock_vcpu_time_info *src, u64 tsc)
 {
 	u64 delta = tsc - src-&gt;tsc_timestamp;
-<blue>	u64 offset = pvclock_scale_delta(delta, src->tsc_to_system_mul,</blue>
+<yellow>	u64 offset = pvclock_scale_delta(delta, src->tsc_to_system_mul,</yellow>
 					     src-&gt;tsc_shift);
-<blue>	return src->system_time + offset;</blue>
+<yellow>	return src->system_time + offset;</yellow>
 }
 
 struct pvclock_vsyscall_time_info {
@@ -171,8 +171,8 @@ static inline struct pvclock_vsyscall_time_info *pvclock_get_pvti_cpu0_va(void)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

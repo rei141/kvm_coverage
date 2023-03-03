@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 489; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 490; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -90,6 +90,7 @@ struct kvm_caps {
 	u64 supported_mce_cap;
 	u64 supported_xcr0;
 	u64 supported_xss;
+	u64 supported_perf_cap;
 };
 
 void kvm_spurious_fault(void);
@@ -119,17 +120,17 @@ static inline unsigned int __grow_ple_window(unsigned int val,
 		return base;
 
 	if (modifier &lt; base)
-<blue>		ret *= modifier;</blue>
+<yellow>		ret *= modifier;</yellow>
 	else
 <yellow>		ret += modifier;</yellow>
 
-<blue>	return min(ret, (u64)max);</blue>
+<yellow>	return min(ret, (u64)max);</yellow>
 }
 
 static inline unsigned int __shrink_ple_window(unsigned int val,
 		unsigned int base, unsigned int modifier, unsigned int min)
 {
-	if (modifier &lt; 1)
+<yellow>	if (modifier < 1)</yellow>
 		return base;
 
 <yellow>	if (modifier < base)</yellow>
@@ -147,14 +148,14 @@ int kvm_check_nested_events(struct kvm_vcpu *vcpu);
 
 static inline bool kvm_is_exception_pending(struct kvm_vcpu *vcpu)
 {
-<yellow>	return vcpu->arch.exception.pending ||</yellow>
-<yellow>	       vcpu->arch.exception_vmexit.pending ||</yellow>
-<yellow>	       kvm_test_request(KVM_REQ_TRIPLE_FAULT, vcpu);</yellow>
+<blue>	return vcpu->arch.exception.pending ||</blue>
+<blue>	       vcpu->arch.exception_vmexit.pending ||</blue>
+<blue>	       kvm_test_request(KVM_REQ_TRIPLE_FAULT, vcpu);</blue>
 }
 
 static inline void kvm_clear_exception_queue(struct kvm_vcpu *vcpu)
 {
-<yellow>	vcpu->arch.exception.pending = false;</yellow>
+<blue>	vcpu->arch.exception.pending = false;</blue>
 	vcpu-&gt;arch.exception.injected = false;
 	vcpu-&gt;arch.exception_vmexit.pending = false;
 }
@@ -162,7 +163,7 @@ static inline void kvm_clear_exception_queue(struct kvm_vcpu *vcpu)
 static inline void kvm_queue_interrupt(struct kvm_vcpu *vcpu, u8 vector,
 	bool soft)
 {
-	vcpu-&gt;arch.interrupt.injected = true;
+<yellow>	vcpu->arch.interrupt.injected = true;</yellow>
 	vcpu-&gt;arch.interrupt.soft = soft;
 	vcpu-&gt;arch.interrupt.nr = vector;
 }
@@ -174,8 +175,8 @@ static inline void kvm_clear_interrupt_queue(struct kvm_vcpu *vcpu)
 
 static inline bool kvm_event_needs_reinjection(struct kvm_vcpu *vcpu)
 {
-	return vcpu-&gt;arch.exception.injected || vcpu-&gt;arch.interrupt.injected ||
-		vcpu-&gt;arch.nmi_injected;
+<blue>	return vcpu->arch.exception.injected || vcpu->arch.interrupt.injected ||</blue>
+<blue>		vcpu->arch.nmi_injected;</blue>
 }
 
 static inline bool kvm_exception_is_soft(unsigned int nr)
@@ -206,7 +207,7 @@ static inline int is_long_mode(struct kvm_vcpu *vcpu)
 <blue>	if (!is_long_mode(vcpu))</blue>
 		return false;
 <blue>	static_call(kvm_x86_get_cs_db_l_bits)(vcpu, &cs_db, &cs_l);</blue>
-<yellow>	return cs_l;</yellow>
+	return cs_l;
 }
 
 static inline bool is_64_bit_hypercall(struct kvm_vcpu *vcpu)
@@ -216,7 +217,7 @@ static inline bool is_64_bit_hypercall(struct kvm_vcpu *vcpu)
 	 * accessible. The hypercall register values will have had to been
 	 * provided in 64-bit mode, so assume the guest is in 64-bit.
 	 */
-	return vcpu-&gt;arch.guest_state_protected || is_64_bit_mode(vcpu);
+<blue>	return vcpu->arch.guest_state_protected || is_64_bit_mode(vcpu);</blue>
 }
 
 static inline bool x86_exception_has_error_code(unsigned int vector)
@@ -225,12 +226,12 @@ static inline bool x86_exception_has_error_code(unsigned int vector)
 			BIT(NP_VECTOR) | BIT(SS_VECTOR) | BIT(GP_VECTOR) |
 			BIT(PF_VECTOR) | BIT(AC_VECTOR);
 
-	return (1U &lt;&lt; vector) &amp; exception_has_error_code;
+<blue>	return (1U << vector) & exception_has_error_code;</blue>
 }
 
 static inline bool mmu_is_nested(struct kvm_vcpu *vcpu)
 {
-	return vcpu-&gt;arch.walk_mmu == &amp;vcpu-&gt;arch.nested_mmu;
+<blue>	return vcpu->arch.walk_mmu == &vcpu->arch.nested_mmu;</blue>
 }
 
 static inline int is_pae(struct kvm_vcpu *vcpu)
@@ -255,18 +256,18 @@ static inline bool is_pae_paging(struct kvm_vcpu *vcpu)
 
 static inline u8 vcpu_virt_addr_bits(struct kvm_vcpu *vcpu)
 {
-<yellow>	return kvm_read_cr4_bits(vcpu, X86_CR4_LA57) ? 57 : 48;</yellow>
+<blue>	return kvm_read_cr4_bits(vcpu, X86_CR4_LA57) ? 57 : 48;</blue>
 }
 
 static inline bool is_noncanonical_address(u64 la, struct kvm_vcpu *vcpu)
 {
-<yellow>	return !__is_canonical_address(la, vcpu_virt_addr_bits(vcpu));</yellow>
+<blue>	return !__is_canonical_address(la, vcpu_virt_addr_bits(vcpu));</blue>
 }
 
 static inline void vcpu_cache_mmio_info(struct kvm_vcpu *vcpu,
 					gva_t gva, gfn_t gfn, unsigned access)
 {
-	u64 gen = kvm_memslots(vcpu-&gt;kvm)-&gt;generation;
+<blue>	u64 gen = kvm_memslots(vcpu->kvm)->generation;</blue>
 
 	if (unlikely(gen &amp; KVM_MEMSLOT_GEN_UPDATE_IN_PROGRESS))
 		return;
@@ -275,7 +276,7 @@ static inline void vcpu_cache_mmio_info(struct kvm_vcpu *vcpu,
 	 * If this is a shadow nested page table, the &quot;GVA&quot; is
 	 * actually a nGPA.
 	 */
-	vcpu-&gt;arch.mmio_gva = mmu_is_nested(vcpu) ? 0 : gva &amp; PAGE_MASK;
+<blue>	vcpu->arch.mmio_gva = mmu_is_nested(vcpu) ? 0 : gva & PAGE_MASK;</blue>
 	vcpu-&gt;arch.mmio_access = access;
 	vcpu-&gt;arch.mmio_gfn = gfn;
 	vcpu-&gt;arch.mmio_gen = gen;
@@ -283,7 +284,7 @@ static inline void vcpu_cache_mmio_info(struct kvm_vcpu *vcpu,
 
 static inline bool vcpu_match_mmio_gen(struct kvm_vcpu *vcpu)
 {
-	return vcpu-&gt;arch.mmio_gen == kvm_memslots(vcpu-&gt;kvm)-&gt;generation;
+<blue>	return vcpu->arch.mmio_gen == kvm_memslots(vcpu->kvm)->generation;</blue>
 }
 
 /*
@@ -294,16 +295,16 @@ static inline bool vcpu_match_mmio_gen(struct kvm_vcpu *vcpu)
 
 static inline void vcpu_clear_mmio_info(struct kvm_vcpu *vcpu, gva_t gva)
 {
-	if (gva != MMIO_GVA_ANY &amp;&amp; vcpu-&gt;arch.mmio_gva != (gva &amp; PAGE_MASK))
+<blue>	if (gva != MMIO_GVA_ANY && vcpu->arch.mmio_gva != (gva & PAGE_MASK))</blue>
 		return;
 
-	vcpu-&gt;arch.mmio_gva = 0;
+<blue>	vcpu->arch.mmio_gva = 0;</blue>
 }
 
 static inline bool vcpu_match_mmio_gva(struct kvm_vcpu *vcpu, unsigned long gva)
 {
-	if (vcpu_match_mmio_gen(vcpu) &amp;&amp; vcpu-&gt;arch.mmio_gva &amp;&amp;
-	      vcpu-&gt;arch.mmio_gva == (gva &amp; PAGE_MASK))
+<blue>	if (vcpu_match_mmio_gen(vcpu) && vcpu->arch.mmio_gva &&</blue>
+<blue>	      vcpu->arch.mmio_gva == (gva & PAGE_MASK))</blue>
 		return true;
 
 	return false;
@@ -311,8 +312,8 @@ static inline bool vcpu_match_mmio_gva(struct kvm_vcpu *vcpu, unsigned long gva)
 
 static inline bool vcpu_match_mmio_gpa(struct kvm_vcpu *vcpu, gpa_t gpa)
 {
-	if (vcpu_match_mmio_gen(vcpu) &amp;&amp; vcpu-&gt;arch.mmio_gfn &amp;&amp;
-	      vcpu-&gt;arch.mmio_gfn == gpa &gt;&gt; PAGE_SHIFT)
+<blue>	if (vcpu_match_mmio_gen(vcpu) && vcpu->arch.mmio_gfn &&</blue>
+<blue>	      vcpu->arch.mmio_gfn == gpa >> PAGE_SHIFT)</blue>
 		return true;
 
 	return false;
@@ -335,7 +336,7 @@ static inline void kvm_register_write(struct kvm_vcpu *vcpu,
 
 static inline bool kvm_check_has_quirk(struct kvm *kvm, u64 quirk)
 {
-<yellow>	return !(kvm->arch.disabled_quirks & quirk);</yellow>
+<blue>	return !(kvm->arch.disabled_quirks & quirk);</blue>
 }
 
 void kvm_inject_realmode_interrupt(struct kvm_vcpu *vcpu, int irq, int inc_eip);
@@ -395,7 +396,7 @@ extern bool eager_page_split;
 
 static inline u64 nsec_to_cycles(struct kvm_vcpu *vcpu, u64 nsec)
 {
-<yellow>	return pvclock_scale_delta(nsec, vcpu->arch.virtual_tsc_mult,</yellow>
+<blue>	return pvclock_scale_delta(nsec, vcpu->arch.virtual_tsc_mult,</blue>
 <yellow>				   vcpu->arch.virtual_tsc_shift);</yellow>
 }
 
@@ -415,7 +416,7 @@ static inline u64 nsec_to_cycles(struct kvm_vcpu *vcpu, u64 nsec)
 
 static inline bool kvm_mwait_in_guest(struct kvm *kvm)
 {
-	return kvm-&gt;arch.mwait_in_guest;
+<yellow>	return kvm->arch.mwait_in_guest;</yellow>
 }
 
 static inline bool kvm_hlt_in_guest(struct kvm *kvm)
@@ -452,7 +453,7 @@ static inline void kvm_before_interrupt(struct kvm_vcpu *vcpu,
 
 static inline void kvm_after_interrupt(struct kvm_vcpu *vcpu)
 {
-<yellow>	WRITE_ONCE(vcpu->arch.handling_intr_from_guest, 0);</yellow>
+<blue>	WRITE_ONCE(vcpu->arch.handling_intr_from_guest, 0);</blue>
 }
 
 static inline bool kvm_handling_nmi_from_guest(struct kvm_vcpu *vcpu)
@@ -460,7 +461,7 @@ static inline bool kvm_handling_nmi_from_guest(struct kvm_vcpu *vcpu)
 <yellow>	return vcpu->arch.handling_intr_from_guest == KVM_HANDLING_NMI;</yellow>
 }
 
-static inline bool kvm_pat_valid(u64 data)
+<blue>static inline bool kvm_pat_valid(u64 data)</blue>
 {
 <blue>	if (data & 0xF8F8F8F8F8F8F8F8ull)</blue>
 		return false;
@@ -471,12 +472,12 @@ static inline bool kvm_pat_valid(u64 data)
 static inline bool kvm_dr7_valid(u64 data)
 {
 	/* Bits [63:32] are reserved */
-	return !(data &gt;&gt; 32);
+<blue>	return !(data >> 32);</blue>
 }
 static inline bool kvm_dr6_valid(u64 data)
 {
 	/* Bits [63:32] are reserved */
-	return !(data &gt;&gt; 32);
+<blue>	return !(data >> 32);</blue>
 }
 
 /*
@@ -553,8 +554,8 @@ int kvm_sev_es_string_io(struct kvm_vcpu *vcpu, unsigned int size,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 508; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 520; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -224,6 +224,18 @@ bool make_spte(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp,
 	if (!prefetch)
 <blue>		spte |= spte_shadow_accessed_mask(spte);</blue>
 
+	/*
+	 * For simplicity, enforce the NX huge page mitigation even if not
+	 * strictly necessary.  KVM could ignore the mitigation if paging is
+	 * disabled in the guest, as the guest doesn&#x27;t have an page tables to
+	 * abuse.  But to safely ignore the mitigation, KVM would have to
+	 * ensure a new MMU is loaded (or all shadow pages zapped) when CR0.PG
+	 * is toggled on, and that&#x27;s a net negative for performance when TDP is
+	 * enabled.  When TDP is disabled, KVM will always switch to a new MMU
+	 * when CR0.PG is toggled, but leveraging that to ignore the mitigation
+	 * would tie make_spte() further to vCPU/MMU state, and add complexity
+	 * just to optimize a mode that is anything but performance critical.
+	 */
 <blue>	if (level > PG_LEVEL_4K && (pte_access & ACC_EXEC_MASK) &&</blue>
 <blue>	    is_nx_huge_page_enabled(vcpu->kvm)) {</blue>
 <yellow>		pte_access &= ~ACC_EXEC_MASK;</yellow>
@@ -326,13 +338,13 @@ static u64 make_spte_executable(u64 spte)
  */
 u64 make_huge_page_split_spte(struct kvm *kvm, u64 huge_spte, union kvm_mmu_page_role role,
 			      int index)
-<yellow>{</yellow>
+<blue>{</blue>
 	u64 child_spte;
 
-<yellow>	if (WARN_ON_ONCE(!is_shadow_present_pte(huge_spte)))</yellow>
+<blue>	if (WARN_ON_ONCE(!is_shadow_present_pte(huge_spte)))</blue>
 		return 0;
 
-<yellow>	if (WARN_ON_ONCE(!is_large_pte(huge_spte)))</yellow>
+<blue>	if (WARN_ON_ONCE(!is_large_pte(huge_spte)))</blue>
 		return 0;
 
 	child_spte = huge_spte;
@@ -342,7 +354,7 @@ u64 make_huge_page_split_spte(struct kvm *kvm, u64 huge_spte, union kvm_mmu_page
 	 * split. So we just have to OR in the offset to the page at the next
 	 * lower level for the given index.
 	 */
-<yellow>	child_spte |= (index * KVM_PAGES_PER_HPAGE(role.level)) << PAGE_SHIFT;</yellow>
+<blue>	child_spte |= (index * KVM_PAGES_PER_HPAGE(role.level)) << PAGE_SHIFT;</blue>
 
 	if (role.level == PG_LEVEL_4K) {
 		child_spte &amp;= ~PT_PAGE_SIZE_MASK;
@@ -352,7 +364,7 @@ u64 make_huge_page_split_spte(struct kvm *kvm, u64 huge_spte, union kvm_mmu_page
 		 * the page executable as the NX hugepage mitigation no longer
 		 * applies.
 		 */
-<yellow>		if ((role.access & ACC_EXEC_MASK) && is_nx_huge_page_enabled(kvm))</yellow>
+<blue>		if ((role.access & ACC_EXEC_MASK) && is_nx_huge_page_enabled(kvm))</blue>
 <yellow>			child_spte = make_spte_executable(child_spte);</yellow>
 	}
 
@@ -368,7 +380,7 @@ u64 make_nonleaf_spte(u64 *child_pt, bool ad_disabled)
 		shadow_user_mask | shadow_x_mask | shadow_me_value;
 
 	if (ad_disabled)
-<yellow>		spte |= SPTE_TDP_AD_DISABLED_MASK;</yellow>
+<blue>		spte |= SPTE_TDP_AD_DISABLED_MASK;</blue>
 	else
 <blue>		spte |= shadow_accessed_mask;</blue>
 
@@ -391,21 +403,21 @@ u64 kvm_mmu_changed_pte_notifier_make_spte(u64 old_spte, kvm_pfn_t new_pfn)
 	return new_spte;
 }
 
-<yellow>u64 mark_spte_for_access_track(u64 spte)</yellow>
+<blue>u64 mark_spte_for_access_track(u64 spte)</blue>
 {
 <blue>	if (spte_ad_enabled(spte))</blue>
 <blue>		return spte & ~shadow_accessed_mask;</blue>
 
-<yellow>	if (is_access_track_spte(spte))</yellow>
+<blue>	if (is_access_track_spte(spte))</blue>
 		return spte;
 
-<yellow>	check_spte_writable_invariants(spte);</yellow>
+<blue>	check_spte_writable_invariants(spte);</blue>
 
-<yellow>	WARN_ONCE(spte & (SHADOW_ACC_TRACK_SAVED_BITS_MASK <<</yellow>
+<blue>	WARN_ONCE(spte & (SHADOW_ACC_TRACK_SAVED_BITS_MASK <<</blue>
 			  SHADOW_ACC_TRACK_SAVED_BITS_SHIFT),
 		  &quot;kvm: Access Tracking saved bit locations are not zero\n&quot;);
 
-<yellow>	spte |= (spte & SHADOW_ACC_TRACK_SAVED_BITS_MASK) <<</yellow>
+<blue>	spte |= (spte & SHADOW_ACC_TRACK_SAVED_BITS_MASK) <<</blue>
 		SHADOW_ACC_TRACK_SAVED_BITS_SHIFT;
 	spte &amp;= ~shadow_acc_track_mask;
 
@@ -572,8 +584,8 @@ void kvm_mmu_reset_all_pte_masks(void)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 1513; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 1526; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -125,10 +125,16 @@ u32 xstate_required_size(u64 xstate_bv, bool compacted)
  * This one is tied to SSB in the user API, and not
  * visible in /proc/cpuinfo.
  */
-#define KVM_X86_FEATURE_PSFD		(13*32+28) /* Predictive Store Forwarding Disable */
+#define KVM_X86_FEATURE_AMD_PSFD	(13*32+28) /* Predictive Store Forwarding Disable */
 
 #define F feature_bit
-#define SF(name) (boot_cpu_has(X86_FEATURE_##name) ? F(name) : 0)
+
+/* Scattered Flag - For features that are scattered by cpufeatures.h. */
+#define SF(name)						\
+({								\
+	BUILD_BUG_ON(X86_FEATURE_##name &gt;= MAX_CPU_FEATURES);	\
+	(boot_cpu_has(X86_FEATURE_##name) ? F(name) : 0);	\
+})
 
 /*
  * Magic value used by KVM when querying userspace-provided CPUID entries and
@@ -221,16 +227,16 @@ static int kvm_cpuid_check_equal(struct kvm_vcpu *vcpu, struct kvm_cpuid_entry2 
 	struct kvm_cpuid_entry2 *orig;
 	int i;
 
-<blue>	if (nent != vcpu->arch.cpuid_nent)</blue>
+<yellow>	if (nent != vcpu->arch.cpuid_nent)</yellow>
 		return -EINVAL;
 
-<blue>	for (i = 0; i < nent; i++) {</blue>
-<blue>		orig = &vcpu->arch.cpuid_entries[i];</blue>
-<blue>		if (e2[i].function != orig->function ||</blue>
-<blue>		    e2[i].index != orig->index ||</blue>
-<blue>		    e2[i].flags != orig->flags ||</blue>
-<blue>		    e2[i].eax != orig->eax || e2[i].ebx != orig->ebx ||</blue>
-<blue>		    e2[i].ecx != orig->ecx || e2[i].edx != orig->edx)</blue>
+<yellow>	for (i = 0; i < nent; i++) {</yellow>
+<yellow>		orig = &vcpu->arch.cpuid_entries[i];</yellow>
+<yellow>		if (e2[i].function != orig->function ||</yellow>
+<yellow>		    e2[i].index != orig->index ||</yellow>
+<yellow>		    e2[i].flags != orig->flags ||</yellow>
+<yellow>		    e2[i].eax != orig->eax || e2[i].ebx != orig->ebx ||</yellow>
+<yellow>		    e2[i].ecx != orig->ecx || e2[i].edx != orig->edx)</yellow>
 			return -EINVAL;
 	}
 
@@ -474,11 +480,11 @@ u64 kvm_vcpu_reserved_gpa_bits_raw(struct kvm_vcpu *vcpu)
 	 * whether the supplied CPUID data is equal to what&#x27;s already set.
 	 */
 	if (vcpu-&gt;arch.last_vmentry_cpu != -1) {
-<blue>		r = kvm_cpuid_check_equal(vcpu, e2, nent);</blue>
+<yellow>		r = kvm_cpuid_check_equal(vcpu, e2, nent);</yellow>
 		if (r)
 			return r;
 
-<blue>		kvfree(e2);</blue>
+<yellow>		kvfree(e2);</yellow>
 		return 0;
 	}
 
@@ -566,7 +572,7 @@ int kvm_vcpu_ioctl_set_cpuid2(struct kvm_vcpu *vcpu,
 
 <blue>	r = kvm_set_cpuid(vcpu, e2, cpuid->nent);</blue>
 	if (r)
-<blue>		kvfree(e2);</blue>
+<yellow>		kvfree(e2);</yellow>
 
 	return r;
 <blue>}</blue>
@@ -606,9 +612,9 @@ static __always_inline void __kvm_cpu_cap_mask(unsigned int leaf)
 }
 
 static __always_inline
-void kvm_cpu_cap_init_scattered(enum kvm_only_cpuid_leafs leaf, u32 mask)
+void kvm_cpu_cap_init_kvm_defined(enum kvm_only_cpuid_leafs leaf, u32 mask)
 {
-	/* Use kvm_cpu_cap_mask for non-scattered leafs. */
+	/* Use kvm_cpu_cap_mask for leafs that aren&#x27;t KVM-only. */
 	BUILD_BUG_ON(leaf &lt; NCAPINTS);
 
 	kvm_cpu_caps[leaf] = mask;
@@ -618,10 +624,10 @@ void kvm_cpu_cap_init_scattered(enum kvm_only_cpuid_leafs leaf, u32 mask)
 
 static __always_inline void kvm_cpu_cap_mask(enum cpuid_leafs leaf, u32 mask)
 {
-	/* Use kvm_cpu_cap_init_scattered for scattered leafs. */
+	/* Use kvm_cpu_cap_init_kvm_defined for KVM-only leafs. */
 	BUILD_BUG_ON(leaf &gt;= NCAPINTS);
 
-<yellow>	kvm_cpu_caps[leaf] &= mask;</yellow>
+	kvm_cpu_caps[leaf] &amp;= mask;
 
 <yellow>	__kvm_cpu_cap_mask(leaf);</yellow>
 }
@@ -720,15 +726,20 @@ void kvm_set_cpu_caps(void)
 <yellow>		kvm_cpu_cap_set(X86_FEATURE_SPEC_CTRL_SSBD);</yellow>
 
 <yellow>	kvm_cpu_cap_mask(CPUID_7_1_EAX,</yellow>
-		F(AVX_VNNI) | F(AVX512_BF16)
+		F(AVX_VNNI) | F(AVX512_BF16) | F(CMPCCXADD) | F(AMX_FP16) |
+		F(AVX_IFMA)
+	);
+
+	kvm_cpu_cap_init_kvm_defined(CPUID_7_1_EDX,
+		F(AVX_VNNI_INT8) | F(AVX_NE_CONVERT) | F(PREFETCHITI)
 	);
 
 	kvm_cpu_cap_mask(CPUID_D_1_EAX,
 		F(XSAVEOPT) | F(XSAVEC) | F(XGETBV1) | F(XSAVES) | f_xfd
 	);
 
-	kvm_cpu_cap_init_scattered(CPUID_12_EAX,
-		SF(SGX1) | SF(SGX2)
+	kvm_cpu_cap_init_kvm_defined(CPUID_12_EAX,
+		SF(SGX1) | SF(SGX2) | SF(SGX_EDECCSSA)
 	);
 
 	kvm_cpu_cap_mask(CPUID_8000_0001_ECX,
@@ -757,7 +768,7 @@ void kvm_set_cpu_caps(void)
 		F(CLZERO) | F(XSAVEERPTR) |
 		F(WBNOINVD) | F(AMD_IBPB) | F(AMD_IBRS) | F(AMD_SSBD) | F(VIRT_SSBD) |
 		F(AMD_SSB_NO) | F(AMD_STIBP) | F(AMD_STIBP_ALWAYS_ON) |
-		__feature_bit(KVM_X86_FEATURE_PSFD)
+		__feature_bit(KVM_X86_FEATURE_AMD_PSFD)
 	);
 
 	/*
@@ -822,17 +833,23 @@ struct kvm_cpuid_array {
 	int nent;
 };
 
-static struct kvm_cpuid_entry2 *do_host_cpuid(struct kvm_cpuid_array *array,
-					      u32 function, u32 index)
-<blue>{</blue>
-	struct kvm_cpuid_entry2 *entry;
-
+static struct kvm_cpuid_entry2 *get_next_cpuid(struct kvm_cpuid_array *array)
+{
 <blue>	if (array->nent >= array->maxnent)</blue>
 		return NULL;
 
-<blue>	entry = &array->entries[array->nent++];</blue>
+<blue>	return &array->entries[array->nent++];</blue>
+}
 
-	memset(entry, 0, sizeof(*entry));
+static struct kvm_cpuid_entry2 *do_host_cpuid(struct kvm_cpuid_array *array,
+					      u32 function, u32 index)
+<blue>{</blue>
+<blue>	struct kvm_cpuid_entry2 *entry = get_next_cpuid(array);</blue>
+
+	if (!entry)
+		return NULL;
+
+<blue>	memset(entry, 0, sizeof(*entry));</blue>
 	entry-&gt;function = function;
 	entry-&gt;index = index;
 	switch (function &amp; 0xC0000000) {
@@ -976,9 +993,9 @@ static inline int __do_cpuid_func(struct kvm_cpuid_array *array, u32 function)
 				goto out;
 
 <blue>			cpuid_entry_override(entry, CPUID_7_1_EAX);</blue>
+			cpuid_entry_override(entry, CPUID_7_1_EDX);
 			entry-&gt;ebx = 0;
 			entry-&gt;ecx = 0;
-			entry-&gt;edx = 0;
 		}
 		break;
 	case 0xa: { /* Architectural Performance Monitoring */
@@ -998,7 +1015,7 @@ static inline int __do_cpuid_func(struct kvm_cpuid_array *array, u32 function)
 		edx.split.bit_width_fixed = kvm_pmu_cap.bit_width_fixed;
 
 		if (kvm_pmu_cap.version)
-<yellow>			edx.split.anythread_deprecated = 1;</yellow>
+<blue>			edx.split.anythread_deprecated = 1;</blue>
 		edx.split.reserved1 = 0;
 		edx.split.reserved2 = 0;
 
@@ -1008,22 +1025,13 @@ static inline int __do_cpuid_func(struct kvm_cpuid_array *array, u32 function)
 		entry-&gt;edx = edx.full;
 		break;
 	}
-	/*
-	 * Per Intel&#x27;s SDM, the 0x1f is a superset of 0xb,
-	 * thus they can be handled by common code.
-	 */
 	case 0x1f:
 	case 0xb:
 		/*
-		 * Populate entries until the level type (ECX[15:8]) of the
-		 * previous entry is zero.  Note, CPUID EAX.{0x1f,0xb}.0 is
-		 * the starting entry, filled by the primary do_host_cpuid().
+		 * No topology; a valid topology is indicated by the presence
+		 * of subleaf 1.
 		 */
-<blue>		for (i = 1; entry->ecx & 0xff00; ++i) {</blue>
-<blue>			entry = do_host_cpuid(array, function, i);</blue>
-			if (!entry)
-				goto out;
-		}
+<blue>		entry->eax = entry->ebx = entry->ecx = 0;</blue>
 		break;
 	case 0xd: {
 <blue>		u64 permitted_xcr0 = kvm_caps.supported_xcr0 & xstate_get_guest_group_perm();</blue>
@@ -1110,9 +1118,7 @@ static inline int __do_cpuid_func(struct kvm_cpuid_array *array, u32 function)
 		 * userspace.  ATTRIBUTES.XFRM is not adjusted as userspace is
 		 * expected to derive it from supported XCR0.
 		 */
-<yellow>		entry->eax &= SGX_ATTR_DEBUG | SGX_ATTR_MODE64BIT |</yellow>
-			      SGX_ATTR_PROVISIONKEY | SGX_ATTR_EINITTOKENKEY |
-			      SGX_ATTR_KSS;
+<yellow>		entry->eax &= SGX_ATTR_PRIV_MASK | SGX_ATTR_UNPRIV_MASK;</yellow>
 		entry-&gt;ebx &amp;= 0;
 		break;
 	/* Intel PT */
@@ -1227,7 +1233,7 @@ static inline int __do_cpuid_func(struct kvm_cpuid_array *array, u32 function)
 		 * the HPAs do not affect GPAs.
 		 */
 <blue>		if (!tdp_enabled)</blue>
-<yellow>			g_phys_as = boot_cpu_data.x86_phys_bits;</yellow>
+<blue>			g_phys_as = boot_cpu_data.x86_phys_bits;</blue>
 		else if (!g_phys_as)
 			g_phys_as = phys_as;
 
@@ -1256,6 +1262,9 @@ static inline int __do_cpuid_func(struct kvm_cpuid_array *array, u32 function)
 		entry-&gt;ebx = entry-&gt;ecx = entry-&gt;edx = 0;
 		break;
 	case 0x8000001e:
+		/* Do not return host topology information.  */
+<yellow>		entry->eax = entry->ebx = entry->ecx = 0;</yellow>
+		entry-&gt;edx = 0; /* reserved */
 		break;
 	case 0x8000001F:
 <yellow>		if (!kvm_cpu_cap_has(X86_FEATURE_SEV)) {</yellow>
@@ -1285,8 +1294,12 @@ static inline int __do_cpuid_func(struct kvm_cpuid_array *array, u32 function)
 		 * Other defined bits are for MSRs that KVM does not expose:
 		 *   EAX      3      SPCL, SMM page configuration lock
 		 *   EAX      13     PCMSR, Prefetch control MSR
+		 *
+		 * KVM doesn&#x27;t support SMM_CTL.
+		 *   EAX       9     SMM_CTL MSR is not supported
 		 */
-<yellow>		entry->eax &= BIT(0) | BIT(2) | BIT(6);</yellow>
+		entry-&gt;eax &amp;= BIT(0) | BIT(2) | BIT(6);
+<yellow>		entry->eax |= BIT(9);</yellow>
 		if (static_cpu_has(X86_FEATURE_LFENCE_RDTSC))
 <yellow>			entry->eax |= BIT(2);</yellow>
 <yellow>		if (!static_cpu_has_bug(X86_BUG_NULL_SEG))</yellow>
@@ -1483,10 +1496,10 @@ get_out_of_range_cpuid_entry(struct kvm_vcpu *vcpu, u32 *fn_ptr, u32 index)
 
 <blue>	if (function >= 0x40000000 && function <= 0x4fffffff)</blue>
 <blue>		class = kvm_find_cpuid_entry(vcpu, function & 0xffffff00);</blue>
-<yellow>	else if (function >= 0xc0000000)</yellow>
+<blue>	else if (function >= 0xc0000000)</blue>
 <yellow>		class = kvm_find_cpuid_entry(vcpu, 0xc0000000);</yellow>
 	else
-<yellow>		class = kvm_find_cpuid_entry(vcpu, function & 0x80000000);</yellow>
+<blue>		class = kvm_find_cpuid_entry(vcpu, function & 0x80000000);</blue>
 
 <blue>	if (class && function <= class->eax)</blue>
 		return NULL;
@@ -1577,8 +1590,8 @@ EXPORT_SYMBOL_GPL(kvm_emulate_cpuid);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>

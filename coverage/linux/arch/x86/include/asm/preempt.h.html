@@ -57,7 +57,7 @@
    </div>
    <div class="split right">
 <table summary='blob content' class='blob' cellspacing="15">
-<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 151; i++){
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 152; i++){
          document.write(i+".\n");
    }
          </script></code_line></pre></td>
@@ -67,10 +67,10 @@
 
 #include &lt;asm/rmwcc.h&gt;
 #include &lt;asm/percpu.h&gt;
+#include &lt;asm/current.h&gt;
+
 #include &lt;linux/thread_info.h&gt;
 #include &lt;linux/static_call_types.h&gt;
-
-DECLARE_PER_CPU(int, __preempt_count);
 
 /* We use the MSB mostly because its available */
 #define PREEMPT_NEED_RESCHED	0x80000000
@@ -87,7 +87,7 @@ DECLARE_PER_CPU(int, __preempt_count);
  */
 static __always_inline int preempt_count(void)
 {
-<yellow>	return raw_cpu_read_4(__preempt_count) & ~PREEMPT_NEED_RESCHED;</yellow>
+<yellow>	return raw_cpu_read_4(pcpu_hot.preempt_count) & ~PREEMPT_NEED_RESCHED;</yellow>
 }
 
 static __always_inline void preempt_count_set(int pc)
@@ -95,10 +95,10 @@ static __always_inline void preempt_count_set(int pc)
 	int old, new;
 
 	do {
-		old = raw_cpu_read_4(__preempt_count);
+		old = raw_cpu_read_4(pcpu_hot.preempt_count);
 		new = (old &amp; PREEMPT_NEED_RESCHED) |
 			(pc &amp; ~PREEMPT_NEED_RESCHED);
-	} while (raw_cpu_cmpxchg_4(__preempt_count, old, new) != old);
+	} while (raw_cpu_cmpxchg_4(pcpu_hot.preempt_count, old, new) != old);
 }
 
 /*
@@ -107,7 +107,7 @@ static __always_inline void preempt_count_set(int pc)
 #define init_task_preempt_count(p) do { } while (0)
 
 #define init_idle_preempt_count(p, cpu) do { \
-	per_cpu(__preempt_count, (cpu)) = PREEMPT_DISABLED; \
+	per_cpu(pcpu_hot.preempt_count, (cpu)) = PREEMPT_DISABLED; \
 } while (0)
 
 /*
@@ -121,17 +121,17 @@ static __always_inline void preempt_count_set(int pc)
 
 static __always_inline void set_preempt_need_resched(void)
 {
-	raw_cpu_and_4(__preempt_count, ~PREEMPT_NEED_RESCHED);
+	raw_cpu_and_4(pcpu_hot.preempt_count, ~PREEMPT_NEED_RESCHED);
 }
 
 static __always_inline void clear_preempt_need_resched(void)
 {
-	raw_cpu_or_4(__preempt_count, PREEMPT_NEED_RESCHED);
+	raw_cpu_or_4(pcpu_hot.preempt_count, PREEMPT_NEED_RESCHED);
 }
 
 static __always_inline bool test_preempt_need_resched(void)
 {
-	return !(raw_cpu_read_4(__preempt_count) &amp; PREEMPT_NEED_RESCHED);
+	return !(raw_cpu_read_4(pcpu_hot.preempt_count) &amp; PREEMPT_NEED_RESCHED);
 }
 
 /*
@@ -140,12 +140,12 @@ static __always_inline bool test_preempt_need_resched(void)
 
 static __always_inline void __preempt_count_add(int val)
 {
-<yellow>	raw_cpu_add_4(__preempt_count, val);</yellow>
+<blue>	raw_cpu_add_4(pcpu_hot.preempt_count, val);</blue>
 }
 
 static __always_inline void __preempt_count_sub(int val)
 {
-	raw_cpu_add_4(__preempt_count, -val);
+	raw_cpu_add_4(pcpu_hot.preempt_count, -val);
 }
 
 /*
@@ -155,7 +155,8 @@ static __always_inline void __preempt_count_sub(int val)
  */
 static __always_inline bool __preempt_count_dec_and_test(void)
 {
-<yellow>	return GEN_UNARY_RMWcc("decl", __preempt_count, e, __percpu_arg([var]));</yellow>
+<blue>	return GEN_UNARY_RMWcc("decl", pcpu_hot.preempt_count, e,</blue>
+			       __percpu_arg([var]));
 }
 
 /*
@@ -163,7 +164,7 @@ static __always_inline bool __preempt_count_dec_and_test(void)
  */
 static __always_inline bool should_resched(int preempt_offset)
 {
-	return unlikely(raw_cpu_read_4(__preempt_count) == preempt_offset);
+<yellow>	return unlikely(raw_cpu_read_4(pcpu_hot.preempt_count) == preempt_offset);</yellow>
 }
 
 #ifdef CONFIG_PREEMPTION
@@ -215,8 +216,8 @@ do { \
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 50.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 82.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 52.3%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 54.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 57.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.2%</li>`
 </script></body></html>
