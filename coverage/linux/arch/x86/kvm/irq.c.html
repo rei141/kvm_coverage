@@ -173,7 +173,7 @@ EXPORT_SYMBOL_GPL(kvm_cpu_has_interrupt);
 static int kvm_cpu_get_extint(struct kvm_vcpu *v)
 {
 <blue>	if (!kvm_cpu_has_extint(v)) {</blue>
-<yellow>		WARN_ON(!lapic_in_kernel(v));</yellow>
+<blue>		WARN_ON(!lapic_in_kernel(v));</blue>
 		return -1;
 	}
 
@@ -201,17 +201,17 @@ int kvm_cpu_get_interrupt(struct kvm_vcpu *v)
 <blue>	if (vector != -1)</blue>
 		return vector;			/* PIC */
 
-<yellow>	return kvm_get_apic_interrupt(v);	/* APIC */</yellow>
+<blue>	return kvm_get_apic_interrupt(v);	/* APIC */</blue>
 <blue>}</blue>
 EXPORT_SYMBOL_GPL(kvm_cpu_get_interrupt);
 
 void kvm_inject_pending_timer_irqs(struct kvm_vcpu *vcpu)
 {
-<yellow>	if (lapic_in_kernel(vcpu))</yellow>
-<yellow>		kvm_inject_apic_timer_irqs(vcpu);</yellow>
-<yellow>	if (kvm_xen_timer_enabled(vcpu))</yellow>
+<blue>	if (lapic_in_kernel(vcpu))</blue>
+<blue>		kvm_inject_apic_timer_irqs(vcpu);</blue>
+<blue>	if (kvm_xen_timer_enabled(vcpu))</blue>
 <yellow>		kvm_xen_inject_timer_irqs(vcpu);</yellow>
-<yellow>}</yellow>
+<blue>}</blue>
 
 void __kvm_migrate_timers(struct kvm_vcpu *vcpu)
 {
@@ -237,6 +237,6 @@ bool kvm_arch_irqchip_in_kernel(struct kvm *kvm)
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 60.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.0%</li>`
 </script></body></html>

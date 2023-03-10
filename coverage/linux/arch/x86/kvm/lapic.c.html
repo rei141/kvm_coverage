@@ -535,7 +535,7 @@ static int find_highest_vector(void *bitmap)
 <blue>	     vec >= 0; vec -= APIC_VECTORS_PER_REG) {</blue>
 <blue>		reg = bitmap + REG_POS(vec);</blue>
 		if (*reg)
-<yellow>			return __fls(*reg) + vec;</yellow>
+<blue>			return __fls(*reg) + vec;</blue>
 	}
 
 	return -1;
@@ -562,32 +562,32 @@ bool __kvm_apic_update_irr(u32 *pir, void *regs, int *max_irr)
 	int max_updated_irr;
 
 	max_updated_irr = -1;
-<yellow>	*max_irr = -1;</yellow>
+<blue>	*max_irr = -1;</blue>
 
-<yellow>	for (i = vec = 0; i <= 7; i++, vec += 32) {</yellow>
-<yellow>		pir_val = READ_ONCE(pir[i]);</yellow>
+<blue>	for (i = vec = 0; i <= 7; i++, vec += 32) {</blue>
+<blue>		pir_val = READ_ONCE(pir[i]);</blue>
 		irr_val = *((u32 *)(regs + APIC_IRR + i * 0x10));
 		if (pir_val) {
 			prev_irr_val = irr_val;
-<yellow>			irr_val |= xchg(&pir[i], 0);</yellow>
+<blue>			irr_val |= xchg(&pir[i], 0);</blue>
 			*((u32 *)(regs + APIC_IRR + i * 0x10)) = irr_val;
 			if (prev_irr_val != irr_val) {
 				max_updated_irr =
-<yellow>					__fls(irr_val ^ prev_irr_val) + vec;</yellow>
+<blue>					__fls(irr_val ^ prev_irr_val) + vec;</blue>
 			}
 		}
-<yellow>		if (irr_val)</yellow>
-<yellow>			*max_irr = __fls(irr_val) + vec;</yellow>
+<blue>		if (irr_val)</blue>
+<blue>			*max_irr = __fls(irr_val) + vec;</blue>
 	}
 
-<yellow>	return ((max_updated_irr != -1) &&</yellow>
-<yellow>		(max_updated_irr == *max_irr));</yellow>
-<yellow>}</yellow>
+<blue>	return ((max_updated_irr != -1) &&</blue>
+<blue>		(max_updated_irr == *max_irr));</blue>
+<blue>}</blue>
 EXPORT_SYMBOL_GPL(__kvm_apic_update_irr);
 
 bool kvm_apic_update_irr(struct kvm_vcpu *vcpu, u32 *pir, int *max_irr)
 {
-<yellow>	struct kvm_lapic *apic = vcpu->arch.apic;</yellow>
+<blue>	struct kvm_lapic *apic = vcpu->arch.apic;</blue>
 
 	return __kvm_apic_update_irr(pir, apic-&gt;regs, max_irr);
 }
@@ -617,15 +617,15 @@ static inline int apic_find_highest_irr(struct kvm_lapic *apic)
 
 <yellow>static inline void apic_clear_irr(int vec, struct kvm_lapic *apic)</yellow>
 {
-<yellow>	if (unlikely(apic->apicv_active)) {</yellow>
+<blue>	if (unlikely(apic->apicv_active)) {</blue>
 		/* need to update RVI */
 <yellow>		kvm_lapic_clear_vector(vec, apic->regs + APIC_IRR);</yellow>
 <yellow>		static_call_cond(kvm_x86_hwapic_irr_update)(apic->vcpu,</yellow>
 							    apic_find_highest_irr(apic));
 	} else {
-<yellow>		apic->irr_pending = false;</yellow>
+<blue>		apic->irr_pending = false;</blue>
 <yellow>		kvm_lapic_clear_vector(vec, apic->regs + APIC_IRR);</yellow>
-<yellow>		if (apic_search_irr(apic) != -1)</yellow>
+<blue>		if (apic_search_irr(apic) != -1)</blue>
 <yellow>			apic->irr_pending = true;</yellow>
 	}
 }
@@ -638,7 +638,7 @@ EXPORT_SYMBOL_GPL(kvm_apic_clear_irr);
 
 static inline void apic_set_isr(int vec, struct kvm_lapic *apic)
 {
-<yellow>	if (__apic_test_and_set_vector(vec, apic->regs + APIC_ISR))</yellow>
+<blue>	if (__apic_test_and_set_vector(vec, apic->regs + APIC_ISR))</blue>
 		return;
 
 	/*
@@ -646,17 +646,17 @@ static inline void apic_set_isr(int vec, struct kvm_lapic *apic)
 	 * because the processor can modify ISR under the hood.  Instead
 	 * just set SVI.
 	 */
-<yellow>	if (unlikely(apic->apicv_active))</yellow>
+<blue>	if (unlikely(apic->apicv_active))</blue>
 <yellow>		static_call_cond(kvm_x86_hwapic_isr_update)(vec);</yellow>
 	else {
-<yellow>		++apic->isr_count;</yellow>
+<blue>		++apic->isr_count;</blue>
 <yellow>		BUG_ON(apic->isr_count > MAX_APIC_VECTOR);</yellow>
 		/*
 		 * ISR (in service register) bit is set when injecting an interrupt.
 		 * The highest vector is injected. Thus the latest bit set matches
 		 * the highest bit in ISR.
 		 */
-<yellow>		apic->highest_isr_cache = vec;</yellow>
+<blue>		apic->highest_isr_cache = vec;</blue>
 	}
 }
 
@@ -778,14 +778,14 @@ int kvm_pv_send_ipi(struct kvm *kvm, unsigned long ipi_bitmap_low,
 static int pv_eoi_put_user(struct kvm_vcpu *vcpu, u8 val)
 {
 
-<yellow>	return kvm_write_guest_cached(vcpu->kvm, &vcpu->arch.pv_eoi.data, &val,</yellow>
+<blue>	return kvm_write_guest_cached(vcpu->kvm, &vcpu->arch.pv_eoi.data, &val,</blue>
 				      sizeof(val));
 }
 
 static int pv_eoi_get_user(struct kvm_vcpu *vcpu, u8 *val)
 {
 
-<yellow>	return kvm_read_guest_cached(vcpu->kvm, &vcpu->arch.pv_eoi.data, val,</yellow>
+<blue>	return kvm_read_guest_cached(vcpu->kvm, &vcpu->arch.pv_eoi.data, val,</blue>
 				      sizeof(*val));
 }
 
@@ -799,19 +799,19 @@ static void pv_eoi_set_pending(struct kvm_vcpu *vcpu)
 	if (pv_eoi_put_user(vcpu, KVM_PV_EOI_ENABLED) &lt; 0)
 		return;
 
-<yellow>	__set_bit(KVM_APIC_PV_EOI_PENDING, &vcpu->arch.apic_attention);</yellow>
+<blue>	__set_bit(KVM_APIC_PV_EOI_PENDING, &vcpu->arch.apic_attention);</blue>
 }
 
 static bool pv_eoi_test_and_clr_pending(struct kvm_vcpu *vcpu)
 {
 	u8 val;
 
-<yellow>	if (pv_eoi_get_user(vcpu, &val) < 0)</yellow>
+<blue>	if (pv_eoi_get_user(vcpu, &val) < 0)</blue>
 		return false;
 
-<yellow>	val &= KVM_PV_EOI_ENABLED;</yellow>
+<blue>	val &= KVM_PV_EOI_ENABLED;</blue>
 
-<yellow>	if (val && pv_eoi_put_user(vcpu, KVM_PV_EOI_DISABLED) < 0)</yellow>
+<blue>	if (val && pv_eoi_put_user(vcpu, KVM_PV_EOI_DISABLED) < 0)</blue>
 		return false;
 
 	/*
@@ -819,7 +819,7 @@ static bool pv_eoi_test_and_clr_pending(struct kvm_vcpu *vcpu)
 	 * While this might not be ideal from performance point of view,
 	 * this makes sure pv eoi is only enabled when we know it&#x27;s safe.
 	 */
-<yellow>	__clear_bit(KVM_APIC_PV_EOI_PENDING, &vcpu->arch.apic_attention);</yellow>
+<blue>	__clear_bit(KVM_APIC_PV_EOI_PENDING, &vcpu->arch.apic_attention);</blue>
 
 	return val;
 }
@@ -846,7 +846,7 @@ static bool __apic_update_ppr(struct kvm_lapic *apic, u32 *new_ppr)
 <blue>	isr = apic_find_highest_isr(apic);</blue>
 	isrv = (isr != -1) ? isr : 0;
 
-<yellow>	if ((tpr & 0xf0) >= (isrv & 0xf0))</yellow>
+<blue>	if ((tpr & 0xf0) >= (isrv & 0xf0))</blue>
 <blue>		ppr = tpr & 0xff;</blue>
 	else
 		ppr = isrv &amp; 0xf0;
@@ -1189,30 +1189,30 @@ static int __apic_accept_irq(struct kvm_lapic *apic, int delivery_mode,
 			     struct dest_map *dest_map)
 {
 	int result = 0;
-<yellow>	struct kvm_vcpu *vcpu = apic->vcpu;</yellow>
+<blue>	struct kvm_vcpu *vcpu = apic->vcpu;</blue>
 
-<yellow>	trace_kvm_apic_accept_irq(vcpu->vcpu_id, delivery_mode,</yellow>
+<blue>	trace_kvm_apic_accept_irq(vcpu->vcpu_id, delivery_mode,</blue>
 				  trig_mode, vector);
-<yellow>	switch (delivery_mode) {</yellow>
+<blue>	switch (delivery_mode) {</blue>
 	case APIC_DM_LOWEST:
 <yellow>		vcpu->arch.apic_arb_prio++;</yellow>
 		fallthrough;
 	case APIC_DM_FIXED:
-<yellow>		if (unlikely(trig_mode && !level))</yellow>
+<blue>		if (unlikely(trig_mode && !level))</blue>
 			break;
 
 		/* FIXME add logic for vcpu on reset */
-<yellow>		if (unlikely(!apic_enabled(apic)))</yellow>
+<blue>		if (unlikely(!apic_enabled(apic)))</blue>
 			break;
 
 		result = 1;
 
-<yellow>		if (dest_map) {</yellow>
+<blue>		if (dest_map) {</blue>
 <yellow>			__set_bit(vcpu->vcpu_id, dest_map->map);</yellow>
 			dest_map-&gt;vectors[vcpu-&gt;vcpu_id] = vector;
 		}
 
-<yellow>		if (apic_test_vector(vector, apic->regs + APIC_TMR) != !!trig_mode) {</yellow>
+<blue>		if (apic_test_vector(vector, apic->regs + APIC_TMR) != !!trig_mode) {</blue>
 			if (trig_mode)
 <yellow>				kvm_lapic_set_vector(vector,</yellow>
 <yellow>						     apic->regs + APIC_TMR);</yellow>
@@ -1221,7 +1221,7 @@ static int __apic_accept_irq(struct kvm_lapic *apic, int delivery_mode,
 						       apic-&gt;regs + APIC_TMR);
 		}
 
-<yellow>		static_call(kvm_x86_deliver_interrupt)(apic, delivery_mode,</yellow>
+<blue>		static_call(kvm_x86_deliver_interrupt)(apic, delivery_mode,</blue>
 						       trig_mode, vector);
 		break;
 
@@ -1279,7 +1279,7 @@ static int __apic_accept_irq(struct kvm_lapic *apic, int delivery_mode,
 		break;
 	}
 	return result;
-<yellow>}</yellow>
+<blue>}</blue>
 
 /*
  * This routine identifies the destination vcpus mask meant to receive the
@@ -1332,7 +1332,7 @@ int kvm_apic_compare_prio(struct kvm_vcpu *vcpu1, struct kvm_vcpu *vcpu2)
 
 static bool kvm_ioapic_handles_vector(struct kvm_lapic *apic, int vector)
 {
-<yellow>	return test_bit(vector, apic->vcpu->arch.ioapic_handled_vectors);</yellow>
+<blue>	return test_bit(vector, apic->vcpu->arch.ioapic_handled_vectors);</blue>
 }
 
 <yellow>static void kvm_ioapic_send_eoi(struct kvm_lapic *apic, int vector)</yellow>
@@ -1777,7 +1777,7 @@ static void kvm_apic_inject_pending_timer_irqs(struct kvm_lapic *apic)
 	if (apic_lvtt_tscdeadline(apic)) {
 <yellow>		ktimer->tscdeadline = 0;</yellow>
 <blue>	} else if (apic_lvtt_oneshot(apic)) {</blue>
-<yellow>		ktimer->tscdeadline = 0;</yellow>
+<blue>		ktimer->tscdeadline = 0;</blue>
 		ktimer-&gt;target_expiration = 0;
 	}
 }
@@ -2037,7 +2037,7 @@ static void start_sw_timer(struct kvm_lapic *apic)
 <blue>	if (!apic_lvtt_period(apic) && atomic_read(&ktimer->pending))</blue>
 		return;
 
-<yellow>	if (apic_lvtt_period(apic) || apic_lvtt_oneshot(apic))</yellow>
+<blue>	if (apic_lvtt_period(apic) || apic_lvtt_oneshot(apic))</blue>
 <blue>		start_sw_period(apic);</blue>
 	else if (apic_lvtt_tscdeadline(apic))
 <yellow>		start_sw_tscdeadline(apic);</yellow>
@@ -2048,7 +2048,7 @@ static void restart_apic_timer(struct kvm_lapic *apic)
 <blue>{</blue>
 <blue>	preempt_disable();</blue>
 
-<yellow>	if (!apic_lvtt_period(apic) && atomic_read(&apic->lapic_timer.pending))</yellow>
+<blue>	if (!apic_lvtt_period(apic) && atomic_read(&apic->lapic_timer.pending))</blue>
 		goto out;
 
 <blue>	if (!start_hv_timer(apic))</blue>
@@ -2240,7 +2240,7 @@ static int kvm_lapic_reg_write(struct kvm_lapic *apic, u32 reg, u32 val)
 			break;
 		}
 <blue>		if (!kvm_apic_sw_enabled(apic))</blue>
-<yellow>			val |= APIC_LVT_MASKED;</yellow>
+<blue>			val |= APIC_LVT_MASKED;</blue>
 <blue>		val &= apic_lvt_mask[index];</blue>
 		kvm_lapic_set_reg(apic, reg, val);
 		break;
@@ -2593,13 +2593,13 @@ int kvm_apic_local_deliver(struct kvm_lapic *apic, int lvt_type)
 
 <blue>	if (kvm_apic_hw_enabled(apic) && !(reg & APIC_LVT_MASKED)) {</blue>
 		vector = reg &amp; APIC_VECTOR_MASK;
-<yellow>		mode = reg & APIC_MODE_MASK;</yellow>
+<blue>		mode = reg & APIC_MODE_MASK;</blue>
 		trig_mode = reg &amp; APIC_LVT_LEVEL_TRIGGER;
 		return __apic_accept_irq(apic, mode, vector, 1, trig_mode,
 					NULL);
 	}
 <blue>	return 0;</blue>
-<yellow>}</yellow>
+<blue>}</blue>
 
 void kvm_apic_nmi_wd_deliver(struct kvm_vcpu *vcpu)
 {
@@ -2705,17 +2705,17 @@ int kvm_apic_accept_pic_intr(struct kvm_vcpu *vcpu)
 
 void kvm_inject_apic_timer_irqs(struct kvm_vcpu *vcpu)
 {
-<yellow>	struct kvm_lapic *apic = vcpu->arch.apic;</yellow>
+<blue>	struct kvm_lapic *apic = vcpu->arch.apic;</blue>
 
 	if (atomic_read(&amp;apic-&gt;lapic_timer.pending) &gt; 0) {
-<yellow>		kvm_apic_inject_pending_timer_irqs(apic);</yellow>
-<yellow>		atomic_set(&apic->lapic_timer.pending, 0);</yellow>
+<blue>		kvm_apic_inject_pending_timer_irqs(apic);</blue>
+<blue>		atomic_set(&apic->lapic_timer.pending, 0);</blue>
 	}
-<yellow>}</yellow>
+<blue>}</blue>
 
 int kvm_get_apic_interrupt(struct kvm_vcpu *vcpu)
-<yellow>{</yellow>
-<yellow>	int vector = kvm_apic_has_interrupt(vcpu);</yellow>
+<blue>{</blue>
+<blue>	int vector = kvm_apic_has_interrupt(vcpu);</blue>
 	struct kvm_lapic *apic = vcpu-&gt;arch.apic;
 	u32 ppr;
 
@@ -2729,8 +2729,8 @@ int kvm_get_apic_interrupt(struct kvm_vcpu *vcpu)
 	 * because the process would deliver it through the IDT.
 	 */
 
-<yellow>	apic_clear_irr(vector, apic);</yellow>
-<yellow>	if (to_hv_vcpu(vcpu) && test_bit(vector, to_hv_synic(vcpu)->auto_eoi_bitmap)) {</yellow>
+<blue>	apic_clear_irr(vector, apic);</blue>
+<blue>	if (to_hv_vcpu(vcpu) && test_bit(vector, to_hv_synic(vcpu)->auto_eoi_bitmap)) {</blue>
 		/*
 		 * For auto-EOI interrupts, there might be another pending
 		 * interrupt above PPR, so check whether to raise another
@@ -2744,8 +2744,8 @@ int kvm_get_apic_interrupt(struct kvm_vcpu *vcpu)
 		 * a concurrent interrupt injection, but that would have
 		 * triggered KVM_REQ_EVENT already.
 		 */
-<yellow>		apic_set_isr(vector, apic);</yellow>
-<yellow>		__apic_update_ppr(apic, &ppr);</yellow>
+<blue>		apic_set_isr(vector, apic);</blue>
+<blue>		__apic_update_ppr(apic, &ppr);</blue>
 	}
 
 	return vector;
@@ -2887,20 +2887,20 @@ static void apic_sync_pv_eoi_from_guest(struct kvm_vcpu *vcpu,
 	 */
 <yellow>	BUG_ON(!pv_eoi_enabled(vcpu));</yellow>
 
-<yellow>	if (pv_eoi_test_and_clr_pending(vcpu))</yellow>
+<blue>	if (pv_eoi_test_and_clr_pending(vcpu))</blue>
 		return;
 <yellow>	vector = apic_set_eoi(apic);</yellow>
 <yellow>	trace_kvm_pv_eoi(apic, vector);</yellow>
 }
 
 void kvm_lapic_sync_from_vapic(struct kvm_vcpu *vcpu)
-<yellow>{</yellow>
+<blue>{</blue>
 	u32 data;
 
-<yellow>	if (test_bit(KVM_APIC_PV_EOI_PENDING, &vcpu->arch.apic_attention))</yellow>
-<yellow>		apic_sync_pv_eoi_from_guest(vcpu, vcpu->arch.apic);</yellow>
+<blue>	if (test_bit(KVM_APIC_PV_EOI_PENDING, &vcpu->arch.apic_attention))</blue>
+<blue>		apic_sync_pv_eoi_from_guest(vcpu, vcpu->arch.apic);</blue>
 
-<yellow>	if (!test_bit(KVM_APIC_CHECK_VAPIC, &vcpu->arch.apic_attention))</yellow>
+<blue>	if (!test_bit(KVM_APIC_CHECK_VAPIC, &vcpu->arch.apic_attention))</blue>
 		return;
 
 <yellow>	if (kvm_read_guest_cached(vcpu->kvm, &vcpu->arch.apic->vapic_cache, &data,</yellow>
@@ -2925,7 +2925,7 @@ static void apic_sync_pv_eoi_to_guest(struct kvm_vcpu *vcpu,
 	    /* Cache not set: could be safe but we don&#x27;t bother. */
 <blue>	    apic->highest_isr_cache == -1 ||</blue>
 	    /* Need EOI to update ioapic. */
-<yellow>	    kvm_ioapic_handles_vector(apic, apic->highest_isr_cache)) {</yellow>
+<blue>	    kvm_ioapic_handles_vector(apic, apic->highest_isr_cache)) {</blue>
 		/*
 		 * PV EOI was disabled by apic_sync_pv_eoi_from_guest
 		 * so we need not do anything here.
@@ -2933,7 +2933,7 @@ static void apic_sync_pv_eoi_to_guest(struct kvm_vcpu *vcpu,
 		return;
 	}
 
-<yellow>	pv_eoi_set_pending(apic->vcpu);</yellow>
+<blue>	pv_eoi_set_pending(apic->vcpu);</blue>
 }
 
 void kvm_lapic_sync_to_vapic(struct kvm_vcpu *vcpu)
@@ -3146,6 +3146,6 @@ void kvm_lapic_exit(void)
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 60.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.0%</li>`
 </script></body></html>

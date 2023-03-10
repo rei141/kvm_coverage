@@ -9827,7 +9827,7 @@ static void post_kvm_run_save(struct kvm_vcpu *vcpu)
 		max_irr = -1;
 
 	if (max_irr != -1)
-<yellow>		max_irr >>= 4;</yellow>
+<blue>		max_irr >>= 4;</blue>
 
 <blue>	tpr = kvm_lapic_get_cr8(vcpu);</blue>
 
@@ -10199,7 +10199,7 @@ EXPORT_SYMBOL_GPL(kvm_vcpu_update_apicv);
 <blue>			srcu_read_unlock(&kvm->srcu, idx);</blue>
 		}
 	} else {
-<yellow>		kvm->arch.apicv_inhibit_reasons = new;</yellow>
+<blue>		kvm->arch.apicv_inhibit_reasons = new;</blue>
 	}
 }
 
@@ -10661,7 +10661,7 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
 <yellow>		kvm_make_request(KVM_REQ_CLOCK_UPDATE, vcpu);</yellow>
 
 <blue>	if (vcpu->arch.apic_attention)</blue>
-<yellow>		kvm_lapic_sync_from_vapic(vcpu);</yellow>
+<blue>		kvm_lapic_sync_from_vapic(vcpu);</blue>
 
 <blue>	r = static_call(kvm_x86_handle_exit)(vcpu, exit_fastpath);</blue>
 	return r;
@@ -10671,7 +10671,7 @@ cancel_injection:
 <blue>		kvm_make_request(KVM_REQ_EVENT, vcpu);</blue>
 <blue>	static_call(kvm_x86_cancel_injection)(vcpu);</blue>
 	if (unlikely(vcpu-&gt;arch.apic_attention))
-<yellow>		kvm_lapic_sync_from_vapic(vcpu);</yellow>
+<blue>		kvm_lapic_sync_from_vapic(vcpu);</blue>
 out:
 	return r;
 }
@@ -10779,7 +10779,7 @@ static int vcpu_run(struct kvm_vcpu *vcpu)
 <yellow>			kvm_xen_inject_pending_events(vcpu);</yellow>
 
 <blue>		if (kvm_cpu_has_pending_timer(vcpu))</blue>
-<yellow>			kvm_inject_pending_timer_irqs(vcpu);</yellow>
+<blue>			kvm_inject_pending_timer_irqs(vcpu);</blue>
 
 <blue>		if (dm_request_for_irq_injection(vcpu) &&</blue>
 <yellow>			kvm_vcpu_ready_for_interrupt_injection(vcpu)) {</yellow>
@@ -13557,6 +13557,6 @@ module_exit(kvm_x86_exit);
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 60.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.0%</li>`
 </script></body></html>

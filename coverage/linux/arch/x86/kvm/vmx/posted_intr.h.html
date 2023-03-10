@@ -96,7 +96,7 @@ struct pi_desc {
 static inline bool pi_test_and_set_on(struct pi_desc *pi_desc)
 {
 <yellow>	return test_and_set_bit(POSTED_INTR_ON,</yellow>
-<yellow>			(unsigned long *)&pi_desc->control);</yellow>
+<blue>			(unsigned long *)&pi_desc->control);</blue>
 }
 
 static inline bool pi_test_and_clear_on(struct pi_desc *pi_desc)
@@ -113,7 +113,7 @@ static inline bool pi_test_and_clear_sn(struct pi_desc *pi_desc)
 
 static inline bool pi_test_and_set_pir(int vector, struct pi_desc *pi_desc)
 {
-<yellow>	return test_and_set_bit(vector, (unsigned long *)pi_desc->pir);</yellow>
+<blue>	return test_and_set_bit(vector, (unsigned long *)pi_desc->pir);</blue>
 }
 
 static inline bool pi_is_pir_empty(struct pi_desc *pi_desc)
@@ -135,7 +135,7 @@ static inline void pi_set_on(struct pi_desc *pi_desc)
 
 static inline void pi_clear_on(struct pi_desc *pi_desc)
 {
-<yellow>	clear_bit(POSTED_INTR_ON,</yellow>
+<blue>	clear_bit(POSTED_INTR_ON,</blue>
 <blue>		(unsigned long *)&pi_desc->control);</blue>
 }
 
@@ -173,6 +173,6 @@ void vmx_pi_start_assignment(struct kvm *kvm);
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 60.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 52.0%</li>`
 </script></body></html>
