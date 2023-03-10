@@ -1609,7 +1609,7 @@ static inline bool __kvm_vcpu_wake_up(struct kvm_vcpu *vcpu)
 
 static inline bool kvm_vcpu_is_blocking(struct kvm_vcpu *vcpu)
 {
-<yellow>	return rcuwait_active(kvm_arch_vcpu_get_wait(vcpu));</yellow>
+<blue>	return rcuwait_active(kvm_arch_vcpu_get_wait(vcpu));</blue>
 }
 
 #ifdef __KVM_HAVE_ARCH_INTC_INITIALIZED
@@ -2351,6 +2351,6 @@ static inline void kvm_account_pgtable_pages(void *virt, int nr)
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
 </script></body></html>

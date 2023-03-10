@@ -1987,7 +1987,7 @@ static int vmx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 		break;
 	case MSR_IA32_SPEC_CTRL:
 <blue>		if (!msr_info->host_initiated &&</blue>
-<yellow>		    !guest_has_spec_ctrl_msr(vcpu))</yellow>
+<blue>		    !guest_has_spec_ctrl_msr(vcpu))</blue>
 			return 1;
 
 <blue>		msr_info->data = to_vmx(vcpu)->spec_ctrl;</blue>
@@ -5392,7 +5392,7 @@ static int handle_set_cr0(struct kvm_vcpu *vcpu, unsigned long val)
 static int handle_set_cr4(struct kvm_vcpu *vcpu, unsigned long val)
 {
 <blue>	if (is_guest_mode(vcpu)) {</blue>
-<yellow>		struct vmcs12 *vmcs12 = get_vmcs12(vcpu);</yellow>
+<blue>		struct vmcs12 *vmcs12 = get_vmcs12(vcpu);</blue>
 		unsigned long orig_val = val;
 
 		/* analogously to handle_set_cr0 */
@@ -5967,18 +5967,18 @@ static int handle_monitor_trap(struct kvm_vcpu *vcpu)
 	return 1;
 <yellow>}</yellow>
 
-<yellow>static fastpath_t handle_fastpath_preemption_timer(struct kvm_vcpu *vcpu)</yellow>
+<blue>static fastpath_t handle_fastpath_preemption_timer(struct kvm_vcpu *vcpu)</blue>
 <yellow>{</yellow>
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 
 <blue>	if (!vmx->req_immediate_exit &&</blue>
-<yellow>	    !unlikely(vmx->loaded_vmcs->hv_timer_soft_disabled)) {</yellow>
-<yellow>		kvm_lapic_expired_hv_timer(vcpu);</yellow>
+<blue>	    !unlikely(vmx->loaded_vmcs->hv_timer_soft_disabled)) {</blue>
+<blue>		kvm_lapic_expired_hv_timer(vcpu);</blue>
 <yellow>		return EXIT_FASTPATH_REENTER_GUEST;</yellow>
 	}
 
 <blue>	return EXIT_FASTPATH_NONE;</blue>
-<yellow>}</yellow>
+<blue>}</blue>
 
 static int handle_preemption_timer(struct kvm_vcpu *vcpu)
 <yellow>{</yellow>
@@ -7101,16 +7101,16 @@ static void vmx_update_hv_timer(struct kvm_vcpu *vcpu)
 <blue>		vmcs_write32(VMX_PREEMPTION_TIMER_VALUE, 0);</blue>
 <blue>		vmx->loaded_vmcs->hv_timer_soft_disabled = false;</blue>
 <blue>	} else if (vmx->hv_deadline_tsc != -1) {</blue>
-<yellow>		tscl = rdtsc();</yellow>
+<blue>		tscl = rdtsc();</blue>
 		if (vmx-&gt;hv_deadline_tsc &gt; tscl)
 			/* set_hv_timer ensures the delta fits in 32-bits */
-<yellow>			delta_tsc = (u32)((vmx->hv_deadline_tsc - tscl) >></yellow>
+<blue>			delta_tsc = (u32)((vmx->hv_deadline_tsc - tscl) >></blue>
 				cpu_preemption_timer_multi);
 		else
 			delta_tsc = 0;
 
-<yellow>		vmcs_write32(VMX_PREEMPTION_TIMER_VALUE, delta_tsc);</yellow>
-<yellow>		vmx->loaded_vmcs->hv_timer_soft_disabled = false;</yellow>
+<blue>		vmcs_write32(VMX_PREEMPTION_TIMER_VALUE, delta_tsc);</blue>
+<blue>		vmx->loaded_vmcs->hv_timer_soft_disabled = false;</blue>
 <blue>	} else if (!vmx->loaded_vmcs->hv_timer_soft_disabled) {</blue>
 <blue>		vmcs_write32(VMX_PREEMPTION_TIMER_VALUE, -1);</blue>
 <blue>		vmx->loaded_vmcs->hv_timer_soft_disabled = true;</blue>
@@ -7952,13 +7952,13 @@ static int vmx_set_hv_timer(struct kvm_vcpu *vcpu, u64 guest_deadline_tsc,
 <yellow>{</yellow>
 	struct vcpu_vmx *vmx;
 	u64 tscl, guest_tscl, delta_tsc, lapic_timer_advance_cycles;
-<yellow>	struct kvm_timer *ktimer = &vcpu->arch.apic->lapic_timer;</yellow>
+<blue>	struct kvm_timer *ktimer = &vcpu->arch.apic->lapic_timer;</blue>
 
 	vmx = to_vmx(vcpu);
 	tscl = rdtsc();
 <yellow>	guest_tscl = kvm_read_l1_tsc(vcpu, tscl);</yellow>
 	delta_tsc = max(guest_deadline_tsc, guest_tscl) - guest_tscl;
-<yellow>	lapic_timer_advance_cycles = nsec_to_cycles(vcpu,</yellow>
+<blue>	lapic_timer_advance_cycles = nsec_to_cycles(vcpu,</blue>
 <yellow>						    ktimer->timer_advance_ns);</yellow>
 
 	if (delta_tsc &gt; lapic_timer_advance_cycles)
@@ -7967,7 +7967,7 @@ static int vmx_set_hv_timer(struct kvm_vcpu *vcpu, u64 guest_deadline_tsc,
 		delta_tsc = 0;
 
 	/* Convert to host delta tsc if tsc scaling is enabled */
-<yellow>	if (vcpu->arch.l1_tsc_scaling_ratio != kvm_caps.default_tsc_scaling_ratio &&</yellow>
+<blue>	if (vcpu->arch.l1_tsc_scaling_ratio != kvm_caps.default_tsc_scaling_ratio &&</blue>
 <yellow>	    delta_tsc && u64_shl_div_u64(delta_tsc,</yellow>
 <yellow>				kvm_caps.tsc_scaling_ratio_frac_bits,</yellow>
 				vcpu-&gt;arch.l1_tsc_scaling_ratio, &amp;delta_tsc))
@@ -7979,17 +7979,17 @@ static int vmx_set_hv_timer(struct kvm_vcpu *vcpu, u64 guest_deadline_tsc,
 	 * It&#x27;s possible that it fits on later vmentries, but checking
 	 * on every vmentry is costly so we just use an hrtimer.
 	 */
-<yellow>	if (delta_tsc >> (cpu_preemption_timer_multi + 32))</yellow>
+<blue>	if (delta_tsc >> (cpu_preemption_timer_multi + 32))</blue>
 		return -ERANGE;
 
-<yellow>	vmx->hv_deadline_tsc = tscl + delta_tsc;</yellow>
-<yellow>	*expired = !delta_tsc;</yellow>
+<blue>	vmx->hv_deadline_tsc = tscl + delta_tsc;</blue>
+<blue>	*expired = !delta_tsc;</blue>
 	return 0;
-<yellow>}</yellow>
+<blue>}</blue>
 
 static void vmx_cancel_hv_timer(struct kvm_vcpu *vcpu)
 <yellow>{</yellow>
-<yellow>	to_vmx(vcpu)->hv_deadline_tsc = -1;</yellow>
+<blue>	to_vmx(vcpu)->hv_deadline_tsc = -1;</blue>
 }
 #endif
 
@@ -8674,6 +8674,6 @@ module_init(vmx_init);
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
 </script></body></html>

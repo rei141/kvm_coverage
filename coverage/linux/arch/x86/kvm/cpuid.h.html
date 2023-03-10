@@ -228,7 +228,7 @@ static inline int guest_cpuid_stepping(struct kvm_vcpu *vcpu)
 
 static inline bool guest_has_spec_ctrl_msr(struct kvm_vcpu *vcpu)
 {
-<yellow>	return (guest_cpuid_has(vcpu, X86_FEATURE_SPEC_CTRL) ||</yellow>
+<blue>	return (guest_cpuid_has(vcpu, X86_FEATURE_SPEC_CTRL) ||</blue>
 <yellow>		guest_cpuid_has(vcpu, X86_FEATURE_AMD_STIBP) ||</yellow>
 <yellow>		guest_cpuid_has(vcpu, X86_FEATURE_AMD_IBRS) ||</yellow>
 <yellow>		guest_cpuid_has(vcpu, X86_FEATURE_AMD_SSBD));</yellow>
@@ -302,6 +302,6 @@ static __always_inline bool guest_pv_has(struct kvm_vcpu *vcpu,
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
 </script></body></html>

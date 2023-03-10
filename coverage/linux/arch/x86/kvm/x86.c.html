@@ -3349,7 +3349,7 @@ static int set_msr_mce(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 <blue>		vcpu->arch.mcg_ctl = data;</blue>
 		break;
 	case MSR_IA32_MC0_CTL2 ... MSR_IA32_MCx_CTL2(KVM_MAX_MCE_BANKS) - 1:
-<yellow>		last_msr = MSR_IA32_MCx_CTL2(bank_num) - 1;</yellow>
+<blue>		last_msr = MSR_IA32_MCx_CTL2(bank_num) - 1;</blue>
 		if (msr &gt; last_msr)
 			return 1;
 
@@ -3688,7 +3688,7 @@ int kvm_set_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
 	case MSR_IA32_APICBASE:
 <blue>		return kvm_set_apic_base(vcpu, msr_info);</blue>
 	case APIC_BASE_MSR ... APIC_BASE_MSR + 0xff:
-<yellow>		return kvm_x2apic_msr_write(vcpu, msr, data);</yellow>
+<blue>		return kvm_x2apic_msr_write(vcpu, msr, data);</blue>
 	case MSR_IA32_TSC_DEADLINE:
 <blue>		kvm_set_lapic_tscdeadline_msr(vcpu, data);</blue>
 		break;
@@ -4812,7 +4812,7 @@ void kvm_arch_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
 		}
 
 <blue>		if (kvm_lapic_hv_timer_in_use(vcpu))</blue>
-<yellow>			kvm_lapic_restart_hv_timer(vcpu);</yellow>
+<blue>			kvm_lapic_restart_hv_timer(vcpu);</blue>
 
 		/*
 		 * On a host with synchronized TSC, there is no need to update
@@ -10571,10 +10571,10 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
 		if (likely(exit_fastpath != EXIT_FASTPATH_REENTER_GUEST))
 			break;
 
-<yellow>		if (kvm_lapic_enabled(vcpu))</yellow>
-<yellow>			static_call_cond(kvm_x86_sync_pir_to_irr)(vcpu);</yellow>
+<blue>		if (kvm_lapic_enabled(vcpu))</blue>
+<blue>			static_call_cond(kvm_x86_sync_pir_to_irr)(vcpu);</blue>
 
-<yellow>		if (unlikely(kvm_vcpu_exit_request(vcpu))) {</yellow>
+<blue>		if (unlikely(kvm_vcpu_exit_request(vcpu))) {</blue>
 			exit_fastpath = EXIT_FASTPATH_EXIT_HANDLED;
 			break;
 		}
@@ -10691,7 +10691,7 @@ static inline int vcpu_block(struct kvm_vcpu *vcpu)
 		 */
 <blue>		hv_timer = kvm_lapic_hv_timer_in_use(vcpu);</blue>
 		if (hv_timer)
-<yellow>			kvm_lapic_switch_to_sw_timer(vcpu);</yellow>
+<blue>			kvm_lapic_switch_to_sw_timer(vcpu);</blue>
 
 <blue>		kvm_vcpu_srcu_read_unlock(vcpu);</blue>
 <blue>		if (vcpu->arch.mp_state == KVM_MP_STATE_HALTED)</blue>
@@ -10701,7 +10701,7 @@ static inline int vcpu_block(struct kvm_vcpu *vcpu)
 <blue>		kvm_vcpu_srcu_read_lock(vcpu);</blue>
 
 		if (hv_timer)
-<yellow>			kvm_lapic_switch_to_hv_timer(vcpu);</yellow>
+<blue>			kvm_lapic_switch_to_hv_timer(vcpu);</blue>
 
 		/*
 		 * If the vCPU is not runnable, a signal or another host event
@@ -13557,6 +13557,6 @@ module_exit(kvm_x86_exit);
 </div><script>const fileList = document.getElementById('file_list')
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.4%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
 </script></body></html>
