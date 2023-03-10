@@ -4182,7 +4182,7 @@ static int vmx_deliver_nested_posted_interrupt(struct kvm_vcpu *vcpu,
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 
 <yellow>	if (is_guest_mode(vcpu) &&</yellow>
-<yellow>	    vector == vmx->nested.posted_intr_nv) {</yellow>
+<blue>	    vector == vmx->nested.posted_intr_nv) {</blue>
 		/*
 		 * If a posted intr is not recognized by hardware,
 		 * we will accomplish it in the next vmentry.
@@ -4220,12 +4220,12 @@ static int vmx_deliver_posted_interrupt(struct kvm_vcpu *vcpu, int vector)
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	int r;
 
-<yellow>	r = vmx_deliver_nested_posted_interrupt(vcpu, vector);</yellow>
+<blue>	r = vmx_deliver_nested_posted_interrupt(vcpu, vector);</blue>
 <yellow>	if (!r)</yellow>
 		return 0;
 
 	/* Note, this is called iff the local APIC is in-kernel. */
-<yellow>	if (!vcpu->arch.apic->apicv_active)</yellow>
+<blue>	if (!vcpu->arch.apic->apicv_active)</blue>
 		return -1;
 
 <yellow>	if (pi_test_and_set_pir(vector, &vmx->pi_desc))</yellow>
@@ -4248,17 +4248,17 @@ static int vmx_deliver_posted_interrupt(struct kvm_vcpu *vcpu, int vector)
 static void vmx_deliver_interrupt(struct kvm_lapic *apic, int delivery_mode,
 				  int trig_mode, int vector)
 <yellow>{</yellow>
-<yellow>	struct kvm_vcpu *vcpu = apic->vcpu;</yellow>
+<blue>	struct kvm_vcpu *vcpu = apic->vcpu;</blue>
 
-<yellow>	if (vmx_deliver_posted_interrupt(vcpu, vector)) {</yellow>
-<yellow>		kvm_lapic_set_irr(vector, apic);</yellow>
+<blue>	if (vmx_deliver_posted_interrupt(vcpu, vector)) {</blue>
+<blue>		kvm_lapic_set_irr(vector, apic);</blue>
 		kvm_make_request(KVM_REQ_EVENT, vcpu);
 		kvm_vcpu_kick(vcpu);
 	} else {
 <yellow>		trace_kvm_apicv_accept_irq(vcpu->vcpu_id, delivery_mode,</yellow>
 					   trig_mode, vector);
 	}
-<yellow>}</yellow>
+<blue>}</blue>
 
 /*
  * Set up the vmcs&#x27;s constant host-state fields, i.e., host-state fields that
@@ -5605,12 +5605,12 @@ static int handle_invlpg(struct kvm_vcpu *vcpu)
 
 static int handle_apic_access(struct kvm_vcpu *vcpu)
 {
-<yellow>	if (likely(fasteoi)) {</yellow>
-<yellow>		unsigned long exit_qualification = vmx_get_exit_qual(vcpu);</yellow>
+<blue>	if (likely(fasteoi)) {</blue>
+<blue>		unsigned long exit_qualification = vmx_get_exit_qual(vcpu);</blue>
 		int access_type, offset;
 
 <yellow>		access_type = exit_qualification & APIC_ACCESS_TYPE;</yellow>
-<yellow>		offset = exit_qualification & APIC_ACCESS_OFFSET;</yellow>
+<blue>		offset = exit_qualification & APIC_ACCESS_OFFSET;</blue>
 		/*
 		 * Sane guest uses MOV to write EOI, with written value
 		 * not cared. So make a short-circuit here by avoiding
@@ -5622,8 +5622,8 @@ static int handle_apic_access(struct kvm_vcpu *vcpu)
 <yellow>			return kvm_skip_emulated_instruction(vcpu);</yellow>
 		}
 	}
-<yellow>	return kvm_emulate_instruction(vcpu, 0);</yellow>
-<yellow>}</yellow>
+<blue>	return kvm_emulate_instruction(vcpu, 0);</blue>
+<blue>}</blue>
 
 static int handle_apic_eoi_induced(struct kvm_vcpu *vcpu)
 <yellow>{</yellow>
@@ -6652,7 +6652,7 @@ static void vmx_update_cr8_intercept(struct kvm_vcpu *vcpu, int tpr, int irr)
 		return;
 
 <blue>	tpr_threshold = (irr == -1 || tpr < irr) ? 0 : irr;</blue>
-<yellow>	if (is_guest_mode(vcpu))</yellow>
+<blue>	if (is_guest_mode(vcpu))</blue>
 <blue>		to_vmx(vcpu)->nested.l1_tpr_threshold = tpr_threshold;</blue>
 	else
 <blue>		vmcs_write32(TPR_THRESHOLD, tpr_threshold);</blue>
@@ -6828,10 +6828,10 @@ static int vmx_sync_pir_to_irr(struct kvm_vcpu *vcpu)
 	 */
 <blue>	if (!is_guest_mode(vcpu) && kvm_vcpu_apicv_active(vcpu))</blue>
 <blue>		vmx_set_rvi(max_irr);</blue>
-<yellow>	else if (got_posted_interrupt)</yellow>
+<blue>	else if (got_posted_interrupt)</blue>
 <yellow>		kvm_make_request(KVM_REQ_EVENT, vcpu);</yellow>
 
-<yellow>	return max_irr;</yellow>
+<blue>	return max_irr;</blue>
 }
 
 static void vmx_load_eoi_exitmap(struct kvm_vcpu *vcpu, u64 *eoi_exit_bitmap)
@@ -8672,8 +8672,8 @@ module_init(vmx_init);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
 </script></body></html>

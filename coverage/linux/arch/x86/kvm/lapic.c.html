@@ -249,7 +249,7 @@ static bool kvm_use_posted_timer_interrupt(struct kvm_vcpu *vcpu)
 		return true;
 		}
 	case KVM_APIC_MODE_XAPIC_FLAT:
-<yellow>		*cluster = map->xapic_flat_map;</yellow>
+<blue>		*cluster = map->xapic_flat_map;</blue>
 		*mask = dest_id &amp; 0xff;
 		return true;
 	case KVM_APIC_MODE_XAPIC_CLUSTER:
@@ -354,8 +354,8 @@ void kvm_recalculate_apic_map(struct kvm *kvm)
 <yellow>			new->mode |= KVM_APIC_MODE_X2APIC;</yellow>
 <blue>		} else if (ldr) {</blue>
 			ldr = GET_APIC_LOGICAL_ID(ldr);
-<yellow>			if (kvm_lapic_get_reg(apic, APIC_DFR) == APIC_DFR_FLAT)</yellow>
-<yellow>				new->mode |= KVM_APIC_MODE_XAPIC_FLAT;</yellow>
+<blue>			if (kvm_lapic_get_reg(apic, APIC_DFR) == APIC_DFR_FLAT)</blue>
+<blue>				new->mode |= KVM_APIC_MODE_XAPIC_FLAT;</blue>
 			else
 <yellow>				new->mode |= KVM_APIC_MODE_XAPIC_CLUSTER;</yellow>
 		}
@@ -363,8 +363,8 @@ void kvm_recalculate_apic_map(struct kvm *kvm)
 <blue>		if (!kvm_apic_map_get_logical_dest(new, ldr, &cluster, &mask))</blue>
 			continue;
 
-<yellow>		if (mask)</yellow>
-<yellow>			cluster[ffs(mask) - 1] = apic;</yellow>
+<blue>		if (mask)</blue>
+<blue>			cluster[ffs(mask) - 1] = apic;</blue>
 	}
 out:
 <blue>	old = rcu_dereference_protected(kvm->arch.apic_map,</blue>
@@ -395,7 +395,7 @@ static inline void apic_set_spiv(struct kvm_lapic *apic, u32 val)
 		if (enabled)
 <blue>			static_branch_slow_dec_deferred(&apic_sw_disabled);</blue>
 		else
-<yellow>			static_branch_inc(&apic_sw_disabled.key);</yellow>
+<blue>			static_branch_inc(&apic_sw_disabled.key);</blue>
 
 <blue>		atomic_set_release(&apic->vcpu->kvm->arch.apic_map_dirty, DIRTY);</blue>
 	}
@@ -407,7 +407,7 @@ static inline void apic_set_spiv(struct kvm_lapic *apic, u32 val)
 
 static inline void kvm_apic_set_xapic_id(struct kvm_lapic *apic, u8 id)
 {
-<yellow>	kvm_lapic_set_reg(apic, APIC_ID, id << 24);</yellow>
+<blue>	kvm_lapic_set_reg(apic, APIC_ID, id << 24);</blue>
 	atomic_set_release(&amp;apic-&gt;vcpu-&gt;kvm-&gt;arch.apic_map_dirty, DIRTY);
 }
 
@@ -419,7 +419,7 @@ static inline void kvm_apic_set_ldr(struct kvm_lapic *apic, u32 id)
 
 static inline void kvm_apic_set_dfr(struct kvm_lapic *apic, u32 val)
 {
-<yellow>	kvm_lapic_set_reg(apic, APIC_DFR, val);</yellow>
+<blue>	kvm_lapic_set_reg(apic, APIC_DFR, val);</blue>
 	atomic_set_release(&amp;apic-&gt;vcpu-&gt;kvm-&gt;arch.apic_map_dirty, DIRTY);
 }
 
@@ -668,7 +668,7 @@ static inline void apic_set_isr(int vec, struct kvm_lapic *apic)
 	 * Note that isr_count is always 1, and highest_isr_cache
 	 * is always -1, with APIC virtualization enabled.
 	 */
-<yellow>	if (!apic->isr_count)</yellow>
+<blue>	if (!apic->isr_count)</blue>
 <yellow>		return -1;</yellow>
 <blue>	if (likely(apic->highest_isr_cache != -1))</blue>
 		return apic-&gt;highest_isr_cache;
@@ -853,7 +853,7 @@ static bool __apic_update_ppr(struct kvm_lapic *apic, u32 *new_ppr)
 
 <blue>	*new_ppr = ppr;</blue>
 	if (old_ppr != ppr)
-<yellow>		kvm_lapic_set_reg(apic, APIC_PROCPRI, ppr);</yellow>
+<blue>		kvm_lapic_set_reg(apic, APIC_PROCPRI, ppr);</blue>
 
 <blue>	return ppr < old_ppr;</blue>
 }
@@ -875,7 +875,7 @@ EXPORT_SYMBOL_GPL(kvm_apic_update_ppr);
 
 static void apic_set_tpr(struct kvm_lapic *apic, u32 tpr)
 {
-<yellow>	kvm_lapic_set_reg(apic, APIC_TASKPRI, tpr);</yellow>
+<blue>	kvm_lapic_set_reg(apic, APIC_TASKPRI, tpr);</blue>
 	apic_update_ppr(apic);
 }
 
@@ -977,7 +977,7 @@ bool kvm_apic_match_dest(struct kvm_vcpu *vcpu, struct kvm_lapic *source,
 	case APIC_DEST_ALLINC:
 		return true;
 	case APIC_DEST_ALLBUT:
-<yellow>		return target != source;</yellow>
+<blue>		return target != source;</blue>
 	default:
 		return false;
 	}
@@ -1042,11 +1042,11 @@ static bool kvm_apic_is_broadcast_dest(struct kvm *kvm, struct kvm_lapic **src,
 {
 	int i, lowest;
 
-<yellow>	if (irq->shorthand == APIC_DEST_SELF && src) {</yellow>
+<blue>	if (irq->shorthand == APIC_DEST_SELF && src) {</blue>
 <yellow>		*dst = src;</yellow>
 		*bitmap = 1;
 		return true;
-<yellow>	} else if (irq->shorthand)</yellow>
+<blue>	} else if (irq->shorthand)</blue>
 		return false;
 
 <yellow>	if (!map || kvm_apic_is_broadcast_dest(kvm, src, irq, map))</yellow>
@@ -1099,18 +1099,18 @@ static bool kvm_apic_is_broadcast_dest(struct kvm *kvm, struct kvm_lapic **src,
 <yellow>	*bitmap = (lowest >= 0) ? 1 << lowest : 0;</yellow>
 
 	return true;
-<yellow>}</yellow>
+<blue>}</blue>
 
 bool kvm_irq_delivery_to_apic_fast(struct kvm *kvm, struct kvm_lapic *src,
 		struct kvm_lapic_irq *irq, int *r, struct dest_map *dest_map)
-<yellow>{</yellow>
+<blue>{</blue>
 	struct kvm_apic_map *map;
 	unsigned long bitmap;
 	struct kvm_lapic **dst = NULL;
 	int i;
 	bool ret;
 
-<yellow>	*r = -1;</yellow>
+<blue>	*r = -1;</blue>
 
 	if (irq-&gt;shorthand == APIC_DEST_SELF) {
 <yellow>		if (KVM_BUG_ON(!src, kvm)) {</yellow>
@@ -1121,10 +1121,10 @@ bool kvm_irq_delivery_to_apic_fast(struct kvm *kvm, struct kvm_lapic *src,
 		return true;
 	}
 
-<yellow>	rcu_read_lock();</yellow>
-<yellow>	map = rcu_dereference(kvm->arch.apic_map);</yellow>
+<blue>	rcu_read_lock();</blue>
+<blue>	map = rcu_dereference(kvm->arch.apic_map);</blue>
 
-<yellow>	ret = kvm_apic_map_get_dest_lapic(kvm, &src, irq, map, &dst, &bitmap);</yellow>
+<blue>	ret = kvm_apic_map_get_dest_lapic(kvm, &src, irq, map, &dst, &bitmap);</blue>
 	if (ret) {
 <yellow>		*r = 0;</yellow>
 <yellow>		for_each_set_bit(i, &bitmap, 16) {</yellow>
@@ -1134,7 +1134,7 @@ bool kvm_irq_delivery_to_apic_fast(struct kvm *kvm, struct kvm_lapic *src,
 		}
 	}
 
-<yellow>	rcu_read_unlock();</yellow>
+<blue>	rcu_read_unlock();</blue>
 	return ret;
 }
 
@@ -1360,15 +1360,15 @@ static bool kvm_ioapic_handles_vector(struct kvm_lapic *apic, int vector)
 
 static int apic_set_eoi(struct kvm_lapic *apic)
 {
-<yellow>	int vector = apic_find_highest_isr(apic);</yellow>
+<blue>	int vector = apic_find_highest_isr(apic);</blue>
 
-<yellow>	trace_kvm_eoi(apic, vector);</yellow>
+<blue>	trace_kvm_eoi(apic, vector);</blue>
 
 	/*
 	 * Not every write EOI will has corresponding ISR,
 	 * one example is when Kernel check timer on setup_IO_APIC
 	 */
-<yellow>	if (vector == -1)</yellow>
+<blue>	if (vector == -1)</blue>
 		return vector;
 
 <yellow>	apic_clear_isr(vector, apic);</yellow>
@@ -1381,7 +1381,7 @@ static int apic_set_eoi(struct kvm_lapic *apic)
 <yellow>	kvm_ioapic_send_eoi(apic, vector);</yellow>
 	kvm_make_request(KVM_REQ_EVENT, apic-&gt;vcpu);
 	return vector;
-<yellow>}</yellow>
+<blue>}</blue>
 
 /*
  * this interface assumes a trap-like exit, which has already finished
@@ -1403,9 +1403,9 @@ void kvm_apic_send_ipi(struct kvm_lapic *apic, u32 icr_low, u32 icr_high)
 	struct kvm_lapic_irq irq;
 
 	/* KVM has no delay and should always clear the BUSY/PENDING flag. */
-<yellow>	WARN_ON_ONCE(icr_low & APIC_ICR_BUSY);</yellow>
+<blue>	WARN_ON_ONCE(icr_low & APIC_ICR_BUSY);</blue>
 
-<yellow>	irq.vector = icr_low & APIC_VECTOR_MASK;</yellow>
+<blue>	irq.vector = icr_low & APIC_VECTOR_MASK;</blue>
 	irq.delivery_mode = icr_low &amp; APIC_MODE_MASK;
 	irq.dest_mode = icr_low &amp; APIC_DEST_MASK;
 	irq.level = (icr_low &amp; APIC_INT_ASSERT) != 0;
@@ -1415,11 +1415,11 @@ void kvm_apic_send_ipi(struct kvm_lapic *apic, u32 icr_low, u32 icr_high)
 	if (apic_x2apic_mode(apic))
 		irq.dest_id = icr_high;
 	else
-<yellow>		irq.dest_id = GET_XAPIC_DEST_FIELD(icr_high);</yellow>
+<blue>		irq.dest_id = GET_XAPIC_DEST_FIELD(icr_high);</blue>
 
-<yellow>	trace_kvm_apic_ipi(icr_low, irq.dest_id);</yellow>
+<blue>	trace_kvm_apic_ipi(icr_low, irq.dest_id);</blue>
 
-<yellow>	kvm_irq_delivery_to_apic(apic->vcpu->kvm, apic, &irq, NULL);</yellow>
+<blue>	kvm_irq_delivery_to_apic(apic->vcpu->kvm, apic, &irq, NULL);</blue>
 }
 EXPORT_SYMBOL_GPL(kvm_apic_send_ipi);
 
@@ -1433,10 +1433,10 @@ static u32 apic_get_tmcct(struct kvm_lapic *apic)
 
 	/* if initial count is 0, current count should also be 0 */
 <blue>	if (kvm_lapic_get_reg(apic, APIC_TMICT) == 0 ||</blue>
-<yellow>		apic->lapic_timer.period == 0)</yellow>
+<blue>		apic->lapic_timer.period == 0)</blue>
 		return 0;
 
-<yellow>	now = ktime_get();</yellow>
+<blue>	now = ktime_get();</blue>
 	remaining = ktime_sub(apic-&gt;lapic_timer.target_expiration, now);
 	if (ktime_to_ns(remaining) &lt; 0)
 		remaining = 0;
@@ -1460,7 +1460,7 @@ static void __report_tpr_access(struct kvm_lapic *apic, bool write)
 
 static inline void report_tpr_access(struct kvm_lapic *apic, bool write)
 {
-<yellow>	if (apic->vcpu->arch.tpr_access_reporting)</yellow>
+<blue>	if (apic->vcpu->arch.tpr_access_reporting)</blue>
 <yellow>		__report_tpr_access(apic, write);</yellow>
 }
 
@@ -1639,7 +1639,7 @@ static void cancel_apic_timer(struct kvm_lapic *apic)
 <blue>	hrtimer_cancel(&apic->lapic_timer.timer);</blue>
 	preempt_disable();
 <blue>	if (apic->lapic_timer.hv_timer_in_use)</blue>
-<yellow>		cancel_hv_timer(apic);</yellow>
+<blue>		cancel_hv_timer(apic);</blue>
 <blue>	preempt_enable();</blue>
 <blue>	atomic_set(&apic->lapic_timer.pending, 0);</blue>
 }
@@ -1865,9 +1865,9 @@ static void update_target_expiration(struct kvm_lapic *apic, uint32_t old_diviso
 
 	apic-&gt;lapic_timer.period =
 			tmict_to_ns(apic, kvm_lapic_get_reg(apic, APIC_TMICT));
-<yellow>	limit_periodic_timer_frequency(apic);</yellow>
+<blue>	limit_periodic_timer_frequency(apic);</blue>
 
-<yellow>	now = ktime_get();</yellow>
+<blue>	now = ktime_get();</blue>
 	remaining = ktime_sub(apic-&gt;lapic_timer.target_expiration, now);
 	if (ktime_to_ns(remaining) &lt; 0)
 		remaining = 0;
@@ -1876,9 +1876,9 @@ static void update_target_expiration(struct kvm_lapic *apic, uint32_t old_diviso
 	ns_remaining_new = mul_u64_u32_div(ns_remaining_old,
 	                                   apic-&gt;divide_count, old_divisor);
 
-<yellow>	apic->lapic_timer.tscdeadline +=</yellow>
-<yellow>		nsec_to_cycles(apic->vcpu, ns_remaining_new) -</yellow>
-<yellow>		nsec_to_cycles(apic->vcpu, ns_remaining_old);</yellow>
+<blue>	apic->lapic_timer.tscdeadline +=</blue>
+<blue>		nsec_to_cycles(apic->vcpu, ns_remaining_new) -</blue>
+<blue>		nsec_to_cycles(apic->vcpu, ns_remaining_old);</blue>
 	apic-&gt;lapic_timer.target_expiration = ktime_add_ns(now, ns_remaining_new);
 }
 
@@ -2141,7 +2141,7 @@ static void kvm_lapic_xapic_id_updated(struct kvm_lapic *apic)
 <blue>	if (kvm_xapic_id(apic) == apic->vcpu->vcpu_id)</blue>
 		return;
 
-<yellow>	kvm_set_apicv_inhibit(apic->vcpu->kvm, APICV_INHIBIT_REASON_APIC_ID_MODIFIED);</yellow>
+<blue>	kvm_set_apicv_inhibit(apic->vcpu->kvm, APICV_INHIBIT_REASON_APIC_ID_MODIFIED);</blue>
 <blue>}</blue>
 
 static int get_lvt_index(u32 reg)
@@ -2162,8 +2162,8 @@ static int kvm_lapic_reg_write(struct kvm_lapic *apic, u32 reg, u32 val)
 
 	switch (reg) {
 	case APIC_ID:		/* Local APIC ID */
-<yellow>		if (!apic_x2apic_mode(apic)) {</yellow>
-<yellow>			kvm_apic_set_xapic_id(apic, val >> 24);</yellow>
+<blue>		if (!apic_x2apic_mode(apic)) {</blue>
+<blue>			kvm_apic_set_xapic_id(apic, val >> 24);</blue>
 			kvm_lapic_xapic_id_updated(apic);
 		} else {
 			ret = 1;
@@ -2171,24 +2171,24 @@ static int kvm_lapic_reg_write(struct kvm_lapic *apic, u32 reg, u32 val)
 		break;
 
 	case APIC_TASKPRI:
-<yellow>		report_tpr_access(apic, true);</yellow>
-<yellow>		apic_set_tpr(apic, val & 0xff);</yellow>
+<blue>		report_tpr_access(apic, true);</blue>
+<blue>		apic_set_tpr(apic, val & 0xff);</blue>
 		break;
 
 	case APIC_EOI:
-<yellow>		apic_set_eoi(apic);</yellow>
+<blue>		apic_set_eoi(apic);</blue>
 		break;
 
 	case APIC_LDR:
-<yellow>		if (!apic_x2apic_mode(apic))</yellow>
-<yellow>			kvm_apic_set_ldr(apic, val & APIC_LDR_MASK);</yellow>
+<blue>		if (!apic_x2apic_mode(apic))</blue>
+<blue>			kvm_apic_set_ldr(apic, val & APIC_LDR_MASK);</blue>
 		else
 			ret = 1;
 		break;
 
 	case APIC_DFR:
-<yellow>		if (!apic_x2apic_mode(apic))</yellow>
-<yellow>			kvm_apic_set_dfr(apic, val | 0x0FFFFFFF);</yellow>
+<blue>		if (!apic_x2apic_mode(apic))</blue>
+<blue>			kvm_apic_set_dfr(apic, val | 0x0FFFFFFF);</blue>
 		else
 			ret = 1;
 		break;
@@ -2201,29 +2201,29 @@ static int kvm_lapic_reg_write(struct kvm_lapic *apic, u32 reg, u32 val)
 <blue>		if (!(val & APIC_SPIV_APIC_ENABLED)) {</blue>
 			int i;
 
-<yellow>			for (i = 0; i < apic->nr_lvt_entries; i++) {</yellow>
+<blue>			for (i = 0; i < apic->nr_lvt_entries; i++) {</blue>
 				kvm_lapic_set_reg(apic, APIC_LVTx(i),
-<yellow>					kvm_lapic_get_reg(apic, APIC_LVTx(i)) | APIC_LVT_MASKED);</yellow>
+<blue>					kvm_lapic_get_reg(apic, APIC_LVTx(i)) | APIC_LVT_MASKED);</blue>
 			}
 			apic_update_lvtt(apic);
-<yellow>			atomic_set(&apic->lapic_timer.pending, 0);</yellow>
+<blue>			atomic_set(&apic->lapic_timer.pending, 0);</blue>
 
 		}
 		break;
 	}
 	case APIC_ICR:
-<yellow>		WARN_ON_ONCE(apic_x2apic_mode(apic));</yellow>
+<blue>		WARN_ON_ONCE(apic_x2apic_mode(apic));</blue>
 
 		/* No delay here, so we always clear the pending bit */
 		val &amp;= ~APIC_ICR_BUSY;
-<yellow>		kvm_apic_send_ipi(apic, val, kvm_lapic_get_reg(apic, APIC_ICR2));</yellow>
+<blue>		kvm_apic_send_ipi(apic, val, kvm_lapic_get_reg(apic, APIC_ICR2));</blue>
 		kvm_lapic_set_reg(apic, APIC_ICR, val);
 		break;
 	case APIC_ICR2:
-<yellow>		if (apic_x2apic_mode(apic))</yellow>
+<blue>		if (apic_x2apic_mode(apic))</blue>
 			ret = 1;
 		else
-<yellow>			kvm_lapic_set_reg(apic, APIC_ICR2, val & 0xff000000);</yellow>
+<blue>			kvm_lapic_set_reg(apic, APIC_ICR2, val & 0xff000000);</blue>
 		break;
 
 	case APIC_LVT0:
@@ -2270,19 +2270,19 @@ static int kvm_lapic_reg_write(struct kvm_lapic *apic, u32 reg, u32 val)
 		update_divide_count(apic);
 		if (apic-&gt;divide_count != old_divisor &amp;&amp;
 <blue>				apic->lapic_timer.period) {</blue>
-<yellow>			hrtimer_cancel(&apic->lapic_timer.timer);</yellow>
-<yellow>			update_target_expiration(apic, old_divisor);</yellow>
+<blue>			hrtimer_cancel(&apic->lapic_timer.timer);</blue>
+<blue>			update_target_expiration(apic, old_divisor);</blue>
 			restart_apic_timer(apic);
 		}
 		break;
 	}
 	case APIC_ESR:
-<yellow>		if (apic_x2apic_mode(apic) && val != 0)</yellow>
+<blue>		if (apic_x2apic_mode(apic) && val != 0)</blue>
 			ret = 1;
 		break;
 
 	case APIC_SELF_IPI:
-<yellow>		if (apic_x2apic_mode(apic))</yellow>
+<blue>		if (apic_x2apic_mode(apic))</blue>
 <yellow>			kvm_apic_send_ipi(apic, APIC_DEST_SELF | (val & APIC_VECTOR_MASK), 0);</yellow>
 		else
 			ret = 1;
@@ -2581,10 +2581,10 @@ int apic_has_pending_timer(struct kvm_vcpu *vcpu)
 <blue>	struct kvm_lapic *apic = vcpu->arch.apic;</blue>
 
 <blue>	if (apic_enabled(apic) && apic_lvt_enabled(apic, APIC_LVTT))</blue>
-<yellow>		return atomic_read(&apic->lapic_timer.pending);</yellow>
+<blue>		return atomic_read(&apic->lapic_timer.pending);</blue>
 
 <blue>	return 0;</blue>
-<yellow>}</yellow>
+<blue>}</blue>
 
 int kvm_apic_local_deliver(struct kvm_lapic *apic, int lvt_type)
 {
@@ -3144,8 +3144,8 @@ void kvm_lapic_exit(void)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
 </script></body></html>

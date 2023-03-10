@@ -786,10 +786,10 @@ static void kvm_mmu_notifier_change_pte(struct mmu_notifier *mn,
 	 * spte can be established without taking the mmu_lock and
 	 * count is also read inside the mmu_lock critical section.
 	 */
-<yellow>	kvm->mmu_invalidate_in_progress++;</yellow>
+<blue>	kvm->mmu_invalidate_in_progress++;</blue>
 	if (likely(kvm-&gt;mmu_invalidate_in_progress == 1)) {
 <blue>		kvm->mmu_invalidate_range_start = start;</blue>
-<yellow>		kvm->mmu_invalidate_range_end = end;</yellow>
+<blue>		kvm->mmu_invalidate_range_end = end;</blue>
 	} else {
 		/*
 		 * Fully tracking multiple concurrent ranges has diminishing
@@ -862,7 +862,7 @@ void kvm_mmu_invalidate_end(struct kvm *kvm, unsigned long start,
 	 * the page that is going to be mapped in the spte could have
 	 * been freed.
 	 */
-<yellow>	kvm->mmu_invalidate_seq++;</yellow>
+<blue>	kvm->mmu_invalidate_seq++;</blue>
 	smp_wmb();
 	/*
 	 * The above sequence increase must be visible before the
@@ -6226,8 +6226,8 @@ int kvm_vm_create_worker_thread(struct kvm *kvm, kvm_vm_thread_fn_t thread_fn,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
 </script></body></html>

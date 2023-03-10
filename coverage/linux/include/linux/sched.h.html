@@ -2275,7 +2275,7 @@ static inline int spin_needbreak(spinlock_t *lock)
 static inline int rwlock_needbreak(rwlock_t *lock)
 {
 #ifdef CONFIG_PREEMPTION
-<yellow>	return rwlock_is_contended(lock);</yellow>
+<blue>	return rwlock_is_contended(lock);</blue>
 #else
 	return 0;
 #endif
@@ -2488,8 +2488,8 @@ extern void sched_set_stop_task(int cpu, struct task_struct *stop);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
 </script></body></html>

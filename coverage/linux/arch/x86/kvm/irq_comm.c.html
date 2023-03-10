@@ -108,29 +108,29 @@ static int kvm_set_ioapic_irq(struct kvm_kernel_irq_routing_entry *e,
 
 int kvm_irq_delivery_to_apic(struct kvm *kvm, struct kvm_lapic *src,
 		struct kvm_lapic_irq *irq, struct dest_map *dest_map)
-<yellow>{</yellow>
+<blue>{</blue>
 	int r = -1;
 	struct kvm_vcpu *vcpu, *lowest = NULL;
 	unsigned long i, dest_vcpu_bitmap[BITS_TO_LONGS(KVM_MAX_VCPUS)];
 	unsigned int dest_vcpus = 0;
 
-<yellow>	if (kvm_irq_delivery_to_apic_fast(kvm, src, irq, &r, dest_map))</yellow>
+<blue>	if (kvm_irq_delivery_to_apic_fast(kvm, src, irq, &r, dest_map))</blue>
 		return r;
 
-<yellow>	if (irq->dest_mode == APIC_DEST_PHYSICAL &&</yellow>
-<yellow>	    irq->dest_id == 0xff && kvm_lowest_prio_delivery(irq)) {</yellow>
+<blue>	if (irq->dest_mode == APIC_DEST_PHYSICAL &&</blue>
+<blue>	    irq->dest_id == 0xff && kvm_lowest_prio_delivery(irq)) {</blue>
 		printk(KERN_INFO &quot;kvm: apic: phys broadcast and lowest prio\n&quot;);
 		irq-&gt;delivery_mode = APIC_DM_FIXED;
 	}
 
-<yellow>	memset(dest_vcpu_bitmap, 0, sizeof(dest_vcpu_bitmap));</yellow>
+<blue>	memset(dest_vcpu_bitmap, 0, sizeof(dest_vcpu_bitmap));</blue>
 
-<yellow>	kvm_for_each_vcpu(i, vcpu, kvm) {</yellow>
-<yellow>		if (!kvm_apic_present(vcpu))</yellow>
+<blue>	kvm_for_each_vcpu(i, vcpu, kvm) {</blue>
+<blue>		if (!kvm_apic_present(vcpu))</blue>
 			continue;
 
 		if (!kvm_apic_match_dest(vcpu, src, irq-&gt;shorthand,
-<yellow>					irq->dest_id, irq->dest_mode))</yellow>
+<blue>					irq->dest_id, irq->dest_mode))</blue>
 			continue;
 
 <yellow>		if (!kvm_lowest_prio_delivery(irq)) {</yellow>
@@ -150,17 +150,17 @@ int kvm_irq_delivery_to_apic(struct kvm *kvm, struct kvm_lapic *src,
 		}
 	}
 
-<yellow>	if (dest_vcpus != 0) {</yellow>
+<blue>	if (dest_vcpus != 0) {</blue>
 <yellow>		int idx = kvm_vector_to_index(irq->vector, dest_vcpus,</yellow>
 					dest_vcpu_bitmap, KVM_MAX_VCPUS);
 
 		lowest = kvm_get_vcpu(kvm, idx);
 	}
 
-<yellow>	if (lowest)</yellow>
+<blue>	if (lowest)</blue>
 <yellow>		r = kvm_apic_set_irq(lowest, irq, dest_map);</yellow>
 
-<yellow>	return r;</yellow>
+<blue>	return r;</blue>
 }
 
 void kvm_set_msi_irq(struct kvm *kvm, struct kvm_kernel_irq_routing_entry *e,
@@ -506,8 +506,8 @@ void kvm_arch_irq_routing_update(struct kvm *kvm)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
 </script></body></html>

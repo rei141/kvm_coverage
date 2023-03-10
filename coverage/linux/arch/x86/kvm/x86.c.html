@@ -10193,10 +10193,10 @@ EXPORT_SYMBOL_GPL(kvm_vcpu_update_apicv);
 		kvm-&gt;arch.apicv_inhibit_reasons = new;
 <blue>		if (new) {</blue>
 			unsigned long gfn = gpa_to_gfn(APIC_DEFAULT_PHYS_BASE);
-<yellow>			int idx = srcu_read_lock(&kvm->srcu);</yellow>
+<blue>			int idx = srcu_read_lock(&kvm->srcu);</blue>
 
 			kvm_zap_gfn_range(kvm, gfn, gfn+1);
-<yellow>			srcu_read_unlock(&kvm->srcu, idx);</yellow>
+<blue>			srcu_read_unlock(&kvm->srcu, idx);</blue>
 		}
 	} else {
 <yellow>		kvm->arch.apicv_inhibit_reasons = new;</yellow>
@@ -10212,7 +10212,7 @@ EXPORT_SYMBOL_GPL(kvm_vcpu_update_apicv);
 <blue>	down_write(&kvm->arch.apicv_update_lock);</blue>
 	__kvm_set_or_clear_apicv_inhibit(kvm, reason, set);
 	up_write(&amp;kvm-&gt;arch.apicv_update_lock);
-<yellow>}</yellow>
+<blue>}</blue>
 EXPORT_SYMBOL_GPL(kvm_set_or_clear_apicv_inhibit);
 
 static void vcpu_scan_ioapic(struct kvm_vcpu *vcpu)
@@ -10231,7 +10231,7 @@ static void vcpu_scan_ioapic(struct kvm_vcpu *vcpu)
 	}
 
 <blue>	if (is_guest_mode(vcpu))</blue>
-<yellow>		vcpu->arch.load_eoi_exitmap_pending = true;</yellow>
+<blue>		vcpu->arch.load_eoi_exitmap_pending = true;</blue>
 	else
 <blue>		kvm_make_request(KVM_REQ_LOAD_EOI_EXITMAP, vcpu);</blue>
 }
@@ -13555,8 +13555,8 @@ module_exit(kvm_x86_exit);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
 </script></body></html>

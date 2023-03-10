@@ -1560,7 +1560,7 @@ slot_rmap_walk_init(struct slot_rmap_walk_iterator *iterator,
 <yellow>	iterator->slot = slot;</yellow>
 	iterator-&gt;start_level = start_level;
 	iterator-&gt;end_level = end_level;
-<yellow>	iterator->start_gfn = start_gfn;</yellow>
+<blue>	iterator->start_gfn = start_gfn;</blue>
 	iterator-&gt;end_gfn = end_gfn;
 
 	rmap_walk_init_level(iterator, iterator-&gt;start_level);
@@ -5812,12 +5812,12 @@ slot_handle_level_range(struct kvm *kvm, const struct kvm_memory_slot *memslot,
 {
 	struct slot_rmap_walk_iterator iterator;
 
-<yellow>	for_each_slot_rmap_range(memslot, start_level, end_level, start_gfn,</yellow>
+<blue>	for_each_slot_rmap_range(memslot, start_level, end_level, start_gfn,</blue>
 			end_gfn, &amp;iterator) {
 		if (iterator.rmap)
-<yellow>			flush |= fn(kvm, iterator.rmap, memslot);</yellow>
+<blue>			flush |= fn(kvm, iterator.rmap, memslot);</blue>
 
-<yellow>		if (need_resched() || rwlock_needbreak(&kvm->mmu_lock)) {</yellow>
+<blue>		if (need_resched() || rwlock_needbreak(&kvm->mmu_lock)) {</blue>
 <yellow>			if (flush && flush_on_yield) {</yellow>
 <yellow>				kvm_flush_remote_tlbs_with_address(kvm,</yellow>
 						start_gfn,
@@ -6118,7 +6118,7 @@ void kvm_mmu_uninit_vm(struct kvm *kvm)
 }
 
 static bool kvm_rmap_zap_gfn_range(struct kvm *kvm, gfn_t gfn_start, gfn_t gfn_end)
-<yellow>{</yellow>
+<blue>{</blue>
 	const struct kvm_memory_slot *memslot;
 	struct kvm_memslots *slots;
 	struct kvm_memslot_iter iter;
@@ -6126,20 +6126,20 @@ static bool kvm_rmap_zap_gfn_range(struct kvm *kvm, gfn_t gfn_start, gfn_t gfn_e
 	gfn_t start, end;
 	int i;
 
-<yellow>	if (!kvm_memslots_have_rmaps(kvm))</yellow>
+<blue>	if (!kvm_memslots_have_rmaps(kvm))</blue>
 		return flush;
 
-<yellow>	for (i = 0; i < KVM_ADDRESS_SPACE_NUM; i++) {</yellow>
-<yellow>		slots = __kvm_memslots(kvm, i);</yellow>
+<blue>	for (i = 0; i < KVM_ADDRESS_SPACE_NUM; i++) {</blue>
+<blue>		slots = __kvm_memslots(kvm, i);</blue>
 
-<yellow>		kvm_for_each_memslot_in_gfn_range(&iter, slots, gfn_start, gfn_end) {</yellow>
+<blue>		kvm_for_each_memslot_in_gfn_range(&iter, slots, gfn_start, gfn_end) {</blue>
 			memslot = iter.slot;
-<yellow>			start = max(gfn_start, memslot->base_gfn);</yellow>
+<blue>			start = max(gfn_start, memslot->base_gfn);</blue>
 			end = min(gfn_end, memslot-&gt;base_gfn + memslot-&gt;npages);
 <yellow>			if (WARN_ON_ONCE(start >= end))</yellow>
 				continue;
 
-<yellow>			flush = slot_handle_level_range(kvm, memslot, __kvm_zap_rmap,</yellow>
+<blue>			flush = slot_handle_level_range(kvm, memslot, __kvm_zap_rmap,</blue>
 							PG_LEVEL_4K, KVM_MAX_HUGEPAGE_LEVEL,
 							start, end - 1, true, flush);
 		}
@@ -6153,30 +6153,30 @@ static bool kvm_rmap_zap_gfn_range(struct kvm *kvm, gfn_t gfn_start, gfn_t gfn_e
  * (not including it)
  */
 void kvm_zap_gfn_range(struct kvm *kvm, gfn_t gfn_start, gfn_t gfn_end)
-<yellow>{</yellow>
+<blue>{</blue>
 	bool flush;
 	int i;
 
-<yellow>	if (WARN_ON_ONCE(gfn_end <= gfn_start))</yellow>
+<blue>	if (WARN_ON_ONCE(gfn_end <= gfn_start))</blue>
 		return;
 
-<yellow>	write_lock(&kvm->mmu_lock);</yellow>
+<blue>	write_lock(&kvm->mmu_lock);</blue>
 
 	kvm_mmu_invalidate_begin(kvm, 0, -1ul);
 
 	flush = kvm_rmap_zap_gfn_range(kvm, gfn_start, gfn_end);
 
-<yellow>	if (is_tdp_mmu_enabled(kvm)) {</yellow>
+<blue>	if (is_tdp_mmu_enabled(kvm)) {</blue>
 		for (i = 0; i &lt; KVM_ADDRESS_SPACE_NUM; i++)
-<yellow>			flush = kvm_tdp_mmu_zap_leafs(kvm, i, gfn_start,</yellow>
+<blue>			flush = kvm_tdp_mmu_zap_leafs(kvm, i, gfn_start,</blue>
 						      gfn_end, true, flush);
 	}
 
-<yellow>	if (flush)</yellow>
-<yellow>		kvm_flush_remote_tlbs_with_address(kvm, gfn_start,</yellow>
+<blue>	if (flush)</blue>
+<blue>		kvm_flush_remote_tlbs_with_address(kvm, gfn_start,</blue>
 						   gfn_end - gfn_start);
 
-<yellow>	kvm_mmu_invalidate_end(kvm, 0, -1ul);</yellow>
+<blue>	kvm_mmu_invalidate_end(kvm, 0, -1ul);</blue>
 
 	write_unlock(&amp;kvm-&gt;mmu_lock);
 }
@@ -7052,8 +7052,8 @@ void kvm_mmu_pre_destroy_vm(struct kvm *kvm)
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 58.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 59.8%</li>`
 fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 84.9%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 58.8%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.7%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 59.5%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 51.8%</li>`
 </script></body></html>
