@@ -1,0 +1,523 @@
+<doctype html>
+<html lang="ja">
+<head><title>mmutrace.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 452; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#if !defined(_TRACE_KVMMMU_H) || defined(TRACE_HEADER_MULTI_READ)
+#define _TRACE_KVMMMU_H
+
+#include &lt;linux/tracepoint.h&gt;
+#include &lt;linux/trace_events.h&gt;
+
+#undef TRACE_SYSTEM
+#define TRACE_SYSTEM kvmmmu
+
+#define KVM_MMU_PAGE_FIELDS		\
+	__field(__u8, mmu_valid_gen)	\
+	__field(__u64, gfn)		\
+	__field(__u32, role)		\
+	__field(__u32, root_count)	\
+	__field(bool, unsync)
+
+#define KVM_MMU_PAGE_ASSIGN(sp)				\
+	__entry-&gt;mmu_valid_gen = sp-&gt;mmu_valid_gen;	\
+	__entry-&gt;gfn = sp-&gt;gfn;				\
+	__entry-&gt;role = sp-&gt;role.word;			\
+	__entry-&gt;root_count = sp-&gt;root_count;		\
+	__entry-&gt;unsync = sp-&gt;unsync;
+
+#define KVM_MMU_PAGE_PRINTK() ({				        \
+	const char *saved_ptr = trace_seq_buffer_ptr(p);		\
+	static const char *access_str[] = {			        \
+		&quot;---&quot;, &quot;--x&quot;, &quot;w--&quot;, &quot;w-x&quot;, &quot;-u-&quot;, &quot;-ux&quot;, &quot;wu-&quot;, &quot;wux&quot;  \
+	};							        \
+	union kvm_mmu_page_role role;				        \
+								        \
+	role.word = __entry-&gt;role;					\
+									\
+	trace_seq_printf(p, &quot;sp gen %u gfn %llx l%u %u-byte q%u%s %s%s&quot;	\
+			 &quot; %snxe %sad root %u %s%c&quot;,			\
+			 __entry-&gt;mmu_valid_gen,			\
+			 __entry-&gt;gfn, role.level,			\
+			 role.has_4_byte_gpte ? 4 : 8,			\
+			 role.quadrant,					\
+			 role.direct ? &quot; direct&quot; : &quot;&quot;,			\
+			 access_str[role.access],			\
+			 role.invalid ? &quot; invalid&quot; : &quot;&quot;,		\
+			 role.efer_nx ? &quot;&quot; : &quot;!&quot;,			\
+			 role.ad_disabled ? &quot;!&quot; : &quot;&quot;,			\
+			 __entry-&gt;root_count,				\
+			 __entry-&gt;unsync ? &quot;unsync&quot; : &quot;sync&quot;, 0);	\
+	saved_ptr;							\
+		})
+
+#define kvm_mmu_trace_pferr_flags       \
+	{ PFERR_PRESENT_MASK, &quot;P&quot; },	\
+	{ PFERR_WRITE_MASK, &quot;W&quot; },	\
+	{ PFERR_USER_MASK, &quot;U&quot; },	\
+	{ PFERR_RSVD_MASK, &quot;RSVD&quot; },	\
+	{ PFERR_FETCH_MASK, &quot;F&quot; }
+
+TRACE_DEFINE_ENUM(RET_PF_CONTINUE);
+TRACE_DEFINE_ENUM(RET_PF_RETRY);
+TRACE_DEFINE_ENUM(RET_PF_EMULATE);
+TRACE_DEFINE_ENUM(RET_PF_INVALID);
+TRACE_DEFINE_ENUM(RET_PF_FIXED);
+TRACE_DEFINE_ENUM(RET_PF_SPURIOUS);
+
+/*
+ * A pagetable walk has started
+ */
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_pagetable_walk,
+	TP_PROTO(u64 addr, u32 pferr),
+	TP_ARGS(addr, pferr),
+
+	TP_STRUCT__entry(
+		__field(__u64, addr)
+		__field(__u32, pferr)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;addr = addr;
+		__entry-&gt;pferr = pferr;
+	),
+
+	TP_printk(&quot;addr %llx pferr %x %s&quot;, __entry-&gt;addr, __entry-&gt;pferr,
+		  __print_flags(__entry-&gt;pferr, &quot;|&quot;, kvm_mmu_trace_pferr_flags))
+);
+
+
+/* We just walked a paging element */
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_paging_element,
+	TP_PROTO(u64 pte, int level),
+	TP_ARGS(pte, level),
+
+	TP_STRUCT__entry(
+		__field(__u64, pte)
+		__field(__u32, level)
+		),
+
+	TP_fast_assign(
+		__entry-&gt;pte = pte;
+		__entry-&gt;level = level;
+		),
+
+	TP_printk(&quot;pte %llx level %u&quot;, __entry-&gt;pte, __entry-&gt;level)
+);
+
+<yellow>DECLARE_EVENT_CLASS(kvm_mmu_set_bit_class,</yellow>
+
+	TP_PROTO(unsigned long table_gfn, unsigned index, unsigned size),
+
+	TP_ARGS(table_gfn, index, size),
+
+	TP_STRUCT__entry(
+		__field(__u64, gpa)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;gpa = ((u64)table_gfn &lt;&lt; PAGE_SHIFT)
+				+ index * size;
+		),
+
+	TP_printk(&quot;gpa %llx&quot;, __entry-&gt;gpa)
+);
+
+/* We set a pte accessed bit */
+<blue>DEFINE_EVENT(kvm_mmu_set_bit_class, kvm_mmu_set_accessed_bit,</blue>
+
+	TP_PROTO(unsigned long table_gfn, unsigned index, unsigned size),
+
+	TP_ARGS(table_gfn, index, size)
+);
+
+/* We set a pte dirty bit */
+<blue>DEFINE_EVENT(kvm_mmu_set_bit_class, kvm_mmu_set_dirty_bit,</blue>
+
+	TP_PROTO(unsigned long table_gfn, unsigned index, unsigned size),
+
+	TP_ARGS(table_gfn, index, size)
+);
+
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_walker_error,
+	TP_PROTO(u32 pferr),
+	TP_ARGS(pferr),
+
+	TP_STRUCT__entry(
+		__field(__u32, pferr)
+		),
+
+	TP_fast_assign(
+		__entry-&gt;pferr = pferr;
+		),
+
+	TP_printk(&quot;pferr %x %s&quot;, __entry-&gt;pferr,
+		  __print_flags(__entry-&gt;pferr, &quot;|&quot;, kvm_mmu_trace_pferr_flags))
+);
+
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_get_page,
+	TP_PROTO(struct kvm_mmu_page *sp, bool created),
+	TP_ARGS(sp, created),
+
+	TP_STRUCT__entry(
+		KVM_MMU_PAGE_FIELDS
+		__field(bool, created)
+		),
+
+	TP_fast_assign(
+		KVM_MMU_PAGE_ASSIGN(sp)
+		__entry-&gt;created = created;
+		),
+
+	TP_printk(&quot;%s %s&quot;, KVM_MMU_PAGE_PRINTK(),
+		  __entry-&gt;created ? &quot;new&quot; : &quot;existing&quot;)
+);
+
+<yellow>DECLARE_EVENT_CLASS(kvm_mmu_page_class,</yellow>
+
+	TP_PROTO(struct kvm_mmu_page *sp),
+	TP_ARGS(sp),
+
+	TP_STRUCT__entry(
+		KVM_MMU_PAGE_FIELDS
+	),
+
+	TP_fast_assign(
+		KVM_MMU_PAGE_ASSIGN(sp)
+	),
+
+	TP_printk(&quot;%s&quot;, KVM_MMU_PAGE_PRINTK())
+);
+
+<yellow>DEFINE_EVENT(kvm_mmu_page_class, kvm_mmu_sync_page,</yellow>
+	TP_PROTO(struct kvm_mmu_page *sp),
+
+	TP_ARGS(sp)
+);
+
+<yellow>DEFINE_EVENT(kvm_mmu_page_class, kvm_mmu_unsync_page,</yellow>
+	TP_PROTO(struct kvm_mmu_page *sp),
+
+	TP_ARGS(sp)
+);
+
+<blue>DEFINE_EVENT(kvm_mmu_page_class, kvm_mmu_prepare_zap_page,</blue>
+	TP_PROTO(struct kvm_mmu_page *sp),
+
+	TP_ARGS(sp)
+);
+
+<blue>TRACE_EVENT(</blue>
+	mark_mmio_spte,
+	TP_PROTO(u64 *sptep, gfn_t gfn, u64 spte),
+	TP_ARGS(sptep, gfn, spte),
+
+	TP_STRUCT__entry(
+		__field(void *, sptep)
+		__field(gfn_t, gfn)
+		__field(unsigned, access)
+		__field(unsigned int, gen)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;sptep = sptep;
+		__entry-&gt;gfn = gfn;
+		__entry-&gt;access = spte &amp; ACC_ALL;
+		__entry-&gt;gen = get_mmio_spte_generation(spte);
+	),
+
+	TP_printk(&quot;sptep:%p gfn %llx access %x gen %x&quot;, __entry-&gt;sptep,
+		  __entry-&gt;gfn, __entry-&gt;access, __entry-&gt;gen)
+);
+
+<yellow>TRACE_EVENT(</yellow>
+	handle_mmio_page_fault,
+	TP_PROTO(u64 addr, gfn_t gfn, unsigned access),
+	TP_ARGS(addr, gfn, access),
+
+	TP_STRUCT__entry(
+		__field(u64, addr)
+		__field(gfn_t, gfn)
+		__field(unsigned, access)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;addr = addr;
+		__entry-&gt;gfn = gfn;
+		__entry-&gt;access = access;
+	),
+
+	TP_printk(&quot;addr:%llx gfn %llx access %x&quot;, __entry-&gt;addr, __entry-&gt;gfn,
+		  __entry-&gt;access)
+);
+
+<blue>TRACE_EVENT(</blue>
+	fast_page_fault,
+	TP_PROTO(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault,
+		 u64 *sptep, u64 old_spte, int ret),
+	TP_ARGS(vcpu, fault, sptep, old_spte, ret),
+
+	TP_STRUCT__entry(
+		__field(int, vcpu_id)
+		__field(gpa_t, cr2_or_gpa)
+		__field(u32, error_code)
+		__field(u64 *, sptep)
+		__field(u64, old_spte)
+		__field(u64, new_spte)
+		__field(int, ret)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;vcpu_id = vcpu-&gt;vcpu_id;
+		__entry-&gt;cr2_or_gpa = fault-&gt;addr;
+		__entry-&gt;error_code = fault-&gt;error_code;
+		__entry-&gt;sptep = sptep;
+		__entry-&gt;old_spte = old_spte;
+		__entry-&gt;new_spte = *sptep;
+		__entry-&gt;ret = ret;
+	),
+
+	TP_printk(&quot;vcpu %d gva %llx error_code %s sptep %p old %#llx&quot;
+		  &quot; new %llx spurious %d fixed %d&quot;, __entry-&gt;vcpu_id,
+		  __entry-&gt;cr2_or_gpa, __print_flags(__entry-&gt;error_code, &quot;|&quot;,
+		  kvm_mmu_trace_pferr_flags), __entry-&gt;sptep,
+		  __entry-&gt;old_spte, __entry-&gt;new_spte,
+		  __entry-&gt;ret == RET_PF_SPURIOUS, __entry-&gt;ret == RET_PF_FIXED
+	)
+);
+
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_zap_all_fast,
+	TP_PROTO(struct kvm *kvm),
+	TP_ARGS(kvm),
+
+	TP_STRUCT__entry(
+		__field(__u8, mmu_valid_gen)
+		__field(unsigned int, mmu_used_pages)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;mmu_valid_gen = kvm-&gt;arch.mmu_valid_gen;
+		__entry-&gt;mmu_used_pages = kvm-&gt;arch.n_used_mmu_pages;
+	),
+
+	TP_printk(&quot;kvm-mmu-valid-gen %u used_pages %x&quot;,
+		  __entry-&gt;mmu_valid_gen, __entry-&gt;mmu_used_pages
+	)
+);
+
+
+<yellow>TRACE_EVENT(</yellow>
+	check_mmio_spte,
+	TP_PROTO(u64 spte, unsigned int kvm_gen, unsigned int spte_gen),
+	TP_ARGS(spte, kvm_gen, spte_gen),
+
+	TP_STRUCT__entry(
+		__field(unsigned int, kvm_gen)
+		__field(unsigned int, spte_gen)
+		__field(u64, spte)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;kvm_gen = kvm_gen;
+		__entry-&gt;spte_gen = spte_gen;
+		__entry-&gt;spte = spte;
+	),
+
+	TP_printk(&quot;spte %llx kvm_gen %x spte-gen %x valid %d&quot;, __entry-&gt;spte,
+		  __entry-&gt;kvm_gen, __entry-&gt;spte_gen,
+		  __entry-&gt;kvm_gen == __entry-&gt;spte_gen
+	)
+);
+
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_set_spte,
+	TP_PROTO(int level, gfn_t gfn, u64 *sptep),
+	TP_ARGS(level, gfn, sptep),
+
+	TP_STRUCT__entry(
+		__field(u64, gfn)
+		__field(u64, spte)
+		__field(u64, sptep)
+		__field(u8, level)
+		/* These depend on page entry type, so compute them now.  */
+		__field(bool, r)
+		__field(bool, x)
+		__field(signed char, u)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;gfn = gfn;
+		__entry-&gt;spte = *sptep;
+		__entry-&gt;sptep = virt_to_phys(sptep);
+		__entry-&gt;level = level;
+		__entry-&gt;r = shadow_present_mask || (__entry-&gt;spte &amp; PT_PRESENT_MASK);
+		__entry-&gt;x = is_executable_pte(__entry-&gt;spte);
+		__entry-&gt;u = shadow_user_mask ? !!(__entry-&gt;spte &amp; shadow_user_mask) : -1;
+	),
+
+	TP_printk(&quot;gfn %llx spte %llx (%s%s%s%s) level %d at %llx&quot;,
+		  __entry-&gt;gfn, __entry-&gt;spte,
+		  __entry-&gt;r ? &quot;r&quot; : &quot;-&quot;,
+		  __entry-&gt;spte &amp; PT_WRITABLE_MASK ? &quot;w&quot; : &quot;-&quot;,
+		  __entry-&gt;x ? &quot;x&quot; : &quot;-&quot;,
+		  __entry-&gt;u == -1 ? &quot;&quot; : (__entry-&gt;u ? &quot;u&quot; : &quot;-&quot;),
+		  __entry-&gt;level, __entry-&gt;sptep
+	)
+);
+
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_spte_requested,
+	TP_PROTO(struct kvm_page_fault *fault),
+	TP_ARGS(fault),
+
+	TP_STRUCT__entry(
+		__field(u64, gfn)
+		__field(u64, pfn)
+		__field(u8, level)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;gfn = fault-&gt;gfn;
+		__entry-&gt;pfn = fault-&gt;pfn | (fault-&gt;gfn &amp; (KVM_PAGES_PER_HPAGE(fault-&gt;goal_level) - 1));
+		__entry-&gt;level = fault-&gt;goal_level;
+	),
+
+	TP_printk(&quot;gfn %llx pfn %llx level %d&quot;,
+		  __entry-&gt;gfn, __entry-&gt;pfn, __entry-&gt;level
+	)
+);
+
+<blue>TRACE_EVENT(</blue>
+	kvm_tdp_mmu_spte_changed,
+	TP_PROTO(int as_id, gfn_t gfn, int level, u64 old_spte, u64 new_spte),
+	TP_ARGS(as_id, gfn, level, old_spte, new_spte),
+
+	TP_STRUCT__entry(
+		__field(u64, gfn)
+		__field(u64, old_spte)
+		__field(u64, new_spte)
+		/* Level cannot be larger than 5 on x86, so it fits in a u8. */
+		__field(u8, level)
+		/* as_id can only be 0 or 1 x86, so it fits in a u8. */
+		__field(u8, as_id)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;gfn = gfn;
+		__entry-&gt;old_spte = old_spte;
+		__entry-&gt;new_spte = new_spte;
+		__entry-&gt;level = level;
+		__entry-&gt;as_id = as_id;
+	),
+
+	TP_printk(&quot;as id %d gfn %llx level %d old_spte %llx new_spte %llx&quot;,
+		  __entry-&gt;as_id, __entry-&gt;gfn, __entry-&gt;level,
+		  __entry-&gt;old_spte, __entry-&gt;new_spte
+	)
+);
+
+<blue>TRACE_EVENT(</blue>
+	kvm_mmu_split_huge_page,
+	TP_PROTO(u64 gfn, u64 spte, int level, int errno),
+	TP_ARGS(gfn, spte, level, errno),
+
+	TP_STRUCT__entry(
+		__field(u64, gfn)
+		__field(u64, spte)
+		__field(int, level)
+		__field(int, errno)
+	),
+
+	TP_fast_assign(
+		__entry-&gt;gfn = gfn;
+		__entry-&gt;spte = spte;
+		__entry-&gt;level = level;
+		__entry-&gt;errno = errno;
+	),
+
+	TP_printk(&quot;gfn %llx spte %llx level %d errno %d&quot;,
+		  __entry-&gt;gfn, __entry-&gt;spte, __entry-&gt;level, __entry-&gt;errno)
+);
+
+#endif /* _TRACE_KVMMMU_H */
+
+#undef TRACE_INCLUDE_PATH
+#define TRACE_INCLUDE_PATH mmu
+#undef TRACE_INCLUDE_FILE
+#define TRACE_INCLUDE_FILE mmutrace
+
+/* This part must be outside protection */
+#include &lt;trace/define_trace.h&gt;
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 49.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.1%</li>`
+</script></body></html>

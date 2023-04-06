@@ -1,0 +1,428 @@
+<doctype html>
+<html lang="ja">
+<head><title>segment.h</title><meta charset="utf-8">
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+<style>
+    code{
+        font-family:Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+    }
+    code_line{
+        font-family: Monaco, Menlo, Consolas, 'Courier New', Courier, monospace, sans-serif;;
+        font-size: 14px;
+        line-height: 18px;
+        overflow: auto;
+        resize: horizontal;
+        color:#303134;
+    }
+    blue{
+        background-color:#BEEDE8;
+    }
+    yellow{
+        background-color:#FFFF99;
+    }
+    red{
+        background-color:#FF99AC;
+    }
+      .split {
+         height: 100%;
+         position: fixed;
+         z-index: 1;
+         top: 0;
+         overflow-x: hidden;
+      }
+
+      .tree {
+         left: 0;
+         width: 20%;
+      }
+
+      .right {
+         border-left: 2px solid #444;
+         right: 0;
+         width: 80%;
+         /* font-family: 'Courier New', Courier, monospace;
+				color: rgb(80, 80, 80); */
+      }
+</style>
+
+</head>
+<body>
+   <div class="split tree">
+      <ul id="file_list">
+      </ul>
+   </div>
+   <div class="split right">
+<table summary='blob content' class='blob' cellspacing="15">
+<tr><td align="right"><pre><code_line><script>for (let i = 1; i <= 357; i++){
+         document.write(i+".\n");
+   }
+         </script></code_line></pre></td>
+<td class='lines'><pre><code class="prettyprint">/* SPDX-License-Identifier: GPL-2.0 */
+#ifndef _ASM_X86_SEGMENT_H
+#define _ASM_X86_SEGMENT_H
+
+#include &lt;linux/const.h&gt;
+#include &lt;asm/alternative.h&gt;
+#include &lt;asm/ibt.h&gt;
+
+/*
+ * Constructor for a conventional segment GDT (or LDT) entry.
+ * This is a macro so it can be used in initializers.
+ */
+#define GDT_ENTRY(flags, base, limit)			\
+	((((base)  &amp; _AC(0xff000000,ULL)) &lt;&lt; (56-24)) |	\
+	 (((flags) &amp; _AC(0x0000f0ff,ULL)) &lt;&lt; 40) |	\
+	 (((limit) &amp; _AC(0x000f0000,ULL)) &lt;&lt; (48-16)) |	\
+	 (((base)  &amp; _AC(0x00ffffff,ULL)) &lt;&lt; 16) |	\
+	 (((limit) &amp; _AC(0x0000ffff,ULL))))
+
+/* Simple and small GDT entries for booting only: */
+
+#define GDT_ENTRY_BOOT_CS	2
+#define GDT_ENTRY_BOOT_DS	3
+#define GDT_ENTRY_BOOT_TSS	4
+#define __BOOT_CS		(GDT_ENTRY_BOOT_CS*8)
+#define __BOOT_DS		(GDT_ENTRY_BOOT_DS*8)
+#define __BOOT_TSS		(GDT_ENTRY_BOOT_TSS*8)
+
+/*
+ * Bottom two bits of selector give the ring
+ * privilege level
+ */
+#define SEGMENT_RPL_MASK	0x3
+
+/*
+ * When running on Xen PV, the actual privilege level of the kernel is 1,
+ * not 0. Testing the Requested Privilege Level in a segment selector to
+ * determine whether the context is user mode or kernel mode with
+ * SEGMENT_RPL_MASK is wrong because the PV kernel&#x27;s privilege level
+ * matches the 0x3 mask.
+ *
+ * Testing with USER_SEGMENT_RPL_MASK is valid for both native and Xen PV
+ * kernels because privilege level 2 is never used.
+ */
+#define USER_SEGMENT_RPL_MASK	0x2
+
+/* User mode is privilege level 3: */
+#define USER_RPL		0x3
+
+/* Bit 2 is Table Indicator (TI): selects between LDT or GDT */
+#define SEGMENT_TI_MASK		0x4
+/* LDT segment has TI set ... */
+#define SEGMENT_LDT		0x4
+/* ... GDT has it cleared */
+#define SEGMENT_GDT		0x0
+
+#define GDT_ENTRY_INVALID_SEG	0
+
+#ifdef CONFIG_X86_32
+/*
+ * The layout of the per-CPU GDT under Linux:
+ *
+ *   0 - null								&lt;=== cacheline #1
+ *   1 - reserved
+ *   2 - reserved
+ *   3 - reserved
+ *
+ *   4 - unused								&lt;=== cacheline #2
+ *   5 - unused
+ *
+ *  ------- start of TLS (Thread-Local Storage) segments:
+ *
+ *   6 - TLS segment #1			[ glibc&#x27;s TLS segment ]
+ *   7 - TLS segment #2			[ Wine&#x27;s %fs Win32 segment ]
+ *   8 - TLS segment #3							&lt;=== cacheline #3
+ *   9 - reserved
+ *  10 - reserved
+ *  11 - reserved
+ *
+ *  ------- start of kernel segments:
+ *
+ *  12 - kernel code segment						&lt;=== cacheline #4
+ *  13 - kernel data segment
+ *  14 - default user CS
+ *  15 - default user DS
+ *  16 - TSS								&lt;=== cacheline #5
+ *  17 - LDT
+ *  18 - PNPBIOS support (16-&gt;32 gate)
+ *  19 - PNPBIOS support
+ *  20 - PNPBIOS support						&lt;=== cacheline #6
+ *  21 - PNPBIOS support
+ *  22 - PNPBIOS support
+ *  23 - APM BIOS support
+ *  24 - APM BIOS support						&lt;=== cacheline #7
+ *  25 - APM BIOS support
+ *
+ *  26 - ESPFIX small SS
+ *  27 - per-cpu			[ offset to per-cpu data area ]
+ *  28 - unused
+ *  29 - unused
+ *  30 - unused
+ *  31 - TSS for double fault handler
+ */
+#define GDT_ENTRY_TLS_MIN		6
+#define GDT_ENTRY_TLS_MAX 		(GDT_ENTRY_TLS_MIN + GDT_ENTRY_TLS_ENTRIES - 1)
+
+#define GDT_ENTRY_KERNEL_CS		12
+#define GDT_ENTRY_KERNEL_DS		13
+#define GDT_ENTRY_DEFAULT_USER_CS	14
+#define GDT_ENTRY_DEFAULT_USER_DS	15
+#define GDT_ENTRY_TSS			16
+#define GDT_ENTRY_LDT			17
+#define GDT_ENTRY_PNPBIOS_CS32		18
+#define GDT_ENTRY_PNPBIOS_CS16		19
+#define GDT_ENTRY_PNPBIOS_DS		20
+#define GDT_ENTRY_PNPBIOS_TS1		21
+#define GDT_ENTRY_PNPBIOS_TS2		22
+#define GDT_ENTRY_APMBIOS_BASE		23
+
+#define GDT_ENTRY_ESPFIX_SS		26
+#define GDT_ENTRY_PERCPU		27
+
+#define GDT_ENTRY_DOUBLEFAULT_TSS	31
+
+/*
+ * Number of entries in the GDT table:
+ */
+#define GDT_ENTRIES			32
+
+/*
+ * Segment selector values corresponding to the above entries:
+ */
+
+#define __KERNEL_CS			(GDT_ENTRY_KERNEL_CS*8)
+#define __KERNEL_DS			(GDT_ENTRY_KERNEL_DS*8)
+#define __USER_DS			(GDT_ENTRY_DEFAULT_USER_DS*8 + 3)
+#define __USER_CS			(GDT_ENTRY_DEFAULT_USER_CS*8 + 3)
+#define __USER32_CS			__USER_CS
+#define __ESPFIX_SS			(GDT_ENTRY_ESPFIX_SS*8)
+
+/* segment for calling fn: */
+#define PNP_CS32			(GDT_ENTRY_PNPBIOS_CS32*8)
+/* code segment for BIOS: */
+#define PNP_CS16			(GDT_ENTRY_PNPBIOS_CS16*8)
+
+/* &quot;Is this PNP code selector (PNP_CS32 or PNP_CS16)?&quot; */
+#define SEGMENT_IS_PNP_CODE(x)		(((x) &amp; 0xf4) == PNP_CS32)
+
+/* data segment for BIOS: */
+#define PNP_DS				(GDT_ENTRY_PNPBIOS_DS*8)
+/* transfer data segment: */
+#define PNP_TS1				(GDT_ENTRY_PNPBIOS_TS1*8)
+/* another data segment: */
+#define PNP_TS2				(GDT_ENTRY_PNPBIOS_TS2*8)
+
+#ifdef CONFIG_SMP
+# define __KERNEL_PERCPU		(GDT_ENTRY_PERCPU*8)
+#else
+# define __KERNEL_PERCPU		0
+#endif
+
+#else /* 64-bit: */
+
+#include &lt;asm/cache.h&gt;
+
+#define GDT_ENTRY_KERNEL32_CS		1
+#define GDT_ENTRY_KERNEL_CS		2
+#define GDT_ENTRY_KERNEL_DS		3
+
+/*
+ * We cannot use the same code segment descriptor for user and kernel mode,
+ * not even in long flat mode, because of different DPL.
+ *
+ * GDT layout to get 64-bit SYSCALL/SYSRET support right. SYSRET hardcodes
+ * selectors:
+ *
+ *   if returning to 32-bit userspace: cs = STAR.SYSRET_CS,
+ *   if returning to 64-bit userspace: cs = STAR.SYSRET_CS+16,
+ *
+ * ss = STAR.SYSRET_CS+8 (in either case)
+ *
+ * thus USER_DS should be between 32-bit and 64-bit code selectors:
+ */
+#define GDT_ENTRY_DEFAULT_USER32_CS	4
+#define GDT_ENTRY_DEFAULT_USER_DS	5
+#define GDT_ENTRY_DEFAULT_USER_CS	6
+
+/* Needs two entries */
+#define GDT_ENTRY_TSS			8
+/* Needs two entries */
+#define GDT_ENTRY_LDT			10
+
+#define GDT_ENTRY_TLS_MIN		12
+#define GDT_ENTRY_TLS_MAX		14
+
+#define GDT_ENTRY_CPUNODE		15
+
+/*
+ * Number of entries in the GDT table:
+ */
+#define GDT_ENTRIES			16
+
+/*
+ * Segment selector values corresponding to the above entries:
+ *
+ * Note, selectors also need to have a correct RPL,
+ * expressed with the +3 value for user-space selectors:
+ */
+#define __KERNEL32_CS			(GDT_ENTRY_KERNEL32_CS*8)
+#define __KERNEL_CS			(GDT_ENTRY_KERNEL_CS*8)
+#define __KERNEL_DS			(GDT_ENTRY_KERNEL_DS*8)
+#define __USER32_CS			(GDT_ENTRY_DEFAULT_USER32_CS*8 + 3)
+#define __USER_DS			(GDT_ENTRY_DEFAULT_USER_DS*8 + 3)
+#define __USER_CS			(GDT_ENTRY_DEFAULT_USER_CS*8 + 3)
+#define __CPUNODE_SEG			(GDT_ENTRY_CPUNODE*8 + 3)
+
+#endif
+
+#define IDT_ENTRIES			256
+#define NUM_EXCEPTION_VECTORS		32
+
+/* Bitmask of exception vectors which push an error code on the stack: */
+#define EXCEPTION_ERRCODE_MASK		0x20027d00
+
+#define GDT_SIZE			(GDT_ENTRIES*8)
+#define GDT_ENTRY_TLS_ENTRIES		3
+#define TLS_SIZE			(GDT_ENTRY_TLS_ENTRIES* 8)
+
+#ifdef CONFIG_X86_64
+
+/* Bit size and mask of CPU number stored in the per CPU data (and TSC_AUX) */
+#define VDSO_CPUNODE_BITS		12
+#define VDSO_CPUNODE_MASK		0xfff
+
+#ifndef __ASSEMBLY__
+
+/* Helper functions to store/load CPU and node numbers */
+
+static inline unsigned long vdso_encode_cpunode(int cpu, unsigned long node)
+{
+	return (node &lt;&lt; VDSO_CPUNODE_BITS) | cpu;
+}
+
+static inline void vdso_read_cpunode(unsigned *cpu, unsigned *node)
+{
+	unsigned int p;
+
+	/*
+	 * Load CPU and node number from the GDT.  LSL is faster than RDTSCP
+	 * and works on all CPUs.  This is volatile so that it orders
+	 * correctly with respect to barrier() and to keep GCC from cleverly
+	 * hoisting it out of the calling function.
+	 *
+	 * If RDPID is available, use it.
+	 */
+	alternative_io (&quot;lsl %[seg],%[p]&quot;,
+			&quot;.byte 0xf3,0x0f,0xc7,0xf8&quot;, /* RDPID %eax/rax */
+			X86_FEATURE_RDPID,
+			[p] &quot;=a&quot; (p), [seg] &quot;r&quot; (__CPUNODE_SEG));
+
+	if (cpu)
+		*cpu = (p &amp; VDSO_CPUNODE_MASK);
+	if (node)
+		*node = (p &gt;&gt; VDSO_CPUNODE_BITS);
+}
+
+#endif /* !__ASSEMBLY__ */
+#endif /* CONFIG_X86_64 */
+
+#ifdef __KERNEL__
+
+/*
+ * early_idt_handler_array is an array of entry points referenced in the
+ * early IDT.  For simplicity, it&#x27;s a real array with one entry point
+ * every nine bytes.  That leaves room for an optional &#x27;push $0&#x27; if the
+ * vector has no error code (two bytes), a &#x27;push $vector_number&#x27; (two
+ * bytes), and a jump to the common entry code (up to five bytes).
+ */
+#define EARLY_IDT_HANDLER_SIZE (9 + ENDBR_INSN_SIZE)
+
+/*
+ * xen_early_idt_handler_array is for Xen pv guests: for each entry in
+ * early_idt_handler_array it contains a prequel in the form of
+ * pop %rcx; pop %r11; jmp early_idt_handler_array[i]; summing up to
+ * max 8 bytes.
+ */
+#define XEN_EARLY_IDT_HANDLER_SIZE (8 + ENDBR_INSN_SIZE)
+
+#ifndef __ASSEMBLY__
+
+extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDLER_SIZE];
+extern void early_ignore_irq(void);
+
+#ifdef CONFIG_XEN_PV
+extern const char xen_early_idt_handler_array[NUM_EXCEPTION_VECTORS][XEN_EARLY_IDT_HANDLER_SIZE];
+#endif
+
+/*
+ * Load a segment. Fall back on loading the zero segment if something goes
+ * wrong.  This variant assumes that loading zero fully clears the segment.
+ * This is always the case on Intel CPUs and, even on 64-bit AMD CPUs, any
+ * failure to fully clear the cached descriptor is only observable for
+ * FS and GS.
+ */
+#define __loadsegment_simple(seg, value)				\
+do {									\
+	unsigned short __val = (value);					\
+									\
+	asm volatile(&quot;						\n&quot;	\
+		     &quot;1:	movl %k0,%%&quot; #seg &quot;		\n&quot;	\
+		     _ASM_EXTABLE_TYPE_REG(1b, 1b, EX_TYPE_ZERO_REG, %k0)\
+		     : &quot;+r&quot; (__val) : : &quot;memory&quot;);			\
+} while (0)
+
+#define __loadsegment_ss(value) __loadsegment_simple(ss, (value))
+#define __loadsegment_ds(value) __loadsegment_simple(ds, (value))
+#define __loadsegment_es(value) __loadsegment_simple(es, (value))
+
+#ifdef CONFIG_X86_32
+
+/*
+ * On 32-bit systems, the hidden parts of FS and GS are unobservable if
+ * the selector is NULL, so there&#x27;s no funny business here.
+ */
+#define __loadsegment_fs(value) __loadsegment_simple(fs, (value))
+#define __loadsegment_gs(value) __loadsegment_simple(gs, (value))
+
+#else
+
+static inline void __loadsegment_fs(unsigned short value)
+{
+<yellow>	asm volatile("						\n"</yellow>
+		     &quot;1:	movw %0, %%fs			\n&quot;
+		     &quot;2:					\n&quot;
+
+		     _ASM_EXTABLE_TYPE(1b, 2b, EX_TYPE_CLEAR_FS)
+
+		     : : &quot;rm&quot; (value) : &quot;memory&quot;);
+}
+
+/* __loadsegment_gs is intentionally undefined.  Use load_gs_index instead. */
+
+#endif
+
+#define loadsegment(seg, value) __loadsegment_ ## seg (value)
+
+/*
+ * Save a segment register away:
+ */
+#define savesegment(seg, value)				\
+	asm(&quot;mov %%&quot; #seg &quot;,%0&quot;:&quot;=r&quot; (value) : : &quot;memory&quot;)
+
+#endif /* !__ASSEMBLY__ */
+#endif /* __KERNEL__ */
+
+#endif /* _ASM_X86_SEGMENT_H */
+
+
+</code></pre></td></tr></table>
+</div><script>const fileList = document.getElementById('file_list')
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 49.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.6%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.1%</li>`
+</script></body></html>
