@@ -1071,7 +1071,7 @@ static bool update_transition_efer(struct vcpu_vmx *vmx)
 
 	/* Shadow paging assumes NX to be available.  */
 <blue>	if (!enable_ept)</blue>
-<yellow>		guest_efer |= EFER_NX;</yellow>
+<blue>		guest_efer |= EFER_NX;</blue>
 
 	/*
 	 * LMA and LME handled by hardware; SCE meaningless outside long mode.
@@ -3133,9 +3133,9 @@ static void exit_lmode(struct kvm_vcpu *vcpu)
 	 */
 <blue>	if (enable_ept) {</blue>
 <blue>		ept_sync_global();</blue>
-<yellow>	} else if (enable_vpid) {</yellow>
-<yellow>		if (cpu_has_vmx_invvpid_global()) {</yellow>
-<yellow>			vpid_sync_vcpu_global();</yellow>
+<blue>	} else if (enable_vpid) {</blue>
+<blue>		if (cpu_has_vmx_invvpid_global()) {</blue>
+<blue>			vpid_sync_vcpu_global();</blue>
 		} else {
 <yellow>			vpid_sync_vcpu_single(vmx->vpid);</yellow>
 <blue>			vpid_sync_vcpu_single(vmx->nested.vpid02);</blue>
@@ -3234,7 +3234,7 @@ void vmx_set_cr0(struct kvm_vcpu *vcpu, unsigned long cr0)
 	else {
 <blue>		hw_cr0 |= KVM_VM_CR0_ALWAYS_ON;</blue>
 <blue>		if (!enable_ept)</blue>
-<yellow>			hw_cr0 |= X86_CR0_WP;</yellow>
+<blue>			hw_cr0 |= X86_CR0_WP;</blue>
 
 <blue>		if (vmx->rmode.vm86_active && (cr0 & X86_CR0_PE))</blue>
 <blue>			enter_pmode(vcpu);</blue>
@@ -3352,7 +3352,7 @@ static void vmx_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa,
 			update_guest_cr3 = false;
 <blue>		vmx_ept_load_pdptrs(vcpu);</blue>
 	} else {
-<yellow>		guest_cr3 = root_hpa | kvm_get_active_pcid(vcpu);</yellow>
+<blue>		guest_cr3 = root_hpa | kvm_get_active_pcid(vcpu);</blue>
 	}
 
 	if (update_guest_cr3)
@@ -3429,7 +3429,7 @@ void vmx_set_cr4(struct kvm_vcpu *vcpu, unsigned long cr4)
 		 * If enable_unrestricted_guest, the CPU automatically
 		 * disables SMEP/SMAP/PKU when the guest sets CR0.PG=0.
 		 */
-<yellow>		if (!is_paging(vcpu))</yellow>
+<blue>		if (!is_paging(vcpu))</blue>
 <blue>			hw_cr4 &= ~(X86_CR4_SMEP | X86_CR4_SMAP | X86_CR4_PKE);</blue>
 	}
 
@@ -4341,7 +4341,7 @@ void set_cr4_guest_host_mask(struct vcpu_vmx *vmx)
 <blue>					  ~vcpu->arch.cr4_guest_rsvd_bits;</blue>
 <blue>	if (!enable_ept) {</blue>
 		vcpu-&gt;arch.cr4_guest_owned_bits &amp;= ~X86_CR4_TLBFLUSH_BITS;
-<yellow>		vcpu->arch.cr4_guest_owned_bits &= ~X86_CR4_PDPTR_BITS;</yellow>
+<blue>		vcpu->arch.cr4_guest_owned_bits &= ~X86_CR4_PDPTR_BITS;</blue>
 	}
 <blue>	if (is_guest_mode(&vmx->vcpu))</blue>
 		vcpu-&gt;arch.cr4_guest_owned_bits &amp;=
@@ -4571,7 +4571,7 @@ static u32 vmx_secondary_exec_control(struct vcpu_vmx *vmx)
 <blue>		exec_control &= ~SECONDARY_EXEC_ENABLE_VPID;</blue>
 <blue>	if (!enable_ept) {</blue>
 		exec_control &amp;= ~SECONDARY_EXEC_ENABLE_EPT;
-<yellow>		enable_unrestricted_guest = 0;</yellow>
+<blue>		enable_unrestricted_guest = 0;</blue>
 	}
 <blue>	if (!enable_unrestricted_guest)</blue>
 <blue>		exec_control &= ~SECONDARY_EXEC_UNRESTRICTED_GUEST;</blue>
@@ -5216,8 +5216,8 @@ static int handle_exception_nmi(struct kvm_vcpu *vcpu)
 	}
 
 <blue>	if (is_page_fault(intr_info)) {</blue>
-<yellow>		cr2 = vmx_get_exit_qual(vcpu);</yellow>
-<yellow>		if (enable_ept && !vcpu->arch.apf.host_apf_flags) {</yellow>
+<blue>		cr2 = vmx_get_exit_qual(vcpu);</blue>
+<blue>		if (enable_ept && !vcpu->arch.apf.host_apf_flags) {</blue>
 			/*
 			 * EPT will cause page fault only if we need to
 			 * detect illegal GPAs.
@@ -5226,7 +5226,7 @@ static int handle_exception_nmi(struct kvm_vcpu *vcpu)
 <yellow>			kvm_fixup_and_inject_pf_error(vcpu, cr2, error_code);</yellow>
 			return 1;
 		} else
-<yellow>			return kvm_handle_page_fault(vcpu, error_code, cr2, NULL, 0);</yellow>
+<blue>			return kvm_handle_page_fault(vcpu, error_code, cr2, NULL, 0);</blue>
 	}
 
 <blue>	ex_no = intr_info & INTR_INFO_VECTOR_MASK;</blue>
@@ -5464,9 +5464,9 @@ static int handle_cr(struct kvm_vcpu *vcpu)
 	case 1: /*mov from cr*/
 <blue>		switch (cr) {</blue>
 		case 3:
-<yellow>			WARN_ON_ONCE(enable_unrestricted_guest);</yellow>
+<blue>			WARN_ON_ONCE(enable_unrestricted_guest);</blue>
 
-<yellow>			val = kvm_read_cr3(vcpu);</yellow>
+<blue>			val = kvm_read_cr3(vcpu);</blue>
 			kvm_register_write(vcpu, reg, val);
 			trace_kvm_cr_read(cr, val);
 			return kvm_skip_emulated_instruction(vcpu);
@@ -8672,8 +8672,8 @@ module_init(vmx_init);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 49.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 55.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
 </script></body></html>

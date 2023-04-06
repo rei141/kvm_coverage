@@ -1186,7 +1186,7 @@ static bool nested_has_guest_tlb_tag(struct kvm_vcpu *vcpu)
 <blue>	struct vmcs12 *vmcs12 = get_vmcs12(vcpu);</blue>
 
 <blue>	return enable_ept ||</blue>
-<yellow>	       (nested_cpu_has_vpid(vmcs12) && to_vmx(vcpu)->nested.vpid02);</yellow>
+<blue>	       (nested_cpu_has_vpid(vmcs12) && to_vmx(vcpu)->nested.vpid02);</blue>
 }
 
 static void nested_vmx_transition_tlb_flush(struct kvm_vcpu *vcpu,
@@ -2236,7 +2236,7 @@ static void prepare_vmcs02_constant_state(struct vcpu_vmx *vmx)
 	 * consistency checks.
 	 */
 <blue>	if (enable_ept && nested_early_check)</blue>
-<yellow>		vmcs_write64(EPT_POINTER,</yellow>
+<blue>		vmcs_write64(EPT_POINTER,</blue>
 			     construct_eptp(&amp;vmx-&gt;vcpu, 0, PT64_ROOT_4LEVEL));
 
 	/* All VMFUNCs are currently emulated through L0 vmexits.  */
@@ -2549,8 +2549,8 @@ static void prepare_vmcs02_rare(struct vcpu_vmx *vmx, struct vmcs12 *vmcs12)
 		 * TODO: if both L0 and L1 need the same MASK and MATCH,
 		 * go ahead and use it?
 		 */
-<yellow>		vmcs_write32(PAGE_FAULT_ERROR_CODE_MASK, 0);</yellow>
-<yellow>		vmcs_write32(PAGE_FAULT_ERROR_CODE_MATCH, 0);</yellow>
+<blue>		vmcs_write32(PAGE_FAULT_ERROR_CODE_MASK, 0);</blue>
+<blue>		vmcs_write32(PAGE_FAULT_ERROR_CODE_MATCH, 0);</blue>
 	} else {
 <blue>		vmcs_write32(PAGE_FAULT_ERROR_CODE_MASK, vmcs12->page_fault_error_code_mask);</blue>
 <blue>		vmcs_write32(PAGE_FAULT_ERROR_CODE_MATCH, vmcs12->page_fault_error_code_match);</blue>
@@ -3149,12 +3149,12 @@ static int nested_vmx_check_vmentry_hw(struct kvm_vcpu *vcpu)
 <blue>	if (!nested_early_check)</blue>
 		return 0;
 
-<yellow>	if (vmx->msr_autoload.host.nr)</yellow>
+<blue>	if (vmx->msr_autoload.host.nr)</blue>
 <yellow>		vmcs_write32(VM_EXIT_MSR_LOAD_COUNT, 0);</yellow>
-<yellow>	if (vmx->msr_autoload.guest.nr)</yellow>
+<blue>	if (vmx->msr_autoload.guest.nr)</blue>
 <yellow>		vmcs_write32(VM_ENTRY_MSR_LOAD_COUNT, 0);</yellow>
 
-<yellow>	preempt_disable();</yellow>
+<blue>	preempt_disable();</blue>
 
 	vmx_prepare_switch_to_guest(vcpu);
 
@@ -3164,34 +3164,34 @@ static int nested_vmx_check_vmentry_hw(struct kvm_vcpu *vcpu)
 	 * be written (by prepare_vmcs02()) before the &quot;real&quot; VMEnter, i.e.
 	 * there is no need to preserve other bits or save/restore the field.
 	 */
-<yellow>	vmcs_writel(GUEST_RFLAGS, 0);</yellow>
+<blue>	vmcs_writel(GUEST_RFLAGS, 0);</blue>
 
 	cr3 = __get_current_cr3_fast();
-<yellow>	if (unlikely(cr3 != vmx->loaded_vmcs->host_state.cr3)) {</yellow>
+<blue>	if (unlikely(cr3 != vmx->loaded_vmcs->host_state.cr3)) {</blue>
 <yellow>		vmcs_writel(HOST_CR3, cr3);</yellow>
 <yellow>		vmx->loaded_vmcs->host_state.cr3 = cr3;</yellow>
 	}
 
-<yellow>	cr4 = cr4_read_shadow();</yellow>
+<blue>	cr4 = cr4_read_shadow();</blue>
 	if (unlikely(cr4 != vmx-&gt;loaded_vmcs-&gt;host_state.cr4)) {
 <yellow>		vmcs_writel(HOST_CR4, cr4);</yellow>
 <yellow>		vmx->loaded_vmcs->host_state.cr4 = cr4;</yellow>
 	}
 
-<yellow>	vm_fail = __vmx_vcpu_run(vmx, (unsigned long *)&vcpu->arch.regs,</yellow>
+<blue>	vm_fail = __vmx_vcpu_run(vmx, (unsigned long *)&vcpu->arch.regs,</blue>
 				 __vmx_vcpu_run_flags(vmx));
 
 	if (vmx-&gt;msr_autoload.host.nr)
 <yellow>		vmcs_write32(VM_EXIT_MSR_LOAD_COUNT, vmx->msr_autoload.host.nr);</yellow>
-<yellow>	if (vmx->msr_autoload.guest.nr)</yellow>
+<blue>	if (vmx->msr_autoload.guest.nr)</blue>
 <yellow>		vmcs_write32(VM_ENTRY_MSR_LOAD_COUNT, vmx->msr_autoload.guest.nr);</yellow>
 
-<yellow>	if (vm_fail) {</yellow>
-<yellow>		u32 error = vmcs_read32(VM_INSTRUCTION_ERROR);</yellow>
+<blue>	if (vm_fail) {</blue>
+<blue>		u32 error = vmcs_read32(VM_INSTRUCTION_ERROR);</blue>
 
-<yellow>		preempt_enable();</yellow>
+<blue>		preempt_enable();</blue>
 
-<yellow>		trace_kvm_nested_vmenter_failed(</yellow>
+<blue>		trace_kvm_nested_vmenter_failed(</blue>
 			&quot;early hardware check VM-instruction error: &quot;, error);
 <yellow>		WARN_ON_ONCE(error != VMXERR_ENTRY_INVALID_CONTROL_FIELD);</yellow>
 		return 1;
@@ -3496,7 +3496,7 @@ enum nvmx_vmentry_status nested_vmx_enter_non_root_mode(struct kvm_vcpu *vcpu,
 	 * path would need to manually save/restore vmcs01.GUEST_CR3.
 	 */
 <blue>	if (!enable_ept && !nested_early_check)</blue>
-<yellow>		vmcs_writel(GUEST_CR3, vcpu->arch.cr3);</yellow>
+<blue>		vmcs_writel(GUEST_CR3, vcpu->arch.cr3);</blue>
 
 <blue>	vmx_switch_vmcs(vcpu, &vmx->nested.vmcs02);</blue>
 
@@ -3509,7 +3509,7 @@ enum nvmx_vmentry_status nested_vmx_enter_non_root_mode(struct kvm_vcpu *vcpu,
 		}
 
 <blue>		if (nested_vmx_check_vmentry_hw(vcpu)) {</blue>
-<yellow>			vmx_switch_vmcs(vcpu, &vmx->vmcs01);</yellow>
+<blue>			vmx_switch_vmcs(vcpu, &vmx->vmcs01);</blue>
 			return NVMX_VMENTRY_VMFAIL;
 		}
 
@@ -3740,7 +3740,7 @@ vmentry_failed:
 		return 0;
 <blue>	if (status == NVMX_VMENTRY_VMEXIT)</blue>
 		return 1;
-<yellow>	WARN_ON_ONCE(status != NVMX_VMENTRY_VMFAIL);</yellow>
+<blue>	WARN_ON_ONCE(status != NVMX_VMENTRY_VMFAIL);</blue>
 <blue>	return nested_vmx_fail(vcpu, VMXERR_ENTRY_INVALID_CONTROL_FIELD);</blue>
 <blue>}</blue>
 
@@ -5733,7 +5733,7 @@ static int handle_vmptrst(struct kvm_vcpu *vcpu)
 <blue>	if (!(vmx->nested.msrs.secondary_ctls_high &</blue>
 	      SECONDARY_EXEC_ENABLE_EPT) ||
 <blue>	    !(vmx->nested.msrs.ept_caps & VMX_EPT_INVEPT_BIT)) {</blue>
-<yellow>		kvm_queue_exception(vcpu, UD_VECTOR);</yellow>
+<blue>		kvm_queue_exception(vcpu, UD_VECTOR);</blue>
 		return 1;
 	}
 
@@ -7124,8 +7124,8 @@ struct kvm_x86_nested_ops vmx_nested_ops = {
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 49.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 55.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
 </script></body></html>

@@ -1193,7 +1193,7 @@ void kvm_post_set_cr4(struct kvm_vcpu *vcpu, unsigned long old_cr4, unsigned lon
 	 * so fall through.
 	 */
 <blue>	if (!tdp_enabled &&</blue>
-<yellow>	    (cr4 & X86_CR4_PCIDE) && !(old_cr4 & X86_CR4_PCIDE))</yellow>
+<blue>	    (cr4 & X86_CR4_PCIDE) && !(old_cr4 & X86_CR4_PCIDE))</blue>
 <yellow>		kvm_mmu_unload(vcpu);</yellow>
 
 	/*
@@ -1278,8 +1278,8 @@ static void kvm_invalidate_pcid(struct kvm_vcpu *vcpu, unsigned long pcid)
 	 * PCID, then nothing needs to be done here because a resync will
 	 * happen anyway before switching to any other CR3.
 	 */
-<yellow>	if (kvm_get_active_pcid(vcpu) == pcid) {</yellow>
-<yellow>		kvm_make_request(KVM_REQ_MMU_SYNC, vcpu);</yellow>
+<blue>	if (kvm_get_active_pcid(vcpu) == pcid) {</blue>
+<blue>		kvm_make_request(KVM_REQ_MMU_SYNC, vcpu);</blue>
 		kvm_make_request(KVM_REQ_TLB_FLUSH_CURRENT, vcpu);
 	}
 
@@ -1288,7 +1288,7 @@ static void kvm_invalidate_pcid(struct kvm_vcpu *vcpu, unsigned long pcid)
 	 * PCIDs for them are also 0, because MOV to CR3 always flushes the TLB
 	 * with PCIDE=0.
 	 */
-<yellow>	if (!kvm_read_cr4_bits(vcpu, X86_CR4_PCIDE))</yellow>
+<blue>	if (!kvm_read_cr4_bits(vcpu, X86_CR4_PCIDE))</blue>
 		return;
 
 <yellow>	for (i = 0; i < KVM_MMU_NUM_PREV_ROOTS; i++)</yellow>
@@ -3488,7 +3488,7 @@ static void kvm_vcpu_flush_tlb_guest(struct kvm_vcpu *vcpu)
 		 * a forced sync of the shadow page tables.  Ensure all the
 		 * roots are synced and the guest TLB in hardware is clean.
 		 */
-<yellow>		kvm_mmu_sync_roots(vcpu);</yellow>
+<blue>		kvm_mmu_sync_roots(vcpu);</blue>
 		kvm_mmu_sync_prev_roots(vcpu);
 	}
 
@@ -7248,7 +7248,7 @@ gpa_t translate_nested_gpa(struct kvm_vcpu *vcpu, gpa_t gpa, u64 access,
 gpa_t kvm_mmu_gva_to_gpa_read(struct kvm_vcpu *vcpu, gva_t gva,
 			      struct x86_exception *exception)
 {
-<yellow>	struct kvm_mmu *mmu = vcpu->arch.walk_mmu;</yellow>
+<blue>	struct kvm_mmu *mmu = vcpu->arch.walk_mmu;</blue>
 
 	u64 access = (static_call(kvm_x86_get_cpl)(vcpu) == 3) ? PFERR_USER_MASK : 0;
 	return mmu-&gt;gva_to_gpa(vcpu, mmu, gva, access, exception);
@@ -7485,9 +7485,9 @@ static int vcpu_mmio_gva_to_gpa(struct kvm_vcpu *vcpu, unsigned long gva,
 	 * shadow page table for L2 guest.
 	 */
 <blue>	if (vcpu_match_mmio_gva(vcpu, gva) && (!is_paging(vcpu) ||</blue>
-<yellow>	    !permission_fault(vcpu, vcpu->arch.walk_mmu,</yellow>
+<blue>	    !permission_fault(vcpu, vcpu->arch.walk_mmu,</blue>
 			      vcpu-&gt;arch.mmio_access, 0, access))) {
-<yellow>		*gpa = vcpu->arch.mmio_gfn << PAGE_SHIFT |</yellow>
+<blue>		*gpa = vcpu->arch.mmio_gfn << PAGE_SHIFT |</blue>
 					(gva &amp; (PAGE_SIZE - 1));
 		trace_vcpu_match_mmio(gva, *gpa, write, false);
 		return 1;
@@ -8619,7 +8619,7 @@ static bool retry_instruction(struct x86_emulate_ctxt *ctxt,
 	vcpu-&gt;arch.last_retry_addr = cr2_or_gpa;
 
 	if (!vcpu-&gt;arch.mmu-&gt;root_role.direct)
-<yellow>		gpa = kvm_mmu_gva_to_gpa_write(vcpu, cr2_or_gpa, NULL);</yellow>
+<blue>		gpa = kvm_mmu_gva_to_gpa_write(vcpu, cr2_or_gpa, NULL);</blue>
 
 <blue>	kvm_mmu_unprotect_page(vcpu->kvm, gpa_to_gfn(gpa));</blue>
 
@@ -8638,8 +8638,8 @@ static int kvm_vcpu_check_hw_bp(unsigned long addr, u32 type, u32 dr7,
 
 	enable = dr7;
 	rwlen = dr7 &gt;&gt; 16;
-<yellow>	for (i = 0; i < 4; i++, enable >>= 2, rwlen >>= 4)</yellow>
-<yellow>		if ((enable & 3) && (rwlen & 15) == type && db[i] == addr)</yellow>
+<blue>	for (i = 0; i < 4; i++, enable >>= 2, rwlen >>= 4)</blue>
+<blue>		if ((enable & 3) && (rwlen & 15) == type && db[i] == addr)</blue>
 <yellow>			dr6 |= (1 << i);</yellow>
 	return dr6;
 }
@@ -8688,7 +8688,7 @@ static bool kvm_is_code_breakpoint_inhibited(struct kvm_vcpu *vcpu)
 {
 	u32 shadow;
 
-<yellow>	if (kvm_get_rflags(vcpu) & X86_EFLAGS_RF)</yellow>
+<blue>	if (kvm_get_rflags(vcpu) & X86_EFLAGS_RF)</blue>
 		return true;
 
 	/*
@@ -8696,7 +8696,7 @@ static bool kvm_is_code_breakpoint_inhibited(struct kvm_vcpu *vcpu)
 	 * but AMD CPUs do not.  MOV/POP SS blocking is rare, check that first
 	 * to avoid the relatively expensive CPUID lookup.
 	 */
-<yellow>	shadow = static_call(kvm_x86_get_interrupt_shadow)(vcpu);</yellow>
+<blue>	shadow = static_call(kvm_x86_get_interrupt_shadow)(vcpu);</blue>
 	return (shadow &amp; KVM_X86_SHADOW_INT_MOV_SS) &amp;&amp;
 <yellow>	       guest_cpuid_is_intel(vcpu);</yellow>
 }
@@ -8743,13 +8743,13 @@ static bool kvm_vcpu_check_code_breakpoint(struct kvm_vcpu *vcpu,
 	}
 
 <blue>	if (unlikely(vcpu->arch.dr7 & DR7_BP_EN_MASK) &&</blue>
-<yellow>	    !kvm_is_code_breakpoint_inhibited(vcpu)) {</yellow>
-<yellow>		unsigned long eip = kvm_get_linear_rip(vcpu);</yellow>
-<yellow>		u32 dr6 = kvm_vcpu_check_hw_bp(eip, 0,</yellow>
+<blue>	    !kvm_is_code_breakpoint_inhibited(vcpu)) {</blue>
+<blue>		unsigned long eip = kvm_get_linear_rip(vcpu);</blue>
+<blue>		u32 dr6 = kvm_vcpu_check_hw_bp(eip, 0,</blue>
 					   vcpu-&gt;arch.dr7,
 					   vcpu-&gt;arch.db);
 
-<yellow>		if (dr6 != 0) {</yellow>
+<blue>		if (dr6 != 0) {</blue>
 <yellow>			kvm_queue_exception_p(vcpu, DB_VECTOR, dr6);</yellow>
 			*r = 1;
 			return true;
@@ -12429,7 +12429,7 @@ static int kvm_alloc_memslot_metadata(struct kvm *kvm,
 	memset(&amp;slot-&gt;arch, 0, sizeof(slot-&gt;arch));
 
 <blue>	if (kvm_memslots_have_rmaps(kvm)) {</blue>
-<yellow>		r = memslot_rmap_alloc(slot, npages);</yellow>
+<blue>		r = memslot_rmap_alloc(slot, npages);</blue>
 <blue>		if (r)</blue>
 			return r;
 	}
@@ -13555,8 +13555,8 @@ module_exit(kvm_x86_exit);
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 49.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 55.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
 </script></body></html>

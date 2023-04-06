@@ -195,14 +195,14 @@ static inline unsigned long kvm_get_pcid(struct kvm_vcpu *vcpu, gpa_t cr3)
 {
 	BUILD_BUG_ON((X86_CR3_PCID_MASK &amp; PAGE_MASK) != 0);
 
-<yellow>	return kvm_read_cr4_bits(vcpu, X86_CR4_PCIDE)</yellow>
+<blue>	return kvm_read_cr4_bits(vcpu, X86_CR4_PCIDE)</blue>
 	       ? cr3 &amp; X86_CR3_PCID_MASK
 <yellow>	       : 0;</yellow>
 }
 
 static inline unsigned long kvm_get_active_pcid(struct kvm_vcpu *vcpu)
 {
-<yellow>	return kvm_get_pcid(vcpu, kvm_read_cr3(vcpu));</yellow>
+<blue>	return kvm_get_pcid(vcpu, kvm_read_cr3(vcpu));</blue>
 }
 
 static inline void kvm_mmu_load_pgd(struct kvm_vcpu *vcpu)
@@ -247,7 +247,7 @@ static inline u8 permission_fault(struct kvm_vcpu *vcpu, struct kvm_mmu *mmu,
 	u64 implicit_access = access &amp; PFERR_IMPLICIT_ACCESS;
 	bool not_smap = ((rflags &amp; X86_EFLAGS_AC) | implicit_access) == X86_EFLAGS_AC;
 	int index = (pfec + (not_smap &lt;&lt; PFERR_RSVD_BIT)) &gt;&gt; 1;
-<yellow>	bool fault = (mmu->permissions[index] >> pte_access) & 1;</yellow>
+<blue>	bool fault = (mmu->permissions[index] >> pte_access) & 1;</blue>
 	u32 errcode = PFERR_PRESENT_MASK;
 
 <yellow>	WARN_ON(pfec & (PFERR_PK_MASK | PFERR_RSVD_MASK));</yellow>
@@ -346,8 +346,8 @@ static inline gpa_t kvm_translate_gpa(struct kvm_vcpu *vcpu,
 
 </code></pre></td></tr></table>
 </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 49.0%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 79.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 55.6%</li>`
-fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.1%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/mmu/mmu.c.html">mmu.c 55.0%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/nested.c.html">nested.c 80.8%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/vmx/vmx.c.html">vmx.c 56.2%</li>`
+fileList.innerHTML+=`<li><a href="/kvm_coverage/coverage/linux/arch/x86/kvm/x86.c.html">x86.c 50.7%</li>`
 </script></body></html>
