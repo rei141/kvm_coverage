@@ -7162,18 +7162,18 @@ struct kvm_x86_nested_ops vmx_nested_ops = {
 
     </code></pre></td></tr></table>
     </div><script>const fileList = document.getElementById('file_list')
-fileList.innerHTML+=`<li><yellow>baseline covered, all not covered</yellow></li><li><blue>baseline covered, all covered</blue></li><li><red>baseline not covered, all covered</red></li>`
+fileList.innerHTML+=`<li><yellow>instrumented covered, all not covered</yellow></li><li><blue>instrumented covered, all covered</blue></li><li><red>instrumented not covered, all covered</red></li>`
 fileList.innerHTML+=`<li>vmx<ul>
-<li><a href="./baseline_all.html">baseline_all</a></li>
-<li><a href="./baseline_syzkaller.html">baseline_syzkaller</a></li>
+<li><a href="./instrumented_all.html">instrumented_all</a></li>
+<li><a href="./instrumented_syzkaller.html">instrumented_syzkaller</a></li>
 <li><a href="./all_wo-harness.html">all_wo-harness</a></li>
 <li><a href="./all_wo-config.html">all_wo-config</a></li>
 <li><a href="./all_wo-validator.html">all_wo-validator</a></li>
 <li><a href="./all_syzkaller.html">all_syzkaller</a></li>
 </ul></li>`
 fileList.innerHTML+=`<li>svm<ul>
-<li><a href="../svm/baseline_all.html">baseline_all</a></li>
-<li><a href="../svm/baseline_syzkaller.html">baseline_syzkaller</a></li>
+<li><a href="../svm/instrumented_all.html">instrumented_all</a></li>
+<li><a href="../svm/instrumented_syzkaller.html">instrumented_syzkaller</a></li>
 <li><a href="../svm/all_wo-harness.html">all_wo-harness</a></li>
 <li><a href="../svm/all_wo-config.html">all_wo-config</a></li>
 <li><a href="../svm/all_wo-validator.html">all_wo-validator</a></li>
